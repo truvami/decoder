@@ -1,8 +1,9 @@
 name: Release 🚀
 
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - "*"
 
 jobs:
   release:
@@ -26,7 +27,7 @@ jobs:
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v4
         with:
-          version: '${{ github.event.release.tag_name }}'
+          version: "~> v2"
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
