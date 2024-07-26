@@ -42,7 +42,7 @@ func convertFieldToType(value interface{}, fieldType reflect.Kind) interface{} {
 	case reflect.Float64:
 		return float64(value.(int))
 	case reflect.String:
-		return value.(string)
+		return fmt.Sprintf("%v", value)
 	case reflect.Bool:
 		return value.(int)&0x01 == 1
 	default:
@@ -109,6 +109,12 @@ func Parse(payloadHex string, config decoder.PayloadConfig) (interface{}, error)
 			if value == nil && optional {
 				continue
 			}
+
+			// log.Printf("field: %v", field.Name)
+			// log.Printf("value: %v", value)
+			// log.Printf("got: %T", value)
+			// log.Printf("expect: %v", fieldValue.Type().Kind())
+
 			fieldType := convertFieldToType(value, fieldValue.Type().Kind())
 			fieldValue.Set(reflect.ValueOf(fieldType))
 		}

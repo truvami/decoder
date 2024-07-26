@@ -12,7 +12,7 @@ type TagXLV1 struct {
 	loraClient middleware.LoracloudClient
 }
 
-func NewTagXLV1(loraClient middleware.LoracloudClient) decoder.Decoder {
+func NewTagXLv1Decoder(loraClient middleware.LoracloudClient) decoder.Decoder {
 	return TagXLV1{loraClient}
 }
 

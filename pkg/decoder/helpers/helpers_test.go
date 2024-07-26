@@ -22,7 +22,7 @@ func TestHexStringToBytes(t *testing.T) {
 	}
 }
 
-type GNSSPayload struct {
+type Port1Payload struct {
 	Moving bool    `json:"moving"`
 	Lat    float64 `json:"gps_lat"`
 	Lon    float64 `json:"gps_lon"`
@@ -54,7 +54,7 @@ func TestParse(t *testing.T) {
 			{Name: "Minute", Start: 15, Length: 1},
 			{Name: "Second", Start: 16, Length: 1},
 		},
-		TargetType: reflect.TypeOf(GNSSPayload{}),
+		TargetType: reflect.TypeOf(Port1Payload{}),
 	}
 
 	tests := []struct {
@@ -65,7 +65,7 @@ func TestParse(t *testing.T) {
 		{
 			payload: "8002cdcd1300744f5e166018040b14341a",
 			config:  config,
-			expected: GNSSPayload{
+			expected: Port1Payload{
 				Moving: false,
 				Lat:    47.041811,
 				Lon:    7.622494,
@@ -88,7 +88,7 @@ func TestParse(t *testing.T) {
 			}
 
 			// Type assert to Payload
-			payload := decodedData.(GNSSPayload)
+			payload := decodedData.(Port1Payload)
 
 			// Check the decoded data against the expected data using reflect.DeepEqual
 			if !reflect.DeepEqual(payload, test.expected) {
@@ -177,5 +177,37 @@ func TestConvertFieldToType(t *testing.T) {
 				t.Fatalf("converted value does not match expected value expected: %v got: %v", test.expected, result)
 			}
 		})
+	}
+}
+
+func TestInvalidPayload(t *testing.T) {
+	_, err := Parse("", decoder.PayloadConfig{
+		Fields: []decoder.FieldConfig{
+			{Name: "Moving", Start: 0, Length: 1},
+		},
+		TargetType: reflect.TypeOf(Port1Payload{}),
+	})
+	if err == nil {
+		t.Fatal("expected field out of bounds")
+	}
+
+	_, err = Parse("01", decoder.PayloadConfig{
+		Fields: []decoder.FieldConfig{
+			{Name: "Moving", Start: 0, Length: 2},
+		},
+		TargetType: reflect.TypeOf(Port1Payload{}),
+	})
+	if err == nil {
+		t.Fatal("expected field out of bounds")
+	}
+
+	_, err = Parse("01", decoder.PayloadConfig{
+		Fields: []decoder.FieldConfig{
+			{Name: "Moving", Start: 10, Length: 1},
+		},
+		TargetType: reflect.TypeOf(Port1Payload{}),
+	})
+	if err == nil {
+		t.Fatal("expected field start out of bounds")
 	}
 }

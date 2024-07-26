@@ -14,19 +14,21 @@ func NewTagSLv1Decoder() decoder.Decoder {
 	return TagSLv1Decoder{}
 }
 
-func (t TagSLv1Decoder) GetConfig(port int16) (decoder.PayloadConfig, error) {
+// https://docs.truvami.com/docs/payloads/tag-S
+// https://docs.truvami.com/docs/payloads/tag-L
+func (t TagSLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 	switch port {
 	case 1:
 		return decoder.PayloadConfig{
 			Fields: []decoder.FieldConfig{
 				{Name: "Moving", Start: 0, Length: 1},
-				{Name: "Lat", Start: 1, Length: 4, Transform: func(v interface{}) interface{} {
+				{Name: "Latitude", Start: 1, Length: 4, Transform: func(v interface{}) interface{} {
 					return float64(v.(int)) / 1000000
 				}},
-				{Name: "Lon", Start: 5, Length: 4, Transform: func(v interface{}) interface{} {
+				{Name: "Longitude", Start: 5, Length: 4, Transform: func(v interface{}) interface{} {
 					return float64(v.(int)) / 1000000
 				}},
-				{Name: "Alt", Start: 9, Length: 2},
+				{Name: "Altitude", Start: 9, Length: 2},
 				{Name: "Year", Start: 11, Length: 1},
 				{Name: "Month", Start: 12, Length: 1},
 				{Name: "Day", Start: 13, Length: 1},
@@ -34,7 +36,14 @@ func (t TagSLv1Decoder) GetConfig(port int16) (decoder.PayloadConfig, error) {
 				{Name: "Minute", Start: 15, Length: 1},
 				{Name: "Second", Start: 16, Length: 1},
 			},
-			TargetType: reflect.TypeOf(GNSSPayload{}),
+			TargetType: reflect.TypeOf(Port1Payload{}),
+		}, nil
+	case 2:
+		return decoder.PayloadConfig{
+			Fields: []decoder.FieldConfig{
+				{Name: "Moving", Start: 0, Length: 1},
+			},
+			TargetType: reflect.TypeOf(Port2Payload{}),
 		}, nil
 	case 3:
 		return decoder.PayloadConfig{
@@ -55,7 +64,26 @@ func (t TagSLv1Decoder) GetConfig(port int16) (decoder.PayloadConfig, error) {
 				{Name: "Mac6", Start: 39, Length: 6, Optional: true},
 				{Name: "Rssi6", Start: 45, Length: 1, Optional: true},
 			},
-			TargetType: reflect.TypeOf(BlePayload{}),
+			TargetType: reflect.TypeOf(Port3Payload{}),
+		}, nil
+	case 4:
+		return decoder.PayloadConfig{
+			Fields: []decoder.FieldConfig{
+				{Name: "LocalizationIntervalWhileMoving", Start: 0, Length: 4},
+				{Name: "LocalizationIntervalWhileSteady", Start: 4, Length: 4},
+				{Name: "HeartbeatInterval", Start: 8, Length: 4},
+				{Name: "GPSTimeoutWhileWaitingForFix", Start: 12, Length: 2},
+				{Name: "AccelerometerWakeupThreshold", Start: 14, Length: 2},
+				{Name: "AccelerometerDelay", Start: 16, Length: 2},
+				{Name: "DeviceState", Start: 18, Length: 1},
+				{Name: "FirmwareVersionMajor", Start: 19, Length: 1},
+				{Name: "FirmwareVersionMinor", Start: 20, Length: 1},
+				{Name: "FirmwareVersionPatch", Start: 21, Length: 1},
+				{Name: "HardwareVersionType", Start: 22, Length: 1},
+				{Name: "HardwareVersionRevision", Start: 23, Length: 1},
+				{Name: "BatteryKeepAliveMessageInterval", Start: 24, Length: 4},
+			},
+			TargetType: reflect.TypeOf(Port4Payload{}),
 		}, nil
 	case 5:
 		return decoder.PayloadConfig{
@@ -76,7 +104,24 @@ func (t TagSLv1Decoder) GetConfig(port int16) (decoder.PayloadConfig, error) {
 				{Name: "Mac7", Start: 43, Length: 6, Optional: true},
 				{Name: "Rssi7", Start: 49, Length: 1, Optional: true},
 			},
-			TargetType: reflect.TypeOf(WifiPayload{}),
+			TargetType: reflect.TypeOf(Port5Payload{}),
+		}, nil
+	case 6:
+		return decoder.PayloadConfig{
+			Fields: []decoder.FieldConfig{
+				{Name: "ButtonPressed", Start: 0, Length: 1},
+			},
+			TargetType: reflect.TypeOf(Port6Payload{}),
+		}, nil
+	case 15:
+		return decoder.PayloadConfig{
+			Fields: []decoder.FieldConfig{
+				{Name: "LowBattery", Start: 0, Length: 1},
+				{Name: "BatteryVoltage", Start: 1, Length: 2, Transform: func(v interface{}) interface{} {
+					return float64(v.(int)) / 1000
+				}},
+			},
+			TargetType: reflect.TypeOf(Port15Payload{}),
 		}, nil
 	}
 
@@ -84,7 +129,7 @@ func (t TagSLv1Decoder) GetConfig(port int16) (decoder.PayloadConfig, error) {
 }
 
 func (t TagSLv1Decoder) Decode(data string, port int16, devEui string) (interface{}, error) {
-	config, err := t.GetConfig(port)
+	config, err := t.getConfig(port)
 	if err != nil {
 		return nil, err
 	}
@@ -95,59 +140,4 @@ func (t TagSLv1Decoder) Decode(data string, port int16, devEui string) (interfac
 	}
 
 	return decodedData, nil
-}
-
-type GNSSPayload struct {
-	Moving bool    `json:"moving"`
-	Lat    float64 `json:"gps_lat"`
-	Lon    float64 `json:"gps_lon"`
-	Alt    float64 `json:"gps_alt"`
-	Year   int     `json:"year"`
-	Month  int     `json:"month"`
-	Day    int     `json:"day"`
-	Hour   int     `json:"hour"`
-	Minute int     `json:"minute"`
-	Second int     `json:"second"`
-	TS     int64   `json:"ts"`
-}
-
-type AccessPoint struct {
-	MAC  string  `json:"mac"`
-	Rssi float32 `json:"rssi"`
-}
-
-type WifiPayload struct {
-	Moving bool   `json:"moving"`
-	Mac1   string `json:"mac1"`
-	Rssi1  int8   `json:"rssi1"`
-	Mac2   string `json:"mac2"`
-	Rssi2  int8   `json:"rssi2"`
-	Mac3   string `json:"mac3"`
-	Rssi3  int8   `json:"rssi3"`
-	Mac4   string `json:"mac4"`
-	Rssi4  int8   `json:"rssi4"`
-	Mac5   string `json:"mac5"`
-	Rssi5  int8   `json:"rssi5"`
-	Mac6   string `json:"mac6"`
-	Rssi6  int8   `json:"rssi6"`
-	Mac7   string `json:"mac7"`
-	Rssi7  int8   `json:"rssi7"`
-}
-
-type BlePayload struct {
-	ScanPointer    uint16 `json:"scanPointer"`
-	TotalMessages  uint8  `json:"totalMessages"`
-	CurrentMessage uint8  `json:"currentMessage"`
-	Mac1           string `json:"mac1"`
-	Rssi1          int8   `json:"rssi1"`
-	Mac2           string `json:"mac2"`
-	Rssi2          int8   `json:"rssi2"`
-	Mac3           string `json:"mac3"`
-	Rssi3          int8   `json:"rssi3"`
-	Mac4           string `json:"mac4"`
-	Rssi4          int8   `json:"rssi4"`
-	Mac5           string `json:"mac5"`
-	Rssi5          int8   `json:"rssi5"`
-	Mac6           string `json:"mac6"`
-	Rssi6          int8   `json:"rssi6"`
 }
