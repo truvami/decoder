@@ -14,7 +14,7 @@ func init() {
 
 var nomadxsCmd = &cobra.Command{
 	Use:   "nomadxs [port] [payload]",
-	Short: "decode tag S / L payloads",
+	Short: "decode nomad XS payloads",
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		d := nomadxs.NewNomadXSv1Decoder()
