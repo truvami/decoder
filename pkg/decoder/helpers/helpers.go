@@ -39,6 +39,8 @@ func convertFieldToType(value interface{}, fieldType reflect.Kind) interface{} {
 		return uint32(value.(int))
 	case reflect.Uint64:
 		return uint64(value.(int))
+	case reflect.Float32:
+		return float32(value.(int))
 	case reflect.Float64:
 		return float64(value.(int))
 	case reflect.String:

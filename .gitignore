@@ -24,5 +24,5 @@
 .env*
 !.env.example
 
-decoder
+^decoder$
 dist/
