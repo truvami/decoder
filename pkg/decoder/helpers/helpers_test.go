@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -92,6 +93,88 @@ func TestParse(t *testing.T) {
 			// Check the decoded data against the expected data using reflect.DeepEqual
 			if !reflect.DeepEqual(payload, test.expected) {
 				t.Fatalf("decoded data does not match expected data expected: %+v got: %+v", test.expected, payload)
+			}
+		})
+	}
+}
+func TestConvertFieldToType(t *testing.T) {
+	tests := []struct {
+		value     interface{}
+		fieldType reflect.Kind
+		expected  interface{}
+	}{
+		{
+			value:     10,
+			fieldType: reflect.Int,
+			expected:  10,
+		},
+		{
+			value:     10,
+			fieldType: reflect.Int8,
+			expected:  int8(10),
+		},
+		{
+			value:     10,
+			fieldType: reflect.Int16,
+			expected:  int16(10),
+		},
+		{
+			value:     10,
+			fieldType: reflect.Int32,
+			expected:  int32(10),
+		},
+		{
+			value:     10,
+			fieldType: reflect.Int64,
+			expected:  int64(10),
+		},
+		{
+			value:     10,
+			fieldType: reflect.Uint,
+			expected:  uint(10),
+		},
+		{
+			value:     10,
+			fieldType: reflect.Uint8,
+			expected:  uint8(10),
+		},
+		{
+			value:     10,
+			fieldType: reflect.Uint16,
+			expected:  uint16(10),
+		},
+		{
+			value:     10,
+			fieldType: reflect.Uint32,
+			expected:  uint32(10),
+		},
+		{
+			value:     10,
+			fieldType: reflect.Uint64,
+			expected:  uint64(10),
+		},
+		{
+			value:     10,
+			fieldType: reflect.Float64,
+			expected:  float64(10),
+		},
+		{
+			value:     "hello",
+			fieldType: reflect.String,
+			expected:  "hello",
+		},
+		{
+			value:     1,
+			fieldType: reflect.Bool,
+			expected:  true,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(fmt.Sprintf("%v_%v", test.value, test.fieldType), func(t *testing.T) {
+			result := convertFieldToType(test.value, test.fieldType)
+			if !reflect.DeepEqual(result, test.expected) {
+				t.Fatalf("converted value does not match expected value expected: %v got: %v", test.expected, result)
 			}
 		})
 	}

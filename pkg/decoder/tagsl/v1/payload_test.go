@@ -97,7 +97,7 @@ func TestDecode(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("%v-%v", test.port, test.payload), func(t *testing.T) {
-			decoder := NewTagSLV1()
+			decoder := NewTagSLv1Decoder()
 			got, err := decoder.Decode(test.payload, test.port, "")
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)

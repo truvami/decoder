@@ -8,13 +8,13 @@ import (
 	"github.com/truvami/decoder/pkg/decoder/helpers"
 )
 
-type TagSLV1 struct{}
+type TagSLv1Decoder struct{}
 
-func NewTagSLV1() decoder.Decoder {
-	return TagSLV1{}
+func NewTagSLv1Decoder() decoder.Decoder {
+	return TagSLv1Decoder{}
 }
 
-func (t TagSLV1) GetConfig(port int16) (decoder.PayloadConfig, error) {
+func (t TagSLv1Decoder) GetConfig(port int16) (decoder.PayloadConfig, error) {
 	switch port {
 	case 1:
 		return decoder.PayloadConfig{
@@ -83,7 +83,7 @@ func (t TagSLV1) GetConfig(port int16) (decoder.PayloadConfig, error) {
 	return decoder.PayloadConfig{}, fmt.Errorf("port %v not supported", port)
 }
 
-func (t TagSLV1) Decode(data string, port int16, devEui string) (interface{}, error) {
+func (t TagSLv1Decoder) Decode(data string, port int16, devEui string) (interface{}, error) {
 	config, err := t.GetConfig(port)
 	if err != nil {
 		return nil, err
