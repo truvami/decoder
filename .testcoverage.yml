@@ -46,6 +46,7 @@ exclude:
   #   - ^pkg/bar     # exclude package `pkg/bar`
   paths:
     - ^cmd/
+    - ^examples/
 
  
 # NOTES:

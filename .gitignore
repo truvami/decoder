@@ -23,3 +23,6 @@
 # Exclude all .env files except .env.example
 .env*
 !.env.example
+
+decoder
+dist/
