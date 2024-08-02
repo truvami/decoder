@@ -50,6 +50,9 @@ builds:
       - goos: freebsd
         goarch: arm64
 
+checksum:
+  name_template: '{{ .ProjectName }}-{{ .Version }}-checksums.txt'
+
 archives:
   - format: tar.gz
     wrap_in_directory: true
