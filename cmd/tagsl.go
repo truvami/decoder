@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
 	"strconv"
 
@@ -34,13 +33,4 @@ var tagslCmd = &cobra.Command{
 
 		printJSON(data)
 	},
-}
-
-func printJSON(data interface{}) {
-	j, err := json.Marshal(data)
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Println(string(j))
 }

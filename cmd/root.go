@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 
@@ -18,4 +19,13 @@ func Execute() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+}
+
+func printJSON(data interface{}) {
+	j, err := json.Marshal(data)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(string(j))
 }
