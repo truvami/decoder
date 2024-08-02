@@ -29,7 +29,7 @@ func TestDecode(t *testing.T) {
 		// check if request body contains 10CE45FFFE00C7ED
 		bodyString, _ := io.ReadAll(r.Body)
 		if strings.Contains(string(bodyString), "10CE45FFFE00C7ED") {
-			w.Write([]byte("{\"invalid\": json}"))
+			_, _ = w.Write([]byte("{\"invalid\": json}"))
 			return
 		}
 
@@ -46,7 +46,7 @@ func TestDecode(t *testing.T) {
 			t.Fatalf("unexpected error: %v", err)
 		}
 
-		w.Write(data)
+		_, _ = w.Write(data)
 	})
 
 	server := startMockServer()
@@ -57,7 +57,10 @@ func TestDecode(t *testing.T) {
 	f, _ := os.Open("./response.json")
 	var exampleResponse loracloud.UplinkMsgResponse
 	d, _ := io.ReadAll(f)
-	json.Unmarshal(d, &exampleResponse)
+	err := json.Unmarshal(d, &exampleResponse)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	tests := []struct {
 		payload     string

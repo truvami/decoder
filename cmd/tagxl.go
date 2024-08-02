@@ -14,7 +14,11 @@ var accessToken string
 
 func init() {
 	tagxlCmd.PersistentFlags().StringVar(&accessToken, "token", "", "Access token for the loracloud API")
-	viper.BindPFlag("token", rootCmd.PersistentFlags().Lookup("token"))
+	err := viper.BindPFlag("token", rootCmd.PersistentFlags().Lookup("token"))
+	if err != nil {
+		fmt.Printf("error binding flag: %v", err)
+	}
+
 	rootCmd.AddCommand(tagxlCmd)
 }
 

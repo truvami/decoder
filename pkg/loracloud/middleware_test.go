@@ -62,12 +62,12 @@ func TestDeliverUplinkMessage(t *testing.T) {
 		bodyString, _ := io.ReadAll(r.Body)
 		if strings.Contains(string(bodyString), "01-23-45-67-89-AB-CD-EC") {
 			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("{\"status\": failed}"))
+			_, _ = w.Write([]byte("{\"status\": failed}"))
 			return
 		}
 
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("{\"status\": \"success\"}"))
+		_, _ = w.Write([]byte("{\"status\": \"success\"}"))
 	})
 
 	server := startMockServer()
