@@ -8,6 +8,8 @@
 
 version: 2
 
+project_name: decoder
+
 before:
   hooks:
     # You may remove this if you don't use go modules.
@@ -16,27 +18,67 @@ before:
     - go generate ./...
 
 builds:
-  - env:
+  - binary: decoder
+    env:
       - CGO_ENABLED=0
     goos:
-      - linux
-      - windows
       - darwin
+      - windows
+      - linux
+      - freebsd
+      - netbsd
+      - illumos
+    goarch:
+      - amd64
+      - arm64
+      - arm
+      - "386"
+      - ppc64le
+      - s390x
+      - mips64
+      - mips64le
+      - riscv64
+      - loong64
+    goarm:
+      - "6"
+      - "7"
+    gomips:
+      - hardfloat
+    ignore:
+      - goos: darwin
+        goarch: "386"
+      - goos: freebsd
+        goarch: arm64
 
 archives:
   - format: tar.gz
-    # this name template makes the OS and Arch compatible with the results of `uname`.
-    name_template: >-
-      {{ .ProjectName }}_
-      {{- title .Os }}_
-      {{- if eq .Arch "amd64" }}x86_64
-      {{- else if eq .Arch "386" }}i386
-      {{- else }}{{ .Arch }}{{ end }}
-      {{- if .Arm }}v{{ .Arm }}{{ end }}
-    # use zip for windows archives
+    wrap_in_directory: true
     format_overrides:
       - goos: windows
         format: zip
+    name_template: '{{ .ProjectName }}-{{ .Version }}-{{ .Os }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}'
+    files:
+      - LICENSE
+      - README.md
+
+brews:
+  - repository:
+      owner: truvami
+      name: homebrew-tap
+    directory: Formula
+    homepage: https://truvami.com
+    description: Example implementation of truvami decoder.
+    install: |
+      bin.install "decoder"
+      output = Utils.popen_read("#{bin}/decoder completion bash")
+      (bash_completion/"decoder").write output
+      output = Utils.popen_read("#{bin}/decoder completion zsh")
+      (zsh_completion/"_decoder").write output
+      output = Utils.popen_read("#{bin}/decoder completion fish")
+      (fish_completion/"decoder.fish").write output
+      prefix.install_metafiles
+    test: |
+      system "#{bin}/decoder --version"
 
 changelog:
   sort: asc
