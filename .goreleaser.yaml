@@ -83,6 +83,32 @@ brews:
     test: |
       system "#{bin}/decoder --version"
 
+chocolateys:
+  - name: truvami-decoder
+    owners: truvami
+    title: truvami decoder
+    authors: truvami
+    project_url: https://docs.truvami.com
+    url_template: "https://github.com/truvami/decoder/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
+    icon_url: "https://avatars.githubusercontent.com/u/144101217?s=200&v=4"
+    copyright: 2024 truvami
+    license_url: https://github.com/truvami/decoder/blob/main/LICENSE
+    require_license_acceptance: false
+    project_source_url: https://github.com/truvami/decoder
+    package_source_url: https://github.com/truvami/decoder
+    docs_url: https://docs.truvami.com
+    bug_tracker_url: https://github.com/truvami/decoder/issues
+    tags: "lora truvami decoder"
+    summary: truvami decoder reference implementation.
+    description: |
+      {{ .ProjectName }} installer package.
+      truvami decoder reference implementation.
+    release_notes: "https://github.com/truvami/decoder/releases/tag/v{{ .Version }}"
+    api_key: "{{ .Env.CHOCO_API_KEY }}"
+    source_repo: "https://push.chocolatey.org/"
+    skip_publish: false
+    goamd64: v1
+
 changelog:
   sort: asc
   filters:
