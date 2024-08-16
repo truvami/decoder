@@ -30,3 +30,6 @@ install-go-test-coverage:
 check-coverage: install-go-test-coverage
 	export ENV=test && go test ./... -coverprofile=./cover.out -covermode=atomic -coverpkg=./...
 	${GOBIN}/go-test-coverage --config=./.testcoverage.yml
+
+install:
+	curl -sSfL https://raw.githubusercontent.com/truvami/decoder/main/install.sh | sh -s -- -b $(go env GOPATH)/bin
