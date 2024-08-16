@@ -15,13 +15,22 @@ var Json bool
 
 func init() {
 	rootCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "Display more verbose output in console output. (default: false)")
-	viper.BindPFlag("verbose", rootCmd.PersistentFlags().Lookup("verbose"))
+	err := viper.BindPFlag("verbose", rootCmd.PersistentFlags().Lookup("verbose"))
+	if err != nil {
+		slog.Error("error while binding verbose flag", slog.Any("error", err))
+	}
 
 	rootCmd.PersistentFlags().BoolVarP(&Debug, "debug", "d", false, "Display debugging output in the console. (default: false)")
-	viper.BindPFlag("debug", rootCmd.PersistentFlags().Lookup("debug"))
+	err = viper.BindPFlag("debug", rootCmd.PersistentFlags().Lookup("debug"))
+	if err != nil {
+		slog.Error("error while binding debug flag", slog.Any("error", err))
+	}
 
 	rootCmd.PersistentFlags().BoolVarP(&Json, "json", "j", false, "Output the result in JSON format. (default: false)")
-	viper.BindPFlag("json", rootCmd.PersistentFlags().Lookup("json"))
+	err = viper.BindPFlag("json", rootCmd.PersistentFlags().Lookup("json"))
+	if err != nil {
+		slog.Error("error while binding json flag", slog.Any("error", err))
+	}
 }
 
 var rootCmd = &cobra.Command{
