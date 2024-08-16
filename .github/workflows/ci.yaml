@@ -2,6 +2,10 @@ name: CI 🚧
 
 on:
   push:
+    paths:
+      - '**.go'
+      - '**.md'
+      - '**.mod'
 
 jobs:
   test:

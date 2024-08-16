@@ -20,7 +20,7 @@ jobs:
       - name: Build
         run: go build -o /usr/local/bin/decoder ./main.go
 
-      - uses: charmbracelet/vhs-action@v1
+      - uses: charmbracelet/vhs-action@v2.0.1
         with:
           path: 'demo.tape'
       - uses: stefanzweifel/git-auto-commit-action@v4
