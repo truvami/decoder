@@ -69,10 +69,10 @@ decoder [command] [flags]
 
 ```sh
 # 🔍 Decode a Nomad XS payload with verbose output
-decoder nomadxs -v
+decoder nomadxs 1 0002c420ff005ed85a12b4180719142607240001ffbaffc2fc6f09a71d2e
 
 # 📝 Decode a Tag S / L payload and output the result in JSON format
-decoder tagsl -j
+decoder tagsl 1 8002cdcd1300744f5e166018040b14341a -j
 
 # 🖋️ Generate autocompletion script for bash
 decoder completion bash
