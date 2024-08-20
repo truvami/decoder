@@ -180,7 +180,7 @@ func (t TagSLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 		return decoder.PayloadConfig{
 			Fields: []decoder.FieldConfig{
 				{Name: "BufferLevel", Start: 0, Length: 2},
-				{Name: "Timestamp", Start: 3, Length: 4},
+				{Name: "Timestamp", Start: 2, Length: 4},
 				{Name: "Moving", Start: 7, Length: 1},
 				{Name: "Mac1", Start: 8, Length: 6, Optional: true},
 				{Name: "Rssi1", Start: 14, Length: 1, Optional: true},
