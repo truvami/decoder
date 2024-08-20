@@ -32,8 +32,4 @@ check-coverage: install-go-test-coverage
 	${GOBIN}/go-test-coverage --config=./.testcoverage.yml
 
 install:
-<<<<<<< Updated upstream
 	curl -sSfL https://raw.githubusercontent.com/truvami/decoder/main/install.sh | sh -s -- -b $(go env GOPATH)/bin
-=======
-	curl -sSfL https://raw.githubusercontent.com/truvami/decoder/main/install.sh | sh -s -- -b $(go env GOPATH)/bin
->>>>>>> Stashed changes

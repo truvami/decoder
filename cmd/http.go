@@ -89,6 +89,11 @@ func getHandler(decoder decoder.Decoder) func(http.ResponseWriter, *http.Request
 		if err != nil {
 			slog.Error("error while decoding request", slog.Any("error", err))
 			setHeaders(w, http.StatusBadRequest)
+			_, err = w.Write([]byte(err.Error()))
+
+			if err != nil {
+				slog.Error("error while sending response", slog.Any("error", err))
+			}
 			return
 		}
 
@@ -98,6 +103,11 @@ func getHandler(decoder decoder.Decoder) func(http.ResponseWriter, *http.Request
 		if err != nil {
 			slog.Error("error while decoding payload", slog.Any("error", err))
 			setHeaders(w, http.StatusBadRequest)
+			_, err = w.Write([]byte(err.Error()))
+
+			if err != nil {
+				slog.Error("error while sending response", slog.Any("error", err))
+			}
 			return
 		}
 
@@ -107,13 +117,21 @@ func getHandler(decoder decoder.Decoder) func(http.ResponseWriter, *http.Request
 		if err != nil {
 			slog.Error("error while encoding response", slog.Any("error", err))
 			setHeaders(w, http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
+			_, err = w.Write([]byte(err.Error()))
+
+			if err != nil {
+				slog.Error("error while sending response", slog.Any("error", err))
+			}
 			return
 		}
 
 		// send the response
 		setHeaders(w, http.StatusOK)
-		w.Write(data.([]byte))
+		_, err = w.Write(data.([]byte))
+		if err != nil {
+			slog.Error("error while sending response", slog.Any("error", err))
+			return
+		}
 
 		slog.Debug("response sent", slog.Any("response", string(data.([]byte))))
 	}
