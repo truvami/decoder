@@ -3,6 +3,7 @@ package tagsl
 import (
 	"fmt"
 	"testing"
+	"time"
 )
 
 func TestDecode(t *testing.T) {
@@ -91,6 +92,25 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
+			payload: "0000003c0000012c000151800078012c05dc02020100010200005460",
+			port:    4,
+			expected: Port4Payload{
+				LocalizationIntervalWhileMoving: 60,
+				LocalizationIntervalWhileSteady: 300,
+				HeartbeatInterval:               86400,
+				GPSTimeoutWhileWaitingForFix:    120,
+				AccelerometerWakeupThreshold:    300,
+				AccelerometerDelay:              1500,
+				DeviceState:                     2,
+				FirmwareVersionMajor:            2,
+				FirmwareVersionMinor:            1,
+				FirmwareVersionPatch:            0,
+				HardwareVersionType:             1,
+				HardwareVersionRevision:         2,
+				BatteryKeepAliveMessageInterval: 21600,
+			},
+		},
+		{
 			payload: "808c59c3c99fc0ad",
 			port:    5,
 			expected: Port5Payload{
@@ -122,6 +142,23 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
+			payload: "00e0286d8aabfca8e0286d8a9478c2726c9a74b58dab726cdac8b89dacf0b0140c96bbc8",
+			port:    5,
+			expected: Port5Payload{
+				Moving: false,
+				Mac1:   "e0286d8aabfc",
+				Rssi1:  -88,
+				Mac2:   "e0286d8a9478",
+				Rssi2:  -62,
+				Mac3:   "726c9a74b58d",
+				Rssi3:  -85,
+				Mac4:   "726cdac8b89d",
+				Rssi4:  -84,
+				Mac5:   "f0b0140c96bb",
+				Rssi5:  -56,
+			},
+		},
+		{
 			payload: "01",
 			port:    6,
 			expected: Port6Payload{
@@ -135,12 +172,45 @@ func TestDecode(t *testing.T) {
 				ButtonPressed: false,
 			},
 		},
+		// {
+		// 	payload: "8002cdcd1300744f5e166018040b14341a",
+		// 	port:    10,
+		// 	expected: Port10Payload{
+		// 		Moving:    false,
+		// 		Latitude:  47.041811,
+		// 		Longitude: 7.622494,
+		// 		Altitude:  5728,
+		// 		Timestamp: helpers.ParseTimestamp(158747),
+		// 		Battery:   3.813,
+		// 	},
+		// },
 		{
 			payload: "800ee5",
 			port:    15,
 			expected: Port15Payload{
 				LowBattery:     false,
 				BatteryVoltage: 3.813,
+			},
+		},
+		{
+			payload: "0002d30c9300824c87117966c45dcd0f8118e0286d8aabfca9f0b0140c96bbc8726c9a74b58da8e0286d8a9478bf",
+			port:    50,
+			expected: Port50Payload{
+				Moving:    false,
+				Latitude:  47.385747,
+				Longitude: 8.539271,
+				Altitude:  447.3,
+				Timestamp: time.Date(2024, 8, 20, 9, 11, 41, 0, time.UTC),
+				Battery:   3.969,
+				TTF:       24,
+				Mac1:      "e0286d8aabfc",
+				Rssi1:     -87,
+				Mac2:      "f0b0140c96bb",
+				Rssi2:     -56,
+				Mac3:      "726c9a74b58d",
+				Rssi3:     -88,
+				Mac4:      "e0286d8a9478",
+				Rssi4:     -65,
 			},
 		},
 	}

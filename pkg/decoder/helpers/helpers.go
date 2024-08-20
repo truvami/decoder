@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"reflect"
+	"time"
 
 	"github.com/truvami/decoder/pkg/decoder"
 )
@@ -47,6 +48,11 @@ func convertFieldToType(value interface{}, fieldType reflect.Kind) interface{} {
 		return fmt.Sprintf("%v", value)
 	case reflect.Bool:
 		return value.(int)&0x01 == 1
+	case reflect.Struct:
+		if fieldType == reflect.TypeOf(time.Time{}).Kind() {
+			return ParseTimestamp(value.(int))
+		}
+		fallthrough
 	default:
 		panic(fmt.Sprintf("unsupported field type: %v", fieldType))
 	}
@@ -129,4 +135,8 @@ func Parse(payloadHex string, config decoder.PayloadConfig) (interface{}, error)
 	}
 
 	return targetValue.Interface(), nil
+}
+
+func ParseTimestamp(timestamp int) time.Time {
+	return time.Unix(int64(timestamp), 0).UTC()
 }
