@@ -172,18 +172,18 @@ func TestDecode(t *testing.T) {
 				ButtonPressed: false,
 			},
 		},
-		// {
-		// 	payload: "8002cdcd1300744f5e166018040b14341a",
-		// 	port:    10,
-		// 	expected: Port10Payload{
-		// 		Moving:    false,
-		// 		Latitude:  47.041811,
-		// 		Longitude: 7.622494,
-		// 		Altitude:  5728,
-		// 		Timestamp: helpers.ParseTimestamp(158747),
-		// 		Battery:   3.813,
-		// 	},
-		// },
+		{
+			payload: "0002d308b50082457f16eb66c4a5cd0ed3",
+			port:    10,
+			expected: Port10Payload{
+				Moving:    false,
+				Latitude:  47.384757,
+				Longitude: 8.537471,
+				Altitude:  586.7,
+				Timestamp: time.Date(2024, 8, 20, 14, 18, 53, 0, time.UTC),
+				Battery:   3.795,
+			},
+		},
 		{
 			payload: "800ee5",
 			port:    15,
