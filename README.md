@@ -1,3 +1,5 @@
+[![codecov](https://codecov.io/gh/truvami/decoder/graph/badge.svg?token=QN8PA727I7)](https://codecov.io/gh/truvami/decoder)
+
 # 🎉 truvami Decoder 🚀
 
 **truvami Decoder** is a command-line interface (CLI) tool written in Go for decoding truvami payloads. This reference implementation supports various payload types, including Nomad XS and different Tag formats. 🛠️
