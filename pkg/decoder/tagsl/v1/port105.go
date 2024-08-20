@@ -31,6 +31,4 @@ type Port105Payload struct {
 	Rssi5       int8      `json:"rssi5"`
 	Mac6        string    `json:"mac6"`
 	Rssi6       int8      `json:"rssi6"`
-	Mac7        string    `json:"mac7"`
-	Rssi7       int8      `json:"rssi7"`
 }
