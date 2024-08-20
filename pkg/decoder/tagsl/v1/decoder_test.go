@@ -19,7 +19,7 @@ func TestDecode(t *testing.T) {
 				Moving:    false,
 				Latitude:  47.041811,
 				Longitude: 7.622494,
-				Altitude:  5728,
+				Altitude:  572.8,
 				Year:      24,
 				Month:     4,
 				Day:       11,
