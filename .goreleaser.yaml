@@ -109,6 +109,17 @@ chocolateys:
     skip_publish: false
     goamd64: v1
 
+dockers:
+  - image_templates:
+      - "ghcr.io/truvami/decoder:latest"
+      - "ghcr.io/truvami/decoder:{{ .Tag }}"
+      - "ghcr.io/truvami/decoder:{{ .Major }}"
+      - "ghcr.io/truvami/decoder:{{ .Major }}.{{ .Minor }}"
+    build_flag_templates:
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+
 changelog:
   sort: asc
   filters:
