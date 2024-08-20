@@ -9,7 +9,7 @@ import "time"
 // | 2     | 1    | Status[6:2] + Moving flag[0] (moving = 1) | uint8                  |
 // | 3-6   | 4    | Latitude                                  | int32, 1/1’000’000 deg |
 // | 7-10  | 4    | Longitude                                 | int32, 1/1’000’000 deg |
-// | 11-12 | 2    | Altitude                                  | uint16, 1/100 meter    |
+// | 11-12 | 2    | Altitude                                  | uint16, 1/10 meter     |
 // | 11-14 | 4    | Unix timestamp                            | uint32                 |
 // | 17-18 | 2    | Battery voltage                           | uint16, mV             |
 // +-------+------+-------------------------------------------+------------------------+
