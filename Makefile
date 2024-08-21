@@ -33,6 +33,3 @@ check-coverage: install-go-test-coverage
 
 install:
 	curl -sSfL https://raw.githubusercontent.com/truvami/decoder/main/install.sh | sh -s -- -b $(go env GOPATH)/bin
-
-build-amd64:
-	env GOOS=windows GOARCH=amd64 go build -o decoder.exe main.go
