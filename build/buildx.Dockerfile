@@ -13,8 +13,5 @@ ENV GOROOT /usr/local/go
 # GOTOOLCHAIN=auto is shorthand for GOTOOLCHAIN=local+auto
 ENV GOTOOLCHAIN auto
 
-# Set all directories as safe
-RUN git config --global --add safe.directory '*'
-
 COPY decoder /usr/bin/
 CMD ["decoder"]
