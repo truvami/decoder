@@ -109,6 +109,70 @@ chocolateys:
     skip_publish: false
     goamd64: v1
 
+dockers:
+  - use: buildx
+    goos: linux
+    goarch: amd64
+    dockerfile: build/buildx.Dockerfile
+    image_templates:
+      - "ghcr.io/truvami/decoder:latest"
+      - "ghcr.io/truvami/decoder:{{ .Tag }}"
+      - "ghcr.io/truvami/decoder:{{ .Major }}"
+      - "ghcr.io/truvami/decoder:{{ .Major }}.{{ .Minor }}"
+    build_flag_templates:
+      - "--pull"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - '--platform=linux/amd64'
+  - use: buildx
+    goos: linux
+    goarch: arm64
+    dockerfile: build/buildx.Dockerfile
+    image_templates:
+      - "ghcr.io/truvami/decoder:latest-arm64"
+      - "ghcr.io/truvami/decoder:{{ .Tag }}-arm64"
+      - "ghcr.io/truvami/decoder:{{ .Major }}-arm64"
+      - "ghcr.io/truvami/decoder:{{ .Major }}.{{ .Minor }}-arm64"
+    build_flag_templates:
+      - "--pull"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - '--platform=linux/arm64'
+  - use: buildx
+    goos: linux
+    goarch: amd64
+    dockerfile: build/buildx-alpine.Dockerfile
+    image_templates:
+      - "ghcr.io/truvami/decoder:alpine"
+      - "ghcr.io/truvami/decoder:latest-alpine"
+      - "ghcr.io/truvami/decoder:{{ .Tag }}-alpine"
+      - "ghcr.io/truvami/decoder:{{ .Major }}-alpine"
+      - "ghcr.io/truvami/decoder:{{ .Major }}.{{ .Minor }}-alpine"
+    build_flag_templates:
+      - "--pull"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - '--platform=linux/amd64'
+  - use: buildx
+    goos: linux
+    goarch: arm64
+    dockerfile: build/buildx-alpine.Dockerfile
+    image_templates:
+      - "ghcr.io/truvami/decoder:alpine-arm64"
+      - "ghcr.io/truvami/decoder:latest-alpine-arm64"
+      - "ghcr.io/truvami/decoder:{{ .Tag }}-alpine-arm64"
+      - "ghcr.io/truvami/decoder:{{ .Major }}-alpine-arm64"
+      - "ghcr.io/truvami/decoder:{{ .Major }}.{{ .Minor }}-alpine-arm64"
+    build_flag_templates:
+      - "--pull"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - '--platform=linux/arm64'
+
 changelog:
   sort: asc
   filters:

@@ -10,7 +10,7 @@ jobs:
     name: Release
     runs-on: ubuntu-latest
     env:
-      GO_VERSION: '1.22'
+      GO_VERSION: "1.22"
       CHOCOLATEY_VERSION: 2.2.0
     timeout-minutes: 15
     permissions:
@@ -34,6 +34,13 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
+
+      - name: Log in to GitHub
+        uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6

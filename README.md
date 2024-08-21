@@ -13,8 +13,11 @@ Check out this demo to see truvami Decoder in action! 👇
 ## 🌟 Features
 
 - 🔍 **Payload Decoding**: Decode Nomad XS, Tag S/L, and Tag XL payloads with ease.
+- 🌐 **HTTP Server**: Start a local HTTP server to decode payloads using RESTful APIs.
 - 📄 **Flexible Output**: Choose between standard console output and JSON format.
 - 🛠️ **Debugging & Verbosity**: Enable debugging and verbose output for detailed insights.
+- 🖋️ **Autocompletion**: Generate autocompletion scripts for your favorite shell.
+- 🚀 **Cross-Platform**: Works on Windows, macOS, and Linux.
 
 ## 📦 Installation
 
@@ -42,6 +45,21 @@ choco install truvami-decoder
 decoder --help
 ```
 
+### 🐳 Docker
+
+You can also run the truvami Decoder using Docker:
+
+```sh
+# Pull the latest Docker image
+docker pull ghcr.io/truvami/decoder
+
+# Run the Docker container
+docker run -it ghcr.io/truvami/decoder decoder --help
+
+# Run the Docker container to start the HTTP server
+docker run -p 8080:8080 ghcr.io/truvami/decoder decoder http --port 8080 --host 0.0.0.0
+```
+
 ## 🛠️ Usage
 
 truvami Decoder provides a variety of commands and options to help you decode payloads efficiently. Below is an overview of the available commands and flags.
@@ -59,6 +77,7 @@ decoder [command] [flags]
 - `nomadxs` - 🧩 Decode Nomad XS payloads.
 - `tagsl` - 🏷️ Decode Tag S / L payloads.
 - `tagxl` - 🏷️ Decode Tag XL payloads.
+- `http` - 🌐 Start local HTTP server to decode payloads.
 
 ### 🚩 Global Flags
 
@@ -75,6 +94,16 @@ decoder nomadxs 1 0002c420ff005ed85a12b4180719142607240001ffbaffc2fc6f09a71d2e
 
 # 📝 Decode a Tag S / L payload and output the result in JSON format
 decoder tagsl 1 8002cdcd1300744f5e166018040b14341a -j
+
+# 🌐 Start a HTTP server
+decoder http --port 8080 --host 0.0.0.0
+
+# 📄 Call HTTP server using curl
+curl -XPOST -H "Content-type: application/json" -d '{
+    "port": 1,
+    "payload": "8002cdcd1300744f5e166018040b14341a",
+    "devEui": ""
+}' 'http://localhost:8080/tagsl/v1'
 
 # 🖋️ Generate autocompletion script for bash
 decoder completion bash
