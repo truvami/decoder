@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -146,5 +147,38 @@ func TestHTTPCmd(t *testing.T) {
 	actualContentType := resp.Header.Get("Content-Type")
 	if actualContentType != expectedContentType {
 		t.Errorf("expected Content-Type header to be %q, got %q", expectedContentType, actualContentType)
+	}
+}
+func TestHealthHandler(t *testing.T) {
+	req, err := http.NewRequest("GET", "/health", nil)
+	if err != nil {
+		t.Fatalf("failed to create request: %v", err)
+	}
+
+	recorder := httptest.NewRecorder()
+	healthHandler(recorder, req)
+
+	resp := recorder.Result()
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("expected status code %d, got %d", http.StatusOK, resp.StatusCode)
+	}
+
+	expectedContentType := "application/json"
+	actualContentType := resp.Header.Get("Content-Type")
+	if actualContentType != expectedContentType {
+		t.Errorf("expected Content-Type header to be %q, got %q", expectedContentType, actualContentType)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("failed to read response body: %v", err)
+	}
+
+	expectedBody := "OK"
+	actualBody := string(body)
+	if actualBody != expectedBody {
+		t.Errorf("expected response body to be %q, got %q", expectedBody, actualBody)
 	}
 }

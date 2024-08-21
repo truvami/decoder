@@ -18,11 +18,13 @@ import (
 
 var host string
 var port uint16
+var health bool
 
 func init() {
 	httpCmd.Flags().StringVar(&host, "host", "localhost", "Host to bind the HTTP server to")
 	httpCmd.Flags().Uint16Var(&port, "port", 8080, "Port to bind the HTTP server to")
 	httpCmd.Flags().StringVar(&accessToken, "token", "", "Access token for the loracloud API")
+	httpCmd.Flags().BoolVar(&health, "health", false, "Enable /health endpoint")
 	rootCmd.AddCommand(httpCmd)
 }
 
@@ -31,6 +33,11 @@ var httpCmd = &cobra.Command{
 	Short: "Start the HTTP server for the decoder.",
 	Run: func(cmd *cobra.Command, args []string) {
 		router := http.NewServeMux()
+
+		// health endpoint
+		if health {
+			router.HandleFunc("/health", healthHandler)
+		}
 
 		type decoderEndpoint struct {
 			path    string
@@ -142,4 +149,12 @@ func setHeaders(w http.ResponseWriter, status int) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "POST")
 	w.WriteHeader(status)
+}
+
+func healthHandler(w http.ResponseWriter, r *http.Request) {
+	setHeaders(w, http.StatusOK)
+	_, err := w.Write([]byte("OK"))
+	if err != nil {
+		slog.Error("error while sending response", slog.Any("error", err))
+	}
 }
