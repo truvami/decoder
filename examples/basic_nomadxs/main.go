@@ -4,16 +4,16 @@ import (
 	"encoding/json"
 	"log"
 
-	"github.com/truvami/decoder/pkg/decoder/tagsl/v1"
+	"github.com/truvami/decoder/pkg/decoder/nomadxs/v1"
 )
 
 func main() {
 	log.Println("initializing tag S / L decoder...")
-	d := tagsl.NewTagSLv1Decoder()
+	d := nomadxs.NewNomadXSv1Decoder()
 
 	// decode data
 	log.Println("decoding data...")
-	data, err := d.Decode("8002cdcd1300744f5e166018040b14341a", 1, "")
+	data, err := d.Decode("0002c420ff005ed85a12b4180719142607240001ffbaffc2fc6f09a71d2e", 1, "")
 	if err != nil {
 		panic(err)
 	}
