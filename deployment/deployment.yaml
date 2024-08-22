@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: decoder
+spec:
+  selector:
+    matchLabels:
+      app: decoder
+  template:
+    metadata:
+      labels:
+        app: decoder
+    spec:
+      containers:
+      - name: decoder
+        image: ghcr.io/truvami/decoder:latest # WARNING: never use latest in production
+        command:
+            - decoder
+        args:
+            - 'http'
+            - '--host'
+            - '0.0.0.0' # Listen on all interfaces
+            - '--port'
+            - '8080' # Listen on port 8080
+            - '-jd' # Enable JSON decoding and debugging
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 8080
