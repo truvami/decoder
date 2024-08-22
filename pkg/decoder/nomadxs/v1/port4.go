@@ -23,7 +23,7 @@ type Port4Payload struct {
 	LocalizationIntervalWhileSteady uint32 `json:"localizationIntervalWhileSteady"`
 	HeartbeatInterval               uint32 `json:"heartbeatInterval"`
 	GPSTimeoutWhileWaitingForFix    uint16 `json:"gpsTimeoutWhileWaitingForFix"`
-	AccelerometerWakeupThreshold    uint16 `json:"accelerometerWakeupThreshold"`
+	AccelerometerWakeupThreshold    uint16 `json:"accelerometerWakeUpThreshold"`
 	AccelerometerDelay              uint16 `json:"accelerometerDelay"`
 	FirmwareVersionMajor            uint8  `json:"firmwareVersionMajor"`
 	FirmwareVersionMinor            uint8  `json:"firmwareVersionMinor"`

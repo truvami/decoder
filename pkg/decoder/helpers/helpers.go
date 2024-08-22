@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"reflect"
+	"time"
 
 	"github.com/truvami/decoder/pkg/decoder"
 )
@@ -47,6 +48,11 @@ func convertFieldToType(value interface{}, fieldType reflect.Kind) interface{} {
 		return fmt.Sprintf("%v", value)
 	case reflect.Bool:
 		return value.(int)&0x01 == 1
+	case reflect.Struct:
+		if fieldType == reflect.TypeOf(time.Time{}).Kind() {
+			return ParseTimestamp(value.(int))
+		}
+		fallthrough
 	default:
 		panic(fmt.Sprintf("unsupported field type: %v", fieldType))
 	}
@@ -129,4 +135,20 @@ func Parse(payloadHex string, config decoder.PayloadConfig) (interface{}, error)
 	}
 
 	return targetValue.Interface(), nil
+}
+
+func ParseTimestamp(timestamp int) time.Time {
+	return time.Unix(int64(timestamp), 0).UTC()
+}
+
+// UintToBinaryArray converts a uint64 value to a binary array of specified length.
+// The value parameter represents the uint64 value to be converted.
+// The length parameter specifies the length of the resulting binary array.
+// The function returns a byte slice representing the binary array.
+func UintToBinaryArray(value uint64, length int) []byte {
+	binaryArray := make([]byte, length)
+	for i := 0; i < length; i++ {
+		binaryArray[length-1-i] = byte((value >> uint(i)) & 0x01)
+	}
+	return binaryArray
 }

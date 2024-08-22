@@ -28,7 +28,9 @@ func (t TagSLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 				{Name: "Longitude", Start: 5, Length: 4, Transform: func(v interface{}) interface{} {
 					return float64(v.(int)) / 1000000
 				}},
-				{Name: "Altitude", Start: 9, Length: 2},
+				{Name: "Altitude", Start: 9, Length: 2, Transform: func(v interface{}) interface{} {
+					return float64(v.(int)) / 10
+				}},
 				{Name: "Year", Start: 11, Length: 1},
 				{Name: "Month", Start: 12, Length: 1},
 				{Name: "Day", Start: 13, Length: 1},
@@ -113,6 +115,26 @@ func (t TagSLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 			},
 			TargetType: reflect.TypeOf(Port6Payload{}),
 		}, nil
+	case 10:
+		return decoder.PayloadConfig{
+			Fields: []decoder.FieldConfig{
+				{Name: "Moving", Start: 0, Length: 1},
+				{Name: "Latitude", Start: 1, Length: 4, Transform: func(v interface{}) interface{} {
+					return float64(v.(int)) / 1000000
+				}},
+				{Name: "Longitude", Start: 5, Length: 4, Transform: func(v interface{}) interface{} {
+					return float64(v.(int)) / 1000000
+				}},
+				{Name: "Altitude", Start: 9, Length: 2, Transform: func(v interface{}) interface{} {
+					return float64(v.(int)) / 10
+				}},
+				{Name: "Timestamp", Start: 11, Length: 4},
+				{Name: "Battery", Start: 15, Length: 2, Transform: func(v interface{}) interface{} {
+					return float64(v.(int)) / 1000
+				}},
+			},
+			TargetType: reflect.TypeOf(Port10Payload{}),
+		}, nil
 	case 15:
 		return decoder.PayloadConfig{
 			Fields: []decoder.FieldConfig{
@@ -122,6 +144,115 @@ func (t TagSLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 				}},
 			},
 			TargetType: reflect.TypeOf(Port15Payload{}),
+		}, nil
+	case 50:
+		return decoder.PayloadConfig{
+			Fields: []decoder.FieldConfig{
+				{Name: "Moving", Start: 0, Length: 1},
+				{Name: "Latitude", Start: 1, Length: 4, Transform: func(v interface{}) interface{} {
+					return float64(v.(int)) / 1000000
+				}},
+				{Name: "Longitude", Start: 5, Length: 4, Transform: func(v interface{}) interface{} {
+					return float64(v.(int)) / 1000000
+				}},
+				{Name: "Altitude", Start: 9, Length: 2, Transform: func(v interface{}) interface{} {
+					return float64(v.(int)) / 10
+				}},
+				{Name: "Timestamp", Start: 11, Length: 4},
+				{Name: "Battery", Start: 15, Length: 2, Transform: func(v interface{}) interface{} {
+					return float64(v.(int)) / 1000
+				}},
+				{Name: "TTF", Start: 17, Length: 1},
+				{Name: "Mac1", Start: 18, Length: 6, Optional: true},
+				{Name: "Rssi1", Start: 24, Length: 1, Optional: true},
+				{Name: "Mac2", Start: 25, Length: 6, Optional: true},
+				{Name: "Rssi2", Start: 31, Length: 1, Optional: true},
+				{Name: "Mac3", Start: 32, Length: 6, Optional: true},
+				{Name: "Rssi3", Start: 38, Length: 1, Optional: true},
+				{Name: "Mac4", Start: 39, Length: 6, Optional: true},
+				{Name: "Rssi4", Start: 45, Length: 1, Optional: true},
+				{Name: "Mac5", Start: 46, Length: 6, Optional: true},
+				{Name: "Rssi5", Start: 52, Length: 1, Optional: true},
+				{Name: "Mac6", Start: 53, Length: 6, Optional: true},
+				{Name: "Rssi6", Start: 59, Length: 1, Optional: true},
+			},
+			TargetType: reflect.TypeOf(Port50Payload{}),
+		}, nil
+	case 105:
+		return decoder.PayloadConfig{
+			Fields: []decoder.FieldConfig{
+				{Name: "BufferLevel", Start: 0, Length: 2},
+				{Name: "Timestamp", Start: 2, Length: 4},
+				{Name: "Moving", Start: 7, Length: 1},
+				{Name: "Mac1", Start: 7, Length: 6, Optional: true},
+				{Name: "Rssi1", Start: 13, Length: 1, Optional: true},
+				{Name: "Mac2", Start: 14, Length: 6, Optional: true},
+				{Name: "Rssi2", Start: 20, Length: 1, Optional: true},
+				{Name: "Mac3", Start: 21, Length: 6, Optional: true},
+				{Name: "Rssi3", Start: 27, Length: 1, Optional: true},
+				{Name: "Mac4", Start: 28, Length: 6, Optional: true},
+				{Name: "Rssi4", Start: 34, Length: 1, Optional: true},
+				{Name: "Mac5", Start: 35, Length: 6, Optional: true},
+				{Name: "Rssi5", Start: 41, Length: 1, Optional: true},
+				{Name: "Mac6", Start: 42, Length: 6, Optional: true},
+				{Name: "Rssi6", Start: 48, Length: 1, Optional: true},
+			},
+			TargetType: reflect.TypeOf(Port105Payload{}),
+		}, nil
+	case 110:
+		return decoder.PayloadConfig{
+			Fields: []decoder.FieldConfig{
+				{Name: "BufferLevel", Start: 0, Length: 2},
+				{Name: "Moving", Start: 2, Length: 1},
+				{Name: "Latitude", Start: 3, Length: 4, Transform: func(v interface{}) interface{} {
+					return float64(v.(int)) / 1000000
+				}},
+				{Name: "Longitude", Start: 7, Length: 4, Transform: func(v interface{}) interface{} {
+					return float64(v.(int)) / 1000000
+				}},
+				{Name: "Altitude", Start: 11, Length: 2, Transform: func(v interface{}) interface{} {
+					return float64(v.(int)) / 10
+				}},
+				{Name: "Timestamp", Start: 13, Length: 4},
+				{Name: "Battery", Start: 17, Length: 2, Transform: func(v interface{}) interface{} {
+					return float64(v.(int)) / 1000
+				}},
+			},
+			TargetType: reflect.TypeOf(Port110Payload{}),
+		}, nil
+	case 150:
+		return decoder.PayloadConfig{
+			Fields: []decoder.FieldConfig{
+				{Name: "BufferLevel", Start: 0, Length: 2},
+				{Name: "Moving", Start: 2, Length: 1},
+				{Name: "Latitude", Start: 3, Length: 4, Transform: func(v interface{}) interface{} {
+					return float64(v.(int)) / 1000000
+				}},
+				{Name: "Longitude", Start: 7, Length: 4, Transform: func(v interface{}) interface{} {
+					return float64(v.(int)) / 1000000
+				}},
+				{Name: "Altitude", Start: 11, Length: 2, Transform: func(v interface{}) interface{} {
+					return float64(v.(int)) / 10
+				}},
+				{Name: "Timestamp", Start: 13, Length: 4},
+				{Name: "Battery", Start: 17, Length: 2, Transform: func(v interface{}) interface{} {
+					return float64(v.(int)) / 1000
+				}},
+				{Name: "TTF", Start: 19, Length: 1},
+				{Name: "Mac1", Start: 20, Length: 6, Optional: true},
+				{Name: "Rssi1", Start: 26, Length: 1, Optional: true},
+				{Name: "Mac2", Start: 27, Length: 6, Optional: true},
+				{Name: "Rssi2", Start: 33, Length: 1, Optional: true},
+				{Name: "Mac3", Start: 34, Length: 6, Optional: true},
+				{Name: "Rssi3", Start: 40, Length: 1, Optional: true},
+				{Name: "Mac4", Start: 41, Length: 6, Optional: true},
+				{Name: "Rssi4", Start: 47, Length: 1, Optional: true},
+				{Name: "Mac5", Start: 48, Length: 6, Optional: true},
+				{Name: "Rssi5", Start: 54, Length: 1, Optional: true},
+				{Name: "Mac6", Start: 55, Length: 6, Optional: true},
+				{Name: "Rssi6", Start: 61, Length: 1, Optional: true},
+			},
+			TargetType: reflect.TypeOf(Port150Payload{}),
 		}, nil
 	}
 

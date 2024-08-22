@@ -211,3 +211,55 @@ func TestInvalidPayload(t *testing.T) {
 		t.Fatal("expected field start out of bounds")
 	}
 }
+
+func TestUintToBinaryArray(t *testing.T) {
+	tests := []struct {
+		value    uint64
+		length   int
+		expected []uint8
+	}{
+		{
+			value:    0x01,
+			length:   1,
+			expected: []uint8{1},
+		},
+		{
+			value:    0x01,
+			length:   2,
+			expected: []uint8{0, 1},
+		},
+		{
+			value:    0x03,
+			length:   2,
+			expected: []uint8{1, 1},
+		},
+		{
+			value:    0x03,
+			length:   4,
+			expected: []uint8{0, 0, 1, 1},
+		},
+		{
+			value:    0x03,
+			length:   8,
+			expected: []uint8{0, 0, 0, 0, 0, 0, 1, 1},
+		},
+		{
+			value:  0x03,
+			length: 16,
+			expected: []uint8{
+				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1,
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(fmt.Sprintf("%v_%v", test.value, test.length), func(t *testing.T) {
+			result := UintToBinaryArray(test.value, test.length)
+			for i, v := range result {
+				if v != test.expected[i] {
+					t.Fatalf("expected: %v got: %v", test.expected, result)
+				}
+			}
+		})
+	}
+}
