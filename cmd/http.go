@@ -32,6 +32,10 @@ var httpCmd = &cobra.Command{
 	Use:   "http",
 	Short: "Start the HTTP server for the decoder.",
 	Run: func(cmd *cobra.Command, args []string) {
+		if len(accessToken) == 0 {
+			slog.Warn("no access token provided for loracloud API")
+		}
+
 		router := http.NewServeMux()
 
 		// health endpoint
@@ -57,7 +61,6 @@ var httpCmd = &cobra.Command{
 
 		// add the decoders
 		for _, d := range decoders {
-			slog.Debug("adding decoder", slog.String("path", d.path))
 			addDecoder(router, d.path, d.decoder)
 		}
 

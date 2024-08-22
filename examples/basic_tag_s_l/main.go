@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"log"
 
-	"github.com/truvami/decoder/pkg/decoder/nomadxs/v1"
+	"github.com/truvami/decoder/pkg/decoder/tagsl/v1"
 )
 
 func main() {
 	log.Println("initializing nomad XS decoder...")
-	d := nomadxs.NewNomadXSv1Decoder()
+	d := tagsl.NewTagSLv1Decoder()
 
 	// decode data
 	log.Println("decoding data...")
