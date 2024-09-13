@@ -193,6 +193,14 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
+			payload: "001044",
+			port:    15,
+			expected: Port15Payload{
+				LowBattery:     false,
+				BatteryVoltage: 4.164,
+			},
+		},
+		{
 			payload: "0002d30c9300824c87117966c45dcd0f8118e0286d8aabfca9f0b0140c96bbc8726c9a74b58da8e0286d8a9478bf",
 			port:    50,
 			expected: Port50Payload{
