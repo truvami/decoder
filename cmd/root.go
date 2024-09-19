@@ -3,11 +3,20 @@ package cmd
 import (
 	"log/slog"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/truvami/decoder/pkg/logger"
 )
+
+var banner = []string{
+	"  _                                   _ ",
+	" | |_ _ __ _   ___   ____ _ _ __ ___ (_)",
+	" | __| '__| | | \\ \\ / / _` | '_ ` _ \\| |",
+	" | |_| |  | |_| |\\ V / (_| | | | | | | |",
+	"  \\__|_|   \\__,_| \\_/ \\__,_|_| |_| |_|_|",
+}
 
 var Debug bool
 var Verbose bool
@@ -36,7 +45,9 @@ func init() {
 var rootCmd = &cobra.Command{
 	Use:   "decoder",
 	Short: "truvami payload decoder cli helper",
-	Long:  `A CLI tool to help decode truvami payloads.`,
+	Long: strings.Join(banner, "\n") + `
+
+A CLI tool to help decode @truvami payloads.`,
 }
 
 func Execute() {
