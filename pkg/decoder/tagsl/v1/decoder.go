@@ -115,6 +115,26 @@ func (t TagSLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 			},
 			TargetType: reflect.TypeOf(Port6Payload{}),
 		}, nil
+	case 7:
+		return decoder.PayloadConfig{
+			Fields: []decoder.FieldConfig{
+				{Name: "Timestamp", Start: 0, Length: 4},
+				{Name: "Moving", Start: 4, Length: 1},
+				{Name: "Mac1", Start: 5, Length: 6, Optional: true},
+				{Name: "Rssi1", Start: 11, Length: 1, Optional: true},
+				{Name: "Mac2", Start: 12, Length: 6, Optional: true},
+				{Name: "Rssi2", Start: 18, Length: 1, Optional: true},
+				{Name: "Mac3", Start: 19, Length: 6, Optional: true},
+				{Name: "Rssi3", Start: 25, Length: 1, Optional: true},
+				{Name: "Mac4", Start: 26, Length: 6, Optional: true},
+				{Name: "Rssi4", Start: 32, Length: 1, Optional: true},
+				{Name: "Mac5", Start: 33, Length: 6, Optional: true},
+				{Name: "Rssi5", Start: 39, Length: 1, Optional: true},
+				{Name: "Mac6", Start: 40, Length: 6, Optional: true},
+				{Name: "Rssi6", Start: 46, Length: 1, Optional: true},
+			},
+			TargetType: reflect.TypeOf(Port7Payload{}),
+		}, nil
 	case 10:
 		return decoder.PayloadConfig{
 			Fields: []decoder.FieldConfig{
