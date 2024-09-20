@@ -5,7 +5,7 @@ import "time"
 // +-------+------+-------------------------------------------+-----------+
 // | Byte  | Size | Description                               | Format    |
 // +-------+------+-------------------------------------------+-----------+
-// | 0     | 2    | Buffer level                              | uint8     |
+// | 0     | 2    | Buffer level                              | uint16     |
 // | 2     | 4    | Unix timestamp                            | uint32    |
 // | 7     | 1    | Status[6:2] + Moving flag[0] (moving = 1) | uint8     |
 // | 7     | 6    | MAC1                                      | 6 x uint8 |
@@ -16,7 +16,7 @@ import "time"
 // +-------+------+-------------------------------------------+-----------+
 
 type Port105Payload struct {
-	BufferLevel uint8     `json:"bufferLevel"`
+	BufferLevel uint16    `json:"bufferLevel"`
 	Timestamp   time.Time `json:"timestamp"`
 	Moving      bool      `json:"moving"`
 	Mac1        string    `json:"mac1"`

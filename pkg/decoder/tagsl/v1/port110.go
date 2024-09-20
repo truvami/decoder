@@ -5,7 +5,7 @@ import "time"
 // +-------+------+-------------------------------------------+------------------------+
 // | Byte  | Size | Description                               | Format                 |
 // +-------+------+-------------------------------------------+------------------------+
-// | 0     | 2    | Buffer level                              | uint8                  |
+// | 0     | 2    | Buffer level                              | uint16                  |
 // | 2     | 1    | Status[6:2] + Moving flag[0] (moving = 1) | uint8                  |
 // | 3-6   | 4    | Latitude                                  | int32, 1/1’000’000 deg |
 // | 7-10  | 4    | Longitude                                 | int32, 1/1’000’000 deg |
@@ -15,7 +15,7 @@ import "time"
 // +-------+------+-------------------------------------------+------------------------+
 
 type Port110Payload struct {
-	BufferLevel uint8     `json:"bufferLevel"`
+	BufferLevel uint16    `json:"bufferLevel"`
 	Moving      bool      `json:"moving"`
 	Latitude    float64   `json:"latitude"`
 	Longitude   float64   `json:"longitude"`
