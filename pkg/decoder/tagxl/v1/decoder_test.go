@@ -115,7 +115,7 @@ func TestDecode(t *testing.T) {
 		// 	payload: "4C050145020B8C",
 		// 	port:    151,
 		// 	expected: Port151Payload{
-		// 		BatteryVoltage: 2.956,
+		// 		Battery: 2.956,
 		// 	},
 		// },
 	}

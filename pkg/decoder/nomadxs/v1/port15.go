@@ -8,6 +8,6 @@ package nomadxs
 // +------+------+---------------------------------------------+------------+
 
 type Port15Payload struct {
-	LowBattery     bool    `json:"low_battery"`
-	BatteryVoltage float64 `json:"battery_voltage"`
+	LowBattery bool    `json:"low_battery"`
+	Battery    float64 `json:"battery"`
 }
