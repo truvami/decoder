@@ -159,7 +159,7 @@ func (t TagSLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 		return decoder.PayloadConfig{
 			Fields: []decoder.FieldConfig{
 				{Name: "LowBattery", Start: 0, Length: 1},
-				{Name: "BatteryVoltage", Start: 1, Length: 2, Transform: func(v interface{}) interface{} {
+				{Name: "Battery", Start: 1, Length: 2, Transform: func(v interface{}) interface{} {
 					return float64(v.(int)) / 1000
 				}},
 			},

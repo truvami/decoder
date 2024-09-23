@@ -208,16 +208,16 @@ func TestDecode(t *testing.T) {
 			payload: "800ee5",
 			port:    15,
 			expected: Port15Payload{
-				LowBattery:     false,
-				BatteryVoltage: 3.813,
+				LowBattery: false,
+				Battery:    3.813,
 			},
 		},
 		{
 			payload: "001044",
 			port:    15,
 			expected: Port15Payload{
-				LowBattery:     false,
-				BatteryVoltage: 4.164,
+				LowBattery: false,
+				Battery:    4.164,
 			},
 		},
 		{

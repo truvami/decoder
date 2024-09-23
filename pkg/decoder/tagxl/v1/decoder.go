@@ -32,7 +32,7 @@ func (t TagXLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 		// 		// }},
 		// 		{Name: "HeartbeatInterval", Start: 11, Length: 1, Optional: true},
 		// 		{Name: "AdvertisementFwuInterval", Start: 12, Length: 1},
-		// 		{Name: "BatteryVoltage", Start: 13, Length: 2},
+		// 		{Name: "Battery", Start: 13, Length: 2},
 		// 		{Name: "FirmwareHash", Start: 15, Length: 4},
 		// 	},
 		// 	TargetType: reflect.TypeOf(Port151Payload{}),
