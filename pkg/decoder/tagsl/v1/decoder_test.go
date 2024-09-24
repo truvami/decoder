@@ -283,7 +283,7 @@ func TestDecode(t *testing.T) {
 			payload: "010166c4a5ba00e0286d8aabfcb1e0286d8a9478c2ec6c9a74b58fad726c9a74b58dadf0b0140c96bbd0",
 			port:    105,
 			expected: Port105Payload{
-				BufferLevel: 1,
+				BufferLevel: 257,
 				Moving:      false,
 				Timestamp:   time.Date(2024, 8, 20, 14, 18, 34, 0, time.UTC),
 				Mac1:        "e0286d8aabfc",
@@ -299,7 +299,7 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload: "801366ee2f4d00c4eb438ddde2a504e31aea1b01a7245a4c7a0d2ec026e98d560d2ebbccd42ef92ed4ae704f5708e1d1b9",
+			payload: "001366ee2f4d00c4eb438ddde2a504e31aea1b01a7245a4c7a0d2ec026e98d560d2ebbccd42ef92ed4ae704f5708e1d1b9",
 			port:    105,
 			expected: Port105Payload{
 				BufferLevel: 19,
@@ -336,7 +336,7 @@ func TestDecode(t *testing.T) {
 			payload: "01020002d309ae008247c5113966c45d640f7e",
 			port:    110,
 			expected: Port110Payload{
-				BufferLevel: 2,
+				BufferLevel: 258,
 				Moving:      false,
 				Latitude:    47.385006,
 				Longitude:   8.538053,
@@ -384,7 +384,7 @@ func TestDecode(t *testing.T) {
 			payload: "01020002d30c9300824c87117966c45dcd0f8118e0286d8aabfca9f0b0140c96bbc8726c9a74b58da8e0286d8a9478bf",
 			port:    150,
 			expected: Port150Payload{
-				BufferLevel: 2,
+				BufferLevel: 258,
 				Moving:      false,
 				Latitude:    47.385747,
 				Longitude:   8.539271,

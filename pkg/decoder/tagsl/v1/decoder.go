@@ -201,7 +201,7 @@ func (t TagSLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 	case 105:
 		return decoder.PayloadConfig{
 			Fields: []decoder.FieldConfig{
-				{Name: "BufferLevel", Start: 1, Length: 1},
+				{Name: "BufferLevel", Start: 0, Length: 2},
 				{Name: "Timestamp", Start: 2, Length: 4},
 				{Name: "Moving", Start: 7, Length: 1},
 				{Name: "Mac1", Start: 7, Length: 6, Optional: true},
@@ -222,7 +222,7 @@ func (t TagSLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 	case 110:
 		return decoder.PayloadConfig{
 			Fields: []decoder.FieldConfig{
-				{Name: "BufferLevel", Start: 1, Length: 1},
+				{Name: "BufferLevel", Start: 0, Length: 2},
 				{Name: "Moving", Start: 2, Length: 1},
 				{Name: "Latitude", Start: 3, Length: 4, Transform: func(v interface{}) interface{} {
 					return float64(v.(int)) / 1000000
@@ -243,7 +243,7 @@ func (t TagSLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 	case 150:
 		return decoder.PayloadConfig{
 			Fields: []decoder.FieldConfig{
-				{Name: "BufferLevel", Start: 1, Length: 1},
+				{Name: "BufferLevel", Start: 0, Length: 2},
 				{Name: "Moving", Start: 2, Length: 1},
 				{Name: "Latitude", Start: 3, Length: 4, Transform: func(v interface{}) interface{} {
 					return float64(v.(int)) / 1000000
