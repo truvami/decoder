@@ -299,6 +299,27 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
+			payload: "001366ee2f4d00c4eb438ddde2a504e31aea1b01a7245a4c7a0d2ec026e98d560d2ebbccd42ef92ed4ae704f5708e1d1b9",
+			port:    105,
+			expected: Port105Payload{
+				BufferLevel: 19,
+				Moving:      false,
+				Timestamp:   time.Date(2024, 9, 21, 2, 28, 29, 0, time.UTC),
+				Mac1:        "c4eb438ddde2",
+				Rssi1:       -91,
+				Mac2:        "04e31aea1b01",
+				Rssi2:       -89,
+				Mac3:        "245a4c7a0d2e",
+				Rssi3:       -64,
+				Mac4:        "26e98d560d2e",
+				Rssi4:       -69,
+				Mac5:        "ccd42ef92ed4",
+				Rssi5:       -82,
+				Mac6:        "704f5708e1d1",
+				Rssi6:       -71,
+			},
+		},
+		{
 			payload: "00020002d309ae008247c5113966c45d640f7e",
 			port:    110,
 			expected: Port110Payload{
