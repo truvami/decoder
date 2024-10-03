@@ -26,16 +26,16 @@ package nomadxl
 // | 47    | 1    | GPS satellite count Beidou                          | uint8               |
 // | 48-49 | 2    | GPS dilution of precision                           | uint16, cm          |
 
-type Port1Payload struct {
-	SystemTime   		uint64 		`json:"timestamp"`
-	UTCDate				uint32 		`json:"date"`
-	UTCTime				uint32 		`json:"time"`			
-	Temperature        	float32		`json:"temperature"`
-	Pressure           	float32		`json:"pressure"`
-	TimeToFix          	uint8		`json:"timeToFix"`
-	AccelerometerXAxis 	int16   	`json:"accelerometerXAxis"`
-	AccelerometerYAxis 	int16   	`json:"accelerometerYAxis"`
-	AccelerometerZAxis 	int16   	`json:"accelerometerZAxis"`
-	Battery				float64		`json:"battery"`
-	BatteryLorawan		uint8		`json:"batteryLorawan"`
+type Port101Payload struct {
+	SystemTime         float64 `json:"timestamp"`
+	UTCDate            uint32  `json:"date"`
+	UTCTime            uint32  `json:"time"`
+	Temperature        float32 `json:"temperature"`
+	Pressure           float32 `json:"pressure"`
+	TimeToFix          uint8   `json:"timeToFix"`
+	AccelerometerXAxis int16   `json:"accelerometerXAxis"`
+	AccelerometerYAxis int16   `json:"accelerometerYAxis"`
+	AccelerometerZAxis int16   `json:"accelerometerZAxis"`
+	Battery            float64 `json:"battery"`
+	BatteryLorawan     uint8   `json:"batteryLorawan"`
 }

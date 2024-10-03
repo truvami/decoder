@@ -9,7 +9,7 @@ import (
 )
 
 func init() {
-	rootCmd.AddCommand(nomadxsCmd)
+	rootCmd.AddCommand(nomadxlCmd)
 }
 
 var nomadxlCmd = &cobra.Command{

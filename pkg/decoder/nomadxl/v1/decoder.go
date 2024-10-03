@@ -41,14 +41,13 @@ func (t NomadXLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 				}},
 				{Name: "BatteryLorawan", Start: 36, Length: 1},
 				{Name: "TimeToFix", Start: 37, Length: 1},
-				
 			},
-			TargetType: reflect.TypeOf(Port1Payload{}),
+			TargetType: reflect.TypeOf(Port101Payload{}),
 		}, nil
 	case 103:
 		return decoder.PayloadConfig{
 			Fields: []decoder.FieldConfig{
-				
+
 				{Name: "UTCDate", Start: 0, Length: 4},
 				{Name: "UTCTime", Start: 4, Length: 4},
 				{Name: "Latitude", Start: 8, Length: 4, Transform: func(v interface{}) interface{} {
@@ -61,7 +60,7 @@ func (t NomadXLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 					return float64(v.(int)) / 10
 				}},
 			},
-			TargetType: reflect.TypeOf(Port1Payload{}),
+			TargetType: reflect.TypeOf(Port103Payload{}),
 		}, nil
 	}
 
