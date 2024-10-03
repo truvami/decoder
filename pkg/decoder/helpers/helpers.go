@@ -1,7 +1,7 @@
 package helpers
 
 import (
-	"encoding/hex"
+	h "encoding/hex"
 	"fmt"
 	"reflect"
 	"time"
@@ -10,7 +10,7 @@ import (
 )
 
 func hexStringToBytes(hexString string) ([]byte, error) {
-	bytes, err := hex.DecodeString(hexString)
+	bytes, err := h.DecodeString(hexString)
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +58,7 @@ func convertFieldToType(value interface{}, fieldType reflect.Kind) interface{} {
 	}
 }
 
-func extractFieldValue(payloadBytes []byte, start int, length int, optional bool) (interface{}, error) {
+func extractFieldValue(payloadBytes []byte, start int, length int, optional bool, hex bool) (interface{}, error) {
 	if length == -1 {
 		if start >= len(payloadBytes) {
 			return nil, fmt.Errorf("field start out of bounds")
@@ -74,15 +74,13 @@ func extractFieldValue(payloadBytes []byte, start int, length int, optional bool
 
 	// Extract the field value based on its length
 	var value interface{}
-	if length == 1 {
-		value = int(payloadBytes[start])
-	} else if length == 2 {
-		value = int(payloadBytes[start])<<8 | int(payloadBytes[start+1])
-	} else if length == 4 {
-		value = int(payloadBytes[start])<<24 | int(payloadBytes[start+1])<<16 | int(payloadBytes[start+2])<<8 | int(payloadBytes[start+3])
+	if hex {
+		value = h.EncodeToString(payloadBytes[start : start+length])
 	} else {
-		// For lengths greater than 4, return the slice as hex string
-		value = hex.EncodeToString(payloadBytes[start : start+length])
+		value = 0
+		for i := 0; i < length; i++ {
+			value = (value.(int) << 8) | int(payloadBytes[start+i])
+		}
 	}
 
 	return value, nil
@@ -104,9 +102,10 @@ func Parse(payloadHex string, config decoder.PayloadConfig) (interface{}, error)
 		start := field.Start
 		length := field.Length
 		optional := field.Optional
+		hex := field.Hex
 
 		// Extract the field value from the payload
-		value, err := extractFieldValue(payloadBytes, start, length, optional)
+		value, err := extractFieldValue(payloadBytes, start, length, optional, hex)
 		if err != nil {
 			return nil, err
 		}
