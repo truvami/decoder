@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/truvami/decoder/pkg/decoder"
 	"github.com/truvami/decoder/pkg/decoder/nomadxs/v1"
+	"github.com/truvami/decoder/pkg/decoder/nomadxl/v1"
 	"github.com/truvami/decoder/pkg/decoder/tagsl/v1"
 	"github.com/truvami/decoder/pkg/decoder/tagxl/v1"
 	"github.com/truvami/decoder/pkg/loracloud"
@@ -57,6 +58,7 @@ var httpCmd = &cobra.Command{
 			},
 			{"tagsl/v1", tagsl.NewTagSLv1Decoder()},
 			{"nomadxs/v1", nomadxs.NewNomadXSv1Decoder()},
+			{"nomadxl/v1", nomadxl.NewNomadXLv1Decoder()},
 		}
 
 		// add the decoders
