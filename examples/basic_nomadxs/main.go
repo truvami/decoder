@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	log.Println("initializing tag S / L decoder...")
+	log.Println("initializing nomad XS decoder...")
 	d := nomadxs.NewNomadXSv1Decoder()
 
 	// decode data
