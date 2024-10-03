@@ -1,4 +1,4 @@
-package nomadxs
+package nomadxl
 
 import (
 	"fmt"
@@ -11,11 +11,11 @@ import (
 type NomadXLv1Decoder struct{}
 
 func NewNomadXLv1Decoder() decoder.Decoder {
-	return NomadXSv1Decoder{}
+	return NomadXLv1Decoder{}
 }
 
 // https://docs.truvami.com/docs/payloads/nomad-XL
-func (t NomadXSv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
+func (t NomadXLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 	switch port {
 	case 101:
 		return decoder.PayloadConfig{

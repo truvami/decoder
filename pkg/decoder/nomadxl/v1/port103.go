@@ -8,7 +8,7 @@ package nomadxl
 // | 12-15 | 4    | Longitude   | int32, 1/100'000 deg |
 // | 16-19 | 4    | Altitude    | int32, 1/100 m       |
 
-type Port1Payload struct {
+type Port103Payload struct {
 	UTCDate				uint32 	`json:"date"`
 	UTCTime				uint32 	`json:"time"`
 	Latitude			float64 `json:"latitude"`

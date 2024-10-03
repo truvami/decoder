@@ -12,7 +12,7 @@ func init() {
 	rootCmd.AddCommand(nomadxsCmd)
 }
 
-var nomadxsCmd = &cobra.Command{
+var nomadxlCmd = &cobra.Command{
 	Use:   "nomadxl [port] [payload]",
 	Short: "decode nomad XL payloads",
 	Args:  cobra.ExactArgs(2),

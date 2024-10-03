@@ -1,4 +1,4 @@
-package nomadxs
+package nomadxl
 
 import (
 	"fmt"
