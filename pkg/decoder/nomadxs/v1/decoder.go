@@ -105,16 +105,16 @@ func (t NomadXSv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 	return decoder.PayloadConfig{}, fmt.Errorf("port %v not supported", port)
 }
 
-func (t NomadXSv1Decoder) Decode(data string, port int16, devEui string) (interface{}, error) {
+func (t NomadXSv1Decoder) Decode(data string, port int16, devEui string) (interface{}, interface{}, error) {
 	config, err := t.getConfig(port)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	decodedData, err := helpers.Parse(data, config)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return decodedData, nil
+	return decodedData, nil, nil
 }

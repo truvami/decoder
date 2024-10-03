@@ -109,7 +109,7 @@ func getHandler(decoder decoder.Decoder) func(http.ResponseWriter, *http.Request
 
 		// decode the payload
 		slog.Debug("decoding payload")
-		data, err := decoder.Decode(req.Payload, req.Port, req.DevEUI)
+		data, _, err := decoder.Decode(req.Payload, req.Port, req.DevEUI)
 		if err != nil {
 			slog.Error("error while decoding payload", slog.Any("error", err))
 			setHeaders(w, http.StatusBadRequest)

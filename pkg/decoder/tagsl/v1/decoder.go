@@ -1,6 +1,7 @@
 package tagsl
 
 import (
+	"encoding/hex"
 	"fmt"
 	"reflect"
 
@@ -279,16 +280,55 @@ func (t TagSLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 	return decoder.PayloadConfig{}, fmt.Errorf("port %v not supported", port)
 }
 
-func (t TagSLv1Decoder) Decode(data string, port int16, devEui string) (interface{}, error) {
+func (t TagSLv1Decoder) Decode(data string, port int16, devEui string) (interface{}, interface{}, error) {
 	config, err := t.getConfig(port)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	decodedData, err := helpers.Parse(data, config)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return decodedData, nil
+	statusData, err := parseStatusByte(data)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return decodedData, statusData, nil
+}
+
+type Status struct {
+	DutyCycle           bool `json:"dutyCycle"`
+	ConfigChangeId      int  `json:"configChangeId"`
+	ConfigChangeSuccess bool `json:"configChangeSuccess"`
+	Moving              bool `json:"moving"`
+}
+
+func parseStatusByte(hexInput string) (Status, error) {
+	// Decode the hex string to bytes
+	data, err := hex.DecodeString(hexInput)
+	if err != nil {
+		return Status{}, err
+	}
+
+	if len(data) == 0 {
+		return Status{}, fmt.Errorf("invalid input, no data found")
+	}
+
+	statusByte := data[0] // Get the first byte
+
+	// Extract bits as per the requirements
+	dcFlag := (statusByte >> 7) & 0x01       // Bit 7
+	confChangeID := (statusByte >> 3) & 0x0F // Bits 6:3 (4-bit)
+	confSuccess := (statusByte >> 2) & 0x01  // Bit 2
+	movingFlag := statusByte & 0x01          // Bit 0
+
+	return Status{
+		DutyCycle:           dcFlag == 1,
+		ConfigChangeId:      int(confChangeID),
+		ConfigChangeSuccess: confSuccess == 1,
+		Moving:              movingFlag == 1,
+	}, nil
 }

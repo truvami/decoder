@@ -429,7 +429,7 @@ func TestDecode(t *testing.T) {
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestPort%vWith%v", test.port, test.payload), func(t *testing.T) {
 			decoder := NewTagSLv1Decoder()
-			got, err := decoder.Decode(test.payload, test.port, "")
+			got, _, err := decoder.Decode(test.payload, test.port, "")
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
@@ -445,8 +445,95 @@ func TestDecode(t *testing.T) {
 
 func TestInvalidPort(t *testing.T) {
 	decoder := NewTagSLv1Decoder()
-	_, err := decoder.Decode("00", 0, "")
+	_, _, err := decoder.Decode("00", 0, "")
 	if err == nil {
 		t.Fatal("expected port not supported")
+	}
+}
+
+func TestParseStatusByte(t *testing.T) {
+	tests := []struct {
+		hexInput string
+		expected Status
+		err      error
+	}{
+		{
+			hexInput: "80",
+			expected: Status{
+				DutyCycle:           true,
+				ConfigChangeId:      0,
+				ConfigChangeSuccess: false,
+				Moving:              false,
+			},
+			err: nil,
+		},
+		{
+			hexInput: "FF",
+			expected: Status{
+				DutyCycle:           true,
+				ConfigChangeId:      15,
+				ConfigChangeSuccess: true,
+				Moving:              true,
+			},
+			err: nil,
+		},
+		{
+			hexInput: "00",
+			expected: Status{
+				DutyCycle:           false,
+				ConfigChangeId:      0,
+				ConfigChangeSuccess: false,
+				Moving:              false,
+			},
+			err: nil,
+		},
+		{
+			hexInput: "4A",
+			expected: Status{
+				DutyCycle:           false,
+				ConfigChangeId:      9,
+				ConfigChangeSuccess: false,
+				Moving:              false,
+			},
+			err: nil,
+		},
+		{
+			hexInput: "8D",
+			expected: Status{
+				DutyCycle:           true,
+				ConfigChangeId:      1,
+				ConfigChangeSuccess: true,
+				Moving:              true,
+			},
+			err: nil,
+		},
+		{
+			hexInput: "",
+			expected: Status{},
+			err:      fmt.Errorf("invalid input, no data found"),
+		},
+		{
+			hexInput: "ZZ",
+			expected: Status{},
+			err:      fmt.Errorf("encoding/hex: invalid byte: U+005A 'Z'"),
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(fmt.Sprintf("TestHexInput%s", test.hexInput), func(t *testing.T) {
+			got, err := parseStatusByte(test.hexInput)
+			if err != nil && test.err == nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if err == nil && test.err != nil {
+				t.Fatalf("expected error: %v, got: %v", test.err, err)
+			}
+			if err != nil && test.err != nil && err.Error() != test.err.Error() {
+				t.Fatalf("expected error: %v, got: %v", test.err, err)
+			}
+			if got != test.expected {
+				t.Errorf("expected: %v\ngot: %v", test.expected, got)
+			}
+		})
 	}
 }
