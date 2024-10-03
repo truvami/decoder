@@ -9,6 +9,7 @@ type FieldConfig struct {
 	Length    int
 	Transform func(interface{}) interface{}
 	Optional  bool
+	Hex       bool
 }
 
 // PayloadConfig defines the overall structure of the payload, including the target struct type
