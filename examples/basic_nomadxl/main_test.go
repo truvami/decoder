@@ -16,7 +16,7 @@ func TestMain(t *testing.T) {
 	main()
 
 	// Check if the expected output is present in the buffer
-	expectedOutput := `49.39913`
+	expectedOutput := `49.39894`
 	if !strings.Contains(buf.String(), expectedOutput) {
 		t.Errorf("expected output %q not found", expectedOutput)
 	}

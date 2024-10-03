@@ -27,7 +27,7 @@ package nomadxl
 // | 48-49 | 2    | GPS dilution of precision                           | uint16, cm          |
 
 type Port101Payload struct {
-	SystemTime         float64 `json:"timestamp"`
+	SystemTime         int64   `json:"systemTime"`
 	UTCDate            uint32  `json:"date"`
 	UTCTime            uint32  `json:"time"`
 	Temperature        float32 `json:"temperature"`

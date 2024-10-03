@@ -15,7 +15,7 @@ func TestDecode(t *testing.T) {
 			payload: "00000001fdd5c693000079300001b45d000000000000000000f600000000000000000b3fd7249f4a00420000000000001501",
 			port:    101,
 			expected: Port101Payload{
-				SystemTime:         4258645.651,
+				SystemTime:         8553612947,
 				UTCDate:            31024,
 				UTCTime:            111709,
 				Temperature:        24.6,
@@ -29,14 +29,14 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload: "0000793000011702004B6089000C836AFFFFC13A",
+			payload: "0000793000020152004B6076000C838C00003994",
 			port:    103,
 			expected: Port103Payload{
 				UTCDate:   31024,
-				UTCTime:   71426,
-				Latitude:  49.39913,
-				Longitude: 8.20074,
-				Altitude:  -160.7,
+				UTCTime:   131410,
+				Latitude:  49.39894,
+				Longitude: 8.20108,
+				Altitude:  147.4,
 			},
 		},
 	}

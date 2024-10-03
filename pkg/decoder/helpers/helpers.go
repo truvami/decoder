@@ -3,6 +3,7 @@ package helpers
 import (
 	"encoding/hex"
 	"fmt"
+	"log"
 	"reflect"
 	"time"
 
@@ -74,14 +75,14 @@ func extractFieldValue(payloadBytes []byte, start int, length int, optional bool
 
 	// Extract the field value based on its length
 	var value interface{}
-	if length == 1 {
-		value = int(payloadBytes[start])
-	} else if length == 2 {
-		value = int(payloadBytes[start])<<8 | int(payloadBytes[start+1])
-	} else if length == 4 {
-		value = int(payloadBytes[start])<<24 | int(payloadBytes[start+1])<<16 | int(payloadBytes[start+2])<<8 | int(payloadBytes[start+3])
-	} else {
-		// For lengths greater than 4, return the slice as hex string
+	switch length {
+	case 1, 2, 4, 8:
+		value = 0
+		for i := 0; i < length; i++ {
+			value = (value.(int) << 8) | int(payloadBytes[start+i])
+		}
+	default:
+		// For lengths greater than 8, return the slice as a hex string
 		value = hex.EncodeToString(payloadBytes[start : start+length])
 	}
 
@@ -118,10 +119,10 @@ func Parse(payloadHex string, config decoder.PayloadConfig) (interface{}, error)
 				continue
 			}
 
-			// log.Printf("field: %v", field.Name)
-			// log.Printf("value: %v", value)
-			// log.Printf("got: %T", value)
-			// log.Printf("expect: %v", fieldValue.Type().Kind())
+			log.Printf("field: %v", field.Name)
+			log.Printf("value: %v", value)
+			log.Printf("got: %T", value)
+			log.Printf("expect: %v", fieldValue.Type().Kind())
 
 			fieldType := convertFieldToType(value, fieldValue.Type().Kind())
 			fieldValue.Set(reflect.ValueOf(fieldType))
@@ -135,6 +136,50 @@ func Parse(payloadHex string, config decoder.PayloadConfig) (interface{}, error)
 	}
 
 	return targetValue.Interface(), nil
+}
+
+func ParseDateTime(input string) (time.Time, error) {
+	// The last 4 characters are always MMSS (minute and second)
+	minuteSecond := input[len(input)-4:]
+
+	// The next 6 characters are YYMM (year and month)
+	yearMonth := input[len(input)-10 : len(input)-4]
+
+	// The rest is the day (D or DD) and hour (H or HH)
+	dayHour := input[:len(input)-10]
+
+	// Identify the day and hour, which may vary in length
+	var day, hour string
+
+	// Check if the day is 2 digits or 1 digit
+	if len(dayHour) == 3 {
+		// Single-digit day (D), single-digit hour (H)
+		day = "0" + string(dayHour[0])   // Pad the day
+		hour = "0" + string(dayHour[1:]) // Pad the hour
+	} else if len(dayHour) == 4 {
+		// Two-digit day (DD), single-digit hour (H)
+		day = string(dayHour[0:2])       // Day is two digits
+		hour = "0" + string(dayHour[2:]) // Pad the hour
+	} else if len(dayHour) == 5 {
+		// Two-digit day (DD), two-digit hour (HH)
+		day = string(dayHour[0:2])  // Day is two digits
+		hour = string(dayHour[2:4]) // Hour is two digits
+	}
+
+	// Now we have day, hour, yearMonth, and minuteSecond
+	// Combine everything into a full datetime string
+	parsedInput := fmt.Sprintf("%s%s%s%s", yearMonth, day, hour, minuteSecond)
+
+	// Define the layout in Go's time format for parsing
+	layout := "060102150405" // YYMMDDHHMMSS (Go's reference date layout)
+
+	// Parse the string into a time.Time object
+	parsedTime, err := time.Parse(layout, parsedInput)
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	return parsedTime, nil
 }
 
 func ParseTimestamp(timestamp int) time.Time {

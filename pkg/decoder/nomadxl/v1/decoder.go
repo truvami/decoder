@@ -28,7 +28,7 @@ func (t NomadXLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 				//{Name: "BufferLevelACC", Start: 20, Length: 2},
 				//{Name: "BufferLevelLOG", Start: 22, Length: 2},
 				{Name: "Temperature", Start: 24, Length: 2, Transform: func(v interface{}) interface{} {
-					return float32(v.(int)) / 100
+					return float32(v.(int)) / 10
 				}},
 				{Name: "Pressure", Start: 26, Length: 2, Transform: func(v interface{}) interface{} {
 					return float32(v.(int))
@@ -50,14 +50,15 @@ func (t NomadXLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 
 				{Name: "UTCDate", Start: 0, Length: 4},
 				{Name: "UTCTime", Start: 4, Length: 4},
+				{},
 				{Name: "Latitude", Start: 8, Length: 4, Transform: func(v interface{}) interface{} {
-					return float64(v.(int)) / 1000000
+					return float64(v.(int)) / 100000
 				}},
 				{Name: "Longitude", Start: 12, Length: 4, Transform: func(v interface{}) interface{} {
-					return float64(v.(int)) / 1000000
+					return float64(v.(int)) / 100000
 				}},
 				{Name: "Altitude", Start: 16, Length: 4, Transform: func(v interface{}) interface{} {
-					return float64(v.(int)) / 10
+					return float64(v.(int)) / 100
 				}},
 			},
 			TargetType: reflect.TypeOf(Port103Payload{}),
