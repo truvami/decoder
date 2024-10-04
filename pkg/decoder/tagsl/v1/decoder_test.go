@@ -441,6 +441,22 @@ func TestDecode(t *testing.T) {
 			}
 		})
 	}
+
+	t.Run("TestInvalidPort", func(t *testing.T) {
+		decoder := NewTagSLv1Decoder()
+		_, _, err := decoder.Decode("00", 0, "")
+		if err == nil {
+			t.Fatal("expected port not supported")
+		}
+	})
+
+	t.Run("TestInvalidPayload", func(t *testing.T) {
+		decoder := NewTagSLv1Decoder()
+		_, _, err := decoder.Decode("", 1, "")
+		if err == nil {
+			t.Fatal("expected invalid payload")
+		}
+	})
 }
 
 func TestInvalidPort(t *testing.T) {
