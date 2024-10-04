@@ -19,5 +19,5 @@ type PayloadConfig struct {
 }
 
 type Decoder interface {
-	Decode(string, int16, string) (interface{}, error)
+	Decode(string, int16, string) (interface{}, interface{}, error)
 }

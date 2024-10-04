@@ -62,8 +62,8 @@ Require decoder
 Require jq
 
 Set Shell "bash"
-Set FontSize 16
-Set Width 1050
+Set FontSize 12
+Set Width 800
 Set Height 600
 
 Type "decoder tagsl 1 8002cdcd1300744f5e166018040b14341a" Sleep 500ms  Enter

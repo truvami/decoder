@@ -77,6 +77,6 @@ func Execute() {
 	}
 }
 
-func printJSON(data interface{}) {
-	slog.Info("successfully decoded payload", slog.Any("data", data))
+func printJSON(data interface{}, metadata interface{}) {
+	slog.Info("successfully decoded payload", slog.Any("data", data), slog.Any("metadata", metadata))
 }
