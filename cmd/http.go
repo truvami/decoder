@@ -109,7 +109,7 @@ func getHandler(decoder decoder.Decoder) func(http.ResponseWriter, *http.Request
 
 		// decode the payload
 		slog.Debug("decoding payload")
-		data, _, err := decoder.Decode(req.Payload, req.Port, req.DevEUI)
+		data, metadata, err := decoder.Decode(req.Payload, req.Port, req.DevEUI)
 		if err != nil {
 			slog.Error("error while decoding payload", slog.Any("error", err))
 			setHeaders(w, http.StatusBadRequest)
@@ -123,7 +123,10 @@ func getHandler(decoder decoder.Decoder) func(http.ResponseWriter, *http.Request
 
 		// data to json
 		slog.Debug("encoding response")
-		data, err = json.Marshal(data)
+		data, err = json.Marshal(map[string]interface{}{
+			"data":     data,
+			"metadata": metadata,
+		})
 		if err != nil {
 			slog.Error("error while encoding response", slog.Any("error", err))
 			setHeaders(w, http.StatusInternalServerError)
