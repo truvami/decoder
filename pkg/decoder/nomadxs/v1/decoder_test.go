@@ -98,7 +98,7 @@ func TestDecode(t *testing.T) {
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestPort%vWith%v", test.port, test.payload), func(t *testing.T) {
 			decoder := NewNomadXSv1Decoder()
-			got, err := decoder.Decode(test.payload, test.port, "")
+			got, _, err := decoder.Decode(test.payload, test.port, "")
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
@@ -114,7 +114,7 @@ func TestDecode(t *testing.T) {
 
 func TestInvalidPort(t *testing.T) {
 	decoder := NewNomadXSv1Decoder()
-	_, err := decoder.Decode("00", 0, "")
+	_, _, err := decoder.Decode("00", 0, "")
 	if err == nil {
 		t.Fatal("expected port not supported")
 	}
