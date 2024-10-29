@@ -462,6 +462,26 @@ func TestDecode(t *testing.T) {
 				Rssi4:       -55,
 			},
 		},
+		{
+			payload: "00000002D30B27008247B81312671BD1641EEF18030BE0286D8A9478CBF0B0140C96BBCE",
+			port:    151,
+			expected: Port151Payload{
+				BufferLevel: 0,
+				Moving:      false,
+				Latitude:    47.385383,
+				Longitude:   8.53804,
+				Altitude:    488.2,
+				Timestamp:   time.Date(2024, 10, 25, 17, 12, 4, 0, time.UTC),
+				Battery:     7.919,
+				TTF:         24,
+				Mac1:        "e0286d8a9478",
+				Rssi1:       -53,
+				Mac2:        "f0b0140c96bb",
+				Rssi2:       -50,
+				PDOP:        3,
+				Satellites:  11,
+			},
+		},
 	}
 
 	for _, test := range tests {
