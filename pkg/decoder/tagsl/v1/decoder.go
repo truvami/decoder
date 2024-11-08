@@ -156,7 +156,9 @@ func (t TagSLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 					return float64(v.(int)) / 1000
 				}},
 				{Name: "TTF", Start: 17, Length: 1, Optional: true},
-				{Name: "PDOP", Start: 18, Length: 1, Optional: true},
+				{Name: "PDOP", Start: 18, Length: 1, Optional: true, Transform: func(v interface{}) interface{} {
+					return float64(v.(int)) / 2
+				}},
 				{Name: "Satellites", Start: 19, Length: 1, Optional: true},
 			},
 			TargetType:      reflect.TypeOf(Port10Payload{}),
@@ -225,7 +227,9 @@ func (t TagSLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 					return float64(v.(int)) / 1000
 				}},
 				{Name: "TTF", Start: 17, Length: 1},
-				{Name: "PDOP", Start: 18, Length: 1},
+				{Name: "PDOP", Start: 18, Length: 1, Transform: func(v interface{}) interface{} {
+					return float64(v.(int)) / 2
+				}},
 				{Name: "Satellites", Start: 19, Length: 1},
 				{Name: "Mac1", Start: 20, Length: 6, Optional: true, Hex: true},
 				{Name: "Rssi1", Start: 26, Length: 1, Optional: true},
@@ -341,7 +345,9 @@ func (t TagSLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 					return float64(v.(int)) / 1000
 				}},
 				{Name: "TTF", Start: 19, Length: 1},
-				{Name: "PDOP", Start: 20, Length: 1},
+				{Name: "PDOP", Start: 20, Length: 1, Transform: func(v interface{}) interface{} {
+					return float64(v.(int)) / 2
+				}},
 				{Name: "Satellites", Start: 21, Length: 1},
 				{Name: "Mac1", Start: 22, Length: 6, Optional: true, Hex: true},
 				{Name: "Rssi1", Start: 28, Length: 1, Optional: true},
