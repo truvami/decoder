@@ -193,6 +193,21 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
+			payload: "012c141e9c455738304543434343460078012c01a8c0",
+			port:    8,
+			expected: Port8Payload{
+				ScanInterval:                          300,
+				ScanTime:                              20,
+				MaxBeacons:                            30,
+				MinRssiValue:                          -100,
+				AdvertisingFilter:                     "4048812220199682886",
+				AccelerometerTriggerHoldTimer:         120,
+				AccelerometerThreshold:                300,
+				BLECurrentConfigurationUplinkInterval: 43200,
+				ScanMode:                              1,
+			},
+		},
+		{
 			payload: "0002d308b50082457f16eb66c4a5cd0ed3",
 			port:    10,
 			expected: Port10Payload{
