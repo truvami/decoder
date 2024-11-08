@@ -121,7 +121,7 @@ func TestSetHeaders(t *testing.T) {
 func TestHTTPCmd(t *testing.T) {
 	go func() {
 		// call the command handler function
-		httpCmd.Run(nil, []string{})
+		httpCmd.Run(nil, []string{"--host", "::1"})
 	}()
 
 	// create a new HTTP request to simulate the command execution

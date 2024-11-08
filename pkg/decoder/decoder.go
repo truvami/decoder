@@ -14,8 +14,9 @@ type FieldConfig struct {
 
 // PayloadConfig defines the overall structure of the payload, including the target struct type
 type PayloadConfig struct {
-	Fields     []FieldConfig
-	TargetType reflect.Type
+	Fields          []FieldConfig
+	TargetType      reflect.Type
+	StatusByteIndex *int // can be nil
 }
 
 type Decoder interface {

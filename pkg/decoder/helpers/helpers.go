@@ -151,3 +151,7 @@ func UintToBinaryArray(value uint64, length int) []byte {
 	}
 	return binaryArray
 }
+
+func ToIntPointer(value int) *int {
+	return &value
+}
