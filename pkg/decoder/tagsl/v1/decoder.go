@@ -1,7 +1,6 @@
 package tagsl
 
 import (
-	"encoding/hex"
 	"fmt"
 	"reflect"
 
@@ -39,7 +38,8 @@ func (t TagSLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 				{Name: "Minute", Start: 15, Length: 1},
 				{Name: "Second", Start: 16, Length: 1},
 			},
-			TargetType: reflect.TypeOf(Port1Payload{}),
+			TargetType:      reflect.TypeOf(Port1Payload{}),
+			StatusByteIndex: helpers.ToIntPointer(0),
 		}, nil
 	case 2:
 		return decoder.PayloadConfig{
@@ -107,7 +107,8 @@ func (t TagSLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 				{Name: "Mac7", Start: 43, Length: 6, Optional: true, Hex: true},
 				{Name: "Rssi7", Start: 49, Length: 1, Optional: true},
 			},
-			TargetType: reflect.TypeOf(Port5Payload{}),
+			TargetType:      reflect.TypeOf(Port5Payload{}),
+			StatusByteIndex: helpers.ToIntPointer(0),
 		}, nil
 	case 6:
 		return decoder.PayloadConfig{
@@ -134,7 +135,8 @@ func (t TagSLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 				{Name: "Mac6", Start: 40, Length: 6, Optional: true, Hex: true},
 				{Name: "Rssi6", Start: 46, Length: 1, Optional: true},
 			},
-			TargetType: reflect.TypeOf(Port7Payload{}),
+			TargetType:      reflect.TypeOf(Port7Payload{}),
+			StatusByteIndex: helpers.ToIntPointer(4),
 		}, nil
 	case 10:
 		return decoder.PayloadConfig{
@@ -157,7 +159,8 @@ func (t TagSLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 				{Name: "PDOP", Start: 18, Length: 1, Optional: true},
 				{Name: "Satellites", Start: 19, Length: 1, Optional: true},
 			},
-			TargetType: reflect.TypeOf(Port10Payload{}),
+			TargetType:      reflect.TypeOf(Port10Payload{}),
+			StatusByteIndex: helpers.ToIntPointer(0),
 		}, nil
 	case 15:
 		return decoder.PayloadConfig{
@@ -167,7 +170,8 @@ func (t TagSLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 					return float64(v.(int)) / 1000
 				}},
 			},
-			TargetType: reflect.TypeOf(Port15Payload{}),
+			TargetType:      reflect.TypeOf(Port15Payload{}),
+			StatusByteIndex: helpers.ToIntPointer(0),
 		}, nil
 	case 50:
 		return decoder.PayloadConfig{
@@ -200,7 +204,8 @@ func (t TagSLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 				{Name: "Mac6", Start: 53, Length: 6, Optional: true, Hex: true},
 				{Name: "Rssi6", Start: 59, Length: 1, Optional: true},
 			},
-			TargetType: reflect.TypeOf(Port50Payload{}),
+			TargetType:      reflect.TypeOf(Port50Payload{}),
+			StatusByteIndex: helpers.ToIntPointer(0),
 		}, nil
 	case 51:
 		return decoder.PayloadConfig{
@@ -235,7 +240,8 @@ func (t TagSLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 				{Name: "Mac6", Start: 55, Length: 6, Optional: true, Hex: true},
 				{Name: "Rssi6", Start: 61, Length: 1, Optional: true},
 			},
-			TargetType: reflect.TypeOf(Port51Payload{}),
+			TargetType:      reflect.TypeOf(Port51Payload{}),
+			StatusByteIndex: helpers.ToIntPointer(0),
 		}, nil
 	case 105:
 		return decoder.PayloadConfig{
@@ -256,7 +262,8 @@ func (t TagSLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 				{Name: "Mac6", Start: 42, Length: 6, Optional: true, Hex: true},
 				{Name: "Rssi6", Start: 48, Length: 1, Optional: true},
 			},
-			TargetType: reflect.TypeOf(Port105Payload{}),
+			TargetType:      reflect.TypeOf(Port105Payload{}),
+			StatusByteIndex: helpers.ToIntPointer(6),
 		}, nil
 	case 110:
 		return decoder.PayloadConfig{
@@ -277,7 +284,8 @@ func (t TagSLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 					return float64(v.(int)) / 1000
 				}},
 			},
-			TargetType: reflect.TypeOf(Port110Payload{}),
+			TargetType:      reflect.TypeOf(Port110Payload{}),
+			StatusByteIndex: helpers.ToIntPointer(2),
 		}, nil
 	case 150:
 		return decoder.PayloadConfig{
@@ -311,7 +319,8 @@ func (t TagSLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 				{Name: "Mac6", Start: 55, Length: 6, Optional: true, Hex: true},
 				{Name: "Rssi6", Start: 61, Length: 1, Optional: true},
 			},
-			TargetType: reflect.TypeOf(Port150Payload{}),
+			TargetType:      reflect.TypeOf(Port150Payload{}),
+			StatusByteIndex: helpers.ToIntPointer(2),
 		}, nil
 	case 151:
 		return decoder.PayloadConfig{
@@ -347,7 +356,8 @@ func (t TagSLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 				{Name: "Mac6", Start: 57, Length: 6, Optional: true, Hex: true},
 				{Name: "Rssi6", Start: 63, Length: 1, Optional: true},
 			},
-			TargetType: reflect.TypeOf(Port151Payload{}),
+			TargetType:      reflect.TypeOf(Port151Payload{}),
+			StatusByteIndex: helpers.ToIntPointer(2),
 		}, nil
 	}
 
@@ -365,7 +375,12 @@ func (t TagSLv1Decoder) Decode(data string, port int16, devEui string) (interfac
 		return nil, nil, err
 	}
 
-	statusData, err := parseStatusByte(data)
+	// if there is no status byte index, return the decoded data and nil for status data
+	if config.StatusByteIndex == nil {
+		return decodedData, nil, nil
+	}
+
+	statusData, err := parseStatusByte(data[*config.StatusByteIndex])
 	if err != nil {
 		return nil, nil, err
 	}
@@ -380,19 +395,7 @@ type Status struct {
 	Moving              bool `json:"moving"`
 }
 
-func parseStatusByte(hexInput string) (Status, error) {
-	// Decode the hex string to bytes
-	data, err := hex.DecodeString(hexInput)
-	if err != nil {
-		return Status{}, err
-	}
-
-	if len(data) == 0 {
-		return Status{}, fmt.Errorf("invalid input, no data found")
-	}
-
-	statusByte := data[0] // Get the first byte
-
+func parseStatusByte(statusByte byte) (Status, error) {
 	// Extract bits as per the requirements
 	dcFlag := (statusByte >> 7) & 0x01       // Bit 7
 	confChangeID := (statusByte >> 3) & 0x0F // Bits 6:3 (4-bit)

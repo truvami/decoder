@@ -527,12 +527,12 @@ func TestInvalidPort(t *testing.T) {
 
 func TestParseStatusByte(t *testing.T) {
 	tests := []struct {
-		hexInput string
+		input    byte
 		expected Status
 		err      error
 	}{
 		{
-			hexInput: "80",
+			input: 0x80,
 			expected: Status{
 				DutyCycle:           true,
 				ConfigChangeId:      0,
@@ -542,7 +542,7 @@ func TestParseStatusByte(t *testing.T) {
 			err: nil,
 		},
 		{
-			hexInput: "FF",
+			input: 0xFF,
 			expected: Status{
 				DutyCycle:           true,
 				ConfigChangeId:      15,
@@ -552,7 +552,7 @@ func TestParseStatusByte(t *testing.T) {
 			err: nil,
 		},
 		{
-			hexInput: "00",
+			input: 0x00,
 			expected: Status{
 				DutyCycle:           false,
 				ConfigChangeId:      0,
@@ -562,7 +562,7 @@ func TestParseStatusByte(t *testing.T) {
 			err: nil,
 		},
 		{
-			hexInput: "4A",
+			input: 0x4A,
 			expected: Status{
 				DutyCycle:           false,
 				ConfigChangeId:      9,
@@ -572,7 +572,7 @@ func TestParseStatusByte(t *testing.T) {
 			err: nil,
 		},
 		{
-			hexInput: "8D",
+			input: 0x8D,
 			expected: Status{
 				DutyCycle:           true,
 				ConfigChangeId:      1,
@@ -581,21 +581,11 @@ func TestParseStatusByte(t *testing.T) {
 			},
 			err: nil,
 		},
-		{
-			hexInput: "",
-			expected: Status{},
-			err:      fmt.Errorf("invalid input, no data found"),
-		},
-		{
-			hexInput: "ZZ",
-			expected: Status{},
-			err:      fmt.Errorf("encoding/hex: invalid byte: U+005A 'Z'"),
-		},
 	}
 
 	for _, test := range tests {
-		t.Run(fmt.Sprintf("TestHexInput%s", test.hexInput), func(t *testing.T) {
-			got, err := parseStatusByte(test.hexInput)
+		t.Run(fmt.Sprintf("TestStatusByteInput%v", test.input), func(t *testing.T) {
+			got, err := parseStatusByte(test.input)
 			if err != nil && test.err == nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
@@ -607,6 +597,84 @@ func TestParseStatusByte(t *testing.T) {
 			}
 			if got != test.expected {
 				t.Errorf("expected: %v\ngot: %v", test.expected, got)
+			}
+		})
+	}
+}
+
+func TestFullDecode(t *testing.T) {
+	tests := []struct {
+		payload        string
+		expectedData   interface{}
+		expectedStatus *Status
+		port           int16
+	}{
+		{
+			payload: "8002cdcd1300744f5e166018040b14341a",
+			expectedData: Port1Payload{
+				Moving:    false,
+				Latitude:  47.041811,
+				Longitude: 7.622494,
+				Altitude:  572.8,
+				Year:      24,
+				Month:     4,
+				Day:       11,
+				Hour:      20,
+				Minute:    52,
+				Second:    26,
+			},
+			expectedStatus: &Status{
+				DutyCycle:           true,
+				ConfigChangeId:      0,
+				ConfigChangeSuccess: false,
+				Moving:              false,
+			},
+			port: 1,
+		},
+		{
+			payload: "66ec04bb00e0286d8aabfcbbec6c9a74b58fb2726c9a74b58db1e0286d8a9478cbf0b0140c96bbd2260122180d42ad",
+			expectedData: Port7Payload{
+				Timestamp: time.Date(2024, 9, 19, 11, 2, 19, 0, time.UTC),
+				Moving:    false,
+				Mac1:      "e0286d8aabfc",
+				Rssi1:     -69,
+				Mac2:      "ec6c9a74b58f",
+				Rssi2:     -78,
+				Mac3:      "726c9a74b58d",
+				Rssi3:     -79,
+				Mac4:      "e0286d8a9478",
+				Rssi4:     -53,
+				Mac5:      "f0b0140c96bb",
+				Rssi5:     -46,
+				Mac6:      "260122180d42",
+				Rssi6:     -83,
+			},
+			expectedStatus: &Status{
+				DutyCycle:           false,
+				ConfigChangeId:      0,
+				ConfigChangeSuccess: false,
+				Moving:              false,
+			},
+			port: 7,
+		},
+	}
+
+	decoder := NewTagSLv1Decoder()
+	for _, test := range tests {
+		t.Run(fmt.Sprintf("TestFullDecodeWithPort%vAndPayload%v", test.port, test.payload), func(t *testing.T) {
+			data, status, err := decoder.Decode(test.payload, test.port, "")
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if data != test.expectedData {
+				t.Errorf("expected data: %v, got: %v", test.expectedData, data)
+			}
+
+			if status != nil && test.expectedStatus == nil {
+				t.Errorf("expected status to be nil, got: %v", status)
+			}
+			if status == nil && test.expectedStatus != nil {
+				t.Errorf("expected status: %v, got: nil", test.expectedStatus)
 			}
 		})
 	}
