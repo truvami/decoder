@@ -9,14 +9,14 @@ import (
 )
 
 func TestInvalidHexString(t *testing.T) {
-	_, err := hexStringToBytes("invalid")
+	_, err := HexStringToBytes("invalid")
 	if err == nil {
 		t.Fatalf("expected error while decoding hex string")
 	}
 }
 
 func TestHexStringToBytes(t *testing.T) {
-	_, err := hexStringToBytes("8002cdcd1300744f5e166018040b14341a")
+	_, err := HexStringToBytes("8002cdcd1300744f5e166018040b14341a")
 	if err != nil {
 		t.Fatalf("error decoding hex string: %v", err)
 	}

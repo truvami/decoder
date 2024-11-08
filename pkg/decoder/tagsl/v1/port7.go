@@ -23,7 +23,6 @@ import "time"
 
 type Port7Payload struct {
 	Timestamp time.Time `json:"timestamp"`
-	Moving    bool      `json:"moving"`
 	Mac1      string    `json:"mac1"`
 	Rssi1     int8      `json:"rssi1"`
 	Mac2      string    `json:"mac2"`
