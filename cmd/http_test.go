@@ -1,12 +1,14 @@
 package cmd
 
 import (
+	"encoding/json"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/truvami/decoder/pkg/decoder/tagsl/v1"
 )
@@ -125,7 +127,7 @@ func TestHTTPCmd(t *testing.T) {
 	}()
 
 	// create a new HTTP request to simulate the command execution
-	reqBody := `{"port": 1, "payload": "8002cdcd1300744f5e166018040b14341a", "devEui": "example devEUI"}`
+	reqBody := `{"port": 105, "payload": "0028672658500172a741b1e238b572a741b1e08bb03498b5c583e2b172a741b1e0cda772a741beed4cc472a741beef53b772a741b1dd0000", "devEui": "example devEUI"}`
 	req, err := http.NewRequest("POST", "http://localhost:8080/tagsl/v1", strings.NewReader(reqBody))
 	if err != nil {
 		t.Fatalf("failed to create request: %v", err)
@@ -147,6 +149,50 @@ func TestHTTPCmd(t *testing.T) {
 	actualContentType := resp.Header.Get("Content-Type")
 	if actualContentType != expectedContentType {
 		t.Errorf("expected Content-Type header to be %q, got %q", expectedContentType, actualContentType)
+	}
+
+	// parse the response body
+	type Response struct {
+		Data     tagsl.Port105Payload `json:"data"`
+		Metadata tagsl.Status         `json:"metadata"`
+	}
+
+	var response Response
+	err = json.NewDecoder(resp.Body).Decode(&response)
+	if err != nil {
+		t.Fatalf("failed to decode response body: %v", err)
+	}
+
+	// check the response body
+	expectedData := tagsl.Port105Payload{
+		BufferLevel: 40,
+		Mac1:        "72a741b1e238",
+		Rssi1:       -75,
+		Mac2:        "72a741b1e08b",
+		Rssi2:       -80,
+		Mac3:        "3498b5c583e2",
+		Rssi3:       -79,
+		Mac4:        "72a741b1e0cd",
+		Rssi4:       -89,
+		Mac5:        "72a741beed4c",
+		Rssi5:       -60,
+		Mac6:        "72a741beef53",
+		Rssi6:       -73,
+		Timestamp:   time.Date(2024, 11, 2, 16, 50, 24, 0, time.UTC),
+	}
+
+	if response.Data != expectedData {
+		t.Errorf("expected response data to be %v, got %v", expectedData, response.Data)
+	}
+
+	expectedMetadata := tagsl.Status{
+		DutyCycle:           false,
+		ConfigChangeId:      0,
+		ConfigChangeSuccess: false,
+		Moving:              true,
+	}
+	if response.Metadata != expectedMetadata {
+		t.Errorf("expected response metadata to be %v, got %v", expectedMetadata, response.Metadata)
 	}
 }
 func TestHealthHandler(t *testing.T) {

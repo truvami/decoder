@@ -9,7 +9,7 @@ import (
 	"github.com/truvami/decoder/pkg/decoder"
 )
 
-func hexStringToBytes(hexString string) ([]byte, error) {
+func HexStringToBytes(hexString string) ([]byte, error) {
 	bytes, err := h.DecodeString(hexString)
 	if err != nil {
 		return nil, err
@@ -89,7 +89,7 @@ func extractFieldValue(payloadBytes []byte, start int, length int, optional bool
 // DecodeLoRaWANPayload decodes the payload based on the provided configuration and populates the target struct
 func Parse(payloadHex string, config decoder.PayloadConfig) (interface{}, error) {
 	// Convert hex payload to bytes
-	payloadBytes, err := hexStringToBytes(payloadHex)
+	payloadBytes, err := HexStringToBytes(payloadHex)
 	if err != nil {
 		return nil, err
 	}

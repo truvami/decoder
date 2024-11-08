@@ -16,7 +16,6 @@ package tagsl
 // +------+------+-------------------------------------------+------------------------+
 
 type Port1Payload struct {
-	Moving    bool    `json:"moving"`
 	Latitude  float64 `json:"latitude"`
 	Longitude float64 `json:"longitude"`
 	Altitude  float64 `json:"altitude"`

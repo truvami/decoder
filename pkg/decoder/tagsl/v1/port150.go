@@ -23,7 +23,6 @@ import "time"
 // Timestamp for the Wi-Fi scanning is TSGNSS – TTF + 10 seconds.
 type Port150Payload struct {
 	BufferLevel uint16    `json:"bufferLevel"`
-	Moving      bool      `json:"moving"`
 	Latitude    float64   `json:"latitude"`
 	Longitude   float64   `json:"longitude"`
 	Altitude    float64   `json:"altitude"`

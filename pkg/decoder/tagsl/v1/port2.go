@@ -7,5 +7,4 @@ package tagsl
 // +------+------+-------------------------------------------+--------+
 
 type Port2Payload struct {
-	Moving bool `json:"moving"`
 }

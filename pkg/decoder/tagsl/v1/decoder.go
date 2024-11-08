@@ -43,10 +43,9 @@ func (t TagSLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 		}, nil
 	case 2:
 		return decoder.PayloadConfig{
-			Fields: []decoder.FieldConfig{
-				{Name: "Moving", Start: 0, Length: 1},
-			},
-			TargetType: reflect.TypeOf(Port2Payload{}),
+			Fields:          []decoder.FieldConfig{},
+			TargetType:      reflect.TypeOf(Port2Payload{}),
+			StatusByteIndex: helpers.ToIntPointer(0),
 		}, nil
 	case 3:
 		return decoder.PayloadConfig{
@@ -288,7 +287,7 @@ func (t TagSLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 		return decoder.PayloadConfig{
 			Fields: []decoder.FieldConfig{
 				{Name: "BufferLevel", Start: 0, Length: 2},
-				{Name: "Moving", Start: 2, Length: 1},
+				// {Name: "Moving", Start: 2, Length: 1},
 				{Name: "Latitude", Start: 3, Length: 4, Transform: func(v interface{}) interface{} {
 					return float64(v.(int)) / 1000000
 				}},
@@ -401,7 +400,13 @@ func (t TagSLv1Decoder) Decode(data string, port int16, devEui string) (interfac
 		return decodedData, nil, nil
 	}
 
-	statusData, err := parseStatusByte(data[*config.StatusByteIndex])
+	// convert hex payload to bytes
+	bytesData, err := helpers.HexStringToBytes(data)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	statusData, err := parseStatusByte(bytesData[*config.StatusByteIndex])
 	if err != nil {
 		return nil, nil, err
 	}
