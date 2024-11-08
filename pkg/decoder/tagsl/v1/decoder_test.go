@@ -657,6 +657,33 @@ func TestFullDecode(t *testing.T) {
 			},
 			port: 7,
 		},
+		{
+			payload: "0c24651155ce55b8602232e20f52b0ac8ba91fedaaa5603197f93781a90aecdafa5fe8bc02ecdafa5fe8bd8c59c3c960f0a5",
+			expectedData: Port5Payload{
+				Moving: false,
+				Mac1:   "24651155ce55",
+				Rssi1:  -72,
+				Mac2:   "602232e20f52",
+				Rssi2:  -80,
+				Mac3:   "ac8ba91fedaa",
+				Rssi3:  -91,
+				Mac4:   "603197f93781",
+				Rssi4:  -87,
+				Mac5:   "0aecdafa5fe8",
+				Rssi5:  -68,
+				Mac6:   "02ecdafa5fe8",
+				Rssi6:  -67,
+				Mac7:   "8c59c3c960f0",
+				Rssi7:  -91,
+			},
+			expectedStatus: &Status{
+				DutyCycle:           false,
+				ConfigChangeId:      1,
+				ConfigChangeSuccess: true,
+				Moving:              false,
+			},
+			port: 5,
+		},
 	}
 
 	decoder := NewTagSLv1Decoder()
