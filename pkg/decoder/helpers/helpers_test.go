@@ -24,9 +24,9 @@ func TestHexStringToBytes(t *testing.T) {
 
 type Port1Payload struct {
 	Moving bool    `json:"moving"`
-	Lat    float64 `json:"gps_lat"`
-	Lon    float64 `json:"gps_lon"`
-	Alt    float64 `json:"gps_alt"`
+	Lat    float64 `json:"gpsLat"`
+	Lon    float64 `json:"gpsLon"`
+	Alt    float64 `json:"gpsAlt"`
 	Year   int     `json:"year"`
 	Month  int     `json:"month"`
 	Day    int     `json:"day"`

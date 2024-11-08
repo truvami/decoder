@@ -7,5 +7,5 @@ package tagsl
 // +------+------+----------------------------------------+--------+
 
 type Port6Payload struct {
-	ButtonPressed bool `json:"button_pressed"`
+	ButtonPressed bool `json:"buttonPressed"`
 }
