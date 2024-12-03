@@ -12,7 +12,7 @@
 *.test
 
 # Main binary, built with `go build`
-decoder
+/decoder
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
