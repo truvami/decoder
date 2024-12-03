@@ -5,7 +5,7 @@ import "time"
 // +------+------+-------------------------------------------+------------------------+
 // | Byte | Size | Description                               | Format                 |
 // +------+------+-------------------------------------------+------------------------+
-// | 0    | 1    | Buffer level                              | uint16                  |
+// | 0    | 1    | Buffer level                              | uint16                 |
 // | 2    | 1    | Status[6:2] + Moving flag[0] (moving = 1) | uint8                  |
 // | 3-6  | 4    | Latitude                                  | int32, 1/1’000’000 deg |
 // | 7-10 | 4    | Longitude                                 | int32, 1/1’000’000 deg |
@@ -13,8 +13,8 @@ import "time"
 // | 13-16| 4    | Unix timestamp                            | uint32                 |
 // | 17-18| 2    | Battery voltage                           | uint16, mV             |
 // | 19   | 1    | TTF                                       | uint8                  |
-// | 20   | 1    | PDOP  		                             | uint8, 1/2 meter       |
-// | 21   | 1    | Number of satellites                      | uint8, 		          |
+// | 20   | 1    | PDOP  		                                 | uint8, 1/2 meter       |
+// | 21   | 1    | Number of satellites                      | uint8, 		            |
 // | 22-27| 6    | MAC1                                      | 6 x uint8              |
 // | 28   | 1    | RSSI1                                     | int8                   |
 // | …    |      |                                           |                        |

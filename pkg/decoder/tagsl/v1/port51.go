@@ -12,8 +12,8 @@ import "time"
 // | 11-14| 4    | Unix timestamp                            | uint32                 |
 // | 15-16| 2    | Battery voltage                           | uint16, mV             |
 // | 17   | 1    | TTF                                       | uint8                  |
-// | 18   | 1    | PDOP  		                             | uint8, 1/2 meter       |
-// | 19   | 1    | Number of satellites                      | uint8, 		          |
+// | 18   | 1    | PDOP  		                                 | uint8, 1/2 meter       |
+// | 19   | 1    | Number of satellites                      | uint8, 		            |
 // | 20-25| 6    | MAC1                                      | 6 x uint8              |
 // | 26   | 1    | RSSI1                                     | int8                   |
 // | …    |      |                                           |                        |
