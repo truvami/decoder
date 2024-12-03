@@ -5,7 +5,7 @@ package tagsl
 // +-------+------+-------------------------------------------+------------+
 // | 0-3   | 4    | Localization interval while moving, IM    | uint32, s  |
 // | 4-7   | 4    | Localization interval while steady, IS    | uint32, s  |
-// | 8-11  | 4    | Heartbeat invterval, IH                   | uint32, s  |
+// | 8-11  | 4    | Heartbeat interval, IH                    | uint32, s  |
 // | 12-13 | 2    | GPS timeout while waiting for fix         | uint16, s  |
 // | 14-15 | 2    | Accelerometer wakeup threshold            | uint16, mg |
 // | 16-17 | 2    | Accelerometer delay                       | uint16, ms |

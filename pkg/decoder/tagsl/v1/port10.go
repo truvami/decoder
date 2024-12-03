@@ -12,8 +12,8 @@ import "time"
 // | 11-14| 4    | Unix timestamp                            | uint32                 |
 // | 15-16| 2    | Battery voltage                           | uint16, mV             |
 // | 17   | 1    | TTF (TimeToFix)                           | uint8, s               |
-// | 18   | 1    | PDOP  		                             | uint8, 1/2 meter       |
-// | 19   | 1    | Number of satellites                      | uint8, 		          |
+// | 18   | 1    | PDOP  		                                 | uint8, 1/2 meter       |
+// | 19   | 1    | Number of satellites                      | uint8, 		            |
 // +------+------+-------------------------------------------+------------------------+
 
 type Port10Payload struct {
