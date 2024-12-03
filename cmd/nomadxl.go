@@ -17,7 +17,7 @@ var nomadxlCmd = &cobra.Command{
 	Short: "decode nomad XL payloads",
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
-		slog.Debug("initilaizing nomadxs decoder")
+		slog.Debug("initializing nomadxs decoder")
 		d := nomadxl.NewNomadXLv1Decoder()
 
 		port, err := strconv.Atoi(args[0])

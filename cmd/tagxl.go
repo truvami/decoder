@@ -28,7 +28,7 @@ var tagxlCmd = &cobra.Command{
 			return
 		}
 
-		slog.Debug("initilaizing tagxl decoder")
+		slog.Debug("initializing tagxl decoder")
 		d := tagxl.NewTagXLv1Decoder(
 			loracloud.NewLoracloudMiddleware(accessToken),
 		)

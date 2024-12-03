@@ -17,7 +17,7 @@ var tagslCmd = &cobra.Command{
 	Short: "decode tag S / L payloads",
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
-		slog.Debug("initilaizing tagsl decoder")
+		slog.Debug("initializing tagsl decoder")
 		d := tagsl.NewTagSLv1Decoder()
 
 		port, err := strconv.Atoi(args[0])
