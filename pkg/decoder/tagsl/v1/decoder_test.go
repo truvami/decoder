@@ -478,7 +478,7 @@ func TestDecode(t *testing.T) {
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestPort%vWith%v", test.port, test.payload), func(t *testing.T) {
 			decoder := NewTagSLv1Decoder()
-			got, _, err := decoder.Decode(test.payload, test.port, "")
+			got, _, err := decoder.Decode(test.payload, test.port, "", false)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
@@ -493,7 +493,7 @@ func TestDecode(t *testing.T) {
 
 	t.Run("TestInvalidPort", func(t *testing.T) {
 		decoder := NewTagSLv1Decoder()
-		_, _, err := decoder.Decode("00", 0, "")
+		_, _, err := decoder.Decode("00", 0, "", false)
 		if err == nil {
 			t.Fatal("expected port not supported")
 		}
@@ -501,7 +501,7 @@ func TestDecode(t *testing.T) {
 
 	t.Run("TestInvalidPayload", func(t *testing.T) {
 		decoder := NewTagSLv1Decoder()
-		_, _, err := decoder.Decode("", 1, "")
+		_, _, err := decoder.Decode("", 1, "", false)
 		if err == nil {
 			t.Fatal("expected invalid payload")
 		}
@@ -510,7 +510,7 @@ func TestDecode(t *testing.T) {
 
 func TestInvalidPort(t *testing.T) {
 	decoder := NewTagSLv1Decoder()
-	_, _, err := decoder.Decode("00", 0, "")
+	_, _, err := decoder.Decode("00", 0, "", false)
 	if err == nil {
 		t.Fatal("expected port not supported")
 	}
@@ -721,7 +721,7 @@ func TestFullDecode(t *testing.T) {
 	decoder := NewTagSLv1Decoder()
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestFullDecodeWithPort%vAndPayload%v", test.port, test.payload), func(t *testing.T) {
-			data, status, err := decoder.Decode(test.payload, test.port, "")
+			data, status, err := decoder.Decode(test.payload, test.port, "", false)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
