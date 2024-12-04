@@ -40,7 +40,7 @@ var tagxlCmd = &cobra.Command{
 		}
 		slog.Debug("port parsed successfully", slog.Int("port", port))
 
-		data, metadata, err := d.Decode(args[1], int16(port), args[2])
+		data, metadata, err := d.Decode(args[1], int16(port), args[2], AutoPadding)
 		if err != nil {
 			slog.Error("error while decoding data", slog.Any("error", err))
 			return

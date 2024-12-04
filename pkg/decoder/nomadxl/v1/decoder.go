@@ -68,10 +68,14 @@ func (t NomadXLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 	return decoder.PayloadConfig{}, fmt.Errorf("port %v not supported", port)
 }
 
-func (t NomadXLv1Decoder) Decode(data string, port int16, devEui string) (interface{}, interface{}, error) {
+func (t NomadXLv1Decoder) Decode(data string, port int16, devEui string, autoPadding bool) (interface{}, interface{}, error) {
 	config, err := t.getConfig(port)
 	if err != nil {
 		return nil, nil, err
+	}
+
+	if autoPadding {
+		data = helpers.HexNullPad(&data, &config)
 	}
 
 	decodedData, err := helpers.Parse(data, config)

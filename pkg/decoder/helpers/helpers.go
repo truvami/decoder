@@ -3,7 +3,9 @@ package helpers
 import (
 	h "encoding/hex"
 	"fmt"
+	"log/slog"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/truvami/decoder/pkg/decoder"
@@ -154,4 +156,19 @@ func UintToBinaryArray(value uint64, length int) []byte {
 
 func ToIntPointer(value int) *int {
 	return &value
+}
+
+func HexNullPad(payload *string, config *decoder.PayloadConfig) string {
+	var requiredBits = 0
+	for _, field := range config.Fields {
+		requiredBits += field.Length * 8
+	}
+	var providedBits = len(*payload) * 4
+
+	if providedBits < requiredBits {
+		var paddingBits = (requiredBits - providedBits) / 4
+		slog.Debug("padding payload with bits\n", slog.Int("bits", paddingBits))
+		*payload = strings.Repeat("0", paddingBits) + *payload
+	}
+	return *payload
 }
