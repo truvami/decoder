@@ -61,7 +61,7 @@ func (t TagXLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 	return decoder.PayloadConfig{}, fmt.Errorf("port %v not supported", port)
 }
 
-func (t TagXLv1Decoder) Decode(data string, port int16, devEui string) (interface{}, interface{}, error) {
+func (t TagXLv1Decoder) Decode(data string, port int16, devEui string, autoPadding bool) (interface{}, interface{}, error) {
 	switch port {
 	case 192, 197, 199:
 		decodedData, err := t.loracloudMiddleware.DeliverUplinkMessage(devEui, loracloud.UplinkMsg{
