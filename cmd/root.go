@@ -21,6 +21,7 @@ var banner = []string{
 var Debug bool
 var Verbose bool
 var Json bool
+var AutoPadding bool
 
 func init() {
 	rootCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "Display more verbose output in console output. (default: false)")
@@ -39,6 +40,12 @@ func init() {
 	err = viper.BindPFlag("json", rootCmd.PersistentFlags().Lookup("json"))
 	if err != nil {
 		slog.Error("error while binding json flag", slog.Any("error", err))
+	}
+
+	rootCmd.PersistentFlags().BoolVarP(&AutoPadding, "auto-padding", "p", false, "Enable automatic padding of payload. (default: false)")
+	err = viper.BindPFlag("auto-padding", rootCmd.PersistentFlags().Lookup("auto-padding"))
+	if err != nil {
+		slog.Error("error while binding auto-padding flag", slog.Any("error", err))
 	}
 }
 
