@@ -76,6 +76,10 @@ func (t TagXLv1Decoder) Decode(data string, port int16, devEui string, autoPaddi
 			return nil, nil, err
 		}
 
+		if autoPadding {
+			data = helpers.HexNullPad(&data, &config)
+		}
+
 		decodedData, err := helpers.Parse(data, config)
 		if err != nil {
 			return nil, nil, err
