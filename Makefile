@@ -33,3 +33,27 @@ check-coverage: install-go-test-coverage
 
 install:
 	curl -sSfL https://raw.githubusercontent.com/truvami/decoder/main/install.sh | sh -s -- -b $(go env GOPATH)/bin
+
+check-json-tags:
+	@echo "Checking JSON tags for camelCase format..."
+	@bash -c ' \
+		files=$$(find . -name "*.go" -not -path "./vendor/*"  -not -path "./pkg/loracloud/*"); \
+		camel_case_regex="^[a-z]+([A-Za-z0-9]+)*$$"; \
+		error_found=false; \
+		for file in $$files; do \
+			json_tags=$$(grep -o '"'"'json:"[^"]*'"'"' "$$file" | sed '"'"'s/json:"//; s/"//'"'"'); \
+			for tag in $$json_tags; do \
+				if [[ ! "$$tag" =~ $$camel_case_regex ]]; then \
+					echo "❌ JSON tag \"$$tag\" in file \"$$file\" is not camelCase."; \
+					error_found=true; \
+				fi; \
+			done; \
+		done; \
+		if [ "$$error_found" = true ]; then \
+			echo "🚧 Some JSON tags are not camelCase. Please fix them."; \
+			exit 1; \
+		else \
+			echo "✅ All JSON tags are camelCase!"; \
+		fi \
+	'
+
