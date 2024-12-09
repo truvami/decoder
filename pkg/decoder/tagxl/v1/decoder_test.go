@@ -66,19 +66,22 @@ func TestDecode(t *testing.T) {
 		payload     string
 		port        int16
 		devEui      string
+		autoPadding bool
 		expected    interface{}
 		expectedErr string
 	}{
 		{
-			payload:  "87821F50490200B520FBE977844D222A3A14A89293956245CC75A9CA1BBC25DDF658542909",
-			port:     192,
-			devEui:   "10CE45FFFE00C7EC",
-			expected: &exampleResponse,
+			payload:     "87821F50490200B520FBE977844D222A3A14A89293956245CC75A9CA1BBC25DDF658542909",
+			port:        192,
+			devEui:      "10CE45FFFE00C7EC",
+			autoPadding: false,
+			expected:    &exampleResponse,
 		},
 		{
 			payload:     "87821F50490200B520FBE977844D222A3A14A89293956245CC75A9CA1BBC25DDF658542909",
 			port:        192,
 			devEui:      "10CE45FFFE00C7ED",
+			autoPadding: false,
 			expected:    nil,
 			expectedErr: "invalid character 'j' looking for beginning of value",
 		},
@@ -86,12 +89,14 @@ func TestDecode(t *testing.T) {
 			payload:     "00",
 			port:        0,
 			devEui:      "",
+			autoPadding: false,
 			expected:    nil,
 			expectedErr: "port 0 not supported",
 		},
 		{
-			payload: "010B0266ACBCF0000000000756",
-			port:    152,
+			payload:     "010b0266acbcf0000000000756",
+			port:        152,
+			autoPadding: false,
 			expected: Port152Payload{
 				NewRotationState:  2,
 				OldRotationState:  0,
@@ -101,8 +106,33 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload: "010B1066ACBE0C00A200000087",
-			port:    152,
+			payload:     "10b0266acbcf0000000000756",
+			port:        152,
+			autoPadding: true,
+			expected: Port152Payload{
+				NewRotationState:  2,
+				OldRotationState:  0,
+				Timestamp:         uint32(time.Date(2024, 8, 2, 11, 3, 12, 0, time.UTC).Unix()),
+				NumberOfRotations: 0,
+				ElapsedSeconds:    1878,
+			},
+		},
+		{
+			payload:     "010b1066acbe0c00a200000087",
+			port:        152,
+			autoPadding: false,
+			expected: Port152Payload{
+				NewRotationState:  0,
+				OldRotationState:  1,
+				Timestamp:         uint32(time.Date(2024, 8, 2, 11, 7, 56, 0, time.UTC).Unix()),
+				NumberOfRotations: 16.2,
+				ElapsedSeconds:    135,
+			},
+		},
+		{
+			payload:     "10b1066acbe0c00a200000087",
+			port:        152,
+			autoPadding: true,
 			expected: Port152Payload{
 				NewRotationState:  0,
 				OldRotationState:  1,
@@ -123,7 +153,7 @@ func TestDecode(t *testing.T) {
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestPort%vWith%v", test.port, test.payload), func(t *testing.T) {
 			decoder := NewTagXLv1Decoder(middleware)
-			got, _, err := decoder.Decode(test.payload, test.port, test.devEui, false)
+			got, _, err := decoder.Decode(test.payload, test.port, test.devEui, test.autoPadding)
 			if err != nil && len(test.expectedErr) == 0 {
 				t.Fatalf("unexpected error: %v", err)
 			}
