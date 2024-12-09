@@ -42,7 +42,7 @@ func init() {
 		slog.Error("error while binding json flag", slog.Any("error", err))
 	}
 
-	rootCmd.PersistentFlags().BoolVarP(&AutoPadding, "auto-padding", "p", false, "Enable automatic padding of payload. (default: false)\nWarning: this may lead to corrupted data.")
+	rootCmd.PersistentFlags().BoolVarP(&AutoPadding, "auto-padding", "", false, "Enable automatic padding of payload. (default: false)\nWarning: this may lead to corrupted data.")
 	err = viper.BindPFlag("auto-padding", rootCmd.PersistentFlags().Lookup("auto-padding"))
 	if err != nil {
 		slog.Error("error while binding auto-padding flag", slog.Any("error", err))
