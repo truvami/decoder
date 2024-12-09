@@ -161,7 +161,9 @@ func ToIntPointer(value int) *int {
 func HexNullPad(payload *string, config *decoder.PayloadConfig) string {
 	var requiredBits = 0
 	for _, field := range config.Fields {
-		requiredBits += field.Length * 8
+		if !field.Optional {
+			requiredBits += field.Length * 8
+		}
 	}
 	var providedBits = len(*payload) * 4
 
