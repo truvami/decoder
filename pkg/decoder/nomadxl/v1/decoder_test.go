@@ -7,13 +7,15 @@ import (
 
 func TestDecode(t *testing.T) {
 	tests := []struct {
-		payload  string
-		port     int16
-		expected interface{}
+		payload     string
+		port        int16
+		autoPadding bool
+		expected    interface{}
 	}{
 		{
-			payload: "00000001fdd5c693000079300001b45d000000000000000000f600000000000000000b3fd7249f4a00420000000000001501",
-			port:    101,
+			payload:     "00000001fdd5c693000079300001b45d000000000000000000f600000000000000000b3fd724",
+			port:        101,
+			autoPadding: false,
 			expected: Port101Payload{
 				SystemTime:         8553612947,
 				UTCDate:            31024,
@@ -29,8 +31,39 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload: "0000793000020152004B6076000C838C00003994",
-			port:    103,
+			payload:     "1fdd5c693000079300001b45d000000000000000000f600000000000000000b3fd724",
+			port:        101,
+			autoPadding: true,
+			expected: Port101Payload{
+				SystemTime:         8553612947,
+				UTCDate:            31024,
+				UTCTime:            111709,
+				Temperature:        24.6,
+				Pressure:           0,
+				TimeToFix:          36,
+				AccelerometerXAxis: 0,
+				AccelerometerYAxis: 0,
+				AccelerometerZAxis: 0,
+				Battery:            2.879,
+				BatteryLorawan:     215,
+			},
+		},
+		{
+			payload:     "0000793000020152004B6076000C838C00003994",
+			port:        103,
+			autoPadding: false,
+			expected: Port103Payload{
+				UTCDate:   31024,
+				UTCTime:   131410,
+				Latitude:  49.39894,
+				Longitude: 8.20108,
+				Altitude:  147.4,
+			},
+		},
+		{
+			payload:     "793000020152004B6076000C838C00003994",
+			port:        103,
+			autoPadding: true,
 			expected: Port103Payload{
 				UTCDate:   31024,
 				UTCTime:   131410,
@@ -43,7 +76,7 @@ func TestDecode(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestPort%vWith%v", test.port, test.payload), func(t *testing.T) {
-			decoder := NewNomadXLv1Decoder()
+			decoder := NewNomadXLv1Decoder(WithAutoPadding(test.autoPadding))
 			got, _, err := decoder.Decode(test.payload, test.port, "")
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)

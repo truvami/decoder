@@ -8,10 +8,26 @@ import (
 	"github.com/truvami/decoder/pkg/decoder/helpers"
 )
 
-type NomadXLv1Decoder struct{}
+type Option func(*NomadXLv1Decoder)
 
-func NewNomadXLv1Decoder() decoder.Decoder {
-	return NomadXLv1Decoder{}
+type NomadXLv1Decoder struct {
+	autoPadding bool
+}
+
+func NewNomadXLv1Decoder(options ...Option) decoder.Decoder {
+	nomadXLv1Decoder := &NomadXLv1Decoder{}
+
+	for _, option := range options {
+		option(nomadXLv1Decoder)
+	}
+
+	return nomadXLv1Decoder
+}
+
+func WithAutoPadding(autoPadding bool) Option {
+	return func(t *NomadXLv1Decoder) {
+		t.autoPadding = autoPadding
+	}
 }
 
 // https://docs.truvami.com/docs/payloads/nomad-XL
@@ -72,6 +88,10 @@ func (t NomadXLv1Decoder) Decode(data string, port int16, devEui string) (interf
 	config, err := t.getConfig(port)
 	if err != nil {
 		return nil, nil, err
+	}
+
+	if t.autoPadding {
+		data = helpers.HexNullPad(&data, &config)
 	}
 
 	decodedData, err := helpers.Parse(data, config)

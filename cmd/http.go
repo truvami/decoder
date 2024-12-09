@@ -54,11 +54,18 @@ var httpCmd = &cobra.Command{
 				"tagxl/v1",
 				tagxl.NewTagXLv1Decoder(
 					loracloud.NewLoracloudMiddleware(accessToken),
+					tagxl.WithAutoPadding(AutoPadding),
 				),
 			},
-			{"tagsl/v1", tagsl.NewTagSLv1Decoder()},
-			{"nomadxs/v1", nomadxs.NewNomadXSv1Decoder()},
-			{"nomadxl/v1", nomadxl.NewNomadXLv1Decoder()},
+			{"tagsl/v1", tagsl.NewTagSLv1Decoder(
+				tagsl.WithAutoPadding(AutoPadding),
+			)},
+			{"nomadxs/v1", nomadxs.NewNomadXSv1Decoder(
+				nomadxs.WithAutoPadding(AutoPadding),
+			)},
+			{"nomadxl/v1", nomadxl.NewNomadXLv1Decoder(
+				nomadxl.WithAutoPadding(AutoPadding),
+			)},
 		}
 
 		// add the decoders

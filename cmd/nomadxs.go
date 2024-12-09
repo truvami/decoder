@@ -18,7 +18,9 @@ var nomadxsCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		slog.Debug("initializing nomadxs decoder")
-		d := nomadxs.NewNomadXSv1Decoder()
+		d := nomadxs.NewNomadXSv1Decoder(
+			nomadxs.WithAutoPadding(AutoPadding),
+		)
 
 		port, err := strconv.Atoi(args[0])
 		if err != nil {

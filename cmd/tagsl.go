@@ -18,7 +18,9 @@ var tagslCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		slog.Debug("initializing tagsl decoder")
-		d := tagsl.NewTagSLv1Decoder()
+		d := tagsl.NewTagSLv1Decoder(
+			tagsl.WithAutoPadding(AutoPadding),
+		)
 
 		port, err := strconv.Atoi(args[0])
 		if err != nil {

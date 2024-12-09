@@ -8,10 +8,26 @@ import (
 	"github.com/truvami/decoder/pkg/decoder/helpers"
 )
 
-type TagSLv1Decoder struct{}
+type Option func(*TagSLv1Decoder)
 
-func NewTagSLv1Decoder() decoder.Decoder {
-	return TagSLv1Decoder{}
+type TagSLv1Decoder struct {
+	autoPadding bool
+}
+
+func NewTagSLv1Decoder(options ...Option) decoder.Decoder {
+	tagSLv1Decoder := &TagSLv1Decoder{}
+
+	for _, option := range options {
+		option(tagSLv1Decoder)
+	}
+
+	return tagSLv1Decoder
+}
+
+func WithAutoPadding(autoPadding bool) Option {
+	return func(t *TagSLv1Decoder) {
+		t.autoPadding = autoPadding
+	}
 }
 
 // https://docs.truvami.com/docs/payloads/tag-S
@@ -388,6 +404,10 @@ func (t TagSLv1Decoder) Decode(data string, port int16, devEui string) (interfac
 	config, err := t.getConfig(port)
 	if err != nil {
 		return nil, nil, err
+	}
+
+	if t.autoPadding {
+		data = helpers.HexNullPad(&data, &config)
 	}
 
 	decodedData, err := helpers.Parse(data, config)
