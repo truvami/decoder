@@ -46,3 +46,6 @@ jobs:
         uses: golangci/golangci-lint-action@v6
         with:
           version: v1.58
+
+      - name: Run JSON tags camelCase check
+        run: make check-json-tags

@@ -8,6 +8,6 @@ package tagsl
 // +------+------+---------------------------------------------+------------+
 
 type Port15Payload struct {
-	LowBattery bool    `json:"low_battery"`
+	LowBattery bool    `json:"lowBattery"`
 	Battery    float64 `json:"battery"`
 }
