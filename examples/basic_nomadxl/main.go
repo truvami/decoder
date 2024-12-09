@@ -13,7 +13,7 @@ func main() {
 
 	// decode data
 	log.Println("decoding data...")
-	data, _, err := d.Decode("0000793000020152004B6076000C838C00003994", 103, "", false)
+	data, _, err := d.Decode("0000793000020152004B6076000C838C00003994", 103, "")
 	if err != nil {
 		panic(err)
 	}

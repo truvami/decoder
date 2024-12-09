@@ -54,11 +54,18 @@ var httpCmd = &cobra.Command{
 				"tagxl/v1",
 				tagxl.NewTagXLv1Decoder(
 					loracloud.NewLoracloudMiddleware(accessToken),
+					tagxl.WithAutoPadding(AutoPadding),
 				),
 			},
-			{"tagsl/v1", tagsl.NewTagSLv1Decoder()},
-			{"nomadxs/v1", nomadxs.NewNomadXSv1Decoder()},
-			{"nomadxl/v1", nomadxl.NewNomadXLv1Decoder()},
+			{"tagsl/v1", tagsl.NewTagSLv1Decoder(
+				tagsl.WithAutoPadding(AutoPadding),
+			)},
+			{"nomadxs/v1", nomadxs.NewNomadXSv1Decoder(
+				nomadxs.WithAutoPadding(AutoPadding),
+			)},
+			{"nomadxl/v1", nomadxl.NewNomadXLv1Decoder(
+				nomadxl.WithAutoPadding(AutoPadding),
+			)},
 		}
 
 		// add the decoders
@@ -111,7 +118,7 @@ func getHandler(decoder decoder.Decoder) func(http.ResponseWriter, *http.Request
 
 		// decode the payload
 		slog.Debug("decoding payload")
-		data, metadata, err := decoder.Decode(req.Payload, req.Port, req.DevEUI, AutoPadding)
+		data, metadata, err := decoder.Decode(req.Payload, req.Port, req.DevEUI)
 		if err != nil {
 			slog.Error("error while decoding payload", slog.Any("error", err))
 			setHeaders(w, http.StatusBadRequest)

@@ -31,6 +31,7 @@ var tagxlCmd = &cobra.Command{
 		slog.Debug("initializing tagxl decoder")
 		d := tagxl.NewTagXLv1Decoder(
 			loracloud.NewLoracloudMiddleware(accessToken),
+			tagxl.WithAutoPadding(AutoPadding),
 		)
 
 		port, err := strconv.Atoi(args[0])
@@ -40,7 +41,7 @@ var tagxlCmd = &cobra.Command{
 		}
 		slog.Debug("port parsed successfully", slog.Int("port", port))
 
-		data, metadata, err := d.Decode(args[1], int16(port), args[2], AutoPadding)
+		data, metadata, err := d.Decode(args[1], int16(port), args[2])
 		if err != nil {
 			slog.Error("error while decoding data", slog.Any("error", err))
 			return

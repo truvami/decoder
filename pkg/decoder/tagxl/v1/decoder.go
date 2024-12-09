@@ -9,12 +9,29 @@ import (
 	"github.com/truvami/decoder/pkg/loracloud"
 )
 
+type Option func(*TagXLv1Decoder)
+
 type TagXLv1Decoder struct {
 	loracloudMiddleware loracloud.LoracloudMiddleware
+	autoPadding         bool
 }
 
-func NewTagXLv1Decoder(loracloudMiddleware loracloud.LoracloudMiddleware) decoder.Decoder {
-	return TagXLv1Decoder{loracloudMiddleware}
+func NewTagXLv1Decoder(loracloudMiddleware loracloud.LoracloudMiddleware, options ...Option) decoder.Decoder {
+	tagXLv1Decoder := &TagXLv1Decoder{
+		loracloudMiddleware: loracloudMiddleware,
+	}
+
+	for _, option := range options {
+		option(tagXLv1Decoder)
+	}
+
+	return tagXLv1Decoder
+}
+
+func WithAutoPadding(autoPadding bool) Option {
+	return func(t *TagXLv1Decoder) {
+		t.autoPadding = autoPadding
+	}
 }
 
 // https://docs.truvami.com/docs/payloads/tag-xl
@@ -61,7 +78,7 @@ func (t TagXLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 	return decoder.PayloadConfig{}, fmt.Errorf("port %v not supported", port)
 }
 
-func (t TagXLv1Decoder) Decode(data string, port int16, devEui string, autoPadding bool) (interface{}, interface{}, error) {
+func (t TagXLv1Decoder) Decode(data string, port int16, devEui string) (interface{}, interface{}, error) {
 	switch port {
 	case 192, 197, 199:
 		decodedData, err := t.loracloudMiddleware.DeliverUplinkMessage(devEui, loracloud.UplinkMsg{
@@ -76,7 +93,7 @@ func (t TagXLv1Decoder) Decode(data string, port int16, devEui string, autoPaddi
 			return nil, nil, err
 		}
 
-		if autoPadding {
+		if t.autoPadding {
 			data = helpers.HexNullPad(&data, &config)
 		}
 

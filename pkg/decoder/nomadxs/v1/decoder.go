@@ -8,10 +8,26 @@ import (
 	"github.com/truvami/decoder/pkg/decoder/helpers"
 )
 
-type NomadXSv1Decoder struct{}
+type Option func(*NomadXSv1Decoder)
 
-func NewNomadXSv1Decoder() decoder.Decoder {
-	return NomadXSv1Decoder{}
+type NomadXSv1Decoder struct {
+	autoPadding bool
+}
+
+func NewNomadXSv1Decoder(options ...Option) decoder.Decoder {
+	nomadXSv1Decoder := &NomadXSv1Decoder{}
+
+	for _, option := range options {
+		option(nomadXSv1Decoder)
+	}
+
+	return nomadXSv1Decoder
+}
+
+func WithAutoPadding(autoPadding bool) Option {
+	return func(t *NomadXSv1Decoder) {
+		t.autoPadding = autoPadding
+	}
 }
 
 // https://docs.truvami.com/docs/payloads/nomad-xs
@@ -105,13 +121,13 @@ func (t NomadXSv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 	return decoder.PayloadConfig{}, fmt.Errorf("port %v not supported", port)
 }
 
-func (t NomadXSv1Decoder) Decode(data string, port int16, devEui string, autoPadding bool) (interface{}, interface{}, error) {
+func (t NomadXSv1Decoder) Decode(data string, port int16, devEui string) (interface{}, interface{}, error) {
 	config, err := t.getConfig(port)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	if autoPadding {
+	if t.autoPadding {
 		data = helpers.HexNullPad(&data, &config)
 	}
 
