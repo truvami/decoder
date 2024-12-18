@@ -138,6 +138,13 @@ func (t NomadXSv1Decoder) Decode(data string, port int16, devEui string) (interf
 		data = helpers.HexNullPad(&data, &config)
 	}
 
+	if !t.skipValidation {
+		err := helpers.ValidateLength(&data, &config)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
 	decodedData, err := helpers.Parse(data, config)
 	if err != nil {
 		return nil, nil, err
