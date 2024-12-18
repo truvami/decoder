@@ -32,6 +32,7 @@ var tagxlCmd = &cobra.Command{
 		d := tagxl.NewTagXLv1Decoder(
 			loracloud.NewLoracloudMiddleware(accessToken),
 			tagxl.WithAutoPadding(AutoPadding),
+			tagxl.WithSkipValidation(SkipValidation),
 		)
 
 		port, err := strconv.Atoi(args[0])

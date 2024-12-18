@@ -55,16 +55,20 @@ var httpCmd = &cobra.Command{
 				tagxl.NewTagXLv1Decoder(
 					loracloud.NewLoracloudMiddleware(accessToken),
 					tagxl.WithAutoPadding(AutoPadding),
+					tagxl.WithSkipValidation(SkipValidation),
 				),
 			},
 			{"tagsl/v1", tagsl.NewTagSLv1Decoder(
 				tagsl.WithAutoPadding(AutoPadding),
+				tagsl.WithSkipValidation(SkipValidation),
 			)},
 			{"nomadxs/v1", nomadxs.NewNomadXSv1Decoder(
 				nomadxs.WithAutoPadding(AutoPadding),
+				nomadxs.WithSkipValidation(SkipValidation),
 			)},
 			{"nomadxl/v1", nomadxl.NewNomadXLv1Decoder(
 				nomadxl.WithAutoPadding(AutoPadding),
+				nomadxl.WithSkipValidation(SkipValidation),
 			)},
 		}
 

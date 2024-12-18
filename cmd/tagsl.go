@@ -20,6 +20,7 @@ var tagslCmd = &cobra.Command{
 		slog.Debug("initializing tagsl decoder")
 		d := tagsl.NewTagSLv1Decoder(
 			tagsl.WithAutoPadding(AutoPadding),
+			tagsl.WithSkipValidation(SkipValidation),
 		)
 
 		port, err := strconv.Atoi(args[0])
