@@ -22,6 +22,7 @@ var Debug bool
 var Verbose bool
 var Json bool
 var AutoPadding bool
+var SkipValidation bool
 
 func init() {
 	rootCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "Display more verbose output in console output. (default: false)")
@@ -46,6 +47,12 @@ func init() {
 	err = viper.BindPFlag("auto-padding", rootCmd.PersistentFlags().Lookup("auto-padding"))
 	if err != nil {
 		slog.Error("error while binding auto-padding flag", slog.Any("error", err))
+	}
+
+	rootCmd.PersistentFlags().BoolVarP(&SkipValidation, "skip-validation", "", false, "Skip length validation of payload. (default: false)")
+	err = viper.BindPFlag("skip-validation", rootCmd.PersistentFlags().Lookup("skip-validation"))
+	if err != nil {
+		slog.Error("error while binding skip-validation flag", slog.Any("error", err))
 	}
 }
 
