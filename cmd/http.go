@@ -3,18 +3,20 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"log/slog"
 	"net/http"
 	"os"
+	"time"
 
-	sloghttp "github.com/samber/slog-http"
+	"github.com/google/uuid"
 	"github.com/spf13/cobra"
+	"github.com/truvami/decoder/internal/logger"
 	"github.com/truvami/decoder/pkg/decoder"
 	"github.com/truvami/decoder/pkg/decoder/nomadxl/v1"
 	"github.com/truvami/decoder/pkg/decoder/nomadxs/v1"
 	"github.com/truvami/decoder/pkg/decoder/tagsl/v1"
 	"github.com/truvami/decoder/pkg/decoder/tagxl/v1"
 	"github.com/truvami/decoder/pkg/loracloud"
+	"go.uber.org/zap"
 )
 
 var host string
@@ -34,7 +36,7 @@ var httpCmd = &cobra.Command{
 	Short: "Start the HTTP server for the decoder.",
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(accessToken) == 0 {
-			slog.Warn("no access token provided for loracloud API")
+			logger.Logger.Warn("no access token provided for loracloud API")
 		}
 
 		router := http.NewServeMux()
@@ -74,21 +76,20 @@ var httpCmd = &cobra.Command{
 		}
 
 		// middleware
-		handler := sloghttp.Recovery(router)
-		handler = sloghttp.New(slog.Default())(handler)
+		handler := loggingMiddleware(logger.Logger, router)
 
-		slog.Info("starting HTTP server", slog.String("host", host), slog.Uint64("port", uint64(port)))
+		logger.Logger.Info("starting HTTP server", zap.String("host", host), zap.Uint64("port", uint64(port)))
 		err := http.ListenAndServe(fmt.Sprintf("%v:%v", host, port), handler)
 
 		if err != nil {
-			slog.Error("error while starting HTTP server", slog.Any("error", err))
+			logger.Logger.Error("error while starting HTTP server", zap.Error(err))
 			os.Exit(1)
 		}
 	},
 }
 
 func addDecoder(router *http.ServeMux, path string, decoder decoder.Decoder) {
-	slog.Debug("adding decoder", slog.String("path", path))
+	logger.Logger.Debug("adding decoder", zap.String("path", path))
 	router.HandleFunc("POST /"+path, getHandler(decoder))
 }
 
@@ -103,46 +104,46 @@ func getHandler(decoder decoder.Decoder) func(http.ResponseWriter, *http.Request
 		// decode the request
 		var req request
 
-		slog.Debug("decoding request")
+		logger.Logger.Debug("decoding request")
 		err := json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
-			slog.Error("error while decoding request", slog.Any("error", err))
+			logger.Logger.Error("error while decoding request", zap.Error(err))
 			setHeaders(w, http.StatusBadRequest)
 			_, err = w.Write([]byte(err.Error()))
 
 			if err != nil {
-				slog.Error("error while sending response", slog.Any("error", err))
+				logger.Logger.Error("error while sending response", zap.Error(err))
 			}
 			return
 		}
 
 		// decode the payload
-		slog.Debug("decoding payload")
+		logger.Logger.Debug("decoding payload")
 		data, metadata, err := decoder.Decode(req.Payload, req.Port, req.DevEUI)
 		if err != nil {
-			slog.Error("error while decoding payload", slog.Any("error", err))
+			logger.Logger.Error("error while decoding payload", zap.Error(err))
 			setHeaders(w, http.StatusBadRequest)
 			_, err = w.Write([]byte(err.Error()))
 
 			if err != nil {
-				slog.Error("error while sending response", slog.Any("error", err))
+				logger.Logger.Error("error while sending response", zap.Error(err))
 			}
 			return
 		}
 
 		// data to json
-		slog.Debug("encoding response")
+		logger.Logger.Debug("encoding response")
 		data, err = json.Marshal(map[string]interface{}{
 			"data":     data,
 			"metadata": metadata,
 		})
 		if err != nil {
-			slog.Error("error while encoding response", slog.Any("error", err))
+			logger.Logger.Error("error while encoding response", zap.Error(err))
 			setHeaders(w, http.StatusInternalServerError)
 			_, err = w.Write([]byte(err.Error()))
 
 			if err != nil {
-				slog.Error("error while sending response", slog.Any("error", err))
+				logger.Logger.Error("error while sending response", zap.Error(err))
 			}
 			return
 		}
@@ -151,12 +152,17 @@ func getHandler(decoder decoder.Decoder) func(http.ResponseWriter, *http.Request
 		setHeaders(w, http.StatusOK)
 		_, err = w.Write(data.([]byte))
 		if err != nil {
-			slog.Error("error while sending response", slog.Any("error", err))
+			logger.Logger.Error("error while sending response", zap.Error(err))
 			return
 		}
 
-		slog.Debug("response sent", slog.Any("response", string(data.([]byte))))
+		logger.Logger.Debug("response sent", zap.Any("response", string(data.([]byte))))
 	}
+}
+
+type responseWriter struct {
+	http.ResponseWriter
+	statusCode int
 }
 
 func setHeaders(w http.ResponseWriter, status int) {
@@ -170,6 +176,34 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 	setHeaders(w, http.StatusOK)
 	_, err := w.Write([]byte("OK"))
 	if err != nil {
-		slog.Error("error while sending response", slog.Any("error", err))
+		logger.Logger.Error("error while sending response", zap.Error(err))
 	}
+}
+
+func loggingMiddleware(logger *zap.Logger, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// generate a unique request ID
+		requestID := uuid.New().String()
+		w.Header().Set("X-Request-ID", requestID)
+
+		// start timer
+		start := time.Now()
+
+		// use a ResponseWriter wrapper to capture the status code
+		rw := &responseWriter{ResponseWriter: w, statusCode: http.StatusOK}
+
+		// process the request
+		next.ServeHTTP(rw, r)
+
+		// log the details
+		logger.Info("HTTP request",
+			zap.String("requestId", requestID),
+			zap.String("method", r.Method),
+			zap.String("url", r.URL.String()),
+			zap.Int("status", rw.statusCode),
+			zap.String("remoteAddress", r.RemoteAddr),
+			zap.String("userAgent", r.UserAgent()),
+			zap.Duration("latency", time.Since(start)),
+		)
+	})
 }

@@ -3,7 +3,7 @@ package helpers
 import (
 	h "encoding/hex"
 	"fmt"
-	"log/slog"
+
 	"reflect"
 	"strings"
 	"time"
@@ -169,7 +169,6 @@ func HexNullPad(payload *string, config *decoder.PayloadConfig) string {
 
 	if providedBits < requiredBits {
 		var paddingBits = (requiredBits - providedBits) / 4
-		slog.Debug("padding payload with bits\n", slog.Int("bits", paddingBits))
 		*payload = strings.Repeat("0", paddingBits) + *payload
 	}
 	return *payload
