@@ -174,3 +174,29 @@ func HexNullPad(payload *string, config *decoder.PayloadConfig) string {
 	}
 	return *payload
 }
+
+func ValidateLength(payload *string, config *decoder.PayloadConfig) error {
+	var payloadLength = len(*payload) / 2
+
+	var minLength = 0
+	for _, field := range config.Fields {
+		if !field.Optional {
+			minLength = field.Start + field.Length
+		}
+	}
+
+	var maxLength = 0
+	for _, field := range config.Fields {
+		maxLength = field.Start + field.Length
+	}
+
+	if payloadLength < minLength {
+		return fmt.Errorf("payload too short")
+	}
+
+	if payloadLength > maxLength {
+		return fmt.Errorf("payload too long")
+	}
+
+	return nil
+}
