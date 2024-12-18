@@ -11,7 +11,8 @@ import (
 type Option func(*TagSLv1Decoder)
 
 type TagSLv1Decoder struct {
-	autoPadding bool
+	autoPadding    bool
+	skipValidation bool
 }
 
 func NewTagSLv1Decoder(options ...Option) decoder.Decoder {
@@ -27,6 +28,12 @@ func NewTagSLv1Decoder(options ...Option) decoder.Decoder {
 func WithAutoPadding(autoPadding bool) Option {
 	return func(t *TagSLv1Decoder) {
 		t.autoPadding = autoPadding
+	}
+}
+
+func WithSkipValidation(skipValidation bool) Option {
+	return func(t *TagSLv1Decoder) {
+		t.skipValidation = skipValidation
 	}
 }
 

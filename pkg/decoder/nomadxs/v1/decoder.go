@@ -11,7 +11,8 @@ import (
 type Option func(*NomadXSv1Decoder)
 
 type NomadXSv1Decoder struct {
-	autoPadding bool
+	autoPadding    bool
+	skipValidation bool
 }
 
 func NewNomadXSv1Decoder(options ...Option) decoder.Decoder {
@@ -27,6 +28,12 @@ func NewNomadXSv1Decoder(options ...Option) decoder.Decoder {
 func WithAutoPadding(autoPadding bool) Option {
 	return func(t *NomadXSv1Decoder) {
 		t.autoPadding = autoPadding
+	}
+}
+
+func WithSkipValidation(skipValidation bool) Option {
+	return func(t *NomadXSv1Decoder) {
+		t.skipValidation = skipValidation
 	}
 }
 

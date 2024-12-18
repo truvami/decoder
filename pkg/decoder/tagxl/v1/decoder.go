@@ -14,6 +14,7 @@ type Option func(*TagXLv1Decoder)
 type TagXLv1Decoder struct {
 	loracloudMiddleware loracloud.LoracloudMiddleware
 	autoPadding         bool
+	skipValidation      bool
 }
 
 func NewTagXLv1Decoder(loracloudMiddleware loracloud.LoracloudMiddleware, options ...Option) decoder.Decoder {
@@ -31,6 +32,12 @@ func NewTagXLv1Decoder(loracloudMiddleware loracloud.LoracloudMiddleware, option
 func WithAutoPadding(autoPadding bool) Option {
 	return func(t *TagXLv1Decoder) {
 		t.autoPadding = autoPadding
+	}
+}
+
+func WithSkipValidation(skipValidation bool) Option {
+	return func(t *TagXLv1Decoder) {
+		t.skipValidation = skipValidation
 	}
 }
 
