@@ -10,10 +10,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/truvami/decoder/internal/logger"
 	"github.com/truvami/decoder/pkg/decoder/tagsl/v1"
 )
 
 func TestAddDecoder(t *testing.T) {
+	logger.NewLogger()
+	defer logger.Sync()
+
 	router := http.NewServeMux()
 	path := "test/path"
 	decoder := tagsl.NewTagSLv1Decoder()
