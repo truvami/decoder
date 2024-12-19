@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"encoding/json"
+	"fmt"
 	"os"
 	"strings"
 
@@ -12,11 +14,11 @@ import (
 )
 
 var banner = []string{
-	"  _                                   _ ",
+	"\033[32m  _                                   _ ",
 	" | |_ _ __ _   ___   ____ _ _ __ ___ (_)",
 	" | __| '__| | | \\ \\ / / _` | '_ ` _ \\| |",
 	" | |_| |  | |_| |\\ V / (_| | | | | | | |",
-	"  \\__|_|   \\__,_| \\_/ \\__,_|_| |_| |_|_|",
+	"  \\__|_|   \\__,_| \\_/ \\__,_|_| |_| |_|_|\033[0m",
 }
 
 var Debug bool
@@ -24,19 +26,19 @@ var Json bool
 var AutoPadding bool
 
 func init() {
-	rootCmd.PersistentFlags().BoolVarP(&Debug, "debug", "d", false, "Display debugging output in the console. (default: false)")
+	rootCmd.PersistentFlags().BoolVarP(&Debug, "debug", "d", false, "Display debugging output in the console. (default: \033[31mfalse\033[0m)")
 	err := viper.BindPFlag("debug", rootCmd.PersistentFlags().Lookup("debug"))
 	if err != nil {
 		logger.Logger.Error("error while binding debug flag", zap.Error(err))
 	}
 
-	rootCmd.PersistentFlags().BoolVarP(&Json, "json", "j", false, "Output the result in JSON format. (default: false)")
+	rootCmd.PersistentFlags().BoolVarP(&Json, "json", "j", false, "Output the result in JSON format. (default: \033[31mfalse\033[0m)")
 	err = viper.BindPFlag("json", rootCmd.PersistentFlags().Lookup("json"))
 	if err != nil {
 		logger.Logger.Error("error while binding json flag", zap.Error(err))
 	}
 
-	rootCmd.PersistentFlags().BoolVarP(&AutoPadding, "auto-padding", "", false, "Enable automatic padding of payload. (default: false)\nWarning: this may lead to corrupted data.")
+	rootCmd.PersistentFlags().BoolVarP(&AutoPadding, "auto-padding", "", false, "Enable automatic padding of payload. (default: \033[31mfalse\033[0m)\n\033[33mWarning:\033[0m this may lead to corrupted data.")
 	err = viper.BindPFlag("auto-padding", rootCmd.PersistentFlags().Lookup("auto-padding"))
 	if err != nil {
 		logger.Logger.Error("error while binding auto-padding flag", zap.Error(err))
@@ -87,5 +89,26 @@ func Execute() {
 }
 
 func printJSON(data interface{}, metadata interface{}) {
-	logger.Logger.Info("successfully decoded payload", zap.Any("data", data), zap.Any("metadata", metadata))
+	if Json {
+		logger.Logger.Info("successfully decoded payload", zap.Any("data", data), zap.Any("metadata", metadata))
+		return
+	}
+
+	logger.Logger.Info("successfully decoded payload")
+
+	// print data and metadata beautifully and formatted
+	marshaled, err := json.MarshalIndent(map[string]interface{}{
+		"data":     data,
+		"metadata": metadata,
+	}, "", "   ")
+
+	// handle marshaling error
+	if err != nil {
+		logger.Logger.Fatal("marshaling error", zap.Error(err))
+	}
+
+	// print the marshaled data
+	fmt.Println()
+	fmt.Println(string(marshaled))
+	fmt.Println()
 }
