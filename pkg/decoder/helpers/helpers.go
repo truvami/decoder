@@ -111,7 +111,7 @@ func Parse(payloadHex string, config decoder.PayloadConfig) (interface{}, error)
 	// Create an instance of the target struct
 	targetValue := reflect.New(config.TargetType).Elem()
 
-	var validationErrors = 0
+	var validationErrors uint8 = 0
 
 	// Iterate over the fields in the config and extract their values
 	for _, field := range config.Fields {
@@ -159,7 +159,7 @@ func Parse(payloadHex string, config decoder.PayloadConfig) (interface{}, error)
 	}
 
 	if validationErrors > 0 {
-		logger.Logger.Warn("validation for some fields failed - are you using the correct port?", zap.Int("validationErrors", validationErrors))
+		logger.Logger.Warn("validation for some fields failed - are you using the correct port?", zap.Uint8("validationErrors", validationErrors))
 	}
 
 	return targetValue.Interface(), nil
