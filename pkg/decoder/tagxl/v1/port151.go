@@ -29,6 +29,6 @@ type Port151Payload struct {
 	AccelerationSensor       []uint16 `json:"accelerationSensor"`
 	HeartbeatInterval        uint8    `json:"heartbeatInterval"`
 	AdvertisementFwuInterval uint8    `json:"advertisementFwuInterval"`
-	Battery                  float64  `json:"battery"`
+	Battery                  float64  `json:"battery" validate:"gte=1,lte=5"`
 	FirmwareHash             []uint8  `json:"firmwareHash"`
 }
