@@ -1040,7 +1040,7 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "00000002D30B27008247B81312671BD1641EEF18030BE0286D8A9478CBF0B0140C96BBCE",
+			payload:     "00000002D30B27008247B81312671BD164133718030BE0286D8A9478CBF0B0140C96BBCE",
 			port:        151,
 			autoPadding: false,
 			expected: Port151Payload{
@@ -1049,7 +1049,7 @@ func TestDecode(t *testing.T) {
 				Longitude:   8.53804,
 				Altitude:    488.2,
 				Timestamp:   time.Date(2024, 10, 25, 17, 12, 4, 0, time.UTC),
-				Battery:     7.919,
+				Battery:     4.919,
 				TTF:         24,
 				Mac1:        "e0286d8a9478",
 				Rssi1:       -53,
@@ -1060,7 +1060,7 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "00000002d30b27008247b81312671bd1641eef18030be0286d8a9478cbf0b0140c96bbcedeadbeef4242d6deadbeef4242d6deadbeef4242d6deadbeef4242d6",
+			payload:     "00000002d30b27008247b81312671bd164133718030be0286d8a9478cbf0b0140c96bbcedeadbeef4242d6deadbeef4242d6deadbeef4242d6deadbeef4242d6",
 			port:        151,
 			autoPadding: false,
 			expected: Port151Payload{
@@ -1069,7 +1069,7 @@ func TestDecode(t *testing.T) {
 				Longitude:   8.53804,
 				Altitude:    488.2,
 				Timestamp:   time.Date(2024, 10, 25, 17, 12, 4, 0, time.UTC),
-				Battery:     7.919,
+				Battery:     4.919,
 				TTF:         24,
 				PDOP:        1.5,
 				Satellites:  11,
@@ -1088,7 +1088,7 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:        "00000002d30b27008247b81312671bd1641eef18030be0286d8a9478cbf0b0140c96bbcedeadbeef4242d6deadbeef4242d6deadbeef4242d6deadbeef4242d6deadbeef",
+			payload:        "00000002d30b27008247b81312671bd164133718030be0286d8a9478cbf0b0140c96bbcedeadbeef4242d6deadbeef4242d6deadbeef4242d6deadbeef4242d6deadbeef",
 			port:           151,
 			autoPadding:    false,
 			skipValidation: true,
@@ -1098,7 +1098,7 @@ func TestDecode(t *testing.T) {
 				Longitude:   8.53804,
 				Altitude:    488.2,
 				Timestamp:   time.Date(2024, 10, 25, 17, 12, 4, 0, time.UTC),
-				Battery:     7.919,
+				Battery:     4.919,
 				TTF:         24,
 				PDOP:        1.5,
 				Satellites:  11,
@@ -1117,7 +1117,7 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "00000002d30b27008247b81312671bd1641eef18030b",
+			payload:     "00000002d30b27008247b81312671bd164133718030b",
 			port:        151,
 			autoPadding: false,
 			expected: Port151Payload{
@@ -1126,14 +1126,14 @@ func TestDecode(t *testing.T) {
 				Longitude:   8.53804,
 				Altitude:    488.2,
 				Timestamp:   time.Date(2024, 10, 25, 17, 12, 4, 0, time.UTC),
-				Battery:     7.919,
+				Battery:     4.919,
 				TTF:         24,
 				PDOP:        1.5,
 				Satellites:  11,
 			},
 		},
 		{
-			payload:     "2d30b27008247b81312671bd1641eef18030b",
+			payload:     "2d30b27008247b81312671bd164133718030b",
 			port:        151,
 			autoPadding: true,
 			expected: Port151Payload{
@@ -1142,7 +1142,7 @@ func TestDecode(t *testing.T) {
 				Longitude:   8.53804,
 				Altitude:    488.2,
 				Timestamp:   time.Date(2024, 10, 25, 17, 12, 4, 0, time.UTC),
-				Battery:     7.919,
+				Battery:     4.919,
 				TTF:         24,
 				PDOP:        1.5,
 				Satellites:  11,
