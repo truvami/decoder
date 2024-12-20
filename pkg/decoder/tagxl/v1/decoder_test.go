@@ -178,3 +178,21 @@ func TestInvalidPort(t *testing.T) {
 		t.Fatal("expected port not supported")
 	}
 }
+
+func TestPayloadTooShort(t *testing.T) {
+	decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("appEui"))
+	_, _, err := decoder.Decode("deadbeef", 152, "")
+
+	if err == nil || err.Error() != "payload too short" {
+		t.Fatal("expected error payload too short")
+	}
+}
+
+func TestPayloadTooLong(t *testing.T) {
+	decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("appEui"))
+	_, _, err := decoder.Decode("deadbeef4242deadbeef4242deadbeef4242", 152, "")
+
+	if err == nil || err.Error() != "payload too long" {
+		t.Fatal("expected error payload too long")
+	}
+}
