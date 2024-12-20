@@ -9,10 +9,11 @@ import (
 
 func TestDecode(t *testing.T) {
 	tests := []struct {
-		payload     string
-		port        int16
-		autoPadding bool
-		expected    interface{}
+		payload        string
+		port           int16
+		autoPadding    bool
+		skipValidation bool
+		expected       interface{}
 	}{
 		{
 			payload:     "8002cdcd1300744f5e166018040b14341a",
@@ -47,16 +48,18 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "00",
-			port:        2,
-			autoPadding: false,
-			expected:    Port2Payload{},
+			payload:        "00",
+			port:           2,
+			autoPadding:    false,
+			skipValidation: true,
+			expected:       Port2Payload{},
 		},
 		{
-			payload:     "01",
-			port:        2,
-			autoPadding: false,
-			expected:    Port2Payload{},
+			payload:        "01",
+			port:           2,
+			autoPadding:    false,
+			skipValidation: true,
+			expected:       Port2Payload{},
 		},
 		{
 			payload:     "822f0101f052fab920feafd0e4158b38b9afe05994cb2f5cb2",
@@ -798,7 +801,7 @@ func TestDecode(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestPort%vWith%v", test.port, test.payload), func(t *testing.T) {
-			decoder := NewTagSLv1Decoder(WithAutoPadding(test.autoPadding))
+			decoder := NewTagSLv1Decoder(WithAutoPadding(test.autoPadding), WithSkipValidation(test.skipValidation))
 			got, _, err := decoder.Decode(test.payload, test.port, "")
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
@@ -917,6 +920,8 @@ func TestParseStatusByte(t *testing.T) {
 func TestFullDecode(t *testing.T) {
 	tests := []struct {
 		payload        string
+		autoPadding    bool
+		skipValidation bool
 		expectedData   interface{}
 		expectedStatus *Status
 		port           int16
@@ -1012,7 +1017,7 @@ func TestFullDecode(t *testing.T) {
 			port: 110,
 		},
 		{
-			payload: "0028672658500172a741b1e238b572a741b1e08bb03498b5c583e2b172a741b1e0cda772a741beed4cc472a741beef53b772a741b1dd0000",
+			payload: "0028672658500172a741b1e238b572a741b1e08bb03498b5c583e2b172a741b1e0cda772a741beed4cc472a741beef53b7",
 			expectedData: Port105Payload{
 				BufferLevel: 40,
 				Mac1:        "72a741b1e238",
@@ -1039,8 +1044,8 @@ func TestFullDecode(t *testing.T) {
 		},
 	}
 
-	decoder := NewTagSLv1Decoder()
 	for _, test := range tests {
+		decoder := NewTagSLv1Decoder(WithAutoPadding(test.autoPadding), WithSkipValidation(test.skipValidation))
 		t.Run(fmt.Sprintf("TestFullDecodeWithPort%vAndPayload%v", test.port, test.payload), func(t *testing.T) {
 			data, status, err := decoder.Decode(test.payload, test.port, "")
 			if err != nil {

@@ -131,7 +131,7 @@ func TestHTTPCmd(t *testing.T) {
 	}()
 
 	// create a new HTTP request to simulate the command execution
-	reqBody := `{"port": 105, "payload": "0028672658500172a741b1e238b572a741b1e08bb03498b5c583e2b172a741b1e0cda772a741beed4cc472a741beef53b772a741b1dd0000", "devEui": "example devEUI"}`
+	reqBody := `{"port": 105, "payload": "0028672658500172a741b1e238b572a741b1e08bb03498b5c583e2b172a741b1e0cda772a741beed4cc472a741beef53b7", "devEui": "example devEUI"}`
 	req, err := http.NewRequest("POST", "http://localhost:8080/tagsl/v1", strings.NewReader(reqBody))
 	if err != nil {
 		t.Fatalf("failed to create request: %v", err)
