@@ -1,13 +1,14 @@
 package cmd
 
 import (
-	"log/slog"
 	"strconv"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/truvami/decoder/internal/logger"
 	"github.com/truvami/decoder/pkg/decoder/tagxl/v1"
 	"github.com/truvami/decoder/pkg/loracloud"
+	"go.uber.org/zap"
 )
 
 var accessToken string
@@ -24,11 +25,11 @@ var tagxlCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		err := viper.BindPFlag("token", rootCmd.Flags().Lookup("token"))
 		if err != nil {
-			slog.Error("error while binding token flag", slog.Any("error", err))
+			logger.Logger.Error("error while binding token flag", zap.Error(err))
 			return
 		}
 
-		slog.Debug("initializing tagxl decoder")
+		logger.Logger.Debug("initializing tagxl decoder")
 		d := tagxl.NewTagXLv1Decoder(
 			loracloud.NewLoracloudMiddleware(accessToken),
 			tagxl.WithAutoPadding(AutoPadding),
@@ -37,14 +38,14 @@ var tagxlCmd = &cobra.Command{
 
 		port, err := strconv.Atoi(args[0])
 		if err != nil {
-			slog.Error("error while parsing port", slog.Any("error", err), slog.String("port", args[0]))
+			logger.Logger.Error("error while parsing port", zap.Error(err), zap.String("port", args[0]))
 			return
 		}
-		slog.Debug("port parsed successfully", slog.Int("port", port))
+		logger.Logger.Debug("port parsed successfully", zap.Int("port", port))
 
 		data, metadata, err := d.Decode(args[1], int16(port), args[2])
 		if err != nil {
-			slog.Error("error while decoding data", slog.Any("error", err))
+			logger.Logger.Error("error while decoding data", zap.Error(err))
 			return
 		}
 

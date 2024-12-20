@@ -1,11 +1,12 @@
 package cmd
 
 import (
-	"log/slog"
 	"strconv"
 
 	"github.com/spf13/cobra"
+	"github.com/truvami/decoder/internal/logger"
 	"github.com/truvami/decoder/pkg/decoder/tagsl/v1"
+	"go.uber.org/zap"
 )
 
 func init() {
@@ -17,7 +18,7 @@ var tagslCmd = &cobra.Command{
 	Short: "decode tag S / L payloads",
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
-		slog.Debug("initializing tagsl decoder")
+		logger.Logger.Debug("initializing tagsl decoder")
 		d := tagsl.NewTagSLv1Decoder(
 			tagsl.WithAutoPadding(AutoPadding),
 			tagsl.WithSkipValidation(SkipValidation),
@@ -25,14 +26,14 @@ var tagslCmd = &cobra.Command{
 
 		port, err := strconv.Atoi(args[0])
 		if err != nil {
-			slog.Error("error while parsing port", slog.Any("error", err), slog.String("port", args[0]))
+			logger.Logger.Error("error while parsing port", zap.Error(err), zap.String("port", args[0]))
 			return
 		}
-		slog.Debug("port parsed successfully", slog.Int("port", port))
+		logger.Logger.Debug("port parsed successfully", zap.Int("port", port))
 
 		data, metadata, err := d.Decode(args[1], int16(port), "")
 		if err != nil {
-			slog.Error("error while decoding data", slog.Any("error", err))
+			logger.Logger.Error("error while decoding data", zap.Error(err))
 			return
 		}
 
