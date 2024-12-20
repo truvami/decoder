@@ -48,7 +48,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&SkipValidation, "skip-validation", "", false, "Skip length validation of payload. (default: false)")
 	err = viper.BindPFlag("skip-validation", rootCmd.PersistentFlags().Lookup("skip-validation"))
 	if err != nil {
-		slog.Error("error while binding skip-validation flag", slog.Any("error", err))
+		logger.Logger.Error("error while binding skip-validation flag", zap.Error(err))
 	}
 }
 
