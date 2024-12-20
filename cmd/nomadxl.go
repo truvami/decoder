@@ -21,6 +21,7 @@ var nomadxlCmd = &cobra.Command{
 		logger.Logger.Debug("initializing nomadxs decoder")
 		d := nomadxl.NewNomadXLv1Decoder(
 			nomadxl.WithAutoPadding(AutoPadding),
+			nomadxl.WithSkipValidation(SkipValidation),
 		)
 
 		port, err := strconv.Atoi(args[0])

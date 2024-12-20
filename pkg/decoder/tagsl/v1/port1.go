@@ -16,13 +16,13 @@ package tagsl
 // +------+------+-------------------------------------------+------------------------+
 
 type Port1Payload struct {
-	Latitude  float64 `json:"latitude"`
-	Longitude float64 `json:"longitude"`
-	Altitude  float64 `json:"altitude"`
-	Year      uint8   `json:"year"`
-	Month     uint8   `json:"month"`
-	Day       uint8   `json:"day"`
-	Hour      uint8   `json:"hour"`
-	Minute    uint8   `json:"minute"`
-	Second    uint8   `json:"second"`
+	Latitude  float64 `json:"latitude" validate:"gte=-90,lte=90"`
+	Longitude float64 `json:"longitude" validate:"gte=-180,lte=180"`
+	Altitude  float64 `json:"altitude" validate:"gte=0,lte=20000"`
+	Year      uint8   `json:"year" validate:"gte=0,lte=255"`
+	Month     uint8   `json:"month" validate:"gte=1,lte=12"`
+	Day       uint8   `json:"day" validate:"gte=1,lte=31"`
+	Hour      uint8   `json:"hour" validate:"gte=0,lte=23"`
+	Minute    uint8   `json:"minute" validate:"gte=0,lte=59"`
+	Second    uint8   `json:"second" validate:"gte=0,lte=59"`
 }
