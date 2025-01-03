@@ -9,5 +9,5 @@ package nomadxs
 
 type Port15Payload struct {
 	LowBattery bool    `json:"lowBattery"`
-	Battery    float64 `json:"battery"`
+	Battery    float64 `json:"battery" validate:"gte=1,lte=5"`
 }
