@@ -10,12 +10,29 @@ import (
 	"github.com/truvami/decoder/pkg/loracloud"
 )
 
+type Option func(*SmartLabelv1Decoder)
+
 type SmartLabelv1Decoder struct {
 	loracloudMiddleware loracloud.LoracloudMiddleware
+	autoPadding         bool
 }
 
-func NewSmartLabelv1Decoder(loracloudMiddleware loracloud.LoracloudMiddleware) decoder.Decoder {
-	return SmartLabelv1Decoder{loracloudMiddleware}
+func NewSmartLabelv1Decoder(loracloudMiddleware loracloud.LoracloudMiddleware, options ...Option) decoder.Decoder {
+	smartLabelv1Decoder := &SmartLabelv1Decoder{
+		loracloudMiddleware: loracloudMiddleware,
+	}
+
+	for _, option := range options {
+		option(smartLabelv1Decoder)
+	}
+
+	return smartLabelv1Decoder
+}
+
+func WithAutoPadding(autoPadding bool) Option {
+	return func(t *SmartLabelv1Decoder) {
+		t.autoPadding = autoPadding
+	}
 }
 
 func getPort11PayloadType(data string) (string, error) {
