@@ -11,9 +11,9 @@ package smartlabel
 // +-------+------+------------------+------------------+
 
 type Port11HeartbeatPayload struct {
-	Battery        float64 `json:"v_bat"`
+	Battery        float64 `json:"vBat"`
 	Temperature    float64 `json:"temp"`
 	RH             float64 `json:"rh"`
-	GNSSScansCount uint16  `json:"gnss_scan_count"`
-	WiFiScansCount uint16  `json:"wifi_scan_count"`
+	GNSSScansCount uint16  `json:"gnssScanCount"`
+	WiFiScansCount uint16  `json:"wifiScanCount"`
 }

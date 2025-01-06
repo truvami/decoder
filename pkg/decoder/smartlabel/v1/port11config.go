@@ -19,15 +19,15 @@ package smartlabel
 
 type Port11ConfigurationPayload struct {
 	Flags               uint8    `json:"flags"`
-	GNSSEnabled         uint8    `json:"gnss_enabled"`
-	WiFiEnabled         uint8    `json:"wifi_enabled"`
-	AccEnabled          uint8    `json:"acc_enabled"`
-	StaticSF           	string    `json:"static_sf"`
-	SteadyIntervalS    	uint16   `json:"steady_interval_s"`
-	MovingIntervalS    	uint16   `json:"moving_interval_s"`
-	HeartbeatIntervalH 	uint8    `json:"heartbeat_interval_h"`
-	LEDBlinkIntervalS  	uint16   `json:"led_blink_interval_s"`
-	AccThresholdMS     	uint16   `json:"acc_threshold_ms"`
-	AccDelayMS         	uint16   `json:"acc_delay_ms"`
-	GitHash            	string   `json:"git_hash"`
+	GNSSEnabled         uint8    `json:"gnssEnabled"`
+	WiFiEnabled         uint8    `json:"wifiEnabled"`
+	AccEnabled          uint8    `json:"accEnabled"`
+	StaticSF           	string   `json:"staticSF"`
+	SteadyIntervalS    	uint16   `json:"steadyIntervalS"`
+	MovingIntervalS    	uint16   `json:"movingIntervalS"`
+	HeartbeatIntervalH 	uint8    `json:"heartbeatIntervalH"`
+	LEDBlinkIntervalS  	uint16   `json:"ledBlinkIntervalS"`
+	AccThresholdMS     	uint16   `json:"accThresholdMS"`
+	AccDelayMS         	uint16   `json:"accDelayMS"`
+	GitHash            	string   `json:"gitHash"`
 }
