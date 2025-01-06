@@ -81,9 +81,6 @@ func (t SmartLabelv1Decoder) getConfig(port int16, data string) (decoder.Payload
 						{Name: "AccThresholdMS", Start: 10, Length: 2},
 						{Name: "AccDelayMS", Start: 12, Length: 2},
 						{Name: "GitHash", Start: 14, Length: 4, Optional: true, Transform: func(v interface{}) interface{} {
-							if v == nil {
-								return nil
-							}
 							return fmt.Sprintf("%08x", v.(int))
 						}},
 					},

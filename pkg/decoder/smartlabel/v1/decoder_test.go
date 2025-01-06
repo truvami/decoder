@@ -75,6 +75,20 @@ func TestDecode(t *testing.T) {
 				WiFiScansCount:    0,
 			},
 		},
+		{
+			payload:     "",
+			port:        11,
+			devEui:      "",
+			expected:    nil,
+			expectedErr: "data length is less than 2",
+		},
+		{
+			payload:     "0eXX",
+			port:        11,
+			devEui:      "",
+			expected:    nil,
+			expectedErr: "encoding/hex",
+		},
 	}
 
 	for _, test := range tests {
