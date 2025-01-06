@@ -105,3 +105,85 @@ func TestInvalidPort(t *testing.T) {
 		t.Fatal("expected port not supported")
 	}
 }
+
+func TestWithAutoPadding(t *testing.T) {
+	middleware := loracloud.NewLoracloudMiddleware("access_token")
+	
+	decoder := NewSmartLabelv1Decoder(
+		middleware,
+		WithAutoPadding(true),
+	)
+	
+	// Type assert to access the internal field
+	if d, ok := decoder.(*SmartLabelv1Decoder); ok {
+		if !d.autoPadding {
+			t.Error("expected autoPadding to be true")
+		}
+	} else {
+		t.Error("failed to type assert decoder")
+	}
+}
+
+func TestGetPort11PayloadType(t *testing.T) {
+	tests := []struct {
+		name        string
+		data        string
+		want        string
+		expectedErr string
+	}{
+		{
+			name:        "Empty data",
+			data:        "",
+			want:        "",
+			expectedErr: "data length is less than 2",
+		},
+		{
+			name:        "Single byte",
+			data:        "0",
+			want:        "",
+			expectedErr: "data length is less than 2",
+		},
+		{
+			name:        "Configuration payload 0E",
+			data:        "0E",
+			want:        "configuration",
+			expectedErr: "",
+		},
+		{
+			name:        "Configuration payload 11",
+			data:        "11",
+			want:        "configuration",
+			expectedErr: "",
+		},
+		{
+			name:        "Heartbeat payload",
+			data:        "0A",
+			want:        "heartbeat",
+			expectedErr: "",
+		},
+		{
+			name:        "Invalid payload",
+			data:        "FF",
+			want:        "",
+			expectedErr: "invalid payload for port 11",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := getPort11PayloadType(tt.data)
+			if err != nil && tt.expectedErr == "" {
+				t.Errorf("unexpected error: %v", err)
+			}
+			if err == nil && tt.expectedErr != "" {
+				t.Errorf("expected error containing %q, got nil", tt.expectedErr)
+			}
+			if err != nil && tt.expectedErr != "" && !strings.Contains(err.Error(), tt.expectedErr) {
+				t.Errorf("expected error containing %q, got %q", tt.expectedErr, err.Error())
+			}
+			if got != tt.want {
+				t.Errorf("getPort11PayloadType() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
