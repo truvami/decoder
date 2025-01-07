@@ -149,6 +149,13 @@ func TestDecode(t *testing.T) {
 			expected:    nil,
 			expectedErr: "encoding/hex",
 		},
+		{
+			payload:     "FF00",
+			port:        11,
+			devEui:      "",
+			expected:    nil,
+			expectedErr: "invalid payload for port 11",
+		},
 	}
 
 	for _, test := range tests {

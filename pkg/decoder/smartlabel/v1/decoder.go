@@ -104,7 +104,7 @@ func (t SmartLabelv1Decoder) getConfig(port int16, data string) (decoder.Payload
 					TargetType: reflect.TypeOf(Port11HeartbeatPayload{}),
 				}, nil
 		}
-		return decoder.PayloadConfig{}, fmt.Errorf("invalid data length")
+		return decoder.PayloadConfig{}, fmt.Errorf("invalid payload for port 11")
 	default:
 		return decoder.PayloadConfig{}, fmt.Errorf("port %v not supported", port)
 	}
