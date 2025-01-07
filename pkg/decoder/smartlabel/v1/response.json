@@ -1,0 +1,83 @@
+{
+    "result": {
+        "deveui": "10CE45FFFE00C7EC",
+        "pending_requests": {
+            "requests": [],
+            "id": 1,
+            "updelay": 32,
+            "upcount": 0
+        },
+        "info_fields": {
+            "rfu": null,
+            "temp": null,
+            "charge": null,
+            "deveui": null,
+            "region": null,
+            "rxtime": null,
+            "signal": null,
+            "status": null,
+            "uptime": null,
+            "adrmode": null,
+            "alcsync": {
+                "value": {
+                    "time": 1406438051,
+                    "token": 9
+                },
+                "timestamp": 1722402838.0137742
+            },
+            "chipeui": null,
+            "joineui": null,
+            "session": {
+                "value": 31,
+                "timestamp": 1708598366.4465802
+            },
+            "voltage": null,
+            "crashlog": {
+                "value": "375a332fa8b53a0ace1c05a9d9fbdcc9ba5fb1fa399ca378ada710bd935d20",
+                "timestamp": 1708598381.5623531
+            },
+            "firmware": {
+                "value": {
+                    "fwcrc": "00000000",
+                    "fwtotal": 0,
+                    "fwcompleted": 0
+                },
+                "timestamp": 1708598366.4465802
+            },
+            "interval": null,
+            "rstcount": {
+                "value": 30,
+                "timestamp": 1708598366.4465802
+            },
+            "appstatus": null,
+            "streampar": null
+        },
+        "log_messages": [],
+        "fports": {
+            "dmport": 199,
+            "gnssport": 198,
+            "wifiport": 197,
+            "fragport": 201,
+            "streamport": 199,
+            "gnssngport": 192
+        },
+        "dnlink": null,
+        "fulfilled_requests": [],
+        "cancelled_requests": [],
+        "file": null,
+        "stream_records": null,
+        "position_solution": {
+            "llh": [51.49278, 0.0212, 83.93],
+            "accuracy": 20.7,
+            "ecef": [3979329.33, 1472.73, 4967927.89],
+            "gdop": 2.48,
+            "capture_time_gps": 1406468591.18046,
+            "capture_time_utc": 1722433373.18046,
+            "capture_times_gps": [1406468582.06164, 1406468591.18046],
+            "capture_times_utc": [1722433364.06164, 1722433373.18046],
+            "timestamp": 1722433395.8510327,
+            "algorithm_type": "gnssng"
+        },
+        "operation": "gnss"
+    }
+}

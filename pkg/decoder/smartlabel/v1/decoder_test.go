@@ -1,7 +1,12 @@
 package smartlabel
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
+	"net/http/httptest"
+	"os"
 	"reflect"
 	"strings"
 	"testing"
@@ -9,10 +14,53 @@ import (
 	"github.com/truvami/decoder/pkg/loracloud"
 )
 
+func startMockServer() *httptest.Server {
+	server := httptest.NewServer(nil)
+	return server
+}
 
 func TestDecode(t *testing.T) {
 
+	http.HandleFunc("/api/v1/device/send", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+
+		// check if request body contains 10CE45FFFE00C7ED
+		bodyString, _ := io.ReadAll(r.Body)
+		if strings.Contains(string(bodyString), "10CE45FFFE00C7ED") {
+			_, _ = w.Write([]byte("{\"invalid\": json}"))
+			return
+		}
+
+		// get file from testdata
+		file, err := os.Open("./response.json")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+
+		defer file.Close()
+
+		data, err := io.ReadAll(file)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+
+		_, _ = w.Write(data)
+	})
+
+	server := startMockServer()
 	middleware := loracloud.NewLoracloudMiddleware("access_token")
+	middleware.BaseUrl = server.URL
+	defer server.Close()
+
+	f, _ := os.Open("./response.json")
+	var exampleResponse loracloud.UplinkMsgResponse
+	d, _ := io.ReadAll(f)
+	err := json.Unmarshal(d, &exampleResponse)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
 
 	tests := []struct {
 		payload     string
@@ -21,7 +69,19 @@ func TestDecode(t *testing.T) {
 		expected    interface{}
 		expectedErr string
 	}{
-		// TODO: test 192, 197
+		{
+			payload:     "87821F50490200B520FBE977844D222A3A14A89293956245CC75A9CA1BBC25DDF658542909",
+			port:        192,
+			devEui:      "10CE45FFFE00C7EC",
+			expected:    &exampleResponse,
+		},
+		{
+			payload:     "87821F50490200B520FBE977844D222A3A14A89293956245CC75A9CA1BBC25DDF658542909",
+			port:        192,
+			devEui:      "10CE45FFFE00C7ED",
+			expected:    nil,
+			expectedErr: "invalid character 'j' looking for beginning of value",
+		},
 		{
 			payload:     "00",
 			port:        0,
