@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -55,7 +56,7 @@ func init() {
 var rootCmd = &cobra.Command{
 	Use:   "decoder",
 	Short: "truvami payload decoder cli helper",
-	Long: strings.Join(banner, "\n") + `
+	Long: getBanner() + `
 
 A CLI tool to help decode @truvami payloads.`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
@@ -118,4 +119,21 @@ func printJSON(data interface{}, metadata interface{}) {
 	fmt.Println()
 	fmt.Println(string(marshaled))
 	fmt.Println()
+}
+
+func getBanner() string {
+	if time.Now().Month() == time.December {
+		banner = []string{
+			"",
+			"\033[1;31m                          ___\033[0m",
+			"\033[1;31m                        /`   `'\\\033[0m",
+			"\033[1;32m   _                   \033[1;31m/   _..---;      \033[1;32m_\033[0m",
+			"\033[1;32m  | |_ _ __ _   ___   _\033[1;31m|  /\033[1;0m__..._/\033[1;32m ___ (_)\033[0m",
+			"\033[1;32m  | __| '__| | | \\ \\ / \033[1;31m|.'\033[1;32m| |  _   _ \\| |\033[0m",
+			"\033[1;32m  | |_| |  | |_| |\\ V \033[1;0m(_)\033[1;32m_| | | | | | | |\033[0m",
+			"\033[1;32m   \\__|_|   \\__,_| \\_/ \\__,_|_| |_| |_|_|\033[0m",
+			"",
+		}
+	}
+	return strings.Join(banner, "\n")
 }

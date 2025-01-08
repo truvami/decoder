@@ -13,6 +13,7 @@ import (
 	"github.com/truvami/decoder/pkg/decoder"
 	"github.com/truvami/decoder/pkg/decoder/nomadxl/v1"
 	"github.com/truvami/decoder/pkg/decoder/nomadxs/v1"
+	"github.com/truvami/decoder/pkg/decoder/smartlabel/v1"
 	"github.com/truvami/decoder/pkg/decoder/tagsl/v1"
 	"github.com/truvami/decoder/pkg/decoder/tagxl/v1"
 	"github.com/truvami/decoder/pkg/loracloud"
@@ -71,6 +72,10 @@ var httpCmd = &cobra.Command{
 			{"nomadxl/v1", nomadxl.NewNomadXLv1Decoder(
 				nomadxl.WithAutoPadding(AutoPadding),
 				nomadxl.WithSkipValidation(SkipValidation),
+			)},
+			{"smartlabel/v1", smartlabel.NewSmartLabelv1Decoder(
+				loracloud.NewLoracloudMiddleware(accessToken),
+				smartlabel.WithAutoPadding(AutoPadding),
 			)},
 		}
 
