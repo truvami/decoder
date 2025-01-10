@@ -32,7 +32,7 @@ type Port1Payload struct {
 	Moving             bool    `json:"moving"`
 	Latitude           float64 `json:"latitude" validate:"gte=-90,lte=90"`
 	Longitude          float64 `json:"longitude" validate:"gte=-180,lte=180"`
-	Altitude           float64 `json:"altitude" validate:"gte=0,lte=20000"`
+	Altitude           float64 `json:"altitude"`
 	Year               uint8   `json:"year" validate:"gte=0,lte=255"`
 	Month              uint8   `json:"month" validate:"gte=1,lte=12"`
 	Day                uint8   `json:"day" validate:"gte=1,lte=31"`
