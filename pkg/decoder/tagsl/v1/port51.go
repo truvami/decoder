@@ -30,7 +30,7 @@ type Port51Payload struct {
 	Battery    float64   `json:"battery" validate:"gte=1,lte=5"`
 	TTF        uint16    `json:"ttf"`
 	PDOP       float64   `json:"pdop"`
-	Satellites float64   `json:"satellites" validate:"gte=3,lte=27"`
+	Satellites uint8     `json:"satellites" validate:"gte=3,lte=27"`
 	Mac1       string    `json:"mac1"`
 	Rssi1      int8      `json:"rssi1"`
 	Mac2       string    `json:"mac2"`

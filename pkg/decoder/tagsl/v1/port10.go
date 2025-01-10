@@ -24,5 +24,5 @@ type Port10Payload struct {
 	Battery    float64   `json:"battery" validate:"gte=1,lte=5"`
 	TTF        float64   `json:"ttf"`
 	PDOP       float64   `json:"pdop"`
-	Satellites float64   `json:"satellites" validate:"gte=3,lte=27"`
+	Satellites uint8     `json:"satellites" validate:"gte=3,lte=27"`
 }
