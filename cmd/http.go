@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -11,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/truvami/decoder/internal/logger"
 	"github.com/truvami/decoder/pkg/decoder"
+	"github.com/truvami/decoder/pkg/decoder/helpers"
 	"github.com/truvami/decoder/pkg/decoder/nomadxl/v1"
 	"github.com/truvami/decoder/pkg/decoder/nomadxs/v1"
 	"github.com/truvami/decoder/pkg/decoder/smartlabel/v1"
@@ -127,17 +129,27 @@ func getHandler(decoder decoder.Decoder) func(http.ResponseWriter, *http.Request
 		}
 
 		// decode the payload
+		var warnings []string = nil
 		logger.Logger.Debug("decoding payload")
 		data, metadata, err := decoder.Decode(req.Payload, req.Port, req.DevEUI)
 		if err != nil {
-			logger.Logger.Error("error while decoding payload", zap.Error(err))
-			setHeaders(w, http.StatusBadRequest)
-			_, err = w.Write([]byte(err.Error()))
+			if errors.Is(err, helpers.ErrValidationFailed) {
+				warnings = []string{}
+				for _, err := range helpers.UnwrapError(err) {
+					logger.Logger.Warn("", zap.Error(err))
+					warnings = append(warnings, err.Error())
+				}
+				logger.Logger.Warn("validation for some fields failed - are you using the correct port?")
+			} else {
+				logger.Logger.Error("error while decoding payload", zap.Error(err))
+				setHeaders(w, http.StatusBadRequest)
+				_, err = w.Write([]byte(err.Error()))
 
-			if err != nil {
-				logger.Logger.Error("error while sending response", zap.Error(err))
+				if err != nil {
+					logger.Logger.Error("error while sending response", zap.Error(err))
+				}
+				return
 			}
-			return
 		}
 
 		// data to json
@@ -145,6 +157,7 @@ func getHandler(decoder decoder.Decoder) func(http.ResponseWriter, *http.Request
 		data, err = json.Marshal(map[string]interface{}{
 			"data":     data,
 			"metadata": metadata,
+			"warnings": warnings,
 		})
 		if err != nil {
 			logger.Logger.Error("error while encoding response", zap.Error(err))
