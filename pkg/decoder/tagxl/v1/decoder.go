@@ -112,10 +112,6 @@ func (t TagXLv1Decoder) Decode(data string, port int16, devEui string) (interfac
 		}
 
 		decodedData, err := helpers.Parse(data, config)
-		if err != nil {
-			return nil, nil, err
-		}
-
-		return decodedData, nil, nil
+		return decodedData, nil, err
 	}
 }

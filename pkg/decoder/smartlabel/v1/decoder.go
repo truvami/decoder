@@ -126,10 +126,6 @@ func (t SmartLabelv1Decoder) Decode(data string, port int16, devEui string) (int
 		}
 
 		decodedData, err := helpers.Parse(data, config)
-		if err != nil {
-			return nil, nil, err
-		}
-
-		return decodedData, nil, nil
+		return decodedData, nil, err
 	}
 }

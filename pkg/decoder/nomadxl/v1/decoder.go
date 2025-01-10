@@ -109,9 +109,5 @@ func (t NomadXLv1Decoder) Decode(data string, port int16, devEui string) (interf
 	}
 
 	decodedData, err := helpers.Parse(data, config)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return decodedData, nil, nil
+	return decodedData, nil, err
 }
