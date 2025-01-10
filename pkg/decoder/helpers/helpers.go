@@ -2,6 +2,7 @@ package helpers
 
 import (
 	h "encoding/hex"
+	"errors"
 	"fmt"
 
 	"reflect"
@@ -9,9 +10,7 @@ import (
 	"time"
 
 	"github.com/go-playground/validator"
-	"github.com/truvami/decoder/internal/logger"
 	"github.com/truvami/decoder/pkg/decoder"
-	"go.uber.org/zap"
 )
 
 func HexStringToBytes(hexString string) ([]byte, error) {
@@ -100,6 +99,8 @@ func validateFieldValue(field reflect.StructField, fieldValue reflect.Value) err
 	return validator.New().Struct(structValue.Interface())
 }
 
+var ErrValidationFailed = errors.New("validation failed")
+
 // DecodeLoRaWANPayload decodes the payload based on the provided configuration and populates the target struct
 func Parse(payloadHex string, config decoder.PayloadConfig) (interface{}, error) {
 	// Convert hex payload to bytes
@@ -111,7 +112,7 @@ func Parse(payloadHex string, config decoder.PayloadConfig) (interface{}, error)
 	// Create an instance of the target struct
 	targetValue := reflect.New(config.TargetType).Elem()
 
-	var validationErrors uint8 = 0
+	errs := []error{}
 
 	// Iterate over the fields in the config and extract their values
 	for _, field := range config.Fields {
@@ -152,17 +153,12 @@ func Parse(payloadHex string, config decoder.PayloadConfig) (interface{}, error)
 		if ok {
 			err := validateFieldValue(fieldName, fieldValue)
 			if err != nil {
-				logger.Logger.Warn("validation failed", zap.Error(err))
-				validationErrors++
+				errs = append(errs, fmt.Errorf("%w for %s", ErrValidationFailed, fieldName.Name))
 			}
 		}
 	}
 
-	if validationErrors > 0 {
-		logger.Logger.Warn("validation for some fields failed - are you using the correct port?", zap.Uint8("validationErrors", validationErrors))
-	}
-
-	return targetValue.Interface(), nil
+	return targetValue.Interface(), errors.Join(errs...)
 }
 
 func ParseTimestamp(timestamp int) time.Time {
