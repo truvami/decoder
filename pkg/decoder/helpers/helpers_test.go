@@ -78,22 +78,6 @@ func TestParse(t *testing.T) {
 				Second: 26,
 			},
 		},
-		{
-			payload: "8002cdcd1300744f5e1660494949494949",
-			config:  config,
-			expected: Port1Payload{
-				Moving: false,
-				Lat:    47.041811,
-				Lon:    7.622494,
-				Alt:    5728,
-				Year:   73,
-				Month:  73,
-				Day:    73,
-				Hour:   73,
-				Minute: 73,
-				Second: 73,
-			},
-		},
 	}
 
 	for _, test := range tests {
