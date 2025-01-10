@@ -101,6 +101,14 @@ func validateFieldValue(field reflect.StructField, fieldValue reflect.Value) err
 
 var ErrValidationFailed = errors.New("validation failed")
 
+func UnwrapError(err error) []error {
+	var errs []error = []error{}
+	if err, ok := err.(interface{ Unwrap() []error }); ok {
+		errs = append(errs, err.Unwrap()...)
+	}
+	return errs
+}
+
 // DecodeLoRaWANPayload decodes the payload based on the provided configuration and populates the target struct
 func Parse(payloadHex string, config decoder.PayloadConfig) (interface{}, error) {
 	// Convert hex payload to bytes
