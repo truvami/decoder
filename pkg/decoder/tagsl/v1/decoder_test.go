@@ -1391,7 +1391,6 @@ func TestValidationErrors(t *testing.T) {
 			port:     150,
 			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Battery", 5.5),
 		},
-		// 0000 00 02d30c93 00824c87 1179 66c45dcd 0f81 2f 02 05
 		{
 			payload:  "00000002d30c9300824c87117966c45dcd0f812f0205",
 			port:     151,
