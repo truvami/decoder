@@ -54,7 +54,7 @@ func (t NomadXLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 					return float32(v.(int)) / 10
 				}},
 				{Name: "Pressure", Start: 26, Length: 2, Transform: func(v interface{}) interface{} {
-					return float32(v.(int))
+					return float32(v.(int)) / 10
 				}},
 				{Name: "AccelerometerXAxis", Start: 28, Length: 2},
 				{Name: "AccelerometerYAxis", Start: 30, Length: 2},
