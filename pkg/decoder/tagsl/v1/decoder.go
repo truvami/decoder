@@ -51,7 +51,9 @@ func (t TagSLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 				{Name: "Longitude", Start: 5, Length: 4, Transform: func(v interface{}) interface{} {
 					return float64(v.(int)) / 1000000
 				}},
-				{Name: "Altitude", Start: 9, Length: 2},
+				{Name: "Altitude", Start: 9, Length: 2, Transform: func(v interface{}) interface{} {
+					return float64(v.(int)) / 10
+				}},
 				{Name: "Year", Start: 11, Length: 1},
 				{Name: "Month", Start: 12, Length: 1},
 				{Name: "Day", Start: 13, Length: 1},
