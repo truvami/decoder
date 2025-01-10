@@ -1197,34 +1197,9 @@ func TestValidationErrors(t *testing.T) {
 			expected: nil,
 		},
 		{
-			payload:  "8002cdcd1300744f5e166018040b143449",
+			payload:  "8005f5e10000744f5e166018040b14341a",
 			port:     1,
-			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Second", 73),
-		},
-		{
-			payload:  "8002cdcd1300744f5e166018040b14491a",
-			port:     1,
-			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Minute", 73),
-		},
-		{
-			payload:  "8002cdcd1300744f5e166018040b49341a",
-			port:     1,
-			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Hour", 73),
-		},
-		{
-			payload:  "8002cdcd1300744f5e166018044914341a",
-			port:     1,
-			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Day", 73),
-		},
-		{
-			payload:  "8002cdcd1300744f5e166018490b14341a",
-			port:     1,
-			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Month", 73),
-		},
-		{
-			payload:  "8002cdcd1300744f5e800018040b14341a",
-			port:     1,
-			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Altitude", 32768),
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Latitude", 100),
 		},
 		{
 			payload:  "8002cdcd130bebc200166018040b14341a",
@@ -1232,11 +1207,67 @@ func TestValidationErrors(t *testing.T) {
 			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Longitude", 200),
 		},
 		{
-			payload:  "8005f5e10000744f5e166018040b14341a",
+			payload:  "8002cdcd1300744f5e166018490b14341a",
 			port:     1,
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Month", 73),
+		},
+		{
+			payload:  "8002cdcd1300744f5e166018044914341a",
+			port:     1,
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Day", 73),
+		},
+		{
+			payload:  "8002cdcd1300744f5e166018040b49341a",
+			port:     1,
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Hour", 73),
+		},
+		{
+			payload:  "8002cdcd1300744f5e166018040b14491a",
+			port:     1,
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Minute", 73),
+		},
+		{
+			payload:  "8002cdcd1300744f5e166018040b143449",
+			port:     1,
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Second", 73),
+		},
+		{
+			payload:  "0002d30b070082491f11256718d9fe0ede190505",
+			port:     10,
+			expected: nil,
+		},
+		{
+			payload:  "0005f5e1000082491f11256718d9fe0ede190505",
+			port:     10,
 			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Latitude", 100),
 		},
+		{
+			payload:  "0002d30b070bebc20011256718d9fe0ede190505",
+			port:     10,
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Longitude", 200),
+		},
+		{
+			payload:  "0002d30b070082491f11256718d9fe01f4190505",
+			port:     10,
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Battery", 0.5),
+		},
+		{
+			payload:  "0002d30b070082491f11256718d9fe157c190505",
+			port:     10,
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Battery", 5.5),
+		},
+		{
+			payload:  "0002d30b070082491f11256718d9fe0ede190502",
+			port:     10,
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Satellites", 2),
+		},
+		{
+			payload:  "0002d30b070082491f11256718d9fe0ede19051c",
+			port:     10,
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Satellites", 28),
+		},
 	}
+
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestPort%vValidationWith%v", test.port, test.payload), func(t *testing.T) {
 			decoder := NewTagSLv1Decoder()
@@ -1354,7 +1385,7 @@ func TestFullDecode(t *testing.T) {
 			expectedData: Port1Payload{
 				Latitude:  47.041811,
 				Longitude: 7.622494,
-				Altitude:  5728,
+				Altitude:  572.8,
 				Year:      24,
 				Month:     4,
 				Day:       11,
