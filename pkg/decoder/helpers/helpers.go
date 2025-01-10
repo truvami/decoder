@@ -161,7 +161,7 @@ func Parse(payloadHex string, config decoder.PayloadConfig) (interface{}, error)
 		if ok {
 			err := validateFieldValue(fieldName, fieldValue)
 			if err != nil {
-				errs = append(errs, fmt.Errorf("%w for %s", ErrValidationFailed, fieldName.Name))
+				errs = append(errs, fmt.Errorf("%w for %s %v", ErrValidationFailed, fieldName.Name, fieldValue))
 			}
 		}
 	}
