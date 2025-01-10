@@ -171,6 +171,31 @@ func TestDecode(t *testing.T) {
 	}
 }
 
+func TestValidationErrors(t *testing.T) {
+	tests := []struct {
+		payload  string
+		port     int16
+		expected error
+	}{}
+
+	for _, test := range tests {
+		t.Run(fmt.Sprintf("TestPort%vValidationWith%v", test.port, test.payload), func(t *testing.T) {
+			decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("appEui"))
+			got, _, err := decoder.Decode(test.payload, test.port, "")
+
+			if err == nil && test.expected == nil {
+				return
+			}
+
+			t.Logf("got %v", got)
+
+			if err != nil && test.expected == nil || err == nil || err.Error() != test.expected.Error() {
+				t.Errorf("expected: %v\ngot: %v", test.expected, err)
+			}
+		})
+	}
+}
+
 func TestInvalidPort(t *testing.T) {
 	decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("appEui"))
 	_, _, err := decoder.Decode("00", 0, "")
