@@ -251,6 +251,21 @@ func TestValidationErrors(t *testing.T) {
 			port:     1,
 			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Pressure", 1200),
 		},
+		{
+			payload:  "010df6",
+			port:     15,
+			expected: nil,
+		},
+		{
+			payload:  "0101f4",
+			port:     15,
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Battery", 0.5),
+		},
+		{
+			payload:  "01157c",
+			port:     15,
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Battery", 5.5),
+		},
 	}
 
 	for _, test := range tests {
