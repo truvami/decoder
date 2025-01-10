@@ -1266,6 +1266,107 @@ func TestValidationErrors(t *testing.T) {
 			port:     10,
 			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Satellites", 28),
 		},
+		{
+			payload:  "001044",
+			port:     15,
+			expected: nil,
+		},
+		{
+			payload:  "0001f4",
+			port:     15,
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Battery", 0.5),
+		},
+		{
+			payload:  "00157c",
+			port:     15,
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Battery", 5.5),
+		},
+		{
+			payload:  "0002d30c9300824c87117966c45dcd0f8118",
+			port:     50,
+			expected: nil,
+		},
+		{
+			payload:  "0005f5e10000824c87117966c45dcd0f8118",
+			port:     50,
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Latitude", 100),
+		},
+		{
+			payload:  "0002d30c930bebc200117966c45dcd0f8118",
+			port:     50,
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Longitude", 200),
+		},
+		{
+			payload:  "0002d30c9300824c87117966c45dcd01f418",
+			port:     50,
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Battery", 0.5),
+		},
+		{
+			payload:  "0002d30c9300824c87117966c45dcd157c18",
+			port:     50,
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Battery", 5.5),
+		},
+		{
+			payload:  "0002d30c9300824c87117966c45dcd0f81180205",
+			port:     51,
+			expected: nil,
+		},
+		{
+			payload:  "0005f5e10000824c87117966c45dcd0f81180205",
+			port:     51,
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Latitude", 100),
+		},
+		{
+			payload:  "0002d30c930bebc200117966c45dcd0f81180205",
+			port:     51,
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Longitude", 200),
+		},
+		{
+			payload:  "0002d30c9300824c87117966c45dcd01f4180205",
+			port:     51,
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Battery", 0.5),
+		},
+		{
+			payload:  "0002d30c9300824c87117966c45dcd157c180205",
+			port:     51,
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Battery", 5.5),
+		},
+		{
+			payload:  "0002d30c9300824c87117966c45dcd0f81180202",
+			port:     51,
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Satellites", 2),
+		},
+		{
+			payload:  "0002d30c9300824c87117966c45dcd0f8118021c",
+			port:     51,
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Satellites", 28),
+		},
+		// 0000 00 02d30c93 00824c87 1179 66c45dcd 0f81
+		{
+			payload:  "00000002d30c9300824c87117966c45dcd0f81",
+			port:     110,
+			expected: nil,
+		},
+		{
+			payload:  "00000005f5e10000824c87117966c45dcd0f81",
+			port:     110,
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Latitude", 100),
+		},
+		{
+			payload:  "00000002d30c930bebc200117966c45dcd0f81",
+			port:     110,
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Longitude", 200),
+		},
+		{
+			payload:  "00000002d30c9300824c87117966c45dcd01f4",
+			port:     110,
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Battery", 0.5),
+		},
+		{
+			payload:  "00000002d30c9300824c87117966c45dcd157c",
+			port:     110,
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Battery", 5.5),
+		},
 	}
 
 	for _, test := range tests {
@@ -1279,7 +1380,7 @@ func TestValidationErrors(t *testing.T) {
 
 			t.Logf("got %v", got)
 
-			if err == nil || err.Error() != test.expected.Error() {
+			if err != nil && test.expected == nil || err == nil || err.Error() != test.expected.Error() {
 				t.Errorf("expected: %v\ngot: %v", test.expected, err)
 			}
 		})
