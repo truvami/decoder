@@ -45,7 +45,7 @@ type Port1Payload struct {
 	AccelerometerYAxis int16   `json:"accelerometerYAxis"`
 	AccelerometerZAxis int16   `json:"accelerometerZAxis"`
 	Temperature        float32 `json:"temperature" validate:"gte=-20,lte=60"`
-	Pressure           float32 `json:"pressure" validate:"gte=0,lte=11000"`
+	Pressure           float32 `json:"pressure" validate:"gte=0,lte=1100"`
 	GyroscopeXAxis     float32 `json:"gyroscopeXAxis"`
 	GyroscopeYAxis     float32 `json:"gyroscopeYAxis"`
 	GyroscopeZAxis     float32 `json:"gyroscopeZAxis"`

@@ -31,7 +31,7 @@ type Port101Payload struct {
 	UTCDate            uint32  `json:"date"`
 	UTCTime            uint32  `json:"time"`
 	Temperature        float32 `json:"temperature" validate:"gte=-20,lte=60"`
-	Pressure           float32 `json:"pressure" validate:"gte=0,lte=11000"`
+	Pressure           float32 `json:"pressure" validate:"gte=0,lte=1100"`
 	TimeToFix          uint8   `json:"timeToFix"`
 	AccelerometerXAxis int16   `json:"accelerometerXAxis"`
 	AccelerometerYAxis int16   `json:"accelerometerYAxis"`
