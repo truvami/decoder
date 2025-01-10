@@ -5,7 +5,6 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/truvami/decoder/internal/logger"
 	"github.com/truvami/decoder/pkg/decoder"
 )
 
@@ -38,9 +37,6 @@ type Port1Payload struct {
 }
 
 func TestParse(t *testing.T) {
-	logger.NewLogger()
-	defer logger.Sync()
-
 	config := decoder.PayloadConfig{
 		Fields: []decoder.FieldConfig{
 			{Name: "Moving", Start: 0, Length: 1},
