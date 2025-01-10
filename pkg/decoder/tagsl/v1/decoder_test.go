@@ -5,6 +5,8 @@ import (
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/truvami/decoder/pkg/decoder/helpers"
 )
 
 func TestDecode(t *testing.T) {
@@ -22,7 +24,7 @@ func TestDecode(t *testing.T) {
 			expected: Port1Payload{
 				Latitude:  47.041811,
 				Longitude: 7.622494,
-				Altitude:  572.8,
+				Altitude:  5728,
 				Year:      24,
 				Month:     4,
 				Day:       11,
@@ -38,7 +40,7 @@ func TestDecode(t *testing.T) {
 			expected: Port1Payload{
 				Latitude:  47.041811,
 				Longitude: 7.622494,
-				Altitude:  572.8,
+				Altitude:  5728,
 				Year:      24,
 				Month:     4,
 				Day:       11,
@@ -55,7 +57,7 @@ func TestDecode(t *testing.T) {
 			expected: Port1Payload{
 				Latitude:  47.041811,
 				Longitude: 7.622494,
-				Altitude:  572.8,
+				Altitude:  5728,
 				Year:      24,
 				Month:     4,
 				Day:       11,
@@ -1183,6 +1185,76 @@ func TestDecode(t *testing.T) {
 	})
 }
 
+func TestValidationErrors(t *testing.T) {
+	tests := []struct {
+		payload  string
+		port     int16
+		expected error
+	}{
+		{
+			payload:  "8002cdcd1300744f5e166018040b14341a",
+			port:     1,
+			expected: nil,
+		},
+		{
+			payload:  "8002cdcd1300744f5e166018040b143449",
+			port:     1,
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Second", 73),
+		},
+		{
+			payload:  "8002cdcd1300744f5e166018040b14491a",
+			port:     1,
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Minute", 73),
+		},
+		{
+			payload:  "8002cdcd1300744f5e166018040b49341a",
+			port:     1,
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Hour", 73),
+		},
+		{
+			payload:  "8002cdcd1300744f5e166018044914341a",
+			port:     1,
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Day", 73),
+		},
+		{
+			payload:  "8002cdcd1300744f5e166018490b14341a",
+			port:     1,
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Month", 73),
+		},
+		{
+			payload:  "8002cdcd1300744f5e800018040b14341a",
+			port:     1,
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Altitude", 32768),
+		},
+		{
+			payload:  "8002cdcd130bebc200166018040b14341a",
+			port:     1,
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Longitude", 200),
+		},
+		{
+			payload:  "8005f5e10000744f5e166018040b14341a",
+			port:     1,
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Latitude", 100),
+		},
+	}
+	for _, test := range tests {
+		t.Run(fmt.Sprintf("TestPort%vValidationWith%v", test.port, test.payload), func(t *testing.T) {
+			decoder := NewTagSLv1Decoder()
+			got, _, err := decoder.Decode(test.payload, test.port, "")
+
+			if err == nil && test.expected == nil {
+				return
+			}
+
+			t.Logf("got %v", got)
+
+			if err == nil || err.Error() != test.expected.Error() {
+				t.Errorf("expected: %v\ngot: %v", test.expected, err)
+			}
+		})
+	}
+}
+
 func TestInvalidPort(t *testing.T) {
 	decoder := NewTagSLv1Decoder()
 	_, _, err := decoder.Decode("00", 0, "")
@@ -1282,7 +1354,7 @@ func TestFullDecode(t *testing.T) {
 			expectedData: Port1Payload{
 				Latitude:  47.041811,
 				Longitude: 7.622494,
-				Altitude:  572.8,
+				Altitude:  5728,
 				Year:      24,
 				Month:     4,
 				Day:       11,
