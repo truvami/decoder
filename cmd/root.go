@@ -91,7 +91,6 @@ A CLI tool to help decode @truvami payloads.`,
 
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		logger.Logger.Error("error while executing command", zap.Error(err))
 		os.Exit(1)
 	}
 }
