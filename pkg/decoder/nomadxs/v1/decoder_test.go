@@ -3,6 +3,8 @@ package nomadxs
 import (
 	"fmt"
 	"testing"
+
+	"github.com/truvami/decoder/pkg/decoder/helpers"
 )
 
 func TestDecode(t *testing.T) {
@@ -13,7 +15,7 @@ func TestDecode(t *testing.T) {
 		expected    interface{}
 	}{
 		{
-			payload:     "0002c420ff005ed85a12b4180719142607240001ffbaffc2fc6f09a71d2e",
+			payload:     "0002c420ff005ed85a12b4180719142607240001ffbaffc2fc6f00d71d2e",
 			port:        1,
 			autoPadding: false,
 			expected: Port1Payload{
@@ -32,12 +34,12 @@ func TestDecode(t *testing.T) {
 				AccelerometerXAxis: -70,
 				AccelerometerYAxis: -62,
 				AccelerometerZAxis: -913,
-				Temperature:        24.71,
-				Pressure:           7470,
+				Temperature:        21.5,
+				Pressure:           747,
 			},
 		},
 		{
-			payload:     "0002c420ff005ed85a12b4180719142607240001ffbaffc2fc6f09a71d2e000000000000",
+			payload:     "0002c420ff005ed85a12b4180719142607240001ffbaffc2fc6f00d71d2e000000000000",
 			port:        1,
 			autoPadding: false,
 			expected: Port1Payload{
@@ -56,8 +58,8 @@ func TestDecode(t *testing.T) {
 				AccelerometerXAxis: -70,
 				AccelerometerYAxis: -62,
 				AccelerometerZAxis: -913,
-				Temperature:        24.71,
-				Pressure:           7470,
+				Temperature:        21.5,
+				Pressure:           747,
 				GyroscopeXAxis:     0.0,
 				GyroscopeYAxis:     0.0,
 				GyroscopeZAxis:     0.0,
@@ -193,10 +195,119 @@ func TestDecode(t *testing.T) {
 	}
 }
 
+func TestValidationErrors(t *testing.T) {
+	tests := []struct {
+		payload  string
+		port     int16
+		expected error
+	}{
+		{
+			payload:  "0002c420ff005ed85a12b4180719142607240001ffbaffc2fc6f00d71d2e",
+			port:     1,
+			expected: nil,
+		},
+		{
+			payload:  "0005f5e100005ed85a12b4180719142607240001ffbaffc2fc6f00d71d2e",
+			port:     1,
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Latitude", 100),
+		},
+		{
+			payload:  "0002c420ff0bebc20012b4180719142607240001ffbaffc2fc6f00d71d2e",
+			port:     1,
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Longitude", 200),
+		},
+		{
+			payload:  "0002c420ff005ed85a12b4184919142607240001ffbaffc2fc6f00d71d2e",
+			port:     1,
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Month", 73),
+		},
+		{
+			payload:  "0002c420ff005ed85a12b4180749142607240001ffbaffc2fc6f00d71d2e",
+			port:     1,
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Day", 73),
+		},
+		{
+			payload:  "0002c420ff005ed85a12b4180719492607240001ffbaffc2fc6f00d71d2e",
+			port:     1,
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Hour", 73),
+		},
+		{
+			payload:  "0002c420ff005ed85a12b4180719144907240001ffbaffc2fc6f00d71d2e",
+			port:     1,
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Minute", 73),
+		},
+		{
+			payload:  "0002c420ff005ed85a12b4180719142649240001ffbaffc2fc6f00d71d2e",
+			port:     1,
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Second", 73),
+		},
+		{
+			payload:  "0002c420ff005ed85a12b4180719142607240001ffbaffc2fc6f02621d2e",
+			port:     1,
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Temperature", 61),
+		},
+		{
+			payload:  "0002c420ff005ed85a12b4180719142607240001ffbaffc2fc6f00d72ee0",
+			port:     1,
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Pressure", 1200),
+		},
+		{
+			payload:  "010df6",
+			port:     15,
+			expected: nil,
+		},
+		{
+			payload:  "0101f4",
+			port:     15,
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Battery", 0.5),
+		},
+		{
+			payload:  "01157c",
+			port:     15,
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Battery", 5.5),
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(fmt.Sprintf("TestPort%vValidationWith%v", test.port, test.payload), func(t *testing.T) {
+			decoder := NewNomadXSv1Decoder()
+			got, _, err := decoder.Decode(test.payload, test.port, "")
+
+			if err == nil && test.expected == nil {
+				return
+			}
+
+			t.Logf("got %v", got)
+
+			if err != nil && test.expected == nil || err == nil || err.Error() != test.expected.Error() {
+				t.Errorf("expected: %v\ngot: %v", test.expected, err)
+			}
+		})
+	}
+}
+
 func TestInvalidPort(t *testing.T) {
 	decoder := NewNomadXSv1Decoder()
 	_, _, err := decoder.Decode("00", 0, "")
 	if err == nil {
 		t.Fatal("expected port not supported")
+	}
+}
+
+func TestPayloadTooShort(t *testing.T) {
+	decoder := NewNomadXSv1Decoder()
+	_, _, err := decoder.Decode("deadbeef", 1, "")
+
+	if err == nil || err.Error() != "payload too short" {
+		t.Fatal("expected error payload too short")
+	}
+}
+
+func TestPayloadTooLong(t *testing.T) {
+	decoder := NewNomadXSv1Decoder()
+	_, _, err := decoder.Decode("deadbeef4242deadbeef4242deadbeef4242deadbeef4242deadbeef4242deadbeef4242deadbeef4242deadbeef4242", 1, "")
+
+	if err == nil || err.Error() != "payload too long" {
+		t.Fatal("expected error payload too long")
 	}
 }

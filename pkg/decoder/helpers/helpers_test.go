@@ -24,15 +24,15 @@ func TestHexStringToBytes(t *testing.T) {
 
 type Port1Payload struct {
 	Moving bool    `json:"moving"`
-	Lat    float64 `json:"gpsLat"`
-	Lon    float64 `json:"gpsLon"`
-	Alt    float64 `json:"gpsAlt"`
-	Year   int     `json:"year"`
-	Month  int     `json:"month"`
-	Day    int     `json:"day"`
-	Hour   int     `json:"hour"`
-	Minute int     `json:"minute"`
-	Second int     `json:"second"`
+	Lat    float64 `json:"gpsLat" validate:"gte=-90,lte=90"`
+	Lon    float64 `json:"gpsLon" validate:"gte=-180,lte=180"`
+	Alt    float64 `json:"gpsAlt" validate:"gte=0,lte=20000"`
+	Year   int     `json:"year" validate:"gte=0,lte=255"`
+	Month  int     `json:"month" validate:"gte=0,lte=255"`
+	Day    int     `json:"day" validate:"gte=1,lte=31"`
+	Hour   int     `json:"hour" validate:"gte=0,lte=23"`
+	Minute int     `json:"minute" validate:"gte=0,lte=59"`
+	Second int     `json:"second" validate:"gte=0,lte=59"`
 	TS     int64   `json:"ts"`
 }
 

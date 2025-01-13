@@ -30,22 +30,22 @@ package nomadxs
 
 type Port1Payload struct {
 	Moving             bool    `json:"moving"`
-	Latitude           float64 `json:"latitude"`
-	Longitude          float64 `json:"longitude"`
+	Latitude           float64 `json:"latitude" validate:"gte=-90,lte=90"`
+	Longitude          float64 `json:"longitude" validate:"gte=-180,lte=180"`
 	Altitude           float64 `json:"altitude"`
-	Year               uint8   `json:"year"`
-	Month              uint8   `json:"month"`
-	Day                uint8   `json:"day"`
-	Hour               uint8   `json:"hour"`
-	Minute             uint8   `json:"minute"`
-	Second             uint8   `json:"second"`
+	Year               uint8   `json:"year" validate:"gte=0,lte=255"`
+	Month              uint8   `json:"month" validate:"gte=1,lte=12"`
+	Day                uint8   `json:"day" validate:"gte=1,lte=31"`
+	Hour               uint8   `json:"hour" validate:"gte=0,lte=23"`
+	Minute             uint8   `json:"minute" validate:"gte=0,lte=59"`
+	Second             uint8   `json:"second" validate:"gte=0,lte=59"`
 	TimeToFix          uint8   `json:"timeToFix"`
 	AmbientLight       uint16  `json:"ambientLight"`
 	AccelerometerXAxis int16   `json:"accelerometerXAxis"`
 	AccelerometerYAxis int16   `json:"accelerometerYAxis"`
 	AccelerometerZAxis int16   `json:"accelerometerZAxis"`
-	Temperature        float32 `json:"temperature"`
-	Pressure           float32 `json:"pressure"`
+	Temperature        float32 `json:"temperature" validate:"gte=-20,lte=60"`
+	Pressure           float32 `json:"pressure" validate:"gte=0,lte=1100"`
 	GyroscopeXAxis     float32 `json:"gyroscopeXAxis"`
 	GyroscopeYAxis     float32 `json:"gyroscopeYAxis"`
 	GyroscopeZAxis     float32 `json:"gyroscopeZAxis"`

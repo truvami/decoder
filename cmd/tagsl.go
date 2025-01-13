@@ -1,10 +1,12 @@
 package cmd
 
 import (
+	"errors"
 	"strconv"
 
 	"github.com/spf13/cobra"
 	"github.com/truvami/decoder/internal/logger"
+	"github.com/truvami/decoder/pkg/decoder/helpers"
 	"github.com/truvami/decoder/pkg/decoder/tagsl/v1"
 	"go.uber.org/zap"
 )
@@ -21,6 +23,7 @@ var tagslCmd = &cobra.Command{
 		logger.Logger.Debug("initializing tagsl decoder")
 		d := tagsl.NewTagSLv1Decoder(
 			tagsl.WithAutoPadding(AutoPadding),
+			tagsl.WithSkipValidation(SkipValidation),
 		)
 
 		port, err := strconv.Atoi(args[0])
@@ -32,8 +35,15 @@ var tagslCmd = &cobra.Command{
 
 		data, metadata, err := d.Decode(args[1], int16(port), "")
 		if err != nil {
-			logger.Logger.Error("error while decoding data", zap.Error(err))
-			return
+			if errors.Is(err, helpers.ErrValidationFailed) {
+				for _, err := range helpers.UnwrapError(err) {
+					logger.Logger.Warn("", zap.Error(err))
+				}
+				logger.Logger.Warn("validation for some fields failed - are you using the correct port?")
+			} else {
+				logger.Logger.Error("error while decoding data", zap.Error(err))
+				return
+			}
 		}
 
 		printJSON(data, metadata)

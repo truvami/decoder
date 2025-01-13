@@ -25,14 +25,14 @@ import "time"
 // Timestamp for the Wi-Fi scanning is TSGNSS – TTF + 10 seconds.
 type Port151Payload struct {
 	BufferLevel uint16    `json:"bufferLevel"`
-	Latitude    float64   `json:"latitude"`
-	Longitude   float64   `json:"longitude"`
+	Latitude    float64   `json:"latitude" validate:"gte=-90,lte=90"`
+	Longitude   float64   `json:"longitude" validate:"gte=-180,lte=180"`
 	Altitude    float64   `json:"altitude"`
 	Timestamp   time.Time `json:"timestamp"`
-	Battery     float64   `json:"battery"`
+	Battery     float64   `json:"battery" validate:"gte=1,lte=5"`
 	TTF         uint16    `json:"ttf"`
 	PDOP        float64   `json:"pdop"`
-	Satellites  float64   `json:"satellites"`
+	Satellites  uint8     `json:"satellites" validate:"gte=3,lte=27"`
 	Mac1        string    `json:"mac1"`
 	Rssi1       int8      `json:"rssi1"`
 	Mac2        string    `json:"mac2"`

@@ -2,15 +2,18 @@ package cmd
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
 	"time"
 
+	"github.com/go-playground/validator"
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 	"github.com/truvami/decoder/internal/logger"
 	"github.com/truvami/decoder/pkg/decoder"
+	"github.com/truvami/decoder/pkg/decoder/helpers"
 	"github.com/truvami/decoder/pkg/decoder/nomadxl/v1"
 	"github.com/truvami/decoder/pkg/decoder/nomadxs/v1"
 	"github.com/truvami/decoder/pkg/decoder/smartlabel/v1"
@@ -58,20 +61,25 @@ var httpCmd = &cobra.Command{
 				tagxl.NewTagXLv1Decoder(
 					loracloud.NewLoracloudMiddleware(accessToken),
 					tagxl.WithAutoPadding(AutoPadding),
+					tagxl.WithSkipValidation(SkipValidation),
 				),
 			},
 			{"tagsl/v1", tagsl.NewTagSLv1Decoder(
 				tagsl.WithAutoPadding(AutoPadding),
+				tagsl.WithSkipValidation(SkipValidation),
 			)},
 			{"nomadxs/v1", nomadxs.NewNomadXSv1Decoder(
 				nomadxs.WithAutoPadding(AutoPadding),
+				nomadxs.WithSkipValidation(SkipValidation),
 			)},
 			{"nomadxl/v1", nomadxl.NewNomadXLv1Decoder(
 				nomadxl.WithAutoPadding(AutoPadding),
+				nomadxl.WithSkipValidation(SkipValidation),
 			)},
 			{"smartlabel/v1", smartlabel.NewSmartLabelv1Decoder(
 				loracloud.NewLoracloudMiddleware(accessToken),
 				smartlabel.WithAutoPadding(AutoPadding),
+				smartlabel.WithSkipValidation(SkipValidation),
 			)},
 		}
 
@@ -101,9 +109,9 @@ func addDecoder(router *http.ServeMux, path string, decoder decoder.Decoder) {
 func getHandler(decoder decoder.Decoder) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		type request struct {
-			Port    int16  `json:"port"`
-			Payload string `json:"payload"`
-			DevEUI  string `json:"devEui"`
+			Port    int16  `json:"port" validate:"required,gt=0,lte=255"`
+			Payload string `json:"payload" validate:"required,hexadecimal"`
+			DevEUI  string `json:"devEui" validate:"omitempty,hexadecimal,len=16"`
 		}
 
 		// decode the request
@@ -113,55 +121,51 @@ func getHandler(decoder decoder.Decoder) func(http.ResponseWriter, *http.Request
 		err := json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
 			logger.Logger.Error("error while decoding request", zap.Error(err))
-			setHeaders(w, http.StatusBadRequest)
-			_, err = w.Write([]byte(err.Error()))
 
-			if err != nil {
-				logger.Logger.Error("error while sending response", zap.Error(err))
-			}
+			setBody(w, http.StatusBadRequest, map[string]interface{}{
+				"error": err.Error(),
+				"docs":  "https://docs.truvami.com",
+			})
 			return
 		}
 
-		// decode the payload
+		if err := validator.New().Struct(req); err != nil {
+			logger.Logger.Error("request validation failed", zap.Error(err))
+			setBody(w, http.StatusBadRequest, map[string]interface{}{
+				"error": "request validation failed",
+				"docs":  "https://docs.truvami.com",
+			})
+			return
+		}
+
 		logger.Logger.Debug("decoding payload")
+
+		var warnings []string = nil
 		data, metadata, err := decoder.Decode(req.Payload, req.Port, req.DevEUI)
 		if err != nil {
-			logger.Logger.Error("error while decoding payload", zap.Error(err))
-			setHeaders(w, http.StatusBadRequest)
-			_, err = w.Write([]byte(err.Error()))
+			if errors.Is(err, helpers.ErrValidationFailed) {
+				warnings = []string{}
+				for _, err := range helpers.UnwrapError(err) {
+					logger.Logger.Warn("validation error", zap.Error(err))
+					warnings = append(warnings, err.Error())
+				}
+				logger.Logger.Warn("validation for some fields failed - are you using the correct port?")
+			} else {
+				logger.Logger.Error("error while decoding payload", zap.Error(err))
 
-			if err != nil {
-				logger.Logger.Error("error while sending response", zap.Error(err))
+				setBody(w, http.StatusBadRequest, map[string]interface{}{
+					"error": err.Error(),
+					"docs":  "https://docs.truvami.com",
+				})
+				return
 			}
-			return
 		}
 
-		// data to json
-		logger.Logger.Debug("encoding response")
-		data, err = json.Marshal(map[string]interface{}{
+		setBody(w, http.StatusOK, map[string]interface{}{
 			"data":     data,
 			"metadata": metadata,
+			"warnings": warnings,
 		})
-		if err != nil {
-			logger.Logger.Error("error while encoding response", zap.Error(err))
-			setHeaders(w, http.StatusInternalServerError)
-			_, err = w.Write([]byte(err.Error()))
-
-			if err != nil {
-				logger.Logger.Error("error while sending response", zap.Error(err))
-			}
-			return
-		}
-
-		// send the response
-		setHeaders(w, http.StatusOK)
-		_, err = w.Write(data.([]byte))
-		if err != nil {
-			logger.Logger.Error("error while sending response", zap.Error(err))
-			return
-		}
-
-		logger.Logger.Debug("response sent", zap.Any("response", string(data.([]byte))))
 	}
 }
 
@@ -171,10 +175,43 @@ type responseWriter struct {
 }
 
 func setHeaders(w http.ResponseWriter, status int) {
-	w.Header().Set("Content-Type", "application/json")
+	if status >= 400 {
+		w.Header().Set("Content-Type", "application/problem+json")
+	} else {
+		w.Header().Set("Content-Type", "application/json")
+	}
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "POST")
 	w.WriteHeader(status)
+}
+
+func setBody(w http.ResponseWriter, status int, body map[string]interface{}) {
+	logger.Logger.Debug("encoding response")
+
+	// add traceId
+	traceId := uuid.New().String()
+	body["traceId"] = traceId
+
+	data, err := json.Marshal(body)
+	if err != nil {
+		logger.Logger.Error("error while encoding response", zap.Error(err))
+		setHeaders(w, http.StatusInternalServerError)
+		_, err = w.Write([]byte(err.Error()))
+
+		if err != nil {
+			logger.Logger.Error("error while sending response", zap.Error(err))
+		}
+		return
+	}
+
+	setHeaders(w, status)
+	_, err = w.Write(data)
+	if err != nil {
+		logger.Logger.Error("error while sending response", zap.Error(err))
+		return
+	}
+
+	logger.Logger.Debug("response sent", zap.Any("response", string(data)))
 }
 
 func healthHandler(w http.ResponseWriter, r *http.Request) {

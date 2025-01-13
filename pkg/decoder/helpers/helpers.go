@@ -2,12 +2,14 @@ package helpers
 
 import (
 	h "encoding/hex"
+	"errors"
 	"fmt"
 
 	"reflect"
 	"strings"
 	"time"
 
+	"github.com/go-playground/validator"
 	"github.com/truvami/decoder/pkg/decoder"
 )
 
@@ -88,6 +90,25 @@ func extractFieldValue(payloadBytes []byte, start int, length int, optional bool
 	return value, nil
 }
 
+func validateFieldValue(field reflect.StructField, fieldValue reflect.Value) error {
+	structType := reflect.StructOf([]reflect.StructField{field})
+
+	structValue := reflect.New(structType).Elem()
+	structValue.FieldByName(field.Name).Set(fieldValue)
+
+	return validator.New().Struct(structValue.Interface())
+}
+
+var ErrValidationFailed = errors.New("validation failed")
+
+func UnwrapError(err error) []error {
+	var errs []error = []error{}
+	if err, ok := err.(interface{ Unwrap() []error }); ok {
+		errs = append(errs, err.Unwrap()...)
+	}
+	return errs
+}
+
 // DecodeLoRaWANPayload decodes the payload based on the provided configuration and populates the target struct
 func Parse(payloadHex string, config decoder.PayloadConfig) (interface{}, error) {
 	// Convert hex payload to bytes
@@ -98,6 +119,8 @@ func Parse(payloadHex string, config decoder.PayloadConfig) (interface{}, error)
 
 	// Create an instance of the target struct
 	targetValue := reflect.New(config.TargetType).Elem()
+
+	errs := []error{}
 
 	// Iterate over the fields in the config and extract their values
 	for _, field := range config.Fields {
@@ -133,9 +156,17 @@ func Parse(payloadHex string, config decoder.PayloadConfig) (interface{}, error)
 			transformedValue := field.Transform(value)
 			fieldValue.Set(reflect.ValueOf(transformedValue))
 		}
+
+		fieldName, ok := targetValue.Type().FieldByName(field.Name)
+		if ok {
+			err := validateFieldValue(fieldName, fieldValue)
+			if err != nil {
+				errs = append(errs, fmt.Errorf("%w for %s %v", ErrValidationFailed, fieldName.Name, fieldValue))
+			}
+		}
 	}
 
-	return targetValue.Interface(), nil
+	return targetValue.Interface(), errors.Join(errs...)
 }
 
 func ParseTimestamp(timestamp int) time.Time {
@@ -172,4 +203,30 @@ func HexNullPad(payload *string, config *decoder.PayloadConfig) string {
 		*payload = strings.Repeat("0", paddingBits) + *payload
 	}
 	return *payload
+}
+
+func ValidateLength(payload *string, config *decoder.PayloadConfig) error {
+	var payloadLength = len(*payload) / 2
+
+	var minLength = 0
+	for _, field := range config.Fields {
+		if !field.Optional {
+			minLength = field.Start + field.Length
+		}
+	}
+
+	var maxLength = 0
+	for _, field := range config.Fields {
+		maxLength = field.Start + field.Length
+	}
+
+	if payloadLength < minLength {
+		return fmt.Errorf("payload too short")
+	}
+
+	if payloadLength > maxLength {
+		return fmt.Errorf("payload too long")
+	}
+
+	return nil
 }

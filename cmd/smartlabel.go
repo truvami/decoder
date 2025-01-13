@@ -1,10 +1,12 @@
 package cmd
 
 import (
+	"errors"
 	"strconv"
 
 	"github.com/spf13/cobra"
 	"github.com/truvami/decoder/internal/logger"
+	"github.com/truvami/decoder/pkg/decoder/helpers"
 	"github.com/truvami/decoder/pkg/decoder/smartlabel/v1"
 	"github.com/truvami/decoder/pkg/loracloud"
 	"go.uber.org/zap"
@@ -23,6 +25,7 @@ var smartlabelCmd = &cobra.Command{
 		d := smartlabel.NewSmartLabelv1Decoder(
 			loracloud.NewLoracloudMiddleware("appEui"),
 			smartlabel.WithAutoPadding(AutoPadding),
+			smartlabel.WithSkipValidation(SkipValidation),
 		)
 
 		port, err := strconv.Atoi(args[0])
@@ -34,8 +37,15 @@ var smartlabelCmd = &cobra.Command{
 
 		data, metadata, err := d.Decode(args[1], int16(port), "")
 		if err != nil {
-			logger.Logger.Error("error while decoding data", zap.Error(err))
-			return
+			if errors.Is(err, helpers.ErrValidationFailed) {
+				for _, err := range helpers.UnwrapError(err) {
+					logger.Logger.Warn("", zap.Error(err))
+				}
+				logger.Logger.Warn("validation for some fields failed - are you using the correct port?")
+			} else {
+				logger.Logger.Error("error while decoding data", zap.Error(err))
+				return
+			}
 		}
 
 		printJSON(data, metadata)

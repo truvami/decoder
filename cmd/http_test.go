@@ -36,7 +36,7 @@ func TestGetHandler(t *testing.T) {
 	decoder := tagsl.NewTagSLv1Decoder()
 	handler := getHandler(decoder)
 
-	reqBody := `{"port": 1, "payload": "8002cdcd1300744f5e166018040b14341a", "devEui": "example devEUI"}`
+	reqBody := `{"port": 1, "payload": "8002cdcd1300744f5e166018040b14341a", "devEui": ""}`
 	req, err := http.NewRequest("POST", "/test/path", strings.NewReader(reqBody))
 	if err != nil {
 		t.Fatalf("failed to create request: %v", err)
@@ -59,7 +59,7 @@ func TestGetHandler(t *testing.T) {
 	}
 
 	// test with invalid JSON
-	reqBody = `{"port": 1, "payload": "8002cdcd1300744f5e166018040b14341a", "devEui": "example devEUI"`
+	reqBody = `{"port": 1, "payload": "8002cdcd1300744f5e166018040b14341a", "devEui": ""`
 	req, err = http.NewRequest("POST", "/test/path", strings.NewReader(reqBody))
 	if err != nil {
 		t.Fatalf("failed to create request: %v", err)
@@ -76,7 +76,7 @@ func TestGetHandler(t *testing.T) {
 	}
 
 	// test with invalid payload
-	reqBody = `{"port": 1, "payload": "invalid", "devEui": "example devEUI"}`
+	reqBody = `{"port": 1, "payload": "invalid", "devEui": ""}`
 	req, err = http.NewRequest("POST", "/test/path", strings.NewReader(reqBody))
 	if err != nil {
 		t.Fatalf("failed to create request: %v", err)
@@ -131,7 +131,7 @@ func TestHTTPCmd(t *testing.T) {
 	}()
 
 	// create a new HTTP request to simulate the command execution
-	reqBody := `{"port": 105, "payload": "0028672658500172a741b1e238b572a741b1e08bb03498b5c583e2b172a741b1e0cda772a741beed4cc472a741beef53b772a741b1dd0000", "devEui": "example devEUI"}`
+	reqBody := `{"port": 105, "payload": "0028672658500172a741b1e238b572a741b1e08bb03498b5c583e2b172a741b1e0cda772a741beed4cc472a741beef53b7"}`
 	req, err := http.NewRequest("POST", "http://localhost:8080/tagsl/v1", strings.NewReader(reqBody))
 	if err != nil {
 		t.Fatalf("failed to create request: %v", err)

@@ -13,14 +13,14 @@ func TestDecode(t *testing.T) {
 		expected    interface{}
 	}{
 		{
-			payload:     "00000001fdd5c693000079300001b45d000000000000000000f600000000000000000b3fd724",
+			payload:     "00000001fdd5c693000079300001b45d000000000000000000d700000000000000000b3fd724",
 			port:        101,
 			autoPadding: false,
 			expected: Port101Payload{
 				SystemTime:         8553612947,
 				UTCDate:            31024,
 				UTCTime:            111709,
-				Temperature:        24.6,
+				Temperature:        21.5,
 				Pressure:           0,
 				TimeToFix:          36,
 				AccelerometerXAxis: 0,
@@ -31,14 +31,14 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "1fdd5c693000079300001b45d000000000000000000f600000000000000000b3fd724",
+			payload:     "1fdd5c693000079300001b45d000000000000000000d700000000000000000b3fd724",
 			port:        101,
 			autoPadding: true,
 			expected: Port101Payload{
 				SystemTime:         8553612947,
 				UTCDate:            31024,
 				UTCTime:            111709,
-				Temperature:        24.6,
+				Temperature:        21.5,
 				Pressure:           0,
 				TimeToFix:          36,
 				AccelerometerXAxis: 0,
@@ -96,5 +96,23 @@ func TestInvalidPort(t *testing.T) {
 	_, _, err := decoder.Decode("00", 0, "")
 	if err == nil {
 		t.Fatal("expected port not supported")
+	}
+}
+
+func TestPayloadTooShort(t *testing.T) {
+	decoder := NewNomadXLv1Decoder()
+	_, _, err := decoder.Decode("deadbeef", 101, "")
+
+	if err == nil || err.Error() != "payload too short" {
+		t.Fatal("expected error payload too short")
+	}
+}
+
+func TestPayloadTooLong(t *testing.T) {
+	decoder := NewNomadXLv1Decoder()
+	_, _, err := decoder.Decode("deadbeef4242deadbeef4242deadbeef4242deadbeef4242deadbeef4242deadbeef4242deadbeef4242", 101, "")
+
+	if err == nil || err.Error() != "payload too long" {
+		t.Fatal("expected error payload too long")
 	}
 }

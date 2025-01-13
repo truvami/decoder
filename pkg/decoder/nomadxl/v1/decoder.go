@@ -11,7 +11,8 @@ import (
 type Option func(*NomadXLv1Decoder)
 
 type NomadXLv1Decoder struct {
-	autoPadding bool
+	autoPadding    bool
+	skipValidation bool
 }
 
 func NewNomadXLv1Decoder(options ...Option) decoder.Decoder {
@@ -27,6 +28,12 @@ func NewNomadXLv1Decoder(options ...Option) decoder.Decoder {
 func WithAutoPadding(autoPadding bool) Option {
 	return func(t *NomadXLv1Decoder) {
 		t.autoPadding = autoPadding
+	}
+}
+
+func WithSkipValidation(skipValidation bool) Option {
+	return func(t *NomadXLv1Decoder) {
+		t.skipValidation = skipValidation
 	}
 }
 
@@ -47,7 +54,7 @@ func (t NomadXLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 					return float32(v.(int)) / 10
 				}},
 				{Name: "Pressure", Start: 26, Length: 2, Transform: func(v interface{}) interface{} {
-					return float32(v.(int))
+					return float32(v.(int)) / 10
 				}},
 				{Name: "AccelerometerXAxis", Start: 28, Length: 2},
 				{Name: "AccelerometerYAxis", Start: 30, Length: 2},
@@ -94,10 +101,13 @@ func (t NomadXLv1Decoder) Decode(data string, port int16, devEui string) (interf
 		data = helpers.HexNullPad(&data, &config)
 	}
 
-	decodedData, err := helpers.Parse(data, config)
-	if err != nil {
-		return nil, nil, err
+	if !t.skipValidation {
+		err := helpers.ValidateLength(&data, &config)
+		if err != nil {
+			return nil, nil, err
+		}
 	}
 
-	return decodedData, nil, nil
+	decodedData, err := helpers.Parse(data, config)
+	return decodedData, nil, err
 }
