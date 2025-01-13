@@ -8,6 +8,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/go-playground/validator"
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 	"github.com/truvami/decoder/internal/logger"
@@ -108,9 +109,9 @@ func addDecoder(router *http.ServeMux, path string, decoder decoder.Decoder) {
 func getHandler(decoder decoder.Decoder) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		type request struct {
-			Port    int16  `json:"port"`
-			Payload string `json:"payload"`
-			DevEUI  string `json:"devEui"`
+			Port    int16  `json:"port" validate:"required,gt=0,lte=255"`
+			Payload string `json:"payload" validate:"required,hexadecimal"`
+			DevEUI  string `json:"devEui,omitempty" validate:"omitempty,hexadecimal,len=16"`
 		}
 
 		// decode the request
@@ -128,15 +129,24 @@ func getHandler(decoder decoder.Decoder) func(http.ResponseWriter, *http.Request
 			return
 		}
 
-		// decode the payload
-		var warnings []string = nil
+		if err := validator.New().Struct(req); err != nil {
+			logger.Logger.Error("request validation failed", zap.Error(err))
+			setBody(w, http.StatusBadRequest, map[string]interface{}{
+				"error": "request validation failed",
+				"docs":  "https://docs.truvami.com",
+			})
+			return
+		}
+
 		logger.Logger.Debug("decoding payload")
+
+		var warnings []string = nil
 		data, metadata, err := decoder.Decode(req.Payload, req.Port, req.DevEUI)
 		if err != nil {
 			if errors.Is(err, helpers.ErrValidationFailed) {
 				warnings = []string{}
 				for _, err := range helpers.UnwrapError(err) {
-					logger.Logger.Warn("", zap.Error(err))
+					logger.Logger.Warn("validation error", zap.Error(err))
 					warnings = append(warnings, err.Error())
 				}
 				logger.Logger.Warn("validation for some fields failed - are you using the correct port?")
@@ -177,6 +187,10 @@ func setHeaders(w http.ResponseWriter, status int) {
 
 func setBody(w http.ResponseWriter, status int, body map[string]interface{}) {
 	logger.Logger.Debug("encoding response")
+
+	// add traceId
+	traceId := uuid.New().String()
+	body["traceId"] = traceId
 
 	data, err := json.Marshal(body)
 	if err != nil {
