@@ -78,6 +78,7 @@ var httpCmd = &cobra.Command{
 			{"smartlabel/v1", smartlabel.NewSmartLabelv1Decoder(
 				loracloud.NewLoracloudMiddleware(accessToken),
 				smartlabel.WithAutoPadding(AutoPadding),
+				smartlabel.WithSkipValidation(SkipValidation),
 			)},
 		}
 

@@ -25,6 +25,7 @@ var smartlabelCmd = &cobra.Command{
 		d := smartlabel.NewSmartLabelv1Decoder(
 			loracloud.NewLoracloudMiddleware("appEui"),
 			smartlabel.WithAutoPadding(AutoPadding),
+			smartlabel.WithSkipValidation(SkipValidation),
 		)
 
 		port, err := strconv.Atoi(args[0])
