@@ -111,7 +111,7 @@ func getHandler(decoder decoder.Decoder) func(http.ResponseWriter, *http.Request
 		type request struct {
 			Port    int16  `json:"port" validate:"required,gt=0,lte=255"`
 			Payload string `json:"payload" validate:"required,hexadecimal"`
-			DevEUI  string `json:"devEui,omitempty" validate:"omitempty,hexadecimal,len=16"`
+			DevEUI  string `json:"devEui" validate:"omitempty,hexadecimal,len=16"`
 		}
 
 		// decode the request
