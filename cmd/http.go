@@ -120,12 +120,11 @@ func getHandler(decoder decoder.Decoder) func(http.ResponseWriter, *http.Request
 		err := json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
 			logger.Logger.Error("error while decoding request", zap.Error(err))
-			setHeaders(w, http.StatusBadRequest)
-			_, err = w.Write([]byte(err.Error()))
 
-			if err != nil {
-				logger.Logger.Error("error while sending response", zap.Error(err))
-			}
+			setBody(w, http.StatusBadRequest, map[string]interface{}{
+				"error": err.Error(),
+				"docs":  "https://docs.truvami.com",
+			})
 			return
 		}
 
@@ -143,43 +142,20 @@ func getHandler(decoder decoder.Decoder) func(http.ResponseWriter, *http.Request
 				logger.Logger.Warn("validation for some fields failed - are you using the correct port?")
 			} else {
 				logger.Logger.Error("error while decoding payload", zap.Error(err))
-				setHeaders(w, http.StatusBadRequest)
-				_, err = w.Write([]byte(err.Error()))
 
-				if err != nil {
-					logger.Logger.Error("error while sending response", zap.Error(err))
-				}
+				setBody(w, http.StatusBadRequest, map[string]interface{}{
+					"error": err.Error(),
+					"docs":  "https://docs.truvami.com",
+				})
 				return
 			}
 		}
 
-		// data to json
-		logger.Logger.Debug("encoding response")
-		data, err = json.Marshal(map[string]interface{}{
+		setBody(w, http.StatusOK, map[string]interface{}{
 			"data":     data,
 			"metadata": metadata,
 			"warnings": warnings,
 		})
-		if err != nil {
-			logger.Logger.Error("error while encoding response", zap.Error(err))
-			setHeaders(w, http.StatusInternalServerError)
-			_, err = w.Write([]byte(err.Error()))
-
-			if err != nil {
-				logger.Logger.Error("error while sending response", zap.Error(err))
-			}
-			return
-		}
-
-		// send the response
-		setHeaders(w, http.StatusOK)
-		_, err = w.Write(data.([]byte))
-		if err != nil {
-			logger.Logger.Error("error while sending response", zap.Error(err))
-			return
-		}
-
-		logger.Logger.Debug("response sent", zap.Any("response", string(data.([]byte))))
 	}
 }
 
@@ -197,6 +173,31 @@ func setHeaders(w http.ResponseWriter, status int) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "POST")
 	w.WriteHeader(status)
+}
+
+func setBody(w http.ResponseWriter, status int, body map[string]interface{}) {
+	logger.Logger.Debug("encoding response")
+
+	data, err := json.Marshal(body)
+	if err != nil {
+		logger.Logger.Error("error while encoding response", zap.Error(err))
+		setHeaders(w, http.StatusInternalServerError)
+		_, err = w.Write([]byte(err.Error()))
+
+		if err != nil {
+			logger.Logger.Error("error while sending response", zap.Error(err))
+		}
+		return
+	}
+
+	setHeaders(w, status)
+	_, err = w.Write(data)
+	if err != nil {
+		logger.Logger.Error("error while sending response", zap.Error(err))
+		return
+	}
+
+	logger.Logger.Debug("response sent", zap.Any("response", string(data)))
 }
 
 func healthHandler(w http.ResponseWriter, r *http.Request) {
