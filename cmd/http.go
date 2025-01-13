@@ -189,7 +189,11 @@ type responseWriter struct {
 }
 
 func setHeaders(w http.ResponseWriter, status int) {
-	w.Header().Set("Content-Type", "application/json")
+	if status >= 400 {
+		w.Header().Set("Content-Type", "application/problem+json")
+	} else {
+		w.Header().Set("Content-Type", "application/json")
+	}
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "POST")
 	w.WriteHeader(status)
