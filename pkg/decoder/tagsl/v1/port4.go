@@ -27,8 +27,8 @@ type Port4Payload struct {
 	FirmwareVersionMinor            uint8  `json:"firmwareVersionMinor"`
 	FirmwareVersionPatch            uint8  `json:"firmwareVersionPatch"`
 	HardwareVersionType             uint8  `json:"hardwareVersionType"`
-	HardwareVersionRevision         uint8  `json:"hardwareVersionRevision" validate:"gte=300,lte=604800"`
-	BatteryKeepAliveMessageInterval uint32 `json:"batteryKeepAliveMessageInterval"`
+	HardwareVersionRevision         uint8  `json:"hardwareVersionRevision"`
+	BatteryKeepAliveMessageInterval uint32 `json:"batteryKeepAliveMessageInterval" validate:"gte=300,lte=604800"`
 	BatchSize                       uint16 `json:"batchSize" validate:"lte=50"`
 	BufferSize                      uint16 `json:"bufferSize" validate:"gte=128,lte=8128"`
 }

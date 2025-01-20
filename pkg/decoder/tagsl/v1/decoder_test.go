@@ -173,7 +173,7 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:        "0000003c0000012c000151800078012c05dc02020100010200005460deadbeef",
+			payload:        "0000003c0000012c000151800078012c05dc02020100010200005460000a1000",
 			port:           4,
 			autoPadding:    false,
 			skipValidation: true,
@@ -191,6 +191,8 @@ func TestDecode(t *testing.T) {
 				HardwareVersionType:             1,
 				HardwareVersionRevision:         2,
 				BatteryKeepAliveMessageInterval: 21600,
+				BatchSize:                       10,
+				BufferSize:                      4096,
 			},
 		},
 		{
