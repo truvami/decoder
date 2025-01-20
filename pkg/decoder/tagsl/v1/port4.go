@@ -16,18 +16,18 @@ package tagsl
 // +-------+------+-------------------------------------------+------------+
 
 type Port4Payload struct {
-	LocalizationIntervalWhileMoving uint32 `json:"localizationIntervalWhileMoving"`
-	LocalizationIntervalWhileSteady uint32 `json:"localizationIntervalWhileSteady"`
-	HeartbeatInterval               uint32 `json:"heartbeatInterval"`
-	GPSTimeoutWhileWaitingForFix    uint16 `json:"gpsTimeoutWhileWaitingForFix"`
-	AccelerometerWakeupThreshold    uint16 `json:"accelerometerWakeupThreshold"`
-	AccelerometerDelay              uint16 `json:"accelerometerDelay"`
+	LocalizationIntervalWhileMoving uint32 `json:"localizationIntervalWhileMoving" validate:"gte=60,lte=86400"`
+	LocalizationIntervalWhileSteady uint32 `json:"localizationIntervalWhileSteady" validate:"gte=120,lte=86400"`
+	HeartbeatInterval               uint32 `json:"heartbeatInterval" validate:"gte=300,lte=604800"`
+	GPSTimeoutWhileWaitingForFix    uint16 `json:"gpsTimeoutWhileWaitingForFix" validate:"gte=60,lte=86400"`
+	AccelerometerWakeupThreshold    uint16 `json:"accelerometerWakeupThreshold" validate:"gte=10,lte=8000"`
+	AccelerometerDelay              uint16 `json:"accelerometerDelay" validate:"gte=1000,lte=10000"`
 	DeviceState                     uint8  `json:"deviceState"`
 	FirmwareVersionMajor            uint8  `json:"firmwareVersionMajor"`
 	FirmwareVersionMinor            uint8  `json:"firmwareVersionMinor"`
 	FirmwareVersionPatch            uint8  `json:"firmwareVersionPatch"`
 	HardwareVersionType             uint8  `json:"hardwareVersionType"`
-	HardwareVersionRevision         uint8  `json:"hardwareVersionRevision"`
+	HardwareVersionRevision         uint8  `json:"hardwareVersionRevision" validate:"gte=300,lte=604800"`
 	BatteryKeepAliveMessageInterval uint32 `json:"batteryKeepAliveMessageInterval"`
 	BatchSize                       uint16 `json:"batchSize" validate:"lte=50"`
 	BufferSize                      uint16 `json:"bufferSize" validate:"gte=128,lte=8128"`
