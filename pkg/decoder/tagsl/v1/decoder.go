@@ -107,6 +107,8 @@ func (t TagSLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 				{Name: "HardwareVersionType", Start: 22, Length: 1},
 				{Name: "HardwareVersionRevision", Start: 23, Length: 1},
 				{Name: "BatteryKeepAliveMessageInterval", Start: 24, Length: 4},
+				{Name: "BatchSize", Start: 28, Length: 2, Optional: true},
+				{Name: "BufferSize", Start: 30, Length: 2, Optional: true},
 			},
 			TargetType: reflect.TypeOf(Port4Payload{}),
 		}, nil
