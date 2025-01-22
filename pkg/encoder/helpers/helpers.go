@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"encoding/hex"
 	h "encoding/hex"
 	"errors"
 	"fmt"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/go-playground/validator"
 	"github.com/truvami/decoder/pkg/decoder"
+	"github.com/truvami/decoder/pkg/encoder"
 )
 
 func HexStringToBytes(hexString string) ([]byte, error) {
@@ -205,7 +207,7 @@ func HexNullPad(payload *string, config *decoder.PayloadConfig) string {
 	return *payload
 }
 
-func ValidateLength(payload *string, config *decoder.PayloadConfig) error {
+func ValidateLength(payload *string, config *encoder.PayloadConfig) error {
 	var payloadLength = len(*payload) / 2
 
 	var minLength = 0
@@ -232,51 +234,67 @@ func ValidateLength(payload *string, config *decoder.PayloadConfig) error {
 }
 
 
-// Encode encodes the provided data into a payload string based on the configuration
-func Encode(data interface{}, config decoder.PayloadConfig) (string, error) {
-    v := reflect.ValueOf(data)
-    if v.Kind() != reflect.Struct {
-        return "", fmt.Errorf("data must be a struct")
-    }
+func Encode(data interface{}, config encoder.PayloadConfig) (string, error) {
+	v := reflect.ValueOf(data)
 
-    payload := make([]byte, config.Length)
+	// Validate input data is a struct
+	if v.Kind() != reflect.Struct {
+		return "", fmt.Errorf("data must be a struct")
+	}
 
-    for _, field := range config.Fields {
-        fieldValue := v.FieldByName(field.Name)
-        if !fieldValue.IsValid() {
-            return "", fmt.Errorf("field %s not found in data", field.Name)
-        }
+	// Determine total payload length
+	var length int
+	for _, field := range config.Fields {
+		if field.Start+field.Length > length {
+			length = field.Start + field.Length
+		}
+	}
+	payload := make([]byte, length)
 
-        var fieldBytes []byte
-        switch fieldValue.Kind() {
-        case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-            fieldBytes = intToBytes(fieldValue.Int(), field.Length)
-        case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-            fieldBytes = uintToBytes(fieldValue.Uint(), field.Length)
-        case reflect.String:
-            fieldBytes = []byte(fieldValue.String())
-        default:
-            return "", fmt.Errorf("unsupported field type: %s", fieldValue.Kind())
-        }
+	// Encode fields into the payload
+	for _, field := range config.Fields {
+		fieldValue := v.FieldByName(field.Name)
 
-        copy(payload[field.Start:field.Start+field.Length], fieldBytes)
-    }
+		// Check if the field exists
+		if !fieldValue.IsValid() {
+			return "", fmt.Errorf("field %s not found in data", field.Name)
+		}
 
-    return string(payload), nil
+		// Convert the value to bytes
+		var fieldBytes []byte
+		switch fieldValue.Kind() {
+		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+			fieldBytes = uintToBytes(fieldValue.Uint(), field.Length)
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+			fieldBytes = intToBytes(fieldValue.Int(), field.Length)
+		default:
+			return "", fmt.Errorf("unsupported field type: %s", fieldValue.Kind())
+		}
+
+		// Copy the bytes into the payload at the correct position
+		copy(payload[field.Start:field.Start+field.Length], fieldBytes)
+	}
+
+	// Convert the payload to a hexadecimal string
+	return hex.EncodeToString(payload), nil
 }
 
-func intToBytes(n int64, length int) []byte {
-    bytes := make([]byte, length)
-    for i := 0; i < length; i++ {
-        bytes[length-i-1] = byte(n >> (8 * i))
-    }
-    return bytes
+// intToBytes converts an integer value to a byte slice
+func intToBytes(value int64, length int) []byte {
+	buf := make([]byte, length)
+	for i := length - 1; i >= 0; i-- {
+		buf[i] = byte(value & 0xFF)
+		value >>= 8
+	}
+	return buf
 }
 
-func uintToBytes(n uint64, length int) []byte {
-    bytes := make([]byte, length)
-    for i := 0; i < length; i++ {
-        bytes[length-i-1] = byte(n >> (8 * i))
-    }
-    return bytes
+// uintToBytes converts an unsigned integer value to a byte slice
+func uintToBytes(value uint64, length int) []byte {
+	buf := make([]byte, length)
+	for i := length - 1; i >= 0; i-- {
+		buf[i] = byte(value & 0xFF)
+		value >>= 8
+	}
+	return buf
 }

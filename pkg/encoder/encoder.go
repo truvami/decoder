@@ -1,4 +1,4 @@
-package decoder
+package encoder
 
 import "reflect"
 
@@ -20,5 +20,5 @@ type PayloadConfig struct {
 }
 
 type Encoder interface {
-	Encode(string, int16, string) (interface{}, interface{}, error)
+	Encode(interface{}, int16, string) (interface{}, interface{}, error)
 }

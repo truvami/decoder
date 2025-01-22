@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/truvami/decoder/pkg/decoder"
+	"github.com/truvami/decoder/pkg/encoder"
 	"github.com/truvami/decoder/pkg/encoder/helpers"
 )
 
@@ -38,25 +38,25 @@ func WithSkipValidation(skipValidation bool) Option {
 }
 
 // Encode encodes the provided data into a payload string
-func (t TagSLv1Encoder) Encode(data interface{}, port int16) (string, error) {
-    config, err := t.getConfig(port)
-    if err != nil {
-        return "", err
-    }
+func (t TagSLv1Encoder) Encode(data interface{}, port int16, extra string) (interface{}, interface{}, error) {
+	config, err := t.getConfig(port)
+	if err != nil {
+		return nil, nil, err
+	}
 
-    payload, err := helpers.Encode(data, config)
-    if err != nil {
-        return "", err
-    }
+	payload, err := helpers.Encode(data, config)
+	if err != nil {
+		return nil, nil, err
+	}
 
-    if !t.skipValidation {
-        err := helpers.ValidateLength(&payload, &config)
-        if err != nil {
-            return "", err
-        }
-    }
+	if !t.skipValidation {
+		err := helpers.ValidateLength(&payload, &config)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
 
-    return payload, nil
+	return payload, extra, nil
 }
 
 // https://docs.truvami.com/docs/payloads/tag-S
@@ -75,15 +75,9 @@ func (t TagSLv1Encoder) getConfig(port int16) (encoder.PayloadConfig, error) {
 				{Name: "GPSTimeoutWhileWaitingForFix", Start: 15, Length: 2},
 				{Name: "AccelerometerWakeupThreshold", Start: 17, Length: 2},
 				{Name: "AccelerometerDelay", Start: 19, Length: 2},
-				{Name: "DeviceState", Start: 21, Length: 1},
-				{Name: "FirmwareVersionMajor", Start: 22, Length: 1},
-				{Name: "FirmwareVersionMinor", Start: 23, Length: 1},
-				{Name: "FirmwareVersionPatch", Start: 24, Length: 1},
-				{Name: "HardwareVersionType", Start: 25, Length: 1},
-				{Name: "HardwareVersionRevision", Start: 26, Length: 1},
-				{Name: "BatteryKeepAliveMessageInterval", Start: 27, Length: 4},
-				{Name: "BatchSize", Start: 31, Length: 2, Optional: true},
-				{Name: "BufferSize", Start: 33, Length: 2, Optional: true},
+				{Name: "BatteryKeepAliveMessageInterval", Start: 21, Length: 4},
+				{Name: "BatchSize", Start: 25, Length: 2, Optional: true},
+				{Name: "BufferSize", Start: 27, Length: 2, Optional: true},
 			},
 			TargetType: reflect.TypeOf(Port128Payload{}),
 		}, nil
