@@ -5,8 +5,8 @@ import (
 	"reflect"
 	"strings"
 
+	helpers "github.com/truvami/decoder/pkg/common"
 	"github.com/truvami/decoder/pkg/decoder"
-	"github.com/truvami/decoder/pkg/decoder/helpers"
 	"github.com/truvami/decoder/pkg/loracloud"
 )
 

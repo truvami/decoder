@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/truvami/decoder/pkg/decoder/helpers"
+	helpers "github.com/truvami/decoder/pkg/common"
 )
 
 func TestDecode(t *testing.T) {

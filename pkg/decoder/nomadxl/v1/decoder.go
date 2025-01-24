@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"reflect"
 
+	helpers "github.com/truvami/decoder/pkg/common"
 	"github.com/truvami/decoder/pkg/decoder"
-	"github.com/truvami/decoder/pkg/decoder/helpers"
 )
 
 type Option func(*NomadXLv1Decoder)

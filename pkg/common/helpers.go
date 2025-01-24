@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"encoding/hex"
 	h "encoding/hex"
 	"errors"
 	"fmt"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/go-playground/validator"
 	"github.com/truvami/decoder/pkg/decoder"
+	"github.com/truvami/decoder/pkg/encoder"
 )
 
 func HexStringToBytes(hexString string) ([]byte, error) {
@@ -229,4 +231,69 @@ func ValidateLength(payload *string, config *decoder.PayloadConfig) error {
 	}
 
 	return nil
+}
+
+func Encode(data interface{}, config encoder.PayloadConfig) (string, error) {
+	v := reflect.ValueOf(data)
+
+	// Validate input data is a struct
+	if v.Kind() != reflect.Struct {
+		return "", fmt.Errorf("data must be a struct")
+	}
+
+	// Determine total payload length
+	var length int
+	for _, field := range config.Fields {
+		if field.Start+field.Length > length {
+			length = field.Start + field.Length
+		}
+	}
+	payload := make([]byte, length)
+
+	// Encode fields into the payload
+	for _, field := range config.Fields {
+		fieldValue := v.FieldByName(field.Name)
+
+		// Check if the field exists
+		if !fieldValue.IsValid() {
+			return "", fmt.Errorf("field %s not found in data", field.Name)
+		}
+
+		// Convert the value to bytes
+		var fieldBytes []byte
+		switch fieldValue.Kind() {
+		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+			fieldBytes = uintToBytes(fieldValue.Uint(), field.Length)
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+			fieldBytes = intToBytes(fieldValue.Int(), field.Length)
+		default:
+			return "", fmt.Errorf("unsupported field type: %s", fieldValue.Kind())
+		}
+
+		// Copy the bytes into the payload at the correct position
+		copy(payload[field.Start:field.Start+field.Length], fieldBytes)
+	}
+
+	// Convert the payload to a hexadecimal string
+	return hex.EncodeToString(payload), nil
+}
+
+// intToBytes converts an integer value to a byte slice
+func intToBytes(value int64, length int) []byte {
+	buf := make([]byte, length)
+	for i := length - 1; i >= 0; i-- {
+		buf[i] = byte(value & 0xFF)
+		value >>= 8
+	}
+	return buf
+}
+
+// uintToBytes converts an unsigned integer value to a byte slice
+func uintToBytes(value uint64, length int) []byte {
+	buf := make([]byte, length)
+	for i := length - 1; i >= 0; i-- {
+		buf[i] = byte(value & 0xFF)
+		value >>= 8
+	}
+	return buf
 }
