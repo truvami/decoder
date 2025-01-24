@@ -1,9 +1,9 @@
 package tagsl
 
 type Port128Payload struct {
-	BLE								uint8 `json:"ble" validate:"gte=0,lte=1"`
-	GPS								uint8 `json:"gps" validate:"gte=0,lte=1"`
-	WIFI							uint8 `json:"wifi" validate:"gte=0,lte=1"`
+	BLE                             uint8  `json:"ble" validate:"gte=0,lte=1"`
+	GPS                             uint8  `json:"gps" validate:"gte=0,lte=1"`
+	WIFI                            uint8  `json:"wifi" validate:"gte=0,lte=1"`
 	LocalizationIntervalWhileMoving uint32 `json:"localizationIntervalWhileMoving" validate:"gte=60,lte=86400"`
 	LocalizationIntervalWhileSteady uint32 `json:"localizationIntervalWhileSteady" validate:"gte=120,lte=86400"`
 	HeartbeatInterval               uint32 `json:"heartbeatInterval" validate:"gte=300,lte=604800"`

@@ -81,7 +81,6 @@ func (t TagSLv1Encoder) getConfig(port int16) (encoder.PayloadConfig, error) {
 			},
 			TargetType: reflect.TypeOf(Port128Payload{}),
 		}, nil
-	
 	}
 
 	return encoder.PayloadConfig{}, fmt.Errorf("port %v not supported", port)

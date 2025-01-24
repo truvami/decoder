@@ -233,7 +233,6 @@ func ValidateLength(payload *string, config *encoder.PayloadConfig) error {
 	return nil
 }
 
-
 func Encode(data interface{}, config encoder.PayloadConfig) (string, error) {
 	v := reflect.ValueOf(data)
 

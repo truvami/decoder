@@ -5,12 +5,12 @@ import (
 )
 
 func TestEncodePort128(t *testing.T) {
-    encoder := NewTagSLv1Encoder(
-        WithAutoPadding(false),
-        WithSkipValidation(true),
-    )
+	encoder := NewTagSLv1Encoder(
+		WithAutoPadding(false),
+		WithSkipValidation(true),
+	)
 
-    data := Port128Payload{
+	data := Port128Payload{
 		BLE:                             1,
 		GPS:                             1,
 		WIFI:                            1,
@@ -27,12 +27,12 @@ func TestEncodePort128(t *testing.T) {
 
 	expectedPayload := "01010100000e1000001c20000151800078012c05dc00005460000a1000"
 
-    payload, _, err := encoder.Encode(data, 128, "data")
-    if err != nil {
-        t.Fatalf("unexpected error: %v", err)
-    }
+	payload, _, err := encoder.Encode(data, 128, "data")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
-    if payload != expectedPayload {
-        t.Errorf("expected payload: %s, got: %s", expectedPayload, payload)
-    }
+	if payload != expectedPayload {
+		t.Errorf("expected payload: %s, got: %s", expectedPayload, payload)
+	}
 }
