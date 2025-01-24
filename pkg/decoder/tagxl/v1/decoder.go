@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
-	helpers "github.com/truvami/decoder/pkg/common"
+	"github.com/truvami/decoder/pkg/common"
 	"github.com/truvami/decoder/pkg/decoder"
 	"github.com/truvami/decoder/pkg/loracloud"
 )
@@ -42,7 +42,7 @@ func WithSkipValidation(skipValidation bool) Option {
 }
 
 // https://docs.truvami.com/docs/payloads/tag-xl
-func (t TagXLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
+func (t TagXLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 	switch port {
 	case 151:
 		// return decoder.PayloadConfig{
@@ -62,8 +62,8 @@ func (t TagXLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 		// 	TargetType: reflect.TypeOf(Port151Payload{}),
 		// }, nil
 	case 152:
-		return decoder.PayloadConfig{
-			Fields: []decoder.FieldConfig{
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
 				{Name: "OldRotationState", Start: 2, Length: 1, Transform: func(v interface{}) interface{} {
 					// get bit 0-3 and return
 					return uint8((v.(int) >> 4) & 0xF)
@@ -82,7 +82,7 @@ func (t TagXLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 		}, nil
 
 	}
-	return decoder.PayloadConfig{}, fmt.Errorf("port %v not supported", port)
+	return common.PayloadConfig{}, fmt.Errorf("port %v not supported", port)
 }
 
 func (t TagXLv1Decoder) Decode(data string, port int16, devEui string) (interface{}, interface{}, error) {
@@ -101,17 +101,17 @@ func (t TagXLv1Decoder) Decode(data string, port int16, devEui string) (interfac
 		}
 
 		if t.autoPadding {
-			data = helpers.HexNullPad(&data, &config)
+			data = common.HexNullPad(&data, &config)
 		}
 
 		if !t.skipValidation {
-			err := helpers.ValidateLength(&data, &config)
+			err := common.ValidateLength(&data, &config)
 			if err != nil {
 				return nil, nil, err
 			}
 		}
 
-		decodedData, err := helpers.Parse(data, config)
+		decodedData, err := common.Parse(data, &config)
 		return decodedData, nil, err
 	}
 }

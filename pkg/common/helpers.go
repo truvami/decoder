@@ -1,4 +1,4 @@
-package helpers
+package common
 
 import (
 	"encoding/hex"
@@ -11,8 +11,6 @@ import (
 	"time"
 
 	"github.com/go-playground/validator"
-	"github.com/truvami/decoder/pkg/decoder"
-	"github.com/truvami/decoder/pkg/encoder"
 )
 
 func HexStringToBytes(hexString string) ([]byte, error) {
@@ -112,7 +110,7 @@ func UnwrapError(err error) []error {
 }
 
 // DecodeLoRaWANPayload decodes the payload based on the provided configuration and populates the target struct
-func Parse(payloadHex string, config decoder.PayloadConfig) (interface{}, error) {
+func Parse(payloadHex string, config *PayloadConfig) (interface{}, error) {
 	// Convert hex payload to bytes
 	payloadBytes, err := HexStringToBytes(payloadHex)
 	if err != nil {
@@ -191,7 +189,7 @@ func ToIntPointer(value int) *int {
 	return &value
 }
 
-func HexNullPad(payload *string, config *decoder.PayloadConfig) string {
+func HexNullPad(payload *string, config *PayloadConfig) string {
 	var requiredBits = 0
 	for _, field := range config.Fields {
 		if !field.Optional {
@@ -207,7 +205,7 @@ func HexNullPad(payload *string, config *decoder.PayloadConfig) string {
 	return *payload
 }
 
-func ValidateLength(payload *string, config *decoder.PayloadConfig) error {
+func ValidateLength(payload *string, config *PayloadConfig) error {
 	var payloadLength = len(*payload) / 2
 
 	var minLength = 0
@@ -233,7 +231,7 @@ func ValidateLength(payload *string, config *decoder.PayloadConfig) error {
 	return nil
 }
 
-func Encode(data interface{}, config encoder.PayloadConfig) (string, error) {
+func Encode(data interface{}, config PayloadConfig) (string, error) {
 	v := reflect.ValueOf(data)
 
 	// Validate input data is a struct

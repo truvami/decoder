@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"strings"
 
-	helpers "github.com/truvami/decoder/pkg/common"
+	"github.com/truvami/decoder/pkg/common"
 	"github.com/truvami/decoder/pkg/decoder"
 	"github.com/truvami/decoder/pkg/loracloud"
 )
@@ -56,18 +56,18 @@ func getPort11PayloadType(data string) (string, error) {
 }
 
 // https://docs.truvami.com/docs/payloads/smartlabel
-func (t SmartLabelv1Decoder) getConfig(port int16, data string) (decoder.PayloadConfig, error) {
+func (t SmartLabelv1Decoder) getConfig(port int16, data string) (common.PayloadConfig, error) {
 	switch port {
 	case 11:
 		// Check first byte length to determine message type
 		payloadType, err := getPort11PayloadType(data)
 		if err != nil {
-			return decoder.PayloadConfig{}, err
+			return common.PayloadConfig{}, err
 		}
 		switch payloadType {
 		case "configuration":
-			return decoder.PayloadConfig{
-				Fields: []decoder.FieldConfig{
+			return common.PayloadConfig{
+				Fields: []common.FieldConfig{
 					{Name: "Flags", Start: 2, Length: 1},
 					{Name: "GNSSEnabled", Start: 2, Length: 1, Transform: func(v interface{}) interface{} {
 						return uint8((v.(int) >> 1) & 0x1)
@@ -94,8 +94,8 @@ func (t SmartLabelv1Decoder) getConfig(port int16, data string) (decoder.Payload
 				TargetType: reflect.TypeOf(Port11ConfigurationPayload{}),
 			}, nil
 		case "heartbeat":
-			return decoder.PayloadConfig{
-				Fields: []decoder.FieldConfig{
+			return common.PayloadConfig{
+				Fields: []common.FieldConfig{
 					{Name: "Battery", Start: 2, Length: 2, Transform: func(v interface{}) interface{} {
 						return float64(v.(int)) / 1000
 					}},
@@ -111,9 +111,9 @@ func (t SmartLabelv1Decoder) getConfig(port int16, data string) (decoder.Payload
 				TargetType: reflect.TypeOf(Port11HeartbeatPayload{}),
 			}, nil
 		}
-		return decoder.PayloadConfig{}, fmt.Errorf("invalid payload for port 11")
+		return common.PayloadConfig{}, fmt.Errorf("invalid payload for port 11")
 	default:
-		return decoder.PayloadConfig{}, fmt.Errorf("port %v not supported", port)
+		return common.PayloadConfig{}, fmt.Errorf("port %v not supported", port)
 	}
 }
 
@@ -132,7 +132,7 @@ func (t SmartLabelv1Decoder) Decode(data string, port int16, devEui string) (int
 			return nil, nil, err
 		}
 
-		decodedData, err := helpers.Parse(data, config)
+		decodedData, err := common.Parse(data, &config)
 		return decodedData, nil, err
 	}
 }

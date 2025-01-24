@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/truvami/decoder/pkg/common"
 	"github.com/truvami/decoder/pkg/encoder"
-	"github.com/truvami/decoder/pkg/encoder/helpers"
 )
 
 type Option func(*TagSLv1Encoder)
@@ -44,13 +44,13 @@ func (t TagSLv1Encoder) Encode(data interface{}, port int16, extra string) (inte
 		return nil, nil, err
 	}
 
-	payload, err := helpers.Encode(data, config)
+	payload, err := common.Encode(data, config)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	if !t.skipValidation {
-		err := helpers.ValidateLength(&payload, &config)
+		err := common.ValidateLength(&payload, &config)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -61,11 +61,11 @@ func (t TagSLv1Encoder) Encode(data interface{}, port int16, extra string) (inte
 
 // https://docs.truvami.com/docs/payloads/tag-S
 // https://docs.truvami.com/docs/payloads/tag-L
-func (t TagSLv1Encoder) getConfig(port int16) (encoder.PayloadConfig, error) {
+func (t TagSLv1Encoder) getConfig(port int16) (common.PayloadConfig, error) {
 	switch port {
 	case 128:
-		return encoder.PayloadConfig{
-			Fields: []encoder.FieldConfig{
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
 				{Name: "BLE", Start: 0, Length: 1},
 				{Name: "GPS", Start: 1, Length: 1},
 				{Name: "WIFI", Start: 2, Length: 1},
@@ -83,5 +83,5 @@ func (t TagSLv1Encoder) getConfig(port int16) (encoder.PayloadConfig, error) {
 		}, nil
 	}
 
-	return encoder.PayloadConfig{}, fmt.Errorf("port %v not supported", port)
+	return common.PayloadConfig{}, fmt.Errorf("port %v not supported", port)
 }
