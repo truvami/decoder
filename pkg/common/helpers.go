@@ -271,6 +271,11 @@ func Encode(data interface{}, config PayloadConfig) (string, error) {
 			return "", fmt.Errorf("unsupported field type: %s", fieldValue.Kind())
 		}
 
+		// Apply the transform function if provided
+		if field.Transform != nil {
+			fieldBytes = field.Transform(fieldBytes).([]byte)
+		}
+
 		// Copy the bytes into the payload at the correct position
 		copy(payload[field.Start:field.Start+field.Length], fieldBytes)
 	}
