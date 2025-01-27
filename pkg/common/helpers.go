@@ -2,7 +2,6 @@ package common
 
 import (
 	"encoding/hex"
-	h "encoding/hex"
 	"errors"
 	"fmt"
 
@@ -14,7 +13,7 @@ import (
 )
 
 func HexStringToBytes(hexString string) ([]byte, error) {
-	bytes, err := h.DecodeString(hexString)
+	bytes, err := hex.DecodeString(hexString)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +61,7 @@ func convertFieldToType(value interface{}, fieldType reflect.Kind) interface{} {
 	}
 }
 
-func extractFieldValue(payloadBytes []byte, start int, length int, optional bool, hex bool) (interface{}, error) {
+func extractFieldValue(payloadBytes []byte, start int, length int, optional bool, hexadecimal bool) (interface{}, error) {
 	if length == -1 {
 		if start >= len(payloadBytes) {
 			return nil, fmt.Errorf("field start out of bounds")
@@ -78,8 +77,8 @@ func extractFieldValue(payloadBytes []byte, start int, length int, optional bool
 
 	// Extract the field value based on its length
 	var value interface{}
-	if hex {
-		value = h.EncodeToString(payloadBytes[start : start+length])
+	if hexadecimal {
+		value = hex.EncodeToString(payloadBytes[start : start+length])
 	} else {
 		value = 0
 		for i := 0; i < length; i++ {
