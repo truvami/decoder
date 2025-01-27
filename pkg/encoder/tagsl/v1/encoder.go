@@ -81,6 +81,20 @@ func (t TagSLv1Encoder) getConfig(port int16) (common.PayloadConfig, error) {
 			},
 			TargetType: reflect.TypeOf(Port128Payload{}),
 		}, nil
+	case 129:
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
+				{Name: "TimeToBuzz", Start: 0, Length: 1},
+			},
+			TargetType: reflect.TypeOf(Port129Payload{}),
+		}, nil
+	case 131:
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
+				{Name: "AccuracyEnhancement", Start: 0, Length: 1},
+			},
+			TargetType: reflect.TypeOf(Port131Payload{}),
+		}, nil
 	}
 
 	return common.PayloadConfig{}, fmt.Errorf("port %v not supported", port)
