@@ -95,6 +95,26 @@ func (t TagSLv1Encoder) getConfig(port int16) (common.PayloadConfig, error) {
 			},
 			TargetType: reflect.TypeOf(Port131Payload{}),
 		}, nil
+	case 134:
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
+				{Name: "ScanInterval", Start: 0, Length: 2},
+				{Name: "ScanTime", Start: 2, Length: 1},
+				{Name: "MaxBeacons", Start: 3, Length: 1},
+				{Name: "MinRssi", Start: 4, Length: 1},
+				{Name: "AdvertisingName", Start: 5, Length: 10, Transform: func(v interface{}) interface{} {
+					if len(v.([]byte)) > 9 {
+						v = v.([]byte)[:9]
+					}
+					return v
+				}},
+				{Name: "AccelerometerTriggerHoldTimer", Start: 15, Length: 2},
+				{Name: "AcceleratorThreshold", Start: 17, Length: 2},
+				{Name: "ScanMode", Start: 19, Length: 1},
+				{Name: "BleConfigUplinkInterval", Start: 20, Length: 2},
+			},
+			TargetType: reflect.TypeOf(Port134Payload{}),
+		}, nil
 	}
 
 	return common.PayloadConfig{}, fmt.Errorf("port %v not supported", port)

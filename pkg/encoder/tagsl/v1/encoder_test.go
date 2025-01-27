@@ -89,6 +89,36 @@ func TestDecoder(t *testing.T) {
 			port:     131,
 			expected: "20",
 		},
+		{
+			data: Port134Payload{
+				ScanInterval:                  300,
+				ScanTime:                      60,
+				MaxBeacons:                    8,
+				MinRssi:                       -24,
+				AdvertisingName:               []byte("deadbeef"),
+				AccelerometerTriggerHoldTimer: 2000,
+				AcceleratorThreshold:          1000,
+				ScanMode:                      0,
+				BleConfigUplinkInterval:       21600,
+			},
+			port:     134,
+			expected: "012c3c08e86465616462656566000007d003e8005460",
+		},
+		{
+			data: Port134Payload{
+				ScanInterval:                  900,
+				ScanTime:                      120,
+				MaxBeacons:                    16,
+				MinRssi:                       -20,
+				AdvertisingName:               []byte("hello-world"),
+				AccelerometerTriggerHoldTimer: 4000,
+				AcceleratorThreshold:          2000,
+				ScanMode:                      2,
+				BleConfigUplinkInterval:       43200,
+			},
+			port:     134,
+			expected: "03847810ec68656c6c6f2d776f72000fa007d002a8c0",
+		},
 	}
 
 	for _, test := range tests {
