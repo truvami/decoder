@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestDecoder(t *testing.T) {
+func TestEncode(t *testing.T) {
 	tests := []struct {
 		data     interface{}
 		port     int16
@@ -135,5 +135,13 @@ func TestDecoder(t *testing.T) {
 				t.Errorf("expected: %v\ngot: %v", test.expected, got)
 			}
 		})
+	}
+}
+
+func TestInvalidPort(t *testing.T) {
+	encoder := NewTagSLv1Encoder()
+	_, _, err := encoder.Encode(nil, 0, "")
+	if err == nil {
+		t.Fatal("expected port not supported")
 	}
 }

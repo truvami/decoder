@@ -10,10 +10,7 @@ import (
 
 type Option func(*TagSLv1Encoder)
 
-type TagSLv1Encoder struct {
-	autoPadding    bool
-	skipValidation bool
-}
+type TagSLv1Encoder struct{}
 
 func NewTagSLv1Encoder(options ...Option) encoder.Encoder {
 	tagSLv1Encoder := &TagSLv1Encoder{}
@@ -23,18 +20,6 @@ func NewTagSLv1Encoder(options ...Option) encoder.Encoder {
 	}
 
 	return tagSLv1Encoder
-}
-
-func WithAutoPadding(autoPadding bool) Option {
-	return func(t *TagSLv1Encoder) {
-		t.autoPadding = autoPadding
-	}
-}
-
-func WithSkipValidation(skipValidation bool) Option {
-	return func(t *TagSLv1Encoder) {
-		t.skipValidation = skipValidation
-	}
 }
 
 // Encode encodes the provided data into a payload string
@@ -47,13 +32,6 @@ func (t TagSLv1Encoder) Encode(data interface{}, port int16, extra string) (inte
 	payload, err := common.Encode(data, config)
 	if err != nil {
 		return nil, nil, err
-	}
-
-	if !t.skipValidation {
-		err := common.ValidateLength(&payload, &config)
-		if err != nil {
-			return nil, nil, err
-		}
 	}
 
 	return payload, extra, nil
