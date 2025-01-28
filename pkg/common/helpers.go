@@ -23,8 +23,6 @@ func HexStringToBytes(hexString string) ([]byte, error) {
 
 func convertFieldToType(value interface{}, fieldType reflect.Kind) interface{} {
 	switch fieldType {
-	case reflect.Slice:
-		return byte(value.(byte))
 	case reflect.Int:
 		return int(value.(int))
 	case reflect.Int8:
