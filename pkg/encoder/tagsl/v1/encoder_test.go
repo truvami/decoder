@@ -138,6 +138,14 @@ func TestEncode(t *testing.T) {
 	}
 }
 
+func TestInvalidData(t *testing.T) {
+	encoder := NewTagSLv1Encoder()
+	_, _, err := encoder.Encode(nil, 128, "")
+	if err == nil || err.Error() != "data must be a struct" {
+		t.Fatal("expected data must be a struct")
+	}
+}
+
 func TestInvalidPort(t *testing.T) {
 	encoder := NewTagSLv1Encoder()
 	_, _, err := encoder.Encode(nil, 0, "")
