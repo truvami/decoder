@@ -141,7 +141,7 @@ func TestEncode(t *testing.T) {
 func TestInvalidPort(t *testing.T) {
 	encoder := NewTagSLv1Encoder()
 	_, _, err := encoder.Encode(nil, 0, "")
-	if err == nil {
+	if err == nil || err.Error() != "port 0 not supported" {
 		t.Fatal("expected port not supported")
 	}
 }

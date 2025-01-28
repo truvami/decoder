@@ -289,7 +289,7 @@ func TestValidationErrors(t *testing.T) {
 func TestInvalidPort(t *testing.T) {
 	decoder := NewNomadXSv1Decoder()
 	_, _, err := decoder.Decode("00", 0, "")
-	if err == nil {
+	if err == nil || err.Error() != "port 0 not supported" {
 		t.Fatal("expected port not supported")
 	}
 }

@@ -199,7 +199,7 @@ func TestValidationErrors(t *testing.T) {
 func TestInvalidPort(t *testing.T) {
 	decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("appEui"))
 	_, _, err := decoder.Decode("00", 0, "")
-	if err == nil {
+	if err == nil || err.Error() != "port 0 not supported" {
 		t.Fatal("expected port not supported")
 	}
 }
