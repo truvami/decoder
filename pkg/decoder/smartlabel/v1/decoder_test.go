@@ -61,7 +61,6 @@ func TestDecode(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-
 	tests := []struct {
 		payload     string
 		port        int16
@@ -70,10 +69,10 @@ func TestDecode(t *testing.T) {
 		expectedErr string
 	}{
 		{
-			payload:     "87821F50490200B520FBE977844D222A3A14A89293956245CC75A9CA1BBC25DDF658542909",
-			port:        192,
-			devEui:      "10CE45FFFE00C7EC",
-			expected:    &exampleResponse,
+			payload:  "87821F50490200B520FBE977844D222A3A14A89293956245CC75A9CA1BBC25DDF658542909",
+			port:     192,
+			devEui:   "10CE45FFFE00C7EC",
+			expected: &exampleResponse,
 		},
 		{
 			payload:     "87821F50490200B520FBE977844D222A3A14A89293956245CC75A9CA1BBC25DDF658542909",
@@ -93,46 +92,46 @@ func TestDecode(t *testing.T) {
 			payload: "0e021e0384012c01003c012c03e8",
 			port:    11,
 			expected: Port11ConfigurationPayload{
-				Flags:               30,
-				GNSSEnabled:         1,
-				WiFiEnabled:         1,
-				AccEnabled:          1,
-				StaticSF:            "SF9",
-				SteadyIntervalS:     900,
-				MovingIntervalS:     300,
-				HeartbeatIntervalH:  1,
-				LEDBlinkIntervalS:   60,
-				AccThresholdMS:      300,
-				AccDelayMS:          1000,
+				Flags:              30,
+				GNSSEnabled:        1,
+				WiFiEnabled:        1,
+				AccEnabled:         1,
+				StaticSF:           "SF9",
+				SteadyIntervalS:    900,
+				MovingIntervalS:    300,
+				HeartbeatIntervalH: 1,
+				LEDBlinkIntervalS:  60,
+				AccThresholdMS:     300,
+				AccDelayMS:         1000,
 			},
 		},
 		{
 			payload: "11021e0384012c01003c012c03e8e43420ea",
 			port:    11,
 			expected: Port11ConfigurationPayload{
-				Flags:               30,
-				GNSSEnabled:         1,
-				WiFiEnabled:         1,
-				AccEnabled:          1,
-				StaticSF:            "SF9",
-				SteadyIntervalS:     900,
-				MovingIntervalS:     300,
-				HeartbeatIntervalH:  1,
-				LEDBlinkIntervalS:   60,
-				AccThresholdMS:      300,
-				AccDelayMS:          1000,
-				GitHash:             "e43420ea",
+				Flags:              30,
+				GNSSEnabled:        1,
+				WiFiEnabled:        1,
+				AccEnabled:         1,
+				StaticSF:           "SF9",
+				SteadyIntervalS:    900,
+				MovingIntervalS:    300,
+				HeartbeatIntervalH: 1,
+				LEDBlinkIntervalS:  60,
+				AccThresholdMS:     300,
+				AccDelayMS:         1000,
+				GitHash:            "e43420ea",
 			},
 		},
 		{
 			payload: "0a010f05095f4100000000",
 			port:    11,
 			expected: Port11HeartbeatPayload{
-				Battery:           3.845,
-				Temperature:       23.99,
-				RH:                32.5,
-				GNSSScansCount:    0,
-				WiFiScansCount:    0,
+				Battery:        3.845,
+				Temperature:    23.99,
+				RH:             32.5,
+				GNSSScansCount: 0,
+				WiFiScansCount: 0,
 			},
 		},
 		{
@@ -189,12 +188,12 @@ func TestInvalidPort(t *testing.T) {
 
 func TestWithAutoPadding(t *testing.T) {
 	middleware := loracloud.NewLoracloudMiddleware("access_token")
-	
+
 	decoder := NewSmartLabelv1Decoder(
 		middleware,
 		WithAutoPadding(true),
 	)
-	
+
 	// Type assert to access the internal field
 	if d, ok := decoder.(*SmartLabelv1Decoder); ok {
 		if !d.autoPadding {
