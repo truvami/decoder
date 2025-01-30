@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/truvami/decoder/pkg/common"
 	"github.com/truvami/decoder/pkg/decoder"
-	"github.com/truvami/decoder/pkg/decoder/helpers"
 )
 
 type Option func(*TagSLv1Decoder)
@@ -39,11 +39,11 @@ func WithSkipValidation(skipValidation bool) Option {
 
 // https://docs.truvami.com/docs/payloads/tag-S
 // https://docs.truvami.com/docs/payloads/tag-L
-func (t TagSLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
+func (t TagSLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 	switch port {
 	case 1:
-		return decoder.PayloadConfig{
-			Fields: []decoder.FieldConfig{
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
 				{Name: "Moving", Start: 0, Length: 1},
 				{Name: "Latitude", Start: 1, Length: 4, Transform: func(v interface{}) interface{} {
 					return float64(v.(int)) / 1000000
@@ -62,17 +62,17 @@ func (t TagSLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 				{Name: "Second", Start: 16, Length: 1},
 			},
 			TargetType:      reflect.TypeOf(Port1Payload{}),
-			StatusByteIndex: helpers.ToIntPointer(0),
+			StatusByteIndex: common.ToIntPointer(0),
 		}, nil
 	case 2:
-		return decoder.PayloadConfig{
-			Fields:          []decoder.FieldConfig{},
+		return common.PayloadConfig{
+			Fields:          []common.FieldConfig{},
 			TargetType:      reflect.TypeOf(Port2Payload{}),
-			StatusByteIndex: helpers.ToIntPointer(0),
+			StatusByteIndex: common.ToIntPointer(0),
 		}, nil
 	case 3:
-		return decoder.PayloadConfig{
-			Fields: []decoder.FieldConfig{
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
 				{Name: "ScanPointer", Start: 0, Length: 2},
 				{Name: "TotalMessages", Start: 2, Length: 1},
 				{Name: "CurrentMessage", Start: 3, Length: 1},
@@ -92,8 +92,8 @@ func (t TagSLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 			TargetType: reflect.TypeOf(Port3Payload{}),
 		}, nil
 	case 4:
-		return decoder.PayloadConfig{
-			Fields: []decoder.FieldConfig{
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
 				{Name: "LocalizationIntervalWhileMoving", Start: 0, Length: 4},
 				{Name: "LocalizationIntervalWhileSteady", Start: 4, Length: 4},
 				{Name: "HeartbeatInterval", Start: 8, Length: 4},
@@ -113,8 +113,8 @@ func (t TagSLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 			TargetType: reflect.TypeOf(Port4Payload{}),
 		}, nil
 	case 5:
-		return decoder.PayloadConfig{
-			Fields: []decoder.FieldConfig{
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
 				{Name: "Moving", Start: 0, Length: 1},
 				{Name: "Mac1", Start: 1, Length: 6, Optional: true, Hex: true},
 				{Name: "Rssi1", Start: 7, Length: 1, Optional: true},
@@ -132,18 +132,18 @@ func (t TagSLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 				{Name: "Rssi7", Start: 49, Length: 1, Optional: true},
 			},
 			TargetType:      reflect.TypeOf(Port5Payload{}),
-			StatusByteIndex: helpers.ToIntPointer(0),
+			StatusByteIndex: common.ToIntPointer(0),
 		}, nil
 	case 6:
-		return decoder.PayloadConfig{
-			Fields: []decoder.FieldConfig{
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
 				{Name: "ButtonPressed", Start: 0, Length: 1},
 			},
 			TargetType: reflect.TypeOf(Port6Payload{}),
 		}, nil
 	case 7:
-		return decoder.PayloadConfig{
-			Fields: []decoder.FieldConfig{
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
 				{Name: "Timestamp", Start: 0, Length: 4},
 				{Name: "Moving", Start: 4, Length: 1},
 				{Name: "Mac1", Start: 5, Length: 6, Optional: true, Hex: true},
@@ -160,11 +160,11 @@ func (t TagSLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 				{Name: "Rssi6", Start: 46, Length: 1, Optional: true},
 			},
 			TargetType:      reflect.TypeOf(Port7Payload{}),
-			StatusByteIndex: helpers.ToIntPointer(4),
+			StatusByteIndex: common.ToIntPointer(4),
 		}, nil
 	case 8:
-		return decoder.PayloadConfig{
-			Fields: []decoder.FieldConfig{
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
 				{Name: "ScanInterval", Start: 0, Length: 2},
 				{Name: "ScanTime", Start: 2, Length: 1},
 				{Name: "MaxBeacons", Start: 3, Length: 1},
@@ -178,8 +178,8 @@ func (t TagSLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 			TargetType: reflect.TypeOf(Port8Payload{}),
 		}, nil
 	case 10:
-		return decoder.PayloadConfig{
-			Fields: []decoder.FieldConfig{
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
 				{Name: "Moving", Start: 0, Length: 1},
 				{Name: "Latitude", Start: 1, Length: 4, Transform: func(v interface{}) interface{} {
 					return float64(v.(int)) / 1000000
@@ -201,22 +201,22 @@ func (t TagSLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 				{Name: "Satellites", Start: 19, Length: 1, Optional: true},
 			},
 			TargetType:      reflect.TypeOf(Port10Payload{}),
-			StatusByteIndex: helpers.ToIntPointer(0),
+			StatusByteIndex: common.ToIntPointer(0),
 		}, nil
 	case 15:
-		return decoder.PayloadConfig{
-			Fields: []decoder.FieldConfig{
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
 				{Name: "LowBattery", Start: 0, Length: 1},
 				{Name: "Battery", Start: 1, Length: 2, Transform: func(v interface{}) interface{} {
 					return float64(v.(int)) / 1000
 				}},
 			},
 			TargetType:      reflect.TypeOf(Port15Payload{}),
-			StatusByteIndex: helpers.ToIntPointer(0),
+			StatusByteIndex: common.ToIntPointer(0),
 		}, nil
 	case 50:
-		return decoder.PayloadConfig{
-			Fields: []decoder.FieldConfig{
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
 				{Name: "Moving", Start: 0, Length: 1},
 				{Name: "Latitude", Start: 1, Length: 4, Transform: func(v interface{}) interface{} {
 					return float64(v.(int)) / 1000000
@@ -246,11 +246,11 @@ func (t TagSLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 				{Name: "Rssi6", Start: 59, Length: 1, Optional: true},
 			},
 			TargetType:      reflect.TypeOf(Port50Payload{}),
-			StatusByteIndex: helpers.ToIntPointer(0),
+			StatusByteIndex: common.ToIntPointer(0),
 		}, nil
 	case 51:
-		return decoder.PayloadConfig{
-			Fields: []decoder.FieldConfig{
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
 				{Name: "Moving", Start: 0, Length: 1},
 				{Name: "Latitude", Start: 1, Length: 4, Transform: func(v interface{}) interface{} {
 					return float64(v.(int)) / 1000000
@@ -284,11 +284,11 @@ func (t TagSLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 				{Name: "Rssi6", Start: 61, Length: 1, Optional: true},
 			},
 			TargetType:      reflect.TypeOf(Port51Payload{}),
-			StatusByteIndex: helpers.ToIntPointer(0),
+			StatusByteIndex: common.ToIntPointer(0),
 		}, nil
 	case 105:
-		return decoder.PayloadConfig{
-			Fields: []decoder.FieldConfig{
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
 				{Name: "BufferLevel", Start: 0, Length: 2},
 				{Name: "Timestamp", Start: 2, Length: 4},
 				{Name: "Moving", Start: 7, Length: 1},
@@ -306,11 +306,11 @@ func (t TagSLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 				{Name: "Rssi6", Start: 48, Length: 1, Optional: true},
 			},
 			TargetType:      reflect.TypeOf(Port105Payload{}),
-			StatusByteIndex: helpers.ToIntPointer(6),
+			StatusByteIndex: common.ToIntPointer(6),
 		}, nil
 	case 110:
-		return decoder.PayloadConfig{
-			Fields: []decoder.FieldConfig{
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
 				{Name: "BufferLevel", Start: 0, Length: 2},
 				// {Name: "Moving", Start: 2, Length: 1},
 				{Name: "Latitude", Start: 3, Length: 4, Transform: func(v interface{}) interface{} {
@@ -328,11 +328,11 @@ func (t TagSLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 				}},
 			},
 			TargetType:      reflect.TypeOf(Port110Payload{}),
-			StatusByteIndex: helpers.ToIntPointer(2),
+			StatusByteIndex: common.ToIntPointer(2),
 		}, nil
 	case 150:
-		return decoder.PayloadConfig{
-			Fields: []decoder.FieldConfig{
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
 				{Name: "BufferLevel", Start: 0, Length: 2},
 				{Name: "Moving", Start: 2, Length: 1},
 				{Name: "Latitude", Start: 3, Length: 4, Transform: func(v interface{}) interface{} {
@@ -363,11 +363,11 @@ func (t TagSLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 				{Name: "Rssi6", Start: 61, Length: 1, Optional: true},
 			},
 			TargetType:      reflect.TypeOf(Port150Payload{}),
-			StatusByteIndex: helpers.ToIntPointer(2),
+			StatusByteIndex: common.ToIntPointer(2),
 		}, nil
 	case 151:
-		return decoder.PayloadConfig{
-			Fields: []decoder.FieldConfig{
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
 				{Name: "BufferLevel", Start: 0, Length: 2},
 				{Name: "Moving", Start: 2, Length: 1},
 				{Name: "Latitude", Start: 3, Length: 4, Transform: func(v interface{}) interface{} {
@@ -402,11 +402,11 @@ func (t TagSLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 				{Name: "Rssi6", Start: 63, Length: 1, Optional: true},
 			},
 			TargetType:      reflect.TypeOf(Port151Payload{}),
-			StatusByteIndex: helpers.ToIntPointer(2),
+			StatusByteIndex: common.ToIntPointer(2),
 		}, nil
 	}
 
-	return decoder.PayloadConfig{}, fmt.Errorf("port %v not supported", port)
+	return common.PayloadConfig{}, fmt.Errorf("port %v not supported", port)
 }
 
 func (t TagSLv1Decoder) Decode(data string, port int16, devEui string) (interface{}, interface{}, error) {
@@ -416,17 +416,17 @@ func (t TagSLv1Decoder) Decode(data string, port int16, devEui string) (interfac
 	}
 
 	if t.autoPadding {
-		data = helpers.HexNullPad(&data, &config)
+		data = common.HexNullPad(&data, &config)
 	}
 
 	if !t.skipValidation {
-		err := helpers.ValidateLength(&data, &config)
+		err := common.ValidateLength(&data, &config)
 		if err != nil {
 			return nil, nil, err
 		}
 	}
 
-	decodedData, err := helpers.Parse(data, config)
+	decodedData, err := common.Parse(data, &config)
 	if err != nil {
 		return decodedData, nil, err
 	}
@@ -437,7 +437,7 @@ func (t TagSLv1Decoder) Decode(data string, port int16, devEui string) (interfac
 	}
 
 	// convert hex payload to bytes
-	bytesData, err := helpers.HexStringToBytes(data)
+	bytesData, err := common.HexStringToBytes(data)
 	if err != nil {
 		return nil, nil, err
 	}

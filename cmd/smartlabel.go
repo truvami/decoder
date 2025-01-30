@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/truvami/decoder/internal/logger"
-	"github.com/truvami/decoder/pkg/decoder/helpers"
+	helpers "github.com/truvami/decoder/pkg/common"
 	"github.com/truvami/decoder/pkg/decoder/smartlabel/v1"
 	"github.com/truvami/decoder/pkg/loracloud"
 	"go.uber.org/zap"

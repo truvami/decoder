@@ -1,11 +1,9 @@
-package helpers
+package common
 
 import (
 	"fmt"
 	"reflect"
 	"testing"
-
-	"github.com/truvami/decoder/pkg/decoder"
 )
 
 func TestInvalidHexString(t *testing.T) {
@@ -37,8 +35,8 @@ type Port1Payload struct {
 }
 
 func TestParse(t *testing.T) {
-	config := decoder.PayloadConfig{
-		Fields: []decoder.FieldConfig{
+	config := PayloadConfig{
+		Fields: []FieldConfig{
 			{Name: "Moving", Start: 0, Length: 1},
 			{Name: "Lat", Start: 1, Length: 4, Transform: func(v interface{}) interface{} {
 				return float64(v.(int)) / 1000000
@@ -59,7 +57,7 @@ func TestParse(t *testing.T) {
 
 	tests := []struct {
 		payload  string
-		config   decoder.PayloadConfig
+		config   PayloadConfig
 		expected interface{}
 	}{
 		{
@@ -82,7 +80,7 @@ func TestParse(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.payload, func(t *testing.T) {
-			decodedData, err := Parse(test.payload, test.config)
+			decodedData, err := Parse(test.payload, &test.config)
 			if err != nil {
 				t.Fatalf("error decoding payload: %v", err)
 			}
@@ -181,8 +179,8 @@ func TestConvertFieldToType(t *testing.T) {
 }
 
 func TestInvalidPayload(t *testing.T) {
-	_, err := Parse("", decoder.PayloadConfig{
-		Fields: []decoder.FieldConfig{
+	_, err := Parse("", &PayloadConfig{
+		Fields: []FieldConfig{
 			{Name: "Moving", Start: 0, Length: 1},
 		},
 		TargetType: reflect.TypeOf(Port1Payload{}),
@@ -191,8 +189,8 @@ func TestInvalidPayload(t *testing.T) {
 		t.Fatal("expected field out of bounds")
 	}
 
-	_, err = Parse("01", decoder.PayloadConfig{
-		Fields: []decoder.FieldConfig{
+	_, err = Parse("01", &PayloadConfig{
+		Fields: []FieldConfig{
 			{Name: "Moving", Start: 0, Length: 2},
 		},
 		TargetType: reflect.TypeOf(Port1Payload{}),
@@ -201,8 +199,8 @@ func TestInvalidPayload(t *testing.T) {
 		t.Fatal("expected field out of bounds")
 	}
 
-	_, err = Parse("01", decoder.PayloadConfig{
-		Fields: []decoder.FieldConfig{
+	_, err = Parse("01", &PayloadConfig{
+		Fields: []FieldConfig{
 			{Name: "Moving", Start: 10, Length: 1},
 		},
 		TargetType: reflect.TypeOf(Port1Payload{}),

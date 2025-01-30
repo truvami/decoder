@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/truvami/decoder/pkg/common"
 	"github.com/truvami/decoder/pkg/decoder"
-	"github.com/truvami/decoder/pkg/decoder/helpers"
 )
 
 type Option func(*NomadXSv1Decoder)
@@ -38,11 +38,11 @@ func WithSkipValidation(skipValidation bool) Option {
 }
 
 // https://docs.truvami.com/docs/payloads/nomad-xs
-func (t NomadXSv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
+func (t NomadXSv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 	switch port {
 	case 1:
-		return decoder.PayloadConfig{
-			Fields: []decoder.FieldConfig{
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
 				{Name: "Moving", Start: 0, Length: 1},
 				{Name: "Latitude", Start: 1, Length: 4, Transform: func(v interface{}) interface{} {
 					return float64(v.(int)) / 1000000
@@ -92,8 +92,8 @@ func (t NomadXSv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 			TargetType: reflect.TypeOf(Port1Payload{}),
 		}, nil
 	case 4:
-		return decoder.PayloadConfig{
-			Fields: []decoder.FieldConfig{
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
 				{Name: "LocalizationIntervalWhileMoving", Start: 0, Length: 4},
 				{Name: "LocalizationIntervalWhileSteady", Start: 4, Length: 4},
 				{Name: "HeartbeatInterval", Start: 8, Length: 4},
@@ -114,8 +114,8 @@ func (t NomadXSv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 			TargetType: reflect.TypeOf(Port4Payload{}),
 		}, nil
 	case 15:
-		return decoder.PayloadConfig{
-			Fields: []decoder.FieldConfig{
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
 				{Name: "LowBattery", Start: 0, Length: 1},
 				{Name: "Battery", Start: 1, Length: 2, Transform: func(v interface{}) interface{} {
 					return float64(v.(int)) / 1000
@@ -125,7 +125,7 @@ func (t NomadXSv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 		}, nil
 	}
 
-	return decoder.PayloadConfig{}, fmt.Errorf("port %v not supported", port)
+	return common.PayloadConfig{}, fmt.Errorf("port %v not supported", port)
 }
 
 func (t NomadXSv1Decoder) Decode(data string, port int16, devEui string) (interface{}, interface{}, error) {
@@ -135,16 +135,16 @@ func (t NomadXSv1Decoder) Decode(data string, port int16, devEui string) (interf
 	}
 
 	if t.autoPadding {
-		data = helpers.HexNullPad(&data, &config)
+		data = common.HexNullPad(&data, &config)
 	}
 
 	if !t.skipValidation {
-		err := helpers.ValidateLength(&data, &config)
+		err := common.ValidateLength(&data, &config)
 		if err != nil {
 			return nil, nil, err
 		}
 	}
 
-	decodedData, err := helpers.Parse(data, config)
+	decodedData, err := common.Parse(data, &config)
 	return decodedData, nil, err
 }

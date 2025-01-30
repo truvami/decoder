@@ -1,7 +1,7 @@
-package helpers
+package common
 
 import (
-	h "encoding/hex"
+	"encoding/hex"
 	"errors"
 	"fmt"
 
@@ -10,11 +10,10 @@ import (
 	"time"
 
 	"github.com/go-playground/validator"
-	"github.com/truvami/decoder/pkg/decoder"
 )
 
 func HexStringToBytes(hexString string) ([]byte, error) {
-	bytes, err := h.DecodeString(hexString)
+	bytes, err := hex.DecodeString(hexString)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +61,7 @@ func convertFieldToType(value interface{}, fieldType reflect.Kind) interface{} {
 	}
 }
 
-func extractFieldValue(payloadBytes []byte, start int, length int, optional bool, hex bool) (interface{}, error) {
+func extractFieldValue(payloadBytes []byte, start int, length int, optional bool, hexadecimal bool) (interface{}, error) {
 	if length == -1 {
 		if start >= len(payloadBytes) {
 			return nil, fmt.Errorf("field start out of bounds")
@@ -78,8 +77,8 @@ func extractFieldValue(payloadBytes []byte, start int, length int, optional bool
 
 	// Extract the field value based on its length
 	var value interface{}
-	if hex {
-		value = h.EncodeToString(payloadBytes[start : start+length])
+	if hexadecimal {
+		value = hex.EncodeToString(payloadBytes[start : start+length])
 	} else {
 		value = 0
 		for i := 0; i < length; i++ {
@@ -110,7 +109,7 @@ func UnwrapError(err error) []error {
 }
 
 // DecodeLoRaWANPayload decodes the payload based on the provided configuration and populates the target struct
-func Parse(payloadHex string, config decoder.PayloadConfig) (interface{}, error) {
+func Parse(payloadHex string, config *PayloadConfig) (interface{}, error) {
 	// Convert hex payload to bytes
 	payloadBytes, err := HexStringToBytes(payloadHex)
 	if err != nil {
@@ -189,7 +188,7 @@ func ToIntPointer(value int) *int {
 	return &value
 }
 
-func HexNullPad(payload *string, config *decoder.PayloadConfig) string {
+func HexNullPad(payload *string, config *PayloadConfig) string {
 	var requiredBits = 0
 	for _, field := range config.Fields {
 		if !field.Optional {
@@ -205,7 +204,7 @@ func HexNullPad(payload *string, config *decoder.PayloadConfig) string {
 	return *payload
 }
 
-func ValidateLength(payload *string, config *decoder.PayloadConfig) error {
+func ValidateLength(payload *string, config *PayloadConfig) error {
 	var payloadLength = len(*payload) / 2
 
 	var minLength = 0
@@ -229,4 +228,76 @@ func ValidateLength(payload *string, config *decoder.PayloadConfig) error {
 	}
 
 	return nil
+}
+
+func Encode(data interface{}, config PayloadConfig) (string, error) {
+	v := reflect.ValueOf(data)
+
+	// Validate input data is a struct
+	if v.Kind() != reflect.Struct {
+		return "", fmt.Errorf("data must be a struct")
+	}
+
+	// Determine total payload length
+	var length int
+	for _, field := range config.Fields {
+		if field.Start+field.Length > length {
+			length = field.Start + field.Length
+		}
+	}
+	payload := make([]byte, length)
+
+	// Encode fields into the payload
+	for _, field := range config.Fields {
+		fieldValue := v.FieldByName(field.Name)
+
+		// Check if the field exists
+		if !fieldValue.IsValid() {
+			return "", fmt.Errorf("field %s not found in data", field.Name)
+		}
+
+		// Convert the value to bytes
+		var fieldBytes []byte
+		switch fieldValue.Kind() {
+		case reflect.Slice:
+			fieldBytes = fieldValue.Bytes()
+		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+			fieldBytes = uintToBytes(fieldValue.Uint(), field.Length)
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+			fieldBytes = intToBytes(fieldValue.Int(), field.Length)
+		default:
+			return "", fmt.Errorf("unsupported field type: %s", fieldValue.Kind())
+		}
+
+		// Apply the transform function if provided
+		if field.Transform != nil {
+			fieldBytes = field.Transform(fieldBytes).([]byte)
+		}
+
+		// Copy the bytes into the payload at the correct position
+		copy(payload[field.Start:field.Start+field.Length], fieldBytes)
+	}
+
+	// Convert the payload to a hexadecimal string
+	return hex.EncodeToString(payload), nil
+}
+
+// intToBytes converts an integer value to a byte slice
+func intToBytes(value int64, length int) []byte {
+	buf := make([]byte, length)
+	for i := length - 1; i >= 0; i-- {
+		buf[i] = byte(value & 0xFF)
+		value >>= 8
+	}
+	return buf
+}
+
+// uintToBytes converts an unsigned integer value to a byte slice
+func uintToBytes(value uint64, length int) []byte {
+	buf := make([]byte, length)
+	for i := length - 1; i >= 0; i-- {
+		buf[i] = byte(value & 0xFF)
+		value >>= 8
+	}
+	return buf
 }

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/truvami/decoder/pkg/common"
 	"github.com/truvami/decoder/pkg/decoder"
-	"github.com/truvami/decoder/pkg/decoder/helpers"
 )
 
 type Option func(*NomadXLv1Decoder)
@@ -38,11 +38,11 @@ func WithSkipValidation(skipValidation bool) Option {
 }
 
 // https://docs.truvami.com/docs/payloads/nomad-XL
-func (t NomadXLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
+func (t NomadXLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 	switch port {
 	case 101:
-		return decoder.PayloadConfig{
-			Fields: []decoder.FieldConfig{
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
 				{Name: "SystemTime", Start: 0, Length: 8},
 				{Name: "UTCDate", Start: 8, Length: 4},
 				{Name: "UTCTime", Start: 12, Length: 4},
@@ -68,8 +68,8 @@ func (t NomadXLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 			TargetType: reflect.TypeOf(Port101Payload{}),
 		}, nil
 	case 103:
-		return decoder.PayloadConfig{
-			Fields: []decoder.FieldConfig{
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
 
 				{Name: "UTCDate", Start: 0, Length: 4},
 				{Name: "UTCTime", Start: 4, Length: 4},
@@ -88,7 +88,7 @@ func (t NomadXLv1Decoder) getConfig(port int16) (decoder.PayloadConfig, error) {
 		}, nil
 	}
 
-	return decoder.PayloadConfig{}, fmt.Errorf("port %v not supported", port)
+	return common.PayloadConfig{}, fmt.Errorf("port %v not supported", port)
 }
 
 func (t NomadXLv1Decoder) Decode(data string, port int16, devEui string) (interface{}, interface{}, error) {
@@ -98,16 +98,16 @@ func (t NomadXLv1Decoder) Decode(data string, port int16, devEui string) (interf
 	}
 
 	if t.autoPadding {
-		data = helpers.HexNullPad(&data, &config)
+		data = common.HexNullPad(&data, &config)
 	}
 
 	if !t.skipValidation {
-		err := helpers.ValidateLength(&data, &config)
+		err := common.ValidateLength(&data, &config)
 		if err != nil {
 			return nil, nil, err
 		}
 	}
 
-	decodedData, err := helpers.Parse(data, config)
+	decodedData, err := common.Parse(data, &config)
 	return decodedData, nil, err
 }

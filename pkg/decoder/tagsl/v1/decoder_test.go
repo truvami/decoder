@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/truvami/decoder/pkg/decoder/helpers"
+	helpers "github.com/truvami/decoder/pkg/common"
 )
 
 func TestDecode(t *testing.T) {
@@ -1170,14 +1170,6 @@ func TestDecode(t *testing.T) {
 		})
 	}
 
-	t.Run("TestInvalidPort", func(t *testing.T) {
-		decoder := NewTagSLv1Decoder()
-		_, _, err := decoder.Decode("00", 0, "")
-		if err == nil {
-			t.Fatal("expected port not supported")
-		}
-	})
-
 	t.Run("TestInvalidPayload", func(t *testing.T) {
 		decoder := NewTagSLv1Decoder()
 		_, _, err := decoder.Decode("", 1, "")
@@ -1451,7 +1443,7 @@ func TestValidationErrors(t *testing.T) {
 func TestInvalidPort(t *testing.T) {
 	decoder := NewTagSLv1Decoder()
 	_, _, err := decoder.Decode("00", 0, "")
-	if err == nil {
+	if err == nil || err.Error() != "port 0 not supported" {
 		t.Fatal("expected port not supported")
 	}
 }
