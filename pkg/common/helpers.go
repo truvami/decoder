@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"net"
 
 	"reflect"
 	"strings"
@@ -11,6 +12,51 @@ import (
 
 	"github.com/go-playground/validator"
 )
+
+type PositionSource int32
+
+const (
+	PositionSource_GNSS PositionSource = 0
+	PositionSource_LORA PositionSource = 1
+	PositionSource_WIFI PositionSource = 2
+	PositionSource_BLE  PositionSource = 3
+)
+
+type Position interface {
+	GetLatitude() float64
+	GetLongitude() float64
+	GetAltitude() *float64
+	GetSource() PositionSource
+	GetCapturedAt() *time.Time
+	GetBuffered() bool
+}
+
+type WifiAccessPoint struct {
+	MacAddress net.HardwareAddr
+	Rssi       int8
+}
+
+type WifiLocation interface {
+	GetAccessPoints() []WifiAccessPoint
+}
+
+func AppendAccessPoint(accessPoints []WifiAccessPoint, mac string, rssi int8) []WifiAccessPoint {
+	if hw, err := net.ParseMAC(addColonToMac(mac)); err == nil {
+		accessPoints = append(accessPoints, WifiAccessPoint{
+			MacAddress: hw,
+			Rssi:       rssi,
+		})
+	}
+	return accessPoints
+}
+
+func addColonToMac(mac string) string {
+	if len(mac) != 12 {
+		return mac
+	}
+	return mac[:2] + ":" + mac[2:4] + ":" + mac[4:6] + ":" + mac[6:8] + ":" + mac[8:10] + ":" + mac[10:12]
+
+}
 
 func HexStringToBytes(hexString string) ([]byte, error) {
 	bytes, err := hex.DecodeString(hexString)
@@ -109,11 +155,13 @@ func UnwrapError(err error) []error {
 }
 
 // DecodeLoRaWANPayload decodes the payload based on the provided configuration and populates the target struct
-func Parse(payloadHex string, config *PayloadConfig) (interface{}, error) {
+func Parse[T any](payloadHex string, config *PayloadConfig) (T, error) {
+	var nilValue T
+
 	// Convert hex payload to bytes
 	payloadBytes, err := HexStringToBytes(payloadHex)
 	if err != nil {
-		return nil, err
+		return nilValue, err
 	}
 
 	// Create an instance of the target struct
@@ -131,7 +179,7 @@ func Parse(payloadHex string, config *PayloadConfig) (interface{}, error) {
 		// Extract the field value from the payload
 		value, err := extractFieldValue(payloadBytes, start, length, optional, hex)
 		if err != nil {
-			return nil, err
+			return nilValue, err
 		}
 
 		// Convert value to appropriate type and set it in the target struct
@@ -165,7 +213,7 @@ func Parse(payloadHex string, config *PayloadConfig) (interface{}, error) {
 		}
 	}
 
-	return targetValue.Interface(), errors.Join(errs...)
+	return targetValue.Interface().(T), errors.Join(errs...)
 }
 
 func ParseTimestamp(timestamp int) time.Time {
@@ -300,4 +348,33 @@ func uintToBytes(value uint64, length int) []byte {
 		value >>= 8
 	}
 	return buf
+}
+
+// ToMap converts a struct to a map using the struct's tags.
+//
+// ToMap uses tags on struct fields to decide which fields to add to the
+// returned map.
+func ToMap(in interface{}, tag string) (map[string]interface{}, error) {
+	out := make(map[string]interface{})
+
+	v := reflect.ValueOf(in)
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
+
+	// we only accept structs
+	if v.Kind() != reflect.Struct {
+		return nil, fmt.Errorf("ToMap only accepts structs; got %T", v)
+	}
+
+	typ := v.Type()
+	for i := 0; i < v.NumField(); i++ {
+		// gets us a StructField
+		fi := typ.Field(i)
+		if tagv := fi.Tag.Get(tag); tagv != "" {
+			// set key of map to value in struct field
+			out[tagv] = v.Field(i).Interface()
+		}
+	}
+	return out, nil
 }

@@ -1,6 +1,6 @@
 module github.com/truvami/decoder
 
-go 1.22.0
+go 1.23.0
 
 require (
 	github.com/go-playground/validator v9.31.0+incompatible

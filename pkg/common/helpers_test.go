@@ -2,6 +2,7 @@ package common
 
 import (
 	"fmt"
+	"net"
 	"reflect"
 	"testing"
 )
@@ -80,17 +81,14 @@ func TestParse(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.payload, func(t *testing.T) {
-			decodedData, err := Parse(test.payload, &test.config)
+			decodedData, err := Parse[Port1Payload](test.payload, &test.config)
 			if err != nil {
 				t.Fatalf("error decoding payload: %v", err)
 			}
 
-			// Type assert to Payload
-			payload := decodedData.(Port1Payload)
-
 			// Check the decoded data against the expected data using reflect.DeepEqual
-			if !reflect.DeepEqual(payload, test.expected) {
-				t.Fatalf("decoded data does not match expected data expected: %+v got: %+v", test.expected, payload)
+			if !reflect.DeepEqual(decodedData, test.expected) {
+				t.Fatalf("decoded data does not match expected data expected: %+v got: %+v", test.expected, decodedData)
 			}
 		})
 	}
@@ -179,7 +177,7 @@ func TestConvertFieldToType(t *testing.T) {
 }
 
 func TestInvalidPayload(t *testing.T) {
-	_, err := Parse("", &PayloadConfig{
+	_, err := Parse[interface{}]("", &PayloadConfig{
 		Fields: []FieldConfig{
 			{Name: "Moving", Start: 0, Length: 1},
 		},
@@ -189,7 +187,7 @@ func TestInvalidPayload(t *testing.T) {
 		t.Fatal("expected field out of bounds")
 	}
 
-	_, err = Parse("01", &PayloadConfig{
+	_, err = Parse[interface{}]("01", &PayloadConfig{
 		Fields: []FieldConfig{
 			{Name: "Moving", Start: 0, Length: 2},
 		},
@@ -199,7 +197,7 @@ func TestInvalidPayload(t *testing.T) {
 		t.Fatal("expected field out of bounds")
 	}
 
-	_, err = Parse("01", &PayloadConfig{
+	_, err = Parse[interface{}]("01", &PayloadConfig{
 		Fields: []FieldConfig{
 			{Name: "Moving", Start: 10, Length: 1},
 		},
@@ -257,6 +255,102 @@ func TestUintToBinaryArray(t *testing.T) {
 				if v != test.expected[i] {
 					t.Fatalf("expected: %v got: %v", test.expected, result)
 				}
+			}
+		})
+	}
+}
+func TestAppendAccessPoint(t *testing.T) {
+	tests := []struct {
+		accessPoints []WifiAccessPoint
+		mac          string
+		rssi         int8
+		expected     []WifiAccessPoint
+	}{
+		{
+			accessPoints: []WifiAccessPoint{},
+			mac:          "001122334455",
+			rssi:         -50,
+			expected: []WifiAccessPoint{
+				{
+					MacAddress: net.HardwareAddr{0x00, 0x11, 0x22, 0x33, 0x44, 0x55},
+					Rssi:       -50,
+				},
+			},
+		},
+		{
+			accessPoints: []WifiAccessPoint{
+				{
+					MacAddress: net.HardwareAddr{0x66, 0x77, 0x88, 0x99, 0xAA, 0xBB},
+					Rssi:       -60,
+				},
+			},
+			mac:  "001122334455",
+			rssi: -50,
+			expected: []WifiAccessPoint{
+				{
+					MacAddress: net.HardwareAddr{0x66, 0x77, 0x88, 0x99, 0xAA, 0xBB},
+					Rssi:       -60,
+				},
+				{
+					MacAddress: net.HardwareAddr{0x00, 0x11, 0x22, 0x33, 0x44, 0x55},
+					Rssi:       -50,
+				},
+			},
+		},
+		{
+			accessPoints: []WifiAccessPoint{},
+			mac:          "invalidmac",
+			rssi:         -50,
+			expected:     []WifiAccessPoint{},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(fmt.Sprintf("%v_%v", test.mac, test.rssi), func(t *testing.T) {
+			result := AppendAccessPoint(test.accessPoints, test.mac, test.rssi)
+			if !reflect.DeepEqual(result, test.expected) {
+				t.Fatalf("expected: %v got: %v", test.expected, result)
+			}
+		})
+	}
+}
+
+func TestAddColonToMac(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{
+			input:    "001122334455",
+			expected: "00:11:22:33:44:55",
+		},
+		{
+			input:    "AABBCCDDEEFF",
+			expected: "AA:BB:CC:DD:EE:FF",
+		},
+		{
+			input:    "1234567890AB",
+			expected: "12:34:56:78:90:AB",
+		},
+		{
+			input:    "0011223344",
+			expected: "0011223344", // Invalid length, should return input as is
+		},
+		{
+			input:    "00112233445566",
+			expected: "00112233445566", // Invalid length, should return input as is
+		},
+		{
+			input:    "8c59c3c99fc0",
+			expected: "8c:59:c3:c9:9f:c0",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.input, func(t *testing.T) {
+			result := addColonToMac(test.input)
+			if result != test.expected {
+				t.Fatalf("expected: %v got: %v", test.expected, result)
 			}
 		})
 	}
