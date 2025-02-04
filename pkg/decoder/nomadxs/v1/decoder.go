@@ -15,6 +15,33 @@ type NomadXSv1Decoder struct {
 	skipValidation bool
 }
 
+// DecodeWifi implements decoder.Decoder.
+func (t *NomadXSv1Decoder) DecodeWifi(string, int16, string) (common.WifiLocation, interface{}, error) {
+	panic("unimplemented")
+}
+
+// DecodePosition implements decoder.Decoder.
+func (t *NomadXSv1Decoder) DecodePosition(data string, port int16, devEui string) (common.Position, interface{}, error) {
+	config, err := t.getConfig(port)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if t.autoPadding {
+		data = common.HexNullPad(&data, &config)
+	}
+
+	if !t.skipValidation {
+		err := common.ValidateLength(&data, &config)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
+	decodedData, err := common.Parse[common.Position](data, &config)
+	return decodedData, nil, err
+}
+
 func NewNomadXSv1Decoder(options ...Option) decoder.Decoder {
 	nomadXSv1Decoder := &NomadXSv1Decoder{}
 
@@ -145,6 +172,6 @@ func (t NomadXSv1Decoder) Decode(data string, port int16, devEui string) (interf
 		}
 	}
 
-	decodedData, err := common.Parse(data, &config)
+	decodedData, err := common.Parse[interface{}](data, &config)
 	return decodedData, nil, err
 }

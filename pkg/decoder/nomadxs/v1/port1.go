@@ -1,5 +1,12 @@
 package nomadxs
 
+import (
+	"fmt"
+	"time"
+
+	"github.com/truvami/decoder/pkg/common"
+)
+
 // +-------+------+-------------------------------------------+------------------------+
 // | Byte  | Size | Description                               | Format                 |
 // +-------+------+-------------------------------------------+------------------------+
@@ -52,4 +59,42 @@ type Port1Payload struct {
 	MagnetometerXAxis  float32 `json:"magnetometerXAxis"`
 	MagnetometerYAxis  float32 `json:"magnetometerYAxis"`
 	MagnetometerZAxis  float32 `json:"magnetometerZAxis"`
+}
+
+var _ common.Position = &Port1Payload{}
+
+func (p Port1Payload) GetLatitude() float64 {
+	return p.Latitude
+}
+
+func (p Port1Payload) GetLongitude() float64 {
+	return p.Longitude
+}
+
+func (p Port1Payload) GetAltitude() *float64 {
+	return &p.Altitude
+}
+
+func (p Port1Payload) GetSource() common.PositionSource {
+	return common.PositionSource_GNSS
+}
+
+func (p Port1Payload) GetCapturedAt() *time.Time {
+	capturedAt, err := time.Parse(time.RFC3339,
+		fmt.Sprintf("%d-%02d-%02dT%02d:%02d:%02dZ",
+			int(p.Year)+2000,
+			p.Month,
+			p.Day,
+			p.Hour,
+			p.Minute,
+			p.Second,
+		))
+	if err != nil {
+		return nil
+	}
+	return &capturedAt
+}
+
+func (p Port1Payload) GetBuffered() bool {
+	return false
 }

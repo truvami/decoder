@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
+
+	"github.com/truvami/decoder/pkg/common"
 )
 
 type LoracloudMiddleware struct {
@@ -145,6 +148,8 @@ type UplinkMsg struct {
 	GNSSUse2DSolver         *bool      `json:"gnss_use_2D_solver"`
 }
 
+var _ common.Position = &UplinkMsgResponse{}
+
 // An “Uplink Response” object reflects the current device state as well as new items resulting from the submitted uplink message.
 // In addition to the info_fields and log_messages fields of the “DeviceInfo” object (DeviceInfo) it contains fields which signal the following state changes and
 // completed items that are due to an uplink message:
@@ -252,4 +257,53 @@ type UplinkMsgResponse struct {
 		} `json:"position_solution"`
 		Operation string `json:"operation"`
 	} `json:"result"`
+}
+
+// GetAltitude implements common.GnssLocation.
+func (u *UplinkMsgResponse) GetAltitude() *float64 {
+	return &u.Result.PositionSolution.Llh[2]
+}
+
+// GetBuffered implements common.GnssLocation.
+func (u *UplinkMsgResponse) GetBuffered() bool {
+	if u.Result.PositionSolution.CaptureTimeGps-u.Result.PositionSolution.Timestamp > 60 {
+		return true
+	}
+	return false
+}
+
+// GetCapturedAt implements common.GnssLocation.
+func (u *UplinkMsgResponse) GetCapturedAt() *time.Time {
+	captureTime := time.Unix(int64(u.Result.PositionSolution.Timestamp*1000), 0)
+
+	if len(u.Result.PositionSolution.CaptureTimesUtc) > 0 {
+		// use the last capture time if available
+		captureTime = time.Unix(int64(u.Result.PositionSolution.CaptureTimesUtc[len(u.Result.PositionSolution.CaptureTimesUtc)-1]*1000), 0)
+	} else if u.Result.PositionSolution.CaptureTimeUtc > 0 {
+		// use the capture time if available
+		captureTime = time.Unix(int64(u.Result.PositionSolution.CaptureTimeUtc*1000), 0)
+	}
+
+	return &captureTime
+}
+
+// GetLatitude implements common.GnssLocation.
+func (u *UplinkMsgResponse) GetLatitude() float64 {
+	return u.Result.PositionSolution.Llh[0]
+}
+
+// GetLongitude implements common.GnssLocation.
+func (u *UplinkMsgResponse) GetLongitude() float64 {
+	return u.Result.PositionSolution.Llh[1]
+}
+
+// GetSource implements common.GnssLocation.
+func (u *UplinkMsgResponse) GetSource() common.PositionSource {
+	switch u.Result.PositionSolution.AlgorithmType {
+	case "gnss":
+		return common.PositionSource_GNSS
+	case "wifi":
+		return common.PositionSource_WIFI
+	}
+	return common.PositionSource_GNSS
 }

@@ -1,6 +1,10 @@
 package tagsl
 
-import "time"
+import (
+	"time"
+
+	"github.com/truvami/decoder/pkg/common"
+)
 
 // +------+------+-------------------------------------------+-----------+
 // | Byte | Size | Description                               | Format    |
@@ -35,4 +39,19 @@ type Port7Payload struct {
 	Rssi5     int8      `json:"rssi5"`
 	Mac6      string    `json:"mac6"`
 	Rssi6     int8      `json:"rssi6"`
+}
+
+var _ common.WifiLocation = &Port7Payload{}
+
+func (p Port7Payload) GetAccessPoints() []common.WifiAccessPoint {
+	var accessPoints []common.WifiAccessPoint
+
+	accessPoints = common.AppendAccessPoint(accessPoints, p.Mac1, p.Rssi1)
+	accessPoints = common.AppendAccessPoint(accessPoints, p.Mac2, p.Rssi2)
+	accessPoints = common.AppendAccessPoint(accessPoints, p.Mac3, p.Rssi3)
+	accessPoints = common.AppendAccessPoint(accessPoints, p.Mac4, p.Rssi4)
+	accessPoints = common.AppendAccessPoint(accessPoints, p.Mac5, p.Rssi5)
+	accessPoints = common.AppendAccessPoint(accessPoints, p.Mac6, p.Rssi6)
+
+	return accessPoints
 }

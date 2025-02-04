@@ -1,6 +1,10 @@
 package tagsl
 
-import "time"
+import (
+	"time"
+
+	"github.com/truvami/decoder/pkg/common"
+)
 
 // +------+------+-------------------------------------------+------------------------+
 // | Byte | Size | Description                               | Format                 |
@@ -43,4 +47,46 @@ type Port150Payload struct {
 	Rssi6       int8      `json:"rssi6"`
 	Mac7        string    `json:"mac7"`
 	Rssi7       int8      `json:"rssi7"`
+}
+
+var _ common.Position = &Port150Payload{}
+
+func (p Port150Payload) GetLatitude() float64 {
+	return p.Latitude
+}
+
+func (p Port150Payload) GetLongitude() float64 {
+	return p.Longitude
+}
+
+func (p Port150Payload) GetAltitude() *float64 {
+	return &p.Altitude
+}
+
+func (p Port150Payload) GetSource() common.PositionSource {
+	return common.PositionSource_GNSS
+}
+
+func (p Port150Payload) GetCapturedAt() *time.Time {
+	return &p.Timestamp
+}
+
+func (p Port150Payload) GetBuffered() bool {
+	return true
+}
+
+var _ common.WifiLocation = &Port150Payload{}
+
+func (p Port150Payload) GetAccessPoints() []common.WifiAccessPoint {
+	var accessPoints []common.WifiAccessPoint
+
+	accessPoints = common.AppendAccessPoint(accessPoints, p.Mac1, p.Rssi1)
+	accessPoints = common.AppendAccessPoint(accessPoints, p.Mac2, p.Rssi2)
+	accessPoints = common.AppendAccessPoint(accessPoints, p.Mac3, p.Rssi3)
+	accessPoints = common.AppendAccessPoint(accessPoints, p.Mac4, p.Rssi4)
+	accessPoints = common.AppendAccessPoint(accessPoints, p.Mac5, p.Rssi5)
+	accessPoints = common.AppendAccessPoint(accessPoints, p.Mac6, p.Rssi6)
+	accessPoints = common.AppendAccessPoint(accessPoints, p.Mac7, p.Rssi7)
+
+	return accessPoints
 }

@@ -426,7 +426,89 @@ func (t TagSLv1Decoder) Decode(data string, port int16, devEui string) (interfac
 		}
 	}
 
-	decodedData, err := common.Parse(data, &config)
+	decodedData, err := common.Parse[interface{}](data, &config)
+	if err != nil {
+		return decodedData, nil, err
+	}
+
+	// if there is no status byte index, return the decoded data and nil for status data
+	if config.StatusByteIndex == nil {
+		return decodedData, nil, nil
+	}
+
+	// convert hex payload to bytes
+	bytesData, err := common.HexStringToBytes(data)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	statusData, err := parseStatusByte(bytesData[*config.StatusByteIndex])
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return decodedData, statusData, nil
+}
+
+func (t TagSLv1Decoder) DecodePosition(data string, port int16, devEui string) (common.Position, interface{}, error) {
+	config, err := t.getConfig(port)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if t.autoPadding {
+		data = common.HexNullPad(&data, &config)
+	}
+
+	if !t.skipValidation {
+		err := common.ValidateLength(&data, &config)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
+	decodedData, err := common.Parse[common.Position](data, &config)
+	if err != nil {
+		return decodedData, nil, err
+	}
+
+	// if there is no status byte index, return the decoded data and nil for status data
+	if config.StatusByteIndex == nil {
+		return decodedData, nil, nil
+	}
+
+	// convert hex payload to bytes
+	bytesData, err := common.HexStringToBytes(data)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	statusData, err := parseStatusByte(bytesData[*config.StatusByteIndex])
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return decodedData, statusData, nil
+}
+
+func (t TagSLv1Decoder) DecodeWifi(data string, port int16, devEui string) (common.WifiLocation, interface{}, error) {
+	config, err := t.getConfig(port)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if t.autoPadding {
+		data = common.HexNullPad(&data, &config)
+	}
+
+	if !t.skipValidation {
+		err := common.ValidateLength(&data, &config)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
+	decodedData, err := common.Parse[common.WifiLocation](data, &config)
 	if err != nil {
 		return decodedData, nil, err
 	}

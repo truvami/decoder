@@ -3,6 +3,7 @@ package tagsl
 import (
 	"fmt"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 
@@ -1166,6 +1167,64 @@ func TestDecode(t *testing.T) {
 
 			if got != test.expected {
 				t.Errorf("expected: %v\ngot: %v", test.expected, got)
+			}
+
+			positionPorts := []int16{1, 10, 50, 51, 110, 150, 151}
+			for _, port := range positionPorts {
+				if port != test.port || test.skipValidation {
+					continue
+				}
+
+				got, _, err := decoder.DecodePosition(test.payload, port, "")
+				if err != nil {
+					t.Fatalf("unexpected error for port %v, %v", port, err)
+				}
+
+				expected, _ := helpers.ToMap(test.expected, "json")
+				if *got.GetAltitude() != expected["altitude"].(float64) {
+					t.Fatalf("expected altitude to be %v for port %v got %v", expected["altitude"], port, *got.GetAltitude())
+				}
+
+				if got.GetLatitude() != expected["latitude"].(float64) {
+					t.Fatalf("expected latitude to be %v for port %v got %v", expected["latitude"], port, got.GetLatitude())
+				}
+
+				if got.GetLongitude() != expected["longitude"].(float64) {
+					t.Fatalf("expected longitude to be %v for port %v got %v", expected["longitude"], port, got.GetLongitude())
+				}
+
+				if expected["bufferLevel"] != nil && !got.GetBuffered() {
+					t.Fatalf("expected buffered to be true for port %v", port)
+				}
+
+				if expected["bufferLevel"] == nil && got.GetBuffered() {
+					t.Fatalf("expected buffered to be false for port %v", port)
+				}
+
+				if got.GetSource() != helpers.PositionSource_GNSS {
+					t.Fatalf("expected source to be GNSS for port %v got %v", port, got.GetSource())
+				}
+			}
+
+			wifiPorts := []int16{5, 7, 50, 51, 105, 107, 150, 151}
+			for _, port := range wifiPorts {
+				if port != test.port || test.skipValidation {
+					continue
+				}
+
+				got, _, err := decoder.DecodeWifi(test.payload, port, "")
+				if err != nil {
+					t.Fatalf("unexpected error for port %v, %v", port, err)
+				}
+
+				expected, _ := helpers.ToMap(test.expected, "json")
+
+				// loop 7 times to check all mac addresses
+				for i := 0; i < 7; i++ {
+					if expected[fmt.Sprintf("mac%v", i+1)] != nil && expected[fmt.Sprintf("mac%v", i+1)] != "" && strings.ReplaceAll(got.GetAccessPoints()[i].MacAddress.String(), ":", "") != expected[fmt.Sprintf("mac%v", i+1)] {
+						t.Fatalf("expected mac%v to be %v for port %v got %v", i+1, expected[fmt.Sprintf("mac%v", i+1)], port, got.GetAccessPoints()[i].MacAddress.String())
+					}
+				}
 			}
 		})
 	}

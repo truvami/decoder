@@ -1,6 +1,10 @@
 package tagsl
 
-import "time"
+import (
+	"time"
+
+	"github.com/truvami/decoder/pkg/common"
+)
 
 // +------+------+-------------------------------------------+------------------------+
 // | Byte | Size | Description                               | Format                 |
@@ -25,4 +29,30 @@ type Port10Payload struct {
 	TTF        float64   `json:"ttf"`
 	PDOP       float64   `json:"pdop"`
 	Satellites uint8     `json:"satellites" validate:"gte=3,lte=27"`
+}
+
+var _ common.Position = &Port10Payload{}
+
+func (p Port10Payload) GetLatitude() float64 {
+	return p.Latitude
+}
+
+func (p Port10Payload) GetLongitude() float64 {
+	return p.Longitude
+}
+
+func (p Port10Payload) GetAltitude() *float64 {
+	return &p.Altitude
+}
+
+func (p Port10Payload) GetSource() common.PositionSource {
+	return common.PositionSource_GNSS
+}
+
+func (p Port10Payload) GetCapturedAt() *time.Time {
+	return &p.Timestamp
+}
+
+func (p Port10Payload) GetBuffered() bool {
+	return false
 }
