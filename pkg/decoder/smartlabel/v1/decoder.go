@@ -18,6 +18,32 @@ type SmartLabelv1Decoder struct {
 	skipValidation      bool
 }
 
+// DecodeWifi implements decoder.Decoder.
+func (t *SmartLabelv1Decoder) DecodeWifi(string, int16, string) (common.WifiLocation, interface{}, error) {
+	panic("unimplemented")
+}
+
+// DecodePosition implements decoder.Decoder.
+func (t *SmartLabelv1Decoder) DecodePosition(data string, port int16, devEui string) (common.Position, interface{}, error) {
+	switch port {
+	case 192, 197:
+		decodedData, err := t.loracloudMiddleware.DeliverUplinkMessage(devEui, loracloud.UplinkMsg{
+			MsgType: "updf",
+			Port:    uint8(port),
+			Payload: data,
+		})
+		return decodedData, nil, err
+	default:
+		config, err := t.getConfig(port, data)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		decodedData, err := common.Parse[common.Position](data, &config)
+		return decodedData, nil, err
+	}
+}
+
 func NewSmartLabelv1Decoder(loracloudMiddleware loracloud.LoracloudMiddleware, options ...Option) decoder.Decoder {
 	smartLabelv1Decoder := &SmartLabelv1Decoder{
 		loracloudMiddleware: loracloudMiddleware,
@@ -132,7 +158,7 @@ func (t SmartLabelv1Decoder) Decode(data string, port int16, devEui string) (int
 			return nil, nil, err
 		}
 
-		decodedData, err := common.Parse(data, &config)
+		decodedData, err := common.Parse[interface{}](data, &config)
 		return decodedData, nil, err
 	}
 }
