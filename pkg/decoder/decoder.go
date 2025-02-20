@@ -20,7 +20,7 @@ const (
 )
 
 type DecodedUplink struct {
-	features []Feature   `json:"-"`
+	features []Feature
 	Data     interface{} `json:"data"`
 	Metadata interface{} `json:"metadata"`
 }
