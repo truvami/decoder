@@ -1,5 +1,11 @@
 package tagsl
 
+import (
+	"time"
+
+	"github.com/truvami/decoder/pkg/decoder"
+)
+
 // +------+------+-------------------------------------------+------------------------+
 // | Byte | Size | Description                               | Format                 |
 // +------+------+-------------------------------------------+------------------------+
@@ -25,4 +31,50 @@ type Port1Payload struct {
 	Hour      uint8   `json:"hour" validate:"gte=0,lte=23"`
 	Minute    uint8   `json:"minute" validate:"gte=0,lte=59"`
 	Second    uint8   `json:"second" validate:"gte=0,lte=59"`
+}
+
+// Enforce that Port1Payload implements interfaces
+var _ decoder.UplinkFeatureBase = &Port1Payload{}
+var _ decoder.UplinkFeatureGNSS = &Port1Payload{}
+
+func (p Port1Payload) GetTimestamp() *time.Time {
+	timestamp := time.Date(
+		int(p.Year)+2000,
+		time.Month(p.Month),
+		int(p.Day),
+		int(p.Hour),
+		int(p.Minute),
+		int(p.Second),
+		0,
+		time.UTC,
+	)
+	return &timestamp
+}
+
+func (p Port1Payload) GetLatitude() float64 {
+	return p.Latitude
+}
+
+func (p Port1Payload) GetLongitude() float64 {
+	return p.Longitude
+}
+
+func (p Port1Payload) GetAltitude() float64 {
+	return p.Altitude
+}
+
+func (p Port1Payload) GetAccuracy() *float64 {
+	return nil
+}
+
+func (p Port1Payload) GetTTF() *float64 {
+	return nil
+}
+
+func (p Port1Payload) GetPDOP() *float64 {
+	return nil
+}
+
+func (p Port1Payload) GetSatellites() *uint8 {
+	return nil
 }

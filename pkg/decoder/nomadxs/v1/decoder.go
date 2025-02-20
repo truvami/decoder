@@ -128,10 +128,10 @@ func (t NomadXSv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 	return common.PayloadConfig{}, fmt.Errorf("port %v not supported", port)
 }
 
-func (t NomadXSv1Decoder) Decode(data string, port int16, devEui string) (interface{}, interface{}, error) {
+func (t NomadXSv1Decoder) Decode(data string, port int16, devEui string) (*decoder.DecodedUplink, error) {
 	config, err := t.getConfig(port)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	if t.autoPadding {
@@ -141,10 +141,10 @@ func (t NomadXSv1Decoder) Decode(data string, port int16, devEui string) (interf
 	if !t.skipValidation {
 		err := common.ValidateLength(&data, &config)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 	}
 
 	decodedData, err := common.Parse(data, &config)
-	return decodedData, nil, err
+	return decoder.NewDecodedUplink(config.Features, decodedData, nil), err
 }

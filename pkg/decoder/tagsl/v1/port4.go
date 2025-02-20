@@ -1,5 +1,11 @@
 package tagsl
 
+import (
+	"time"
+
+	"github.com/truvami/decoder/pkg/decoder"
+)
+
 // +-------+------+-------------------------------------------+------------+
 // | Byte  | Size | Description                               | Format     |
 // +-------+------+-------------------------------------------+------------+
@@ -31,4 +37,10 @@ type Port4Payload struct {
 	BatteryKeepAliveMessageInterval uint32 `json:"batteryKeepAliveMessageInterval" validate:"gte=300,lte=604800"`
 	BatchSize                       uint16 `json:"batchSize" validate:"lte=50"`
 	BufferSize                      uint16 `json:"bufferSize" validate:"gte=128,lte=8128"`
+}
+
+var _ decoder.UplinkFeatureBase = &Port4Payload{}
+
+func (p Port4Payload) GetTimestamp() *time.Time {
+	return nil
 }

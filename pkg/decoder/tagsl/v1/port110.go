@@ -1,6 +1,10 @@
 package tagsl
 
-import "time"
+import (
+	"time"
+
+	"github.com/truvami/decoder/pkg/decoder"
+)
 
 // +-------+------+-------------------------------------------+------------------------+
 // | Byte  | Size | Description                               | Format                 |
@@ -21,4 +25,49 @@ type Port110Payload struct {
 	Altitude    float64   `json:"altitude"`
 	Timestamp   time.Time `json:"timestamp"`
 	Battery     float64   `json:"battery" validate:"gte=1,lte=5"`
+}
+
+var _ decoder.UplinkFeatureBase = &Port110Payload{}
+var _ decoder.UplinkFeatureGNSS = &Port110Payload{}
+var _ decoder.UpLinkFeatureBattery = &Port110Payload{}
+var _ decoder.UplinkFeatureBuffered = &Port110Payload{}
+
+func (p Port110Payload) GetTimestamp() *time.Time {
+	return &p.Timestamp
+}
+
+func (p Port110Payload) GetLatitude() float64 {
+	return p.Latitude
+}
+
+func (p Port110Payload) GetLongitude() float64 {
+	return p.Longitude
+}
+
+func (p Port110Payload) GetAltitude() float64 {
+	return p.Altitude
+}
+
+func (p Port110Payload) GetAccuracy() *float64 {
+	return nil
+}
+
+func (p Port110Payload) GetTTF() *float64 {
+	return nil
+}
+
+func (p Port110Payload) GetSatellites() *uint8 {
+	return nil
+}
+
+func (p Port110Payload) GetPDOP() *float64 {
+	return nil
+}
+
+func (p Port110Payload) GetBatteryVoltage() float64 {
+	return p.Battery
+}
+
+func (p Port110Payload) GetBufferLevel() uint16 {
+	return p.BufferLevel
 }

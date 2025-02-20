@@ -35,7 +35,7 @@ var smartlabelCmd = &cobra.Command{
 		}
 		logger.Logger.Debug("port parsed successfully", zap.Int("port", port))
 
-		data, metadata, err := d.Decode(args[1], int16(port), "")
+		data, err := d.Decode(args[1], int16(port), "")
 		if err != nil {
 			if errors.Is(err, helpers.ErrValidationFailed) {
 				for _, err := range helpers.UnwrapError(err) {
@@ -48,6 +48,6 @@ var smartlabelCmd = &cobra.Command{
 			}
 		}
 
-		printJSON(data, metadata)
+		printJSON(data.Data, data.Metadata)
 	},
 }

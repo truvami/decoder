@@ -1,5 +1,11 @@
 package tagsl
 
+import (
+	"time"
+
+	"github.com/truvami/decoder/pkg/decoder"
+)
+
 // +------+------+----------------+-----------+
 // | Byte | Size | Description    | Format    |
 // +------+------+----------------+-----------+
@@ -29,4 +35,59 @@ type Port3Payload struct {
 	Rssi5          int8   `json:"rssi5"`
 	Mac6           string `json:"mac6"`
 	Rssi6          int8   `json:"rssi6"`
+}
+
+var _ decoder.UplinkFeatureBase = &Port3Payload{}
+var _ decoder.UplinkFeatureWiFi = &Port3Payload{}
+
+func (p Port3Payload) GetTimestamp() *time.Time {
+	return nil
+}
+
+func (p Port3Payload) GetAccessPoints() []decoder.AccessPoint {
+	accessPoints := []decoder.AccessPoint{}
+
+	if p.Mac1 != "" {
+		accessPoints = append(accessPoints, decoder.AccessPoint{
+			MAC:  p.Mac1,
+			RSSI: p.Rssi1,
+		})
+	}
+
+	if p.Mac2 != "" {
+		accessPoints = append(accessPoints, decoder.AccessPoint{
+			MAC:  p.Mac2,
+			RSSI: p.Rssi2,
+		})
+	}
+
+	if p.Mac3 != "" {
+		accessPoints = append(accessPoints, decoder.AccessPoint{
+			MAC:  p.Mac3,
+			RSSI: p.Rssi3,
+		})
+	}
+
+	if p.Mac4 != "" {
+		accessPoints = append(accessPoints, decoder.AccessPoint{
+			MAC:  p.Mac4,
+			RSSI: p.Rssi4,
+		})
+	}
+
+	if p.Mac5 != "" {
+		accessPoints = append(accessPoints, decoder.AccessPoint{
+			MAC:  p.Mac5,
+			RSSI: p.Rssi5,
+		})
+	}
+
+	if p.Mac6 != "" {
+		accessPoints = append(accessPoints, decoder.AccessPoint{
+			MAC:  p.Mac6,
+			RSSI: p.Rssi6,
+		})
+	}
+
+	return accessPoints
 }

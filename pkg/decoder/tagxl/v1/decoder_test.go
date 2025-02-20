@@ -153,14 +153,14 @@ func TestDecode(t *testing.T) {
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestPort%vWith%v", test.port, test.payload), func(t *testing.T) {
 			decoder := NewTagXLv1Decoder(middleware, WithAutoPadding(test.autoPadding))
-			got, _, err := decoder.Decode(test.payload, test.port, test.devEui)
+			got, err := decoder.Decode(test.payload, test.port, test.devEui)
 			if err != nil && len(test.expectedErr) == 0 {
 				t.Fatalf("unexpected error: %v", err)
 			}
 
 			t.Logf("got %v", got)
 
-			if !reflect.DeepEqual(got, test.expected) && len(test.expectedErr) == 0 {
+			if got != nil && !reflect.DeepEqual(got.Data, test.expected) && len(test.expectedErr) == 0 {
 				t.Errorf("expected: %v, got: %v", test.expected, got)
 			}
 
@@ -181,7 +181,7 @@ func TestValidationErrors(t *testing.T) {
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestPort%vValidationWith%v", test.port, test.payload), func(t *testing.T) {
 			decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("appEui"))
-			got, _, err := decoder.Decode(test.payload, test.port, "")
+			got, err := decoder.Decode(test.payload, test.port, "")
 
 			if err == nil && test.expected == nil {
 				return
@@ -198,7 +198,7 @@ func TestValidationErrors(t *testing.T) {
 
 func TestInvalidPort(t *testing.T) {
 	decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("appEui"))
-	_, _, err := decoder.Decode("00", 0, "")
+	_, err := decoder.Decode("00", 0, "")
 	if err == nil || err.Error() != "port 0 not supported" {
 		t.Fatal("expected port not supported")
 	}
@@ -206,7 +206,7 @@ func TestInvalidPort(t *testing.T) {
 
 func TestPayloadTooShort(t *testing.T) {
 	decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("appEui"))
-	_, _, err := decoder.Decode("deadbeef", 152, "")
+	_, err := decoder.Decode("deadbeef", 152, "")
 
 	if err == nil || err.Error() != "payload too short" {
 		t.Fatal("expected error payload too short")
@@ -215,7 +215,7 @@ func TestPayloadTooShort(t *testing.T) {
 
 func TestPayloadTooLong(t *testing.T) {
 	decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("appEui"))
-	_, _, err := decoder.Decode("deadbeef4242deadbeef4242deadbeef4242", 152, "")
+	_, err := decoder.Decode("deadbeef4242deadbeef4242deadbeef4242", 152, "")
 
 	if err == nil || err.Error() != "payload too long" {
 		t.Fatal("expected error payload too long")

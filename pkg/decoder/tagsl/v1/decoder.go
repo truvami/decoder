@@ -63,6 +63,7 @@ func (t TagSLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 			},
 			TargetType:      reflect.TypeOf(Port1Payload{}),
 			StatusByteIndex: common.ToIntPointer(0),
+			Features:        []decoder.Feature{decoder.FeatureGNSS},
 		}, nil
 	case 2:
 		return common.PayloadConfig{
@@ -90,6 +91,7 @@ func (t TagSLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 				{Name: "Rssi6", Start: 45, Length: 1, Optional: true},
 			},
 			TargetType: reflect.TypeOf(Port3Payload{}),
+			Features:   []decoder.Feature{decoder.FeatureWiFi},
 		}, nil
 	case 4:
 		return common.PayloadConfig{
@@ -111,6 +113,7 @@ func (t TagSLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 				{Name: "BufferSize", Start: 30, Length: 2, Optional: true},
 			},
 			TargetType: reflect.TypeOf(Port4Payload{}),
+			Features:   []decoder.Feature{decoder.FeatureConfig},
 		}, nil
 	case 5:
 		return common.PayloadConfig{
@@ -133,6 +136,7 @@ func (t TagSLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 			},
 			TargetType:      reflect.TypeOf(Port5Payload{}),
 			StatusByteIndex: common.ToIntPointer(0),
+			Features:        []decoder.Feature{decoder.FeatureWiFi},
 		}, nil
 	case 6:
 		return common.PayloadConfig{
@@ -140,6 +144,7 @@ func (t TagSLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 				{Name: "ButtonPressed", Start: 0, Length: 1},
 			},
 			TargetType: reflect.TypeOf(Port6Payload{}),
+			Features:   []decoder.Feature{decoder.FeatureButton},
 		}, nil
 	case 7:
 		return common.PayloadConfig{
@@ -161,6 +166,7 @@ func (t TagSLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 			},
 			TargetType:      reflect.TypeOf(Port7Payload{}),
 			StatusByteIndex: common.ToIntPointer(4),
+			Features:        []decoder.Feature{decoder.FeatureWiFi},
 		}, nil
 	case 8:
 		return common.PayloadConfig{
@@ -176,6 +182,7 @@ func (t TagSLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 				{Name: "BLECurrentConfigurationUplinkInterval", Start: 20, Length: 2},
 			},
 			TargetType: reflect.TypeOf(Port8Payload{}),
+			Features:   []decoder.Feature{decoder.FeatureConfig},
 		}, nil
 	case 10:
 		return common.PayloadConfig{
@@ -202,6 +209,7 @@ func (t TagSLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 			},
 			TargetType:      reflect.TypeOf(Port10Payload{}),
 			StatusByteIndex: common.ToIntPointer(0),
+			Features:        []decoder.Feature{decoder.FeatureGNSS, decoder.FeatureBattery},
 		}, nil
 	case 15:
 		return common.PayloadConfig{
@@ -213,6 +221,7 @@ func (t TagSLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 			},
 			TargetType:      reflect.TypeOf(Port15Payload{}),
 			StatusByteIndex: common.ToIntPointer(0),
+			Features:        []decoder.Feature{decoder.FeatureBattery},
 		}, nil
 	case 50:
 		return common.PayloadConfig{
@@ -247,6 +256,7 @@ func (t TagSLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 			},
 			TargetType:      reflect.TypeOf(Port50Payload{}),
 			StatusByteIndex: common.ToIntPointer(0),
+			Features:        []decoder.Feature{decoder.FeatureGNSS, decoder.FeatureBattery, decoder.FeatureWiFi},
 		}, nil
 	case 51:
 		return common.PayloadConfig{
@@ -285,6 +295,7 @@ func (t TagSLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 			},
 			TargetType:      reflect.TypeOf(Port51Payload{}),
 			StatusByteIndex: common.ToIntPointer(0),
+			Features:        []decoder.Feature{decoder.FeatureGNSS, decoder.FeatureBattery, decoder.FeatureWiFi},
 		}, nil
 	case 105:
 		return common.PayloadConfig{
@@ -307,6 +318,7 @@ func (t TagSLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 			},
 			TargetType:      reflect.TypeOf(Port105Payload{}),
 			StatusByteIndex: common.ToIntPointer(6),
+			Features:        []decoder.Feature{decoder.FeatureWiFi, decoder.FeatureBuffered},
 		}, nil
 	case 110:
 		return common.PayloadConfig{
@@ -329,6 +341,7 @@ func (t TagSLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 			},
 			TargetType:      reflect.TypeOf(Port110Payload{}),
 			StatusByteIndex: common.ToIntPointer(2),
+			Features:        []decoder.Feature{decoder.FeatureGNSS, decoder.FeatureBattery, decoder.FeatureBuffered},
 		}, nil
 	case 150:
 		return common.PayloadConfig{
@@ -364,6 +377,7 @@ func (t TagSLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 			},
 			TargetType:      reflect.TypeOf(Port150Payload{}),
 			StatusByteIndex: common.ToIntPointer(2),
+			Features:        []decoder.Feature{decoder.FeatureGNSS, decoder.FeatureBattery, decoder.FeatureWiFi, decoder.FeatureBuffered},
 		}, nil
 	case 151:
 		return common.PayloadConfig{
@@ -403,16 +417,17 @@ func (t TagSLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 			},
 			TargetType:      reflect.TypeOf(Port151Payload{}),
 			StatusByteIndex: common.ToIntPointer(2),
+			Features:        []decoder.Feature{decoder.FeatureGNSS, decoder.FeatureBattery, decoder.FeatureWiFi, decoder.FeatureBuffered},
 		}, nil
 	}
 
 	return common.PayloadConfig{}, fmt.Errorf("port %v not supported", port)
 }
 
-func (t TagSLv1Decoder) Decode(data string, port int16, devEui string) (interface{}, interface{}, error) {
+func (t TagSLv1Decoder) Decode(data string, port int16, devEui string) (*decoder.DecodedUplink, error) {
 	config, err := t.getConfig(port)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	if t.autoPadding {
@@ -422,32 +437,32 @@ func (t TagSLv1Decoder) Decode(data string, port int16, devEui string) (interfac
 	if !t.skipValidation {
 		err := common.ValidateLength(&data, &config)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 	}
 
 	decodedData, err := common.Parse(data, &config)
 	if err != nil {
-		return decodedData, nil, err
+		return nil, err
 	}
 
 	// if there is no status byte index, return the decoded data and nil for status data
 	if config.StatusByteIndex == nil {
-		return decodedData, nil, nil
+		return decoder.NewDecodedUplink(config.Features, decodedData, nil), nil
 	}
 
 	// convert hex payload to bytes
 	bytesData, err := common.HexStringToBytes(data)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	statusData, err := parseStatusByte(bytesData[*config.StatusByteIndex])
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	return decodedData, statusData, nil
+	return decoder.NewDecodedUplink(config.Features, decodedData, statusData), nil
 }
 
 type Status struct {

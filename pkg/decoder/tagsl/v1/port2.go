@@ -1,5 +1,11 @@
 package tagsl
 
+import (
+	"time"
+
+	"github.com/truvami/decoder/pkg/decoder"
+)
+
 // +------+------+-------------------------------------------+--------+
 // | Byte | Size | Description                               | Format |
 // +------+------+-------------------------------------------+--------+
@@ -7,4 +13,10 @@ package tagsl
 // +------+------+-------------------------------------------+--------+
 
 type Port2Payload struct {
+}
+
+var _ decoder.UplinkFeatureBase = &Port2Payload{}
+
+func (p Port2Payload) GetTimestamp() *time.Time {
+	return nil
 }

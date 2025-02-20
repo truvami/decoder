@@ -141,11 +141,6 @@ func Parse(payloadHex string, config *PayloadConfig) (interface{}, error) {
 				continue
 			}
 
-			// log.Printf("field: %v", field.Name)
-			// log.Printf("value: %v", value)
-			// log.Printf("got: %T", value)
-			// log.Printf("expect: %v", fieldValue.Type().Kind())
-
 			fieldType := convertFieldToType(value, fieldValue.Type().Kind())
 			fieldValue.Set(reflect.ValueOf(fieldType))
 		}

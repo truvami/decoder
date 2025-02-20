@@ -1,6 +1,10 @@
 package tagsl
 
-import "time"
+import (
+	"time"
+
+	"github.com/truvami/decoder/pkg/decoder"
+)
 
 // +------+------+-------------------------------------------+------------------------+
 // | Byte | Size | Description                               | Format                 |
@@ -25,4 +29,44 @@ type Port10Payload struct {
 	TTF        float64   `json:"ttf"`
 	PDOP       float64   `json:"pdop"`
 	Satellites uint8     `json:"satellites" validate:"gte=3,lte=27"`
+}
+
+var _ decoder.UplinkFeatureBase = &Port10Payload{}
+var _ decoder.UplinkFeatureGNSS = &Port10Payload{}
+var _ decoder.UpLinkFeatureBattery = &Port10Payload{}
+
+func (p Port10Payload) GetTimestamp() *time.Time {
+	return &p.Timestamp
+}
+
+func (p Port10Payload) GetLatitude() float64 {
+	return p.Latitude
+}
+
+func (p Port10Payload) GetLongitude() float64 {
+	return p.Longitude
+}
+
+func (p Port10Payload) GetAltitude() float64 {
+	return p.Altitude
+}
+
+func (p Port10Payload) GetAccuracy() *float64 {
+	return nil
+}
+
+func (p Port10Payload) GetTTF() *float64 {
+	return &p.TTF
+}
+
+func (p Port10Payload) GetPDOP() *float64 {
+	return &p.PDOP
+}
+
+func (p Port10Payload) GetSatellites() *uint8 {
+	return &p.Satellites
+}
+
+func (p Port10Payload) GetBatteryVoltage() float64 {
+	return p.Battery
 }

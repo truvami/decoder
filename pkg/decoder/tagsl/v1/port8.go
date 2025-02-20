@@ -1,5 +1,11 @@
 package tagsl
 
+import (
+	"time"
+
+	"github.com/truvami/decoder/pkg/decoder"
+)
+
 // | Byte   | Size | Description                                 | Format                                             |
 // |--------|------|--------------------------------------------|-----------------------------------------------------|
 // | 0-1    | 2    | Scan interval                              | uint16, s                                           |
@@ -23,4 +29,10 @@ type Port8Payload struct {
 	AccelerometerThreshold                uint16 `json:"accelerometerThreshold"`
 	ScanMode                              uint8  `json:"scanMode"`
 	BLECurrentConfigurationUplinkInterval uint16 `json:"bleCurrentConfigurationUplinkInterval"`
+}
+
+var _ decoder.UplinkFeatureBase = &Port8Payload{}
+
+func (p Port8Payload) GetTimestamp() *time.Time {
+	return nil
 }

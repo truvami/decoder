@@ -77,14 +77,14 @@ func TestDecode(t *testing.T) {
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestPort%vWith%v", test.port, test.payload), func(t *testing.T) {
 			decoder := NewNomadXLv1Decoder(WithAutoPadding(test.autoPadding))
-			got, _, err := decoder.Decode(test.payload, test.port, "")
+			got, err := decoder.Decode(test.payload, test.port, "")
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
 
 			t.Logf("got %v", got)
 
-			if got != test.expected {
+			if got.Data != test.expected {
 				t.Errorf("expected: %v, got: %v", test.expected, got)
 			}
 		})
@@ -93,7 +93,7 @@ func TestDecode(t *testing.T) {
 
 func TestInvalidPort(t *testing.T) {
 	decoder := NewNomadXLv1Decoder()
-	_, _, err := decoder.Decode("00", 0, "")
+	_, err := decoder.Decode("00", 0, "")
 	if err == nil || err.Error() != "port 0 not supported" {
 		t.Fatal("expected port not supported")
 	}
@@ -101,7 +101,7 @@ func TestInvalidPort(t *testing.T) {
 
 func TestPayloadTooShort(t *testing.T) {
 	decoder := NewNomadXLv1Decoder()
-	_, _, err := decoder.Decode("deadbeef", 101, "")
+	_, err := decoder.Decode("deadbeef", 101, "")
 
 	if err == nil || err.Error() != "payload too short" {
 		t.Fatal("expected error payload too short")
@@ -110,7 +110,7 @@ func TestPayloadTooShort(t *testing.T) {
 
 func TestPayloadTooLong(t *testing.T) {
 	decoder := NewNomadXLv1Decoder()
-	_, _, err := decoder.Decode("deadbeef4242deadbeef4242deadbeef4242deadbeef4242deadbeef4242deadbeef4242deadbeef4242", 101, "")
+	_, err := decoder.Decode("deadbeef4242deadbeef4242deadbeef4242deadbeef4242deadbeef4242deadbeef4242deadbeef4242", 101, "")
 
 	if err == nil || err.Error() != "payload too long" {
 		t.Fatal("expected error payload too long")

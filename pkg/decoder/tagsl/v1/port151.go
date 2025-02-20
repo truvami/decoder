@@ -1,6 +1,10 @@
 package tagsl
 
-import "time"
+import (
+	"time"
+
+	"github.com/truvami/decoder/pkg/decoder"
+)
 
 // +------+------+-------------------------------------------+------------------------+
 // | Byte | Size | Description                               | Format                 |
@@ -47,4 +51,105 @@ type Port151Payload struct {
 	Rssi6       int8      `json:"rssi6"`
 	Mac7        string    `json:"mac7"`
 	Rssi7       int8      `json:"rssi7"`
+}
+
+var _ decoder.UplinkFeatureBase = &Port151Payload{}
+var _ decoder.UplinkFeatureGNSS = &Port151Payload{}
+var _ decoder.UpLinkFeatureBattery = &Port151Payload{}
+var _ decoder.UplinkFeatureWiFi = &Port151Payload{}
+var _ decoder.UplinkFeatureBuffered = &Port151Payload{}
+
+func (p Port151Payload) GetTimestamp() *time.Time {
+	return &p.Timestamp
+}
+
+func (p Port151Payload) GetLatitude() float64 {
+	return p.Latitude
+}
+
+func (p Port151Payload) GetLongitude() float64 {
+	return p.Longitude
+}
+
+func (p Port151Payload) GetAltitude() float64 {
+	return p.Altitude
+}
+
+func (p Port151Payload) GetAccuracy() *float64 {
+	return nil
+}
+
+func (p Port151Payload) GetTTF() *float64 {
+	return nil
+}
+
+func (p Port151Payload) GetPDOP() *float64 {
+	return nil
+}
+
+func (p Port151Payload) GetSatellites() *uint8 {
+	return nil
+}
+
+func (p Port151Payload) GetBatteryVoltage() float64 {
+	return p.Battery
+}
+
+func (p Port151Payload) GetAccessPoints() []decoder.AccessPoint {
+	accessPoints := []decoder.AccessPoint{}
+
+	if p.Mac1 != "" {
+		accessPoints = append(accessPoints, decoder.AccessPoint{
+			MAC:  p.Mac1,
+			RSSI: p.Rssi1,
+		})
+	}
+
+	if p.Mac2 != "" {
+		accessPoints = append(accessPoints, decoder.AccessPoint{
+			MAC:  p.Mac2,
+			RSSI: p.Rssi2,
+		})
+	}
+
+	if p.Mac3 != "" {
+		accessPoints = append(accessPoints, decoder.AccessPoint{
+			MAC:  p.Mac3,
+			RSSI: p.Rssi3,
+		})
+	}
+
+	if p.Mac4 != "" {
+		accessPoints = append(accessPoints, decoder.AccessPoint{
+			MAC:  p.Mac4,
+			RSSI: p.Rssi4,
+		})
+	}
+
+	if p.Mac5 != "" {
+		accessPoints = append(accessPoints, decoder.AccessPoint{
+			MAC:  p.Mac5,
+			RSSI: p.Rssi5,
+		})
+	}
+
+	if p.Mac6 != "" {
+		accessPoints = append(accessPoints, decoder.AccessPoint{
+			MAC:  p.Mac6,
+			RSSI: p.Rssi6,
+		})
+	}
+
+	if p.Mac7 != "" {
+		accessPoints = append(accessPoints, decoder.AccessPoint{
+			MAC:  p.Mac7,
+			RSSI: p.Rssi7,
+		})
+	}
+
+	return accessPoints
+}
+
+func (p Port151Payload) GetBufferLevel() uint16 {
+	return p.BufferLevel
 }

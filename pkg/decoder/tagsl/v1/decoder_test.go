@@ -7,6 +7,7 @@ import (
 	"time"
 
 	helpers "github.com/truvami/decoder/pkg/common"
+	"github.com/truvami/decoder/pkg/decoder"
 )
 
 func TestDecode(t *testing.T) {
@@ -1157,14 +1158,14 @@ func TestDecode(t *testing.T) {
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestPort%vWith%v", test.port, test.payload), func(t *testing.T) {
 			decoder := NewTagSLv1Decoder(WithAutoPadding(test.autoPadding), WithSkipValidation(test.skipValidation))
-			got, _, err := decoder.Decode(test.payload, test.port, "")
+			got, err := decoder.Decode(test.payload, test.port, "")
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
 
 			t.Logf("got %v", got)
 
-			if got != test.expected {
+			if got == nil || got.Data != test.expected {
 				t.Errorf("expected: %v\ngot: %v", test.expected, got)
 			}
 		})
@@ -1172,7 +1173,7 @@ func TestDecode(t *testing.T) {
 
 	t.Run("TestInvalidPayload", func(t *testing.T) {
 		decoder := NewTagSLv1Decoder()
-		_, _, err := decoder.Decode("", 1, "")
+		_, err := decoder.Decode("", 1, "")
 		if err == nil {
 			t.Fatal("expected invalid payload")
 		}
@@ -1425,7 +1426,7 @@ func TestValidationErrors(t *testing.T) {
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestPort%vValidationWith%v", test.port, test.payload), func(t *testing.T) {
 			decoder := NewTagSLv1Decoder()
-			got, _, err := decoder.Decode(test.payload, test.port, "")
+			got, err := decoder.Decode(test.payload, test.port, "")
 
 			if err == nil && test.expected == nil {
 				return
@@ -1442,7 +1443,7 @@ func TestValidationErrors(t *testing.T) {
 
 func TestInvalidPort(t *testing.T) {
 	decoder := NewTagSLv1Decoder()
-	_, _, err := decoder.Decode("00", 0, "")
+	_, err := decoder.Decode("00", 0, "")
 	if err == nil || err.Error() != "port 0 not supported" {
 		t.Fatal("expected port not supported")
 	}
@@ -1655,24 +1656,24 @@ func TestFullDecode(t *testing.T) {
 	for _, test := range tests {
 		decoder := NewTagSLv1Decoder(WithAutoPadding(test.autoPadding), WithSkipValidation(test.skipValidation))
 		t.Run(fmt.Sprintf("TestFullDecodeWithPort%vAndPayload%v", test.port, test.payload), func(t *testing.T) {
-			data, status, err := decoder.Decode(test.payload, test.port, "")
+			decoded, err := decoder.Decode(test.payload, test.port, "")
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
-			if data != test.expectedData {
-				t.Errorf("expected data: %v, got: %v", test.expectedData, data)
+			if decoded.Data != test.expectedData {
+				t.Errorf("expected data: %v, got: %v", test.expectedData, decoded.Data)
 			}
 
-			if status != nil && test.expectedStatus == nil {
-				t.Errorf("expected status to be nil, got: %v", status)
+			if decoded.Metadata != nil && test.expectedStatus == nil {
+				t.Errorf("expected status to be nil, got: %v", decoded.Metadata)
 			}
-			if status == nil && test.expectedStatus != nil {
+			if decoded.Metadata == nil && test.expectedStatus != nil {
 				t.Errorf("expected status: %v, got: nil", test.expectedStatus)
 			}
 
 			// check if status is equal to expected status using reflect.DeepEqual
-			if reflect.DeepEqual(status, *test.expectedStatus) == false {
-				t.Errorf("expected status: %v, got: %v", *test.expectedStatus, status)
+			if reflect.DeepEqual(decoded.Metadata, *test.expectedStatus) == false {
+				t.Errorf("expected status: %v, got: %v", *test.expectedStatus, decoded.Metadata)
 			}
 		})
 	}
@@ -1680,7 +1681,7 @@ func TestFullDecode(t *testing.T) {
 
 func TestPayloadTooShort(t *testing.T) {
 	decoder := NewTagSLv1Decoder()
-	_, _, err := decoder.Decode("deadbeef", 1, "")
+	_, err := decoder.Decode("deadbeef", 1, "")
 
 	if err == nil || err.Error() != "payload too short" {
 		t.Fatal("expected error payload too short")
@@ -1689,9 +1690,148 @@ func TestPayloadTooShort(t *testing.T) {
 
 func TestPayloadTooLong(t *testing.T) {
 	decoder := NewTagSLv1Decoder()
-	_, _, err := decoder.Decode("deadbeef4242deadbeef4242deadbeef4242", 1, "")
+	_, err := decoder.Decode("deadbeef4242deadbeef4242deadbeef4242", 1, "")
 
 	if err == nil || err.Error() != "payload too long" {
 		t.Fatal("expected error payload too long")
+	}
+}
+
+func TestFeatures(t *testing.T) {
+	tests := []struct {
+		payload        string
+		port           int16
+		skipValidation bool
+	}{
+		{
+			payload: "8002cdcd1300744f5e166018040b14341a",
+			port:    1,
+		},
+		{
+			payload:        "00",
+			port:           2,
+			skipValidation: true,
+		},
+		{
+			payload: "822f0101f052fab920feafd0e4158b38b9afe05994cb2f5cb2",
+			port:    3,
+		},
+		{
+			payload: "0000012c00000e1000001c200078012c05dc02020100010200002328",
+			port:    4,
+		},
+		{
+			payload: "00e0286d8aabfca8e0286d8a9478c2726c9a74b58dab726cdac8b89dacf0b0140c96bbc8deadbeef4242d6deadbeef4242d6",
+			port:    5,
+		},
+		{
+			payload: "01",
+			port:    6,
+		},
+		{
+			payload: "66ec04bb00e0286d8aabfcbbec6c9a74b58fb2726c9a74b58db1e0286d8a9478cbf0b0140c96bbd2260122180d42ad",
+			port:    7,
+		},
+		{
+			payload: "012c141e9c455738304543434343460078012c01a8c0",
+			port:    8,
+		},
+		{
+			payload: "0002d308b50082457f16eb66c4a5cd0ed3",
+			port:    10,
+		},
+		{
+			payload: "800ee5",
+			port:    15,
+		},
+		{
+			payload: "0002d30c9300824c87117966c45dcd0f8118e0286d8aabfca9f0b0140c96bbc8726c9a74b58da8e0286d8a9478bf",
+			port:    50,
+		},
+		{
+			payload: "0002D30BA000824ACE1122671B983E0EEA340B06726C9A74B58DB1FCF528F8634FB552A8DB7BD6B5B9E0286D8AABFCBC",
+			port:    51,
+		},
+		{
+			payload: "000166c4a5ba00e0286d8aabfcb1e0286d8a9478c2ec6c9a74b58fad726c9a74b58dadf0b0140c96bbd0",
+			port:    105,
+		},
+		{
+			payload: "00020002d309ae008247c5113966c45d640f7e",
+			port:    110,
+		},
+		{
+			payload: "00020002d30c9300824c87117966c45dcd0f8118e0286d8aabfca9f0b0140c96bbc8726c9a74b58da8e0286d8a9478bf",
+			port:    150,
+		},
+		{
+			payload: "00000002D30B27008247B81312671BD164133718030BE0286D8A9478CBF0B0140C96BBCE",
+			port:    151,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(fmt.Sprintf("TestFeaturesWithPort%vAndPayload%v", test.port, test.payload), func(t *testing.T) {
+			d := NewTagSLv1Decoder(
+				WithSkipValidation(test.skipValidation),
+			)
+			decodedPayload, _ := d.Decode(test.payload, test.port, "")
+
+			// should be able to decode base feature
+			base, ok := decodedPayload.Data.(decoder.UplinkFeatureBase)
+			if !ok {
+				t.Fatalf("expected UplinkFeatureBase, got %T", decodedPayload)
+			}
+			// check if it panics
+			base.GetTimestamp()
+
+			if decodedPayload.Is(decoder.FeatureGNSS) {
+				gnss, ok := decodedPayload.Data.(decoder.UplinkFeatureGNSS)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureGNSS, got %T", decodedPayload)
+				}
+				if gnss.GetLatitude() == 0 {
+					t.Fatalf("expected non zero latitude")
+				}
+				if gnss.GetLongitude() == 0 {
+					t.Fatalf("expected non zero longitude")
+				}
+				if gnss.GetAltitude() == 0 {
+					t.Fatalf("expected non zero altitude")
+				}
+				// call function to check if it panics
+				gnss.GetAltitude()
+				gnss.GetPDOP()
+				gnss.GetSatellites()
+				gnss.GetTTF()
+			}
+			if decodedPayload.Is(decoder.FeatureBuffered) {
+				buffered, ok := decodedPayload.Data.(decoder.UplinkFeatureBuffered)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureBuffered, got %T", decodedPayload)
+				}
+				// call function to check if it panics
+				buffered.GetBufferLevel()
+			}
+			if decodedPayload.Is(decoder.FeatureBattery) {
+				batteryVoltage, ok := decodedPayload.Data.(decoder.UpLinkFeatureBattery)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureBattery, got %T", decodedPayload)
+				}
+				if batteryVoltage.GetBatteryVoltage() == 0 {
+					t.Fatalf("expected non zero battery voltage")
+				}
+			}
+			if decodedPayload.Is(decoder.FeatureWiFi) {
+				wifi, ok := decodedPayload.Data.(decoder.UplinkFeatureWiFi)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureWiFi, got %T", decodedPayload)
+				}
+				if wifi.GetAccessPoints() == nil {
+					t.Fatalf("expected non nil access points")
+				}
+			}
+
+		})
 	}
 }
