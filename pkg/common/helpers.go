@@ -59,7 +59,6 @@ func convertFieldToType(value interface{}, fieldType reflect.Kind) interface{} {
 	default:
 		panic(fmt.Sprintf("unsupported field type: %v", fieldType))
 	}
-	return nil
 }
 
 func extractFieldValue(payloadBytes []byte, start int, length int, optional bool, hexadecimal bool) (interface{}, error) {
