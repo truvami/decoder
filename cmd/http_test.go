@@ -143,8 +143,12 @@ func TestHTTPCmd(t *testing.T) {
 	logger.NewLogger()
 	defer logger.Sync()
 
-	httpCmd.Flags().Set("port", "38888")
-	httpCmd.Flags().Set("host", "127.0.0.1")
+	if httpCmd.Flags().Set("port", "38888") != nil {
+		t.Fatalf("failed to set port flag")
+	}
+	if httpCmd.Flags().Set("host", "127.0.0.1") != nil {
+		t.Fatalf("failed to set host flag")
+	}
 
 	go func() {
 		// call the command handler function
