@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/truvami/decoder/internal/logger"
 	helpers "github.com/truvami/decoder/pkg/common"
-	"github.com/truvami/decoder/pkg/decoder/tagsl/v1"
+	tagsl "github.com/truvami/decoder/pkg/decoder/tagsl/v1"
 	"go.uber.org/zap"
 )
 

@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/truvami/decoder/internal/logger"
-	"github.com/truvami/decoder/pkg/decoder/tagsl/v1"
+	tagsl "github.com/truvami/decoder/pkg/decoder/tagsl/v1"
 )
 
 func TestAddDecoder(t *testing.T) {

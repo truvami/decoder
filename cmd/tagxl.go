@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/truvami/decoder/internal/logger"
 	helpers "github.com/truvami/decoder/pkg/common"
-	"github.com/truvami/decoder/pkg/decoder/tagxl/v1"
+	tagxl "github.com/truvami/decoder/pkg/decoder/tagxl/v1"
 	"github.com/truvami/decoder/pkg/loracloud"
 	"go.uber.org/zap"
 )
