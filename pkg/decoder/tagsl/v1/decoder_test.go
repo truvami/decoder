@@ -1831,7 +1831,14 @@ func TestFeatures(t *testing.T) {
 					t.Fatalf("expected non nil access points")
 				}
 			}
-
+			if decodedPayload.Is(decoder.FeatureMoving) {
+				moving, ok := decodedPayload.Data.(decoder.UplinkFeatureMoving)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureMoving, got %T", decodedPayload)
+				}
+				// call function to check if it panics
+				moving.IsMoving()
+			}
 		})
 	}
 }

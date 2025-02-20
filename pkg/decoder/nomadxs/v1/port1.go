@@ -1,5 +1,11 @@
 package nomadxs
 
+import (
+	"time"
+
+	"github.com/truvami/decoder/pkg/decoder"
+)
+
 // +-------+------+-------------------------------------------+------------------------+
 // | Byte  | Size | Description                               | Format                 |
 // +-------+------+-------------------------------------------+------------------------+
@@ -52,4 +58,64 @@ type Port1Payload struct {
 	MagnetometerXAxis  float32 `json:"magnetometerXAxis"`
 	MagnetometerYAxis  float32 `json:"magnetometerYAxis"`
 	MagnetometerZAxis  float32 `json:"magnetometerZAxis"`
+}
+
+var _ decoder.UplinkFeatureBase = &Port1Payload{}
+var _ decoder.UplinkFeatureGNSS = &Port1Payload{}
+var _ decoder.UplinkFeatureMoving = &Port1Payload{}
+
+// GetTimestamp implements decoder.UplinkFeatureBase.
+func (p Port1Payload) GetTimestamp() *time.Time {
+	timestamp := time.Date(
+		int(p.Year)+2000,
+		time.Month(p.Month),
+		int(p.Day),
+		int(p.Hour),
+		int(p.Minute),
+		int(p.Second),
+		0,
+		time.UTC,
+	)
+	return &timestamp
+}
+
+// GetAccuracy implements decoder.UplinkFeatureGNSS.
+func (p Port1Payload) GetAccuracy() *float64 {
+	return nil
+}
+
+// GetAltitude implements decoder.UplinkFeatureGNSS.
+func (p Port1Payload) GetAltitude() float64 {
+	return p.Altitude
+}
+
+// GetLatitude implements decoder.UplinkFeatureGNSS.
+func (p Port1Payload) GetLatitude() float64 {
+	return p.Latitude
+}
+
+// GetLongitude implements decoder.UplinkFeatureGNSS.
+func (p Port1Payload) GetLongitude() float64 {
+	return p.Longitude
+}
+
+// GetPDOP implements decoder.UplinkFeatureGNSS.
+func (p Port1Payload) GetPDOP() *float64 {
+	return nil
+}
+
+// GetSatellites implements decoder.UplinkFeatureGNSS.
+func (p Port1Payload) GetSatellites() *uint8 {
+	return nil
+}
+
+// GetTTF implements decoder.UplinkFeatureGNSS.
+func (p Port1Payload) GetTTF() *float64 {
+	ttf := float64(p.TimeToFix)
+	return &ttf
+}
+
+// IsMoving implements decoder.UplinkFeatureMoving.
+func (p Port1Payload) IsMoving() bool {
+	return p.Moving
 }

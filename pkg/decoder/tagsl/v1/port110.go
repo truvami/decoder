@@ -19,6 +19,7 @@ import (
 // +-------+------+-------------------------------------------+------------------------+
 
 type Port110Payload struct {
+	Moving      bool      `json:"moving"`
 	BufferLevel uint16    `json:"bufferLevel"`
 	Latitude    float64   `json:"latitude" validate:"gte=-90,lte=90"`
 	Longitude   float64   `json:"longitude" validate:"gte=-180,lte=180"`
@@ -31,6 +32,7 @@ var _ decoder.UplinkFeatureBase = &Port110Payload{}
 var _ decoder.UplinkFeatureGNSS = &Port110Payload{}
 var _ decoder.UpLinkFeatureBattery = &Port110Payload{}
 var _ decoder.UplinkFeatureBuffered = &Port110Payload{}
+var _ decoder.UplinkFeatureMoving = &Port110Payload{}
 
 func (p Port110Payload) GetTimestamp() *time.Time {
 	return &p.Timestamp
@@ -70,4 +72,8 @@ func (p Port110Payload) GetBatteryVoltage() float64 {
 
 func (p Port110Payload) GetBufferLevel() uint16 {
 	return p.BufferLevel
+}
+
+func (p Port110Payload) IsMoving() bool {
+	return p.Moving
 }

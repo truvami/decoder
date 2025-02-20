@@ -1,6 +1,8 @@
 package decoder
 
-import "time"
+import (
+	"time"
+)
 
 type Decoder interface {
 	Decode(payload string, port int16, devEui string) (*DecodedUplink, error)
@@ -17,6 +19,7 @@ const (
 	FeatureBle         Feature = "ble"
 	FeatureButton      Feature = "button"
 	FeatureConfig      Feature = "config"
+	FeatureMoving      Feature = "moving"
 )
 
 type DecodedUplink struct {
@@ -96,4 +99,9 @@ type AccessPoint struct {
 type UplinkFeatureWiFi interface {
 	// GetAccessPoints returns the list of WiFi access points detected by the device.
 	GetAccessPoints() []AccessPoint
+}
+
+type UplinkFeatureMoving interface {
+	// IsMoving returns true if the device is moving, otherwise it returns false.
+	IsMoving() bool
 }

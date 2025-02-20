@@ -1,5 +1,11 @@
 package nomadxl
 
+import (
+	"time"
+
+	"github.com/truvami/decoder/pkg/decoder"
+)
+
 // | Byte  | Size | Description                                         | Format              |
 // |-------|------|-----------------------------------------------------|---------------------|
 // | 0-7   | 8    | System time (ms since reset)                        | uint64_t, ms        |
@@ -38,4 +44,23 @@ type Port101Payload struct {
 	AccelerometerZAxis int16   `json:"accelerometerZAxis"`
 	Battery            float64 `json:"battery" validate:"gte=1,lte=5"`
 	BatteryLorawan     uint8   `json:"batteryLorawan"`
+}
+
+var _ decoder.UplinkFeatureBase = &Port101Payload{}
+var _ decoder.UpLinkFeatureBattery = &Port101Payload{}
+var _ decoder.UplinkFeatureBuffered = &Port101Payload{}
+
+// GetBatteryVoltage implements decoder.UpLinkFeatureBattery.
+func (p Port101Payload) GetBatteryVoltage() float64 {
+	return p.Battery
+}
+
+// GetTimestamp implements decoder.UplinkFeatureBase.
+func (p Port101Payload) GetTimestamp() *time.Time {
+	return nil
+}
+
+// GetBufferLevel implements decoder.UplinkFeatureBuffered.
+func (p Port101Payload) GetBufferLevel() uint16 {
+	return 0
 }

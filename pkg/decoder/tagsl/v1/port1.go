@@ -22,6 +22,7 @@ import (
 // +------+------+-------------------------------------------+------------------------+
 
 type Port1Payload struct {
+	Moving    bool    `json:"moving"`
 	Latitude  float64 `json:"latitude" validate:"gte=-90,lte=90"`
 	Longitude float64 `json:"longitude" validate:"gte=-180,lte=180"`
 	Altitude  float64 `json:"altitude"`
@@ -36,6 +37,7 @@ type Port1Payload struct {
 // Enforce that Port1Payload implements interfaces
 var _ decoder.UplinkFeatureBase = &Port1Payload{}
 var _ decoder.UplinkFeatureGNSS = &Port1Payload{}
+var _ decoder.UplinkFeatureMoving = &Port1Payload{}
 
 func (p Port1Payload) GetTimestamp() *time.Time {
 	timestamp := time.Date(
@@ -77,4 +79,8 @@ func (p Port1Payload) GetPDOP() *float64 {
 
 func (p Port1Payload) GetSatellites() *uint8 {
 	return nil
+}
+
+func (p Port1Payload) IsMoving() bool {
+	return p.Moving
 }

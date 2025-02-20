@@ -18,24 +18,26 @@ import (
 // +------+------+-------------------------------------------+-----------+
 
 type Port5Payload struct {
-	Mac1  string `json:"mac1"`
-	Rssi1 int8   `json:"rssi1"`
-	Mac2  string `json:"mac2"`
-	Rssi2 int8   `json:"rssi2"`
-	Mac3  string `json:"mac3"`
-	Rssi3 int8   `json:"rssi3"`
-	Mac4  string `json:"mac4"`
-	Rssi4 int8   `json:"rssi4"`
-	Mac5  string `json:"mac5"`
-	Rssi5 int8   `json:"rssi5"`
-	Mac6  string `json:"mac6"`
-	Rssi6 int8   `json:"rssi6"`
-	Mac7  string `json:"mac7"`
-	Rssi7 int8   `json:"rssi7"`
+	Moving bool   `json:"moving"`
+	Mac1   string `json:"mac1"`
+	Rssi1  int8   `json:"rssi1"`
+	Mac2   string `json:"mac2"`
+	Rssi2  int8   `json:"rssi2"`
+	Mac3   string `json:"mac3"`
+	Rssi3  int8   `json:"rssi3"`
+	Mac4   string `json:"mac4"`
+	Rssi4  int8   `json:"rssi4"`
+	Mac5   string `json:"mac5"`
+	Rssi5  int8   `json:"rssi5"`
+	Mac6   string `json:"mac6"`
+	Rssi6  int8   `json:"rssi6"`
+	Mac7   string `json:"mac7"`
+	Rssi7  int8   `json:"rssi7"`
 }
 
 var _ decoder.UplinkFeatureBase = &Port5Payload{}
 var _ decoder.UplinkFeatureWiFi = &Port5Payload{}
+var _ decoder.UplinkFeatureMoving = &Port5Payload{}
 
 func (p Port5Payload) GetTimestamp() *time.Time {
 	return nil
@@ -94,4 +96,8 @@ func (p Port5Payload) GetAccessPoints() []decoder.AccessPoint {
 	}
 
 	return accessPoints
+}
+
+func (p Port5Payload) IsMoving() bool {
+	return p.Moving
 }

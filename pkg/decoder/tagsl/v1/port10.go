@@ -21,6 +21,7 @@ import (
 // +------+------+-------------------------------------------+------------------------+
 
 type Port10Payload struct {
+	Moving     bool      `json:"moving"`
 	Latitude   float64   `json:"latitude" validate:"gte=-90,lte=90"`
 	Longitude  float64   `json:"longitude" validate:"gte=-180,lte=180"`
 	Altitude   float64   `json:"altitude"`
@@ -34,6 +35,7 @@ type Port10Payload struct {
 var _ decoder.UplinkFeatureBase = &Port10Payload{}
 var _ decoder.UplinkFeatureGNSS = &Port10Payload{}
 var _ decoder.UpLinkFeatureBattery = &Port10Payload{}
+var _ decoder.UplinkFeatureMoving = &Port10Payload{}
 
 func (p Port10Payload) GetTimestamp() *time.Time {
 	return &p.Timestamp
@@ -69,4 +71,8 @@ func (p Port10Payload) GetSatellites() *uint8 {
 
 func (p Port10Payload) GetBatteryVoltage() float64 {
 	return p.Battery
+}
+
+func (p Port10Payload) IsMoving() bool {
+	return p.Moving
 }

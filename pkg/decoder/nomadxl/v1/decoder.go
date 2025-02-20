@@ -66,6 +66,7 @@ func (t NomadXLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 				{Name: "TimeToFix", Start: 37, Length: 1},
 			},
 			TargetType: reflect.TypeOf(Port101Payload{}),
+			Features:   []decoder.Feature{decoder.FeatureBattery, decoder.FeatureTemperature, decoder.FeatureBuffered},
 		}, nil
 	case 103:
 		return common.PayloadConfig{
@@ -85,6 +86,7 @@ func (t NomadXLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 				}},
 			},
 			TargetType: reflect.TypeOf(Port103Payload{}),
+			Features:   []decoder.Feature{decoder.FeatureGNSS},
 		}, nil
 	}
 

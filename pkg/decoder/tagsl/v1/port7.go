@@ -26,6 +26,7 @@ import (
 // +------+------+-------------------------------------------+-----------+
 
 type Port7Payload struct {
+	Moving    bool      `json:"moving"`
 	Timestamp time.Time `json:"timestamp"`
 	Mac1      string    `json:"mac1"`
 	Rssi1     int8      `json:"rssi1"`
@@ -43,6 +44,7 @@ type Port7Payload struct {
 
 var _ decoder.UplinkFeatureBase = &Port7Payload{}
 var _ decoder.UplinkFeatureWiFi = &Port7Payload{}
+var _ decoder.UplinkFeatureMoving = &Port7Payload{}
 
 func (p Port7Payload) GetTimestamp() *time.Time {
 	return &p.Timestamp
@@ -94,4 +96,8 @@ func (p Port7Payload) GetAccessPoints() []decoder.AccessPoint {
 	}
 
 	return accessPoints
+}
+
+func (p Port7Payload) IsMoving() bool {
+	return p.Moving
 }

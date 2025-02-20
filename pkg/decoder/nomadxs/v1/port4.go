@@ -1,5 +1,11 @@
 package nomadxs
 
+import (
+	"time"
+
+	"github.com/truvami/decoder/pkg/decoder"
+)
+
 // +-------+------+-------------------------------------------+------------------+
 // | Byte  | Size | Description                               | Format           |
 // +-------+------+-------------------------------------------+------------------+
@@ -35,4 +41,11 @@ type Port4Payload struct {
 	AccuracyEnhancement             uint8  `json:"accuracyEnhancement"`
 	LightLowerThreshold             uint16 `json:"lightLowerThreshold"`
 	LightUpperThreshold             uint16 `json:"lightUpperThreshold"`
+}
+
+var _ decoder.UplinkFeatureBase = &Port4Payload{}
+
+// GetTimestamp implements decoder.UplinkFeatureBase.
+func (p Port4Payload) GetTimestamp() *time.Time {
+	return nil
 }
