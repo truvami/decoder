@@ -1,6 +1,7 @@
 package tagsl
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/truvami/decoder/pkg/decoder"
@@ -40,7 +41,19 @@ type Port4Payload struct {
 }
 
 var _ decoder.UplinkFeatureBase = &Port4Payload{}
+var _ decoder.UplinkFeatureFirmwareVersion = &Port4Payload{}
+var _ decoder.UplinkFeatureHardwareVersion = &Port4Payload{}
 
 func (p Port4Payload) GetTimestamp() *time.Time {
 	return nil
+}
+
+// GetHardwareVersion implements decoder.UplinkFeatureHardwareVersion.
+func (p Port4Payload) GetHardwareVersion() string {
+	return fmt.Sprintf("%d.%d", p.HardwareVersionType, p.HardwareVersionRevision)
+}
+
+// GetFirmwareVersion implements decoder.UplinkFeatureFirmwareVersion.
+func (p Port4Payload) GetFirmwareVersion() string {
+	return fmt.Sprintf("%d.%d.%d", p.FirmwareVersionMajor, p.FirmwareVersionMinor, p.FirmwareVersionPatch)
 }

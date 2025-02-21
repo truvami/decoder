@@ -113,7 +113,7 @@ func (t TagSLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 				{Name: "BufferSize", Start: 30, Length: 2, Optional: true},
 			},
 			TargetType: reflect.TypeOf(Port4Payload{}),
-			Features:   []decoder.Feature{decoder.FeatureConfig},
+			Features:   []decoder.Feature{decoder.FeatureConfig, decoder.FeatureHardwareVersion, decoder.FeatureFirmwareVersion},
 		}, nil
 	case 5:
 		return common.PayloadConfig{

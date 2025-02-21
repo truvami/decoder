@@ -11,15 +11,17 @@ type Decoder interface {
 type Feature string
 
 const (
-	FeatureGNSS        Feature = "gnss"
-	FeatureBuffered    Feature = "buffered"
-	FeatureBattery     Feature = "battery"
-	FeatureTemperature Feature = "temperature"
-	FeatureWiFi        Feature = "wifi"
-	FeatureBle         Feature = "ble"
-	FeatureButton      Feature = "button"
-	FeatureConfig      Feature = "config"
-	FeatureMoving      Feature = "moving"
+	FeatureGNSS            Feature = "gnss"
+	FeatureBuffered        Feature = "buffered"
+	FeatureBattery         Feature = "battery"
+	FeatureTemperature     Feature = "temperature"
+	FeatureWiFi            Feature = "wifi"
+	FeatureBle             Feature = "ble"
+	FeatureButton          Feature = "button"
+	FeatureConfig          Feature = "config"
+	FeatureMoving          Feature = "moving"
+	FeatureFirmwareVersion Feature = "firmware_version"
+	FeatureHardwareVersion Feature = "hardware_version"
 )
 
 type DecodedUplink struct {
@@ -104,4 +106,14 @@ type UplinkFeatureWiFi interface {
 type UplinkFeatureMoving interface {
 	// IsMoving returns true if the device is moving, otherwise it returns false.
 	IsMoving() bool
+}
+
+type UplinkFeatureFirmwareVersion interface {
+	// GetFirmwareVersion returns the firmware version of the device.
+	GetFirmwareVersion() string
+}
+
+type UplinkFeatureHardwareVersion interface {
+	// GetHardwareVersion returns the hardware version of the device.
+	GetHardwareVersion() string
 }
