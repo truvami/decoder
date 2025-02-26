@@ -29,7 +29,7 @@ func (t TagSLv1Encoder) Encode(data interface{}, port int16, extra string) (inte
 		return nil, nil, err
 	}
 
-	payload, err := common.Encode(data, config)
+	payload, err := common.EncodePayload(data, config)
 	if err != nil {
 		return nil, nil, err
 	}
