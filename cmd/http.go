@@ -19,6 +19,8 @@ import (
 	"github.com/truvami/decoder/pkg/decoder/smartlabel/v1"
 	"github.com/truvami/decoder/pkg/decoder/tagsl/v1"
 	"github.com/truvami/decoder/pkg/decoder/tagxl/v1"
+	"github.com/truvami/decoder/pkg/encoder"
+	encoderTagsl "github.com/truvami/decoder/pkg/encoder/tagsl/v1"
 	"github.com/truvami/decoder/pkg/loracloud"
 	"go.uber.org/zap"
 )
@@ -33,12 +35,23 @@ func init() {
 	httpCmd.Flags().StringVar(&accessToken, "token", "", "Access token for the loracloud API")
 	httpCmd.Flags().BoolVar(&health, "health", false, "Enable /health endpoint")
 	rootCmd.AddCommand(httpCmd)
+
+	// Add the generic encoder endpoint
+	httpCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
+		// This will run before the Run function
+	}
 }
 
 var httpCmd = &cobra.Command{
 	Use:   "http",
 	Short: "Start the HTTP server for the decoder.",
 	Run: func(cmd *cobra.Command, args []string) {
+		// Ensure logger is initialized
+		if logger.Logger == nil {
+			logger.NewLogger()
+			defer logger.Sync()
+		}
+		
 		if len(accessToken) == 0 {
 			logger.Logger.Warn("no access token provided for loracloud API")
 		}
@@ -86,6 +99,22 @@ var httpCmd = &cobra.Command{
 		// add the decoders
 		for _, d := range decoders {
 			addDecoder(router, d.path, d.decoder)
+		}
+
+		// Define encoder endpoints
+		type encoderEndpoint struct {
+			path    string
+			encoder encoder.Encoder
+		}
+
+		var encoders []encoderEndpoint = []encoderEndpoint{
+			{"encode/tagsl/v1", encoderTagsl.NewTagSLv1Encoder()},
+			// Add other encoders as they become available
+		}
+
+		// add the encoders
+		for _, e := range encoders {
+			addEncoder(router, e.path, e.encoder)
 		}
 
 		// middleware
@@ -163,6 +192,143 @@ func getHandler(decoder decoder.Decoder) func(http.ResponseWriter, *http.Request
 
 		setBody(w, http.StatusOK, map[string]interface{}{
 			"data":     data,
+			"metadata": metadata,
+			"warnings": warnings,
+		})
+	}
+}
+
+func addEncoder(router *http.ServeMux, path string, encoder encoder.Encoder) {
+	logger.Logger.Debug("adding encoder", zap.String("path", path))
+	router.HandleFunc("POST /"+path, getEncoderHandler(encoder))
+}
+
+func getEncoderHandler(encoder encoder.Encoder) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// First, decode the request to get the port and raw payload
+		var rawReq struct {
+			Port    int16           `json:"port" validate:"required,gt=0,lte=255"`
+			Payload json.RawMessage `json:"payload" validate:"required"`
+			DevEUI  string          `json:"devEui" validate:"omitempty,hexadecimal,len=16"`
+		}
+
+		logger.Logger.Debug("decoding request")
+		err := json.NewDecoder(r.Body).Decode(&rawReq)
+		if err != nil {
+			logger.Logger.Error("error while decoding request", zap.Error(err))
+
+			setBody(w, http.StatusBadRequest, map[string]interface{}{
+				"error": err.Error(),
+				"docs":  "https://docs.truvami.com",
+			})
+			return
+		}
+
+		if err := validator.New().Struct(rawReq); err != nil {
+			logger.Logger.Error("request validation failed", zap.Error(err))
+			setBody(w, http.StatusBadRequest, map[string]interface{}{
+				"error": "request validation failed",
+				"docs":  "https://docs.truvami.com",
+			})
+			return
+		}
+
+		// Now we have the raw payload and port, we can determine the correct struct type
+		// and unmarshal the payload into it
+		var structPayload interface{}
+		
+		// This is a simplified example - in a real implementation, you would have a more
+		// comprehensive mapping of device types and ports to struct types
+		switch r.URL.Path {
+		case "/encode/tagsl/v1":
+			switch rawReq.Port {
+			case 128:
+				var payload encoderTagsl.Port128Payload
+				if err := json.Unmarshal(rawReq.Payload, &payload); err != nil {
+					logger.Logger.Error("error unmarshaling payload", zap.Error(err))
+					setBody(w, http.StatusBadRequest, map[string]interface{}{
+						"error": fmt.Sprintf("Error unmarshaling payload: %v", err),
+						"docs":  "https://docs.truvami.com",
+					})
+					return
+				}
+				structPayload = payload
+			case 129:
+				var payload encoderTagsl.Port129Payload
+				if err := json.Unmarshal(rawReq.Payload, &payload); err != nil {
+					logger.Logger.Error("error unmarshaling payload", zap.Error(err))
+					setBody(w, http.StatusBadRequest, map[string]interface{}{
+						"error": fmt.Sprintf("Error unmarshaling payload: %v", err),
+						"docs":  "https://docs.truvami.com",
+					})
+					return
+				}
+				structPayload = payload
+			case 131:
+				var payload encoderTagsl.Port131Payload
+				if err := json.Unmarshal(rawReq.Payload, &payload); err != nil {
+					logger.Logger.Error("error unmarshaling payload", zap.Error(err))
+					setBody(w, http.StatusBadRequest, map[string]interface{}{
+						"error": fmt.Sprintf("Error unmarshaling payload: %v", err),
+						"docs":  "https://docs.truvami.com",
+					})
+					return
+				}
+				structPayload = payload
+			case 134:
+				var payload encoderTagsl.Port134Payload
+				if err := json.Unmarshal(rawReq.Payload, &payload); err != nil {
+					logger.Logger.Error("error unmarshaling payload", zap.Error(err))
+					setBody(w, http.StatusBadRequest, map[string]interface{}{
+						"error": fmt.Sprintf("Error unmarshaling payload: %v", err),
+						"docs":  "https://docs.truvami.com",
+					})
+					return
+				}
+				structPayload = payload
+			default:
+				logger.Logger.Error("unsupported port", zap.Int16("port", rawReq.Port))
+				setBody(w, http.StatusBadRequest, map[string]interface{}{
+					"error": fmt.Sprintf("Unsupported port: %d", rawReq.Port),
+					"docs":  "https://docs.truvami.com",
+				})
+				return
+			}
+		default:
+			// For other device types, you would add similar switch statements
+			logger.Logger.Error("unsupported device type", zap.String("path", r.URL.Path))
+			setBody(w, http.StatusBadRequest, map[string]interface{}{
+				"error": "Unsupported device type",
+				"docs":  "https://docs.truvami.com",
+			})
+			return
+		}
+
+		logger.Logger.Debug("encoding payload", zap.Any("payload", structPayload), zap.Int16("port", rawReq.Port))
+
+		var warnings []string = nil
+		encoded, metadata, err := encoder.Encode(structPayload, rawReq.Port, rawReq.DevEUI)
+		if err != nil {
+			if errors.Is(err, helpers.ErrValidationFailed) {
+				warnings = []string{}
+				for _, err := range helpers.UnwrapError(err) {
+					logger.Logger.Warn("validation error", zap.Error(err))
+					warnings = append(warnings, err.Error())
+				}
+				logger.Logger.Warn("validation for some fields failed - are you using the correct port?")
+			} else {
+				logger.Logger.Error("error while encoding payload", zap.Error(err))
+
+				setBody(w, http.StatusBadRequest, map[string]interface{}{
+					"error": err.Error(),
+					"docs":  "https://docs.truvami.com",
+				})
+				return
+			}
+		}
+
+		setBody(w, http.StatusOK, map[string]interface{}{
+			"encoded":  encoded,
 			"metadata": metadata,
 			"warnings": warnings,
 		})

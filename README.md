@@ -98,12 +98,67 @@ decoder tagsl 1 8002cdcd1300744f5e166018040b14341a -j
 # 🌐 Start a HTTP server
 decoder http --port 8080 --host 0.0.0.0
 
-# 📄 Call HTTP server using curl
+# 📄 Call HTTP server using curl for decoding
 curl -XPOST -H "Content-type: application/json" -d '{
     "port": 1,
     "payload": "8002cdcd1300744f5e166018040b14341a",
     "devEui": ""
 }' 'http://localhost:8080/tagsl/v1'
+
+# 📄 Call HTTP server using curl for encoding (Port 128)
+curl -XPOST -H "Content-type: application/json" -d '{
+    "port": 128,
+    "payload": {
+        "ble": 1,
+        "gps": 1,
+        "wifi": 1,
+        "localizationIntervalWhileMoving": 3600,
+        "localizationIntervalWhileSteady": 7200,
+        "heartbeatInterval": 86400,
+        "gpsTimeoutWhileWaitingForFix": 120,
+        "accelerometerWakeupThreshold": 300,
+        "accelerometerDelay": 1500,
+        "batteryKeepAliveMessageInterval": 21600,
+        "batchSize": 10,
+        "bufferSize": 4096
+    },
+    "devEui": ""
+}' 'http://localhost:8080/encode/tagsl/v1'
+
+# 📄 Call HTTP server using curl for encoding (Port 129)
+curl -XPOST -H "Content-type: application/json" -d '{
+    "port": 129,
+    "payload": {
+        "timeToBuzz": 16
+    },
+    "devEui": ""
+}' 'http://localhost:8080/encode/tagsl/v1'
+
+# 📄 Call HTTP server using curl for encoding (Port 131)
+curl -XPOST -H "Content-type: application/json" -d '{
+    "port": 131,
+    "payload": {
+        "accuracyEnhancement": 16
+    },
+    "devEui": ""
+}' 'http://localhost:8080/encode/tagsl/v1'
+
+# 📄 Call HTTP server using curl for encoding (Port 134)
+curl -XPOST -H "Content-type: application/json" -d '{
+    "port": 134,
+    "payload": {
+        "scanInterval": 300,
+        "scanTime": 60,
+        "maxBeacons": 8,
+        "minRssi": -24,
+        "advertisingName": "deadbeef",
+        "accelerometerTriggerHoldTimer": 2000,
+        "acceleratorThreshold": 1000,
+        "scanMode": 0,
+        "bleConfigUplinkInterval": 21600
+    },
+    "devEui": ""
+}' 'http://localhost:8080/encode/tagsl/v1'
 
 # 🖋️ Generate autocompletion script for bash
 decoder completion bash
@@ -114,3 +169,76 @@ For more detailed information on each command, use:
 ```sh
 decoder [command] --help
 ```
+
+## API Endpoints
+
+### Decode Payload
+
+```
+POST /{device_type}/v1
+```
+
+**Request Body:**
+
+```json
+{
+  "port": 1,
+  "payload": "hex_encoded_payload",
+  "devEui": ""
+}
+```
+
+**Response:**
+
+```json
+{
+  "data": {
+    // Decoded payload fields
+  },
+  "metadata": {
+    // Metadata about the decoded payload
+  },
+  "warnings": [
+    // Any warnings that occurred during decoding
+  ],
+  "traceId": "unique_trace_id"
+}
+```
+
+### Encode Payload
+
+```
+POST /encode/{device_type}/v1
+```
+
+**Request Body:**
+
+```json
+{
+  "port": 128,
+  "payload": {
+    // Object with fields to encode based on device type and port
+  },
+  "devEui": ""
+}
+```
+
+**Response:**
+
+```json
+{
+  "encoded": "hex_encoded_payload",
+  "metadata": {
+    // Any additional metadata
+  },
+  "warnings": [
+    // Any warnings that occurred during encoding
+  ],
+  "traceId": "unique_trace_id"
+}
+```
+
+Available device types for encoding:
+
+- `tagsl` - Tag S/L devices
+- More device types will be added as they become available

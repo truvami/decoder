@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"bytes"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/truvami/decoder/internal/logger"
 	"github.com/truvami/decoder/pkg/decoder/tagsl/v1"
+	tagslEncoder "github.com/truvami/decoder/pkg/encoder/tagsl/v1"
 )
 
 func TestAddDecoder(t *testing.T) {
@@ -32,6 +34,7 @@ func TestAddDecoder(t *testing.T) {
 		t.Errorf("expected pattern to be 'POST /test/path', got '%s'", pattern)
 	}
 }
+
 func TestGetHandler(t *testing.T) {
 	decoder := tagsl.NewTagSLv1Decoder()
 	handler := getHandler(decoder)
@@ -199,6 +202,7 @@ func TestHTTPCmd(t *testing.T) {
 		t.Errorf("expected response metadata to be %v, got %v", expectedMetadata, response.Metadata)
 	}
 }
+
 func TestHealthHandler(t *testing.T) {
 	req, err := http.NewRequest("GET", "/health", nil)
 	if err != nil {
@@ -230,5 +234,117 @@ func TestHealthHandler(t *testing.T) {
 	actualBody := string(body)
 	if actualBody != expectedBody {
 		t.Errorf("expected response body to be %q, got %q", expectedBody, actualBody)
+	}
+}
+
+func TestAddEncoder(t *testing.T) {
+	logger.NewLogger()
+	defer logger.Sync()
+
+	router := http.NewServeMux()
+	path := "encode/test/path"
+	encoder := tagslEncoder.NewTagSLv1Encoder()
+
+	addEncoder(router, path, encoder)
+
+	handler, pattern := router.Handler(&http.Request{Method: "POST", URL: &url.URL{Path: "/encode/test/path"}})
+	if handler == nil {
+		t.Errorf("expected handler to be set")
+	}
+	if pattern != "POST /encode/test/path" {
+		t.Errorf("expected pattern to be 'POST /encode/test/path', got '%s'", pattern)
+	}
+}
+
+func TestGetEncoderHandler(t *testing.T) {
+	encoder := tagslEncoder.NewTagSLv1Encoder()
+	handler := getEncoderHandler(encoder)
+
+	// Test with Port128Payload
+	payload := tagslEncoder.Port128Payload{
+		BLE:                             1,
+		GPS:                             1,
+		WIFI:                            1,
+		LocalizationIntervalWhileMoving: 3600,
+		LocalizationIntervalWhileSteady: 7200,
+		HeartbeatInterval:               86400,
+		GPSTimeoutWhileWaitingForFix:    120,
+		AccelerometerWakeupThreshold:    300,
+		AccelerometerDelay:              1500,
+		BatteryKeepAliveMessageInterval: 21600,
+		BatchSize:                       10,
+		BufferSize:                      4096,
+	}
+
+	reqBody, err := json.Marshal(map[string]interface{}{
+		"port":    128,
+		"payload": payload,
+		"devEui":  "",
+	})
+	if err != nil {
+		t.Fatalf("failed to marshal request body: %v", err)
+	}
+
+	req, err := http.NewRequest("POST", "/encode/tagsl/v1", bytes.NewReader(reqBody))
+	if err != nil {
+		t.Fatalf("failed to create request: %v", err)
+	}
+
+	recorder := httptest.NewRecorder()
+	handler(recorder, req)
+
+	resp := recorder.Result()
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("expected status code %d, got %d", http.StatusOK, resp.StatusCode)
+	}
+
+	expectedContentType := "application/json"
+	actualContentType := resp.Header.Get("Content-Type")
+	if actualContentType != expectedContentType {
+		t.Errorf("expected Content-Type header to be %q, got %q", expectedContentType, actualContentType)
+	}
+
+	// Test with invalid JSON
+	reqBody = []byte(`{"port": 128, "payload": {`)
+	req, err = http.NewRequest("POST", "/encode/tagsl/v1", bytes.NewReader(reqBody))
+	if err != nil {
+		t.Fatalf("failed to create request: %v", err)
+	}
+
+	recorder = httptest.NewRecorder()
+	handler(recorder, req)
+
+	resp = recorder.Result()
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusBadRequest {
+		t.Errorf("expected status code %d, got %d", http.StatusBadRequest, resp.StatusCode)
+	}
+
+	// Test with invalid port
+	reqBody, err = json.Marshal(map[string]interface{}{
+		"port":    0, // Invalid port
+		"payload": payload,
+		"devEui":  "",
+	})
+	if err != nil {
+		t.Fatalf("failed to marshal request body: %v", err)
+	}
+
+	req, err = http.NewRequest("POST", "/encode/tagsl/v1", bytes.NewReader(reqBody))
+	if err != nil {
+		t.Fatalf("failed to create request: %v", err)
+	}
+
+	recorder = httptest.NewRecorder()
+	handler(recorder, req)
+
+	resp = recorder.Result()
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusBadRequest {
+		t.Errorf("expected status code %d, got %d", http.StatusBadRequest, resp.StatusCode)
 	}
 }
