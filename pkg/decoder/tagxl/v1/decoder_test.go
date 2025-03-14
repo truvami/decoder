@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/truvami/decoder/pkg/decoder"
 	"github.com/truvami/decoder/pkg/loracloud"
 )
 
@@ -153,14 +154,14 @@ func TestDecode(t *testing.T) {
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestPort%vWith%v", test.port, test.payload), func(t *testing.T) {
 			decoder := NewTagXLv1Decoder(middleware, WithAutoPadding(test.autoPadding))
-			got, _, err := decoder.Decode(test.payload, test.port, test.devEui)
+			got, err := decoder.Decode(test.payload, test.port, test.devEui)
 			if err != nil && len(test.expectedErr) == 0 {
 				t.Fatalf("unexpected error: %v", err)
 			}
 
 			t.Logf("got %v", got)
 
-			if !reflect.DeepEqual(got, test.expected) && len(test.expectedErr) == 0 {
+			if got != nil && !reflect.DeepEqual(got.Data, test.expected) && len(test.expectedErr) == 0 {
 				t.Errorf("expected: %v, got: %v", test.expected, got)
 			}
 
@@ -180,8 +181,8 @@ func TestValidationErrors(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestPort%vValidationWith%v", test.port, test.payload), func(t *testing.T) {
-			decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("appEui"))
-			got, _, err := decoder.Decode(test.payload, test.port, "")
+			decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"))
+			got, err := decoder.Decode(test.payload, test.port, "")
 
 			if err == nil && test.expected == nil {
 				return
@@ -197,16 +198,16 @@ func TestValidationErrors(t *testing.T) {
 }
 
 func TestInvalidPort(t *testing.T) {
-	decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("appEui"))
-	_, _, err := decoder.Decode("00", 0, "")
+	decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"))
+	_, err := decoder.Decode("00", 0, "")
 	if err == nil || err.Error() != "port 0 not supported" {
 		t.Fatal("expected port not supported")
 	}
 }
 
 func TestPayloadTooShort(t *testing.T) {
-	decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("appEui"))
-	_, _, err := decoder.Decode("deadbeef", 152, "")
+	decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"))
+	_, err := decoder.Decode("deadbeef", 152, "")
 
 	if err == nil || err.Error() != "payload too short" {
 		t.Fatal("expected error payload too short")
@@ -214,10 +215,96 @@ func TestPayloadTooShort(t *testing.T) {
 }
 
 func TestPayloadTooLong(t *testing.T) {
-	decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("appEui"))
-	_, _, err := decoder.Decode("deadbeef4242deadbeef4242deadbeef4242", 152, "")
+	decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"))
+	_, err := decoder.Decode("deadbeef4242deadbeef4242deadbeef4242", 152, "")
 
 	if err == nil || err.Error() != "payload too long" {
 		t.Fatal("expected error payload too long")
+	}
+}
+
+func TestFeatures(t *testing.T) {
+	tests := []struct {
+		payload        string
+		port           int16
+		skipValidation bool
+	}{
+		{
+			payload: "010b0266acbcf0000000000756",
+			port:    152,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(fmt.Sprintf("TestFeaturesWithPort%vAndPayload%v", test.port, test.payload), func(t *testing.T) {
+			d := NewTagXLv1Decoder(
+				loracloud.NewLoracloudMiddleware("apiKey"),
+				WithSkipValidation(test.skipValidation),
+			)
+			decodedPayload, _ := d.Decode(test.payload, test.port, "")
+
+			// should be able to decode base feature
+			base, ok := decodedPayload.Data.(decoder.UplinkFeatureBase)
+			if !ok {
+				t.Fatalf("expected UplinkFeatureBase, got %T", decodedPayload)
+			}
+			// check if it panics
+			base.GetTimestamp()
+
+			if decodedPayload.Is(decoder.FeatureGNSS) {
+				gnss, ok := decodedPayload.Data.(decoder.UplinkFeatureGNSS)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureGNSS, got %T", decodedPayload)
+				}
+				if gnss.GetLatitude() == 0 {
+					t.Fatalf("expected non zero latitude")
+				}
+				if gnss.GetLongitude() == 0 {
+					t.Fatalf("expected non zero longitude")
+				}
+				if gnss.GetAltitude() == 0 {
+					t.Fatalf("expected non zero altitude")
+				}
+				// call function to check if it panics
+				gnss.GetAltitude()
+				gnss.GetPDOP()
+				gnss.GetSatellites()
+				gnss.GetTTF()
+			}
+			if decodedPayload.Is(decoder.FeatureBuffered) {
+				buffered, ok := decodedPayload.Data.(decoder.UplinkFeatureBuffered)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureBuffered, got %T", decodedPayload)
+				}
+				// call function to check if it panics
+				buffered.GetBufferLevel()
+			}
+			if decodedPayload.Is(decoder.FeatureBattery) {
+				batteryVoltage, ok := decodedPayload.Data.(decoder.UpLinkFeatureBattery)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureBattery, got %T", decodedPayload)
+				}
+				if batteryVoltage.GetBatteryVoltage() == 0 {
+					t.Fatalf("expected non zero battery voltage")
+				}
+			}
+			if decodedPayload.Is(decoder.FeatureWiFi) {
+				wifi, ok := decodedPayload.Data.(decoder.UplinkFeatureWiFi)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureWiFi, got %T", decodedPayload)
+				}
+				if wifi.GetAccessPoints() == nil {
+					t.Fatalf("expected non nil access points")
+				}
+			}
+			if decodedPayload.Is(decoder.FeatureMoving) {
+				moving, ok := decodedPayload.Data.(decoder.UplinkFeatureMoving)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureMoving, got %T", decodedPayload)
+				}
+				// call function to check if it panics
+				moving.IsMoving()
+			}
+		})
 	}
 }

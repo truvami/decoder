@@ -66,6 +66,7 @@ func (t NomadXLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 				{Name: "TimeToFix", Start: 37, Length: 1},
 			},
 			TargetType: reflect.TypeOf(Port101Payload{}),
+			Features:   []decoder.Feature{decoder.FeatureBattery, decoder.FeatureTemperature, decoder.FeatureBuffered},
 		}, nil
 	case 103:
 		return common.PayloadConfig{
@@ -85,16 +86,17 @@ func (t NomadXLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 				}},
 			},
 			TargetType: reflect.TypeOf(Port103Payload{}),
+			Features:   []decoder.Feature{decoder.FeatureGNSS},
 		}, nil
 	}
 
 	return common.PayloadConfig{}, fmt.Errorf("port %v not supported", port)
 }
 
-func (t NomadXLv1Decoder) Decode(data string, port int16, devEui string) (interface{}, interface{}, error) {
+func (t NomadXLv1Decoder) Decode(data string, port int16, devEui string) (*decoder.DecodedUplink, error) {
 	config, err := t.getConfig(port)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	if t.autoPadding {
@@ -104,10 +106,10 @@ func (t NomadXLv1Decoder) Decode(data string, port int16, devEui string) (interf
 	if !t.skipValidation {
 		err := common.ValidateLength(&data, &config)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 	}
 
 	decodedData, err := common.Parse(data, &config)
-	return decodedData, nil, err
+	return decoder.NewDecodedUplink(config.Features, decodedData, nil), err
 }

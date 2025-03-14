@@ -117,7 +117,7 @@ func (t SmartLabelv1Decoder) getConfig(port int16, data string) (common.PayloadC
 	}
 }
 
-func (t SmartLabelv1Decoder) Decode(data string, port int16, devEui string) (interface{}, interface{}, error) {
+func (t SmartLabelv1Decoder) Decode(data string, port int16, devEui string) (*decoder.DecodedUplink, error) {
 	switch port {
 	case 192, 197:
 		decodedData, err := t.loracloudMiddleware.DeliverUplinkMessage(devEui, loracloud.UplinkMsg{
@@ -125,14 +125,14 @@ func (t SmartLabelv1Decoder) Decode(data string, port int16, devEui string) (int
 			Port:    uint8(port),
 			Payload: data,
 		})
-		return decodedData, nil, err
+		return decoder.NewDecodedUplink([]decoder.Feature{}, decodedData, nil), err
 	default:
 		config, err := t.getConfig(port, data)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 
 		decodedData, err := common.Parse(data, &config)
-		return decodedData, nil, err
+		return decoder.NewDecodedUplink(config.Features, decodedData, nil), err
 	}
 }

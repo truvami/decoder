@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/truvami/decoder/internal/logger"
 	helpers "github.com/truvami/decoder/pkg/common"
-	"github.com/truvami/decoder/pkg/decoder/smartlabel/v1"
+	smartlabel "github.com/truvami/decoder/pkg/decoder/smartlabel/v1"
 	"github.com/truvami/decoder/pkg/loracloud"
 	"go.uber.org/zap"
 )
@@ -35,7 +35,7 @@ var smartlabelCmd = &cobra.Command{
 		}
 		logger.Logger.Debug("port parsed successfully", zap.Int("port", port))
 
-		data, metadata, err := d.Decode(args[1], int16(port), "")
+		data, err := d.Decode(args[1], int16(port), "")
 		if err != nil {
 			if errors.Is(err, helpers.ErrValidationFailed) {
 				for _, err := range helpers.UnwrapError(err) {
@@ -48,6 +48,6 @@ var smartlabelCmd = &cobra.Command{
 			}
 		}
 
-		printJSON(data, metadata)
+		printJSON(data.Data, data.Metadata)
 	},
 }

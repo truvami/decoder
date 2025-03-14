@@ -3,6 +3,8 @@ package nomadxl
 import (
 	"fmt"
 	"testing"
+
+	"github.com/truvami/decoder/pkg/decoder"
 )
 
 func TestDecode(t *testing.T) {
@@ -77,14 +79,14 @@ func TestDecode(t *testing.T) {
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestPort%vWith%v", test.port, test.payload), func(t *testing.T) {
 			decoder := NewNomadXLv1Decoder(WithAutoPadding(test.autoPadding))
-			got, _, err := decoder.Decode(test.payload, test.port, "")
+			got, err := decoder.Decode(test.payload, test.port, "")
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
 
 			t.Logf("got %v", got)
 
-			if got != test.expected {
+			if got.Data != test.expected {
 				t.Errorf("expected: %v, got: %v", test.expected, got)
 			}
 		})
@@ -93,7 +95,7 @@ func TestDecode(t *testing.T) {
 
 func TestInvalidPort(t *testing.T) {
 	decoder := NewNomadXLv1Decoder()
-	_, _, err := decoder.Decode("00", 0, "")
+	_, err := decoder.Decode("00", 0, "")
 	if err == nil || err.Error() != "port 0 not supported" {
 		t.Fatal("expected port not supported")
 	}
@@ -101,7 +103,7 @@ func TestInvalidPort(t *testing.T) {
 
 func TestPayloadTooShort(t *testing.T) {
 	decoder := NewNomadXLv1Decoder()
-	_, _, err := decoder.Decode("deadbeef", 101, "")
+	_, err := decoder.Decode("deadbeef", 101, "")
 
 	if err == nil || err.Error() != "payload too short" {
 		t.Fatal("expected error payload too short")
@@ -110,9 +112,99 @@ func TestPayloadTooShort(t *testing.T) {
 
 func TestPayloadTooLong(t *testing.T) {
 	decoder := NewNomadXLv1Decoder()
-	_, _, err := decoder.Decode("deadbeef4242deadbeef4242deadbeef4242deadbeef4242deadbeef4242deadbeef4242deadbeef4242", 101, "")
+	_, err := decoder.Decode("deadbeef4242deadbeef4242deadbeef4242deadbeef4242deadbeef4242deadbeef4242deadbeef4242", 101, "")
 
 	if err == nil || err.Error() != "payload too long" {
 		t.Fatal("expected error payload too long")
+	}
+}
+
+func TestFeatures(t *testing.T) {
+	tests := []struct {
+		payload        string
+		port           int16
+		skipValidation bool
+	}{
+		{
+			payload: "00000001fdd5c693000079300001b45d000000000000000000d700000000000000000b3fd724",
+			port:    101,
+		},
+		{
+			payload: "0000793000020152004B6076000C838C00003994",
+			port:    103,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(fmt.Sprintf("TestFeaturesWithPort%vAndPayload%v", test.port, test.payload), func(t *testing.T) {
+			d := NewNomadXLv1Decoder(
+				WithSkipValidation(test.skipValidation),
+			)
+			decodedPayload, _ := d.Decode(test.payload, test.port, "")
+
+			// should be able to decode base feature
+			base, ok := decodedPayload.Data.(decoder.UplinkFeatureBase)
+			if !ok {
+				t.Fatalf("expected UplinkFeatureBase, got %T", decodedPayload)
+			}
+			// check if it panics
+			base.GetTimestamp()
+
+			if decodedPayload.Is(decoder.FeatureGNSS) {
+				gnss, ok := decodedPayload.Data.(decoder.UplinkFeatureGNSS)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureGNSS, got %T", decodedPayload)
+				}
+				if gnss.GetLatitude() == 0 {
+					t.Fatalf("expected non zero latitude")
+				}
+				if gnss.GetLongitude() == 0 {
+					t.Fatalf("expected non zero longitude")
+				}
+				if gnss.GetAltitude() == 0 {
+					t.Fatalf("expected non zero altitude")
+				}
+				// call function to check if it panics
+				gnss.GetAltitude()
+				gnss.GetPDOP()
+				gnss.GetSatellites()
+				gnss.GetTTF()
+				gnss.GetAccuracy()
+			}
+			if decodedPayload.Is(decoder.FeatureBuffered) {
+				buffered, ok := decodedPayload.Data.(decoder.UplinkFeatureBuffered)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureBuffered, got %T", decodedPayload)
+				}
+				// call function to check if it panics
+				buffered.GetBufferLevel()
+			}
+			if decodedPayload.Is(decoder.FeatureBattery) {
+				batteryVoltage, ok := decodedPayload.Data.(decoder.UpLinkFeatureBattery)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureBattery, got %T", decodedPayload)
+				}
+				if batteryVoltage.GetBatteryVoltage() == 0 {
+					t.Fatalf("expected non zero battery voltage")
+				}
+			}
+			if decodedPayload.Is(decoder.FeatureWiFi) {
+				wifi, ok := decodedPayload.Data.(decoder.UplinkFeatureWiFi)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureWiFi, got %T", decodedPayload)
+				}
+				if wifi.GetAccessPoints() == nil {
+					t.Fatalf("expected non nil access points")
+				}
+			}
+			if decodedPayload.Is(decoder.FeatureMoving) {
+				moving, ok := decodedPayload.Data.(decoder.UplinkFeatureMoving)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureMoving, got %T", decodedPayload)
+				}
+				// call function to check if it panics
+				moving.IsMoving()
+			}
+		})
 	}
 }

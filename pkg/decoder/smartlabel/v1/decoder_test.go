@@ -160,14 +160,14 @@ func TestDecode(t *testing.T) {
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestPort%vWith%v", test.port, test.payload), func(t *testing.T) {
 			decoder := NewSmartLabelv1Decoder(middleware)
-			got, _, err := decoder.Decode(test.payload, test.port, test.devEui)
+			got, err := decoder.Decode(test.payload, test.port, test.devEui)
 			if err != nil && len(test.expectedErr) == 0 {
 				t.Fatalf("unexpected error: %v", err)
 			}
 
 			t.Logf("got %v", got)
 
-			if !reflect.DeepEqual(got, test.expected) && len(test.expectedErr) == 0 {
+			if got != nil && !reflect.DeepEqual(got.Data, test.expected) && len(test.expectedErr) == 0 {
 				t.Errorf("expected: %v, got: %v", test.expected, got)
 			}
 
@@ -180,7 +180,7 @@ func TestDecode(t *testing.T) {
 
 func TestInvalidPort(t *testing.T) {
 	decoder := NewSmartLabelv1Decoder(loracloud.NewLoracloudMiddleware("appEui"))
-	_, _, err := decoder.Decode("00", 0, "")
+	_, err := decoder.Decode("00", 0, "")
 	if err == nil || err.Error() != "port 0 not supported" {
 		t.Fatal("expected port not supported")
 	}

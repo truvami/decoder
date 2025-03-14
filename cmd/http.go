@@ -14,11 +14,11 @@ import (
 	"github.com/truvami/decoder/internal/logger"
 	helpers "github.com/truvami/decoder/pkg/common"
 	"github.com/truvami/decoder/pkg/decoder"
-	"github.com/truvami/decoder/pkg/decoder/nomadxl/v1"
-	"github.com/truvami/decoder/pkg/decoder/nomadxs/v1"
-	"github.com/truvami/decoder/pkg/decoder/smartlabel/v1"
-	"github.com/truvami/decoder/pkg/decoder/tagsl/v1"
-	"github.com/truvami/decoder/pkg/decoder/tagxl/v1"
+	nomadxl "github.com/truvami/decoder/pkg/decoder/nomadxl/v1"
+	nomadxs "github.com/truvami/decoder/pkg/decoder/nomadxs/v1"
+	smartlabel "github.com/truvami/decoder/pkg/decoder/smartlabel/v1"
+	tagsl "github.com/truvami/decoder/pkg/decoder/tagsl/v1"
+	tagxl "github.com/truvami/decoder/pkg/decoder/tagxl/v1"
 	"github.com/truvami/decoder/pkg/loracloud"
 	"go.uber.org/zap"
 )
@@ -141,17 +141,17 @@ func getHandler(decoder decoder.Decoder) func(http.ResponseWriter, *http.Request
 		logger.Logger.Debug("decoding payload")
 
 		var warnings []string = nil
-		data, metadata, err := decoder.Decode(req.Payload, req.Port, req.DevEUI)
+		data, err := decoder.Decode(req.Payload, req.Port, req.DevEUI)
 		if err != nil {
 			if errors.Is(err, helpers.ErrValidationFailed) {
 				warnings = []string{}
 				for _, err := range helpers.UnwrapError(err) {
-					logger.Logger.Warn("validation error", zap.Error(err))
+					logger.Logger.Warn("validation error", zap.Error(err), zap.String("devEui", req.DevEUI), zap.Int16("port", req.Port))
 					warnings = append(warnings, err.Error())
 				}
 				logger.Logger.Warn("validation for some fields failed - are you using the correct port?")
 			} else {
-				logger.Logger.Error("error while decoding payload", zap.Error(err))
+				logger.Logger.Error("error while decoding payload", zap.Error(err), zap.String("devEui", req.DevEUI), zap.Int16("port", req.Port))
 
 				setBody(w, http.StatusBadRequest, map[string]interface{}{
 					"error": err.Error(),
@@ -161,9 +161,10 @@ func getHandler(decoder decoder.Decoder) func(http.ResponseWriter, *http.Request
 			}
 		}
 
+		logger.Logger.Info("payload decoded successfully", zap.String("devEui", req.DevEUI), zap.Int16("port", req.Port))
 		setBody(w, http.StatusOK, map[string]interface{}{
-			"data":     data,
-			"metadata": metadata,
+			"data":     data.Data,
+			"metadata": data.Metadata,
 			"warnings": warnings,
 		})
 	}

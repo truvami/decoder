@@ -1,6 +1,10 @@
 package common
 
-import "reflect"
+import (
+	"reflect"
+
+	"github.com/truvami/decoder/pkg/decoder"
+)
 
 type FieldConfig struct {
 	Name      string
@@ -16,4 +20,5 @@ type PayloadConfig struct {
 	Fields          []FieldConfig
 	TargetType      reflect.Type
 	StatusByteIndex *int // can be nil
+	Features        []decoder.Feature
 }

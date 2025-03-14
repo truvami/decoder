@@ -1,6 +1,10 @@
 package tagsl
 
-import "time"
+import (
+	"time"
+
+	"github.com/truvami/decoder/pkg/decoder"
+)
 
 // +------+------+-------------------------------------------+------------------------+
 // | Byte | Size | Description                               | Format                 |
@@ -21,6 +25,8 @@ import "time"
 
 // Timestamp for the Wi-Fi scanning is TSGNSS – TTF + 10 seconds.
 type Port50Payload struct {
+	Moving    bool      `json:"moving"`
+	DutyCycle bool      `json:"dutyCycle"`
 	Latitude  float64   `json:"latitude" validate:"gte=-90,lte=90"`
 	Longitude float64   `json:"longitude" validate:"gte=-180,lte=180"`
 	Altitude  float64   `json:"altitude"`
@@ -41,4 +47,89 @@ type Port50Payload struct {
 	Rssi6     int8      `json:"rssi6"`
 	Mac7      string    `json:"mac7"`
 	Rssi7     int8      `json:"rssi7"`
+}
+
+var _ decoder.UplinkFeatureBase = &Port50Payload{}
+var _ decoder.UplinkFeatureGNSS = &Port50Payload{}
+var _ decoder.UpLinkFeatureBattery = &Port50Payload{}
+var _ decoder.UplinkFeatureWiFi = &Port50Payload{}
+var _ decoder.UplinkFeatureMoving = &Port50Payload{}
+var _ decoder.UplinkFeatureDutyCycle = &Port50Payload{}
+
+func (p Port50Payload) GetTimestamp() *time.Time {
+	return &p.Timestamp
+}
+
+func (p Port50Payload) GetLatitude() float64 {
+	return p.Latitude
+}
+
+func (p Port50Payload) GetLongitude() float64 {
+	return p.Longitude
+}
+
+func (p Port50Payload) GetAltitude() float64 {
+	return p.Altitude
+}
+
+func (p Port50Payload) GetAccuracy() *float64 {
+	return nil
+}
+
+func (p Port50Payload) GetTTF() *float64 {
+	return nil
+}
+
+func (p Port50Payload) GetPDOP() *float64 {
+	return nil
+}
+
+func (p Port50Payload) GetSatellites() *uint8 {
+	return nil
+}
+
+func (p Port50Payload) GetBatteryVoltage() float64 {
+	return p.Battery
+}
+
+func (p Port50Payload) GetAccessPoints() []decoder.AccessPoint {
+	accessPoints := []decoder.AccessPoint{}
+
+	if p.Mac1 != "" {
+		accessPoints = append(accessPoints, decoder.AccessPoint{
+			MAC:  p.Mac1,
+			RSSI: p.Rssi1,
+		})
+	}
+
+	if p.Mac2 != "" {
+		accessPoints = append(accessPoints, decoder.AccessPoint{
+			MAC:  p.Mac2,
+			RSSI: p.Rssi2,
+		})
+	}
+
+	if p.Mac3 != "" {
+		accessPoints = append(accessPoints, decoder.AccessPoint{
+			MAC:  p.Mac3,
+			RSSI: p.Rssi3,
+		})
+	}
+
+	if p.Mac4 != "" {
+		accessPoints = append(accessPoints, decoder.AccessPoint{
+			MAC:  p.Mac4,
+			RSSI: p.Rssi4,
+		})
+	}
+
+	return accessPoints
+}
+
+func (p Port50Payload) IsMoving() bool {
+	return p.Moving
+}
+
+func (p Port50Payload) IsDutyCycle() bool {
+	return p.DutyCycle
 }

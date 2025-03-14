@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/truvami/decoder/internal/logger"
-	"github.com/truvami/decoder/pkg/decoder/tagsl/v1"
+	tagsl "github.com/truvami/decoder/pkg/decoder/tagsl/v1"
 )
 
 func TestAddDecoder(t *testing.T) {
@@ -33,6 +33,9 @@ func TestAddDecoder(t *testing.T) {
 	}
 }
 func TestGetHandler(t *testing.T) {
+	logger.NewLogger()
+	defer logger.Sync()
+
 	decoder := tagsl.NewTagSLv1Decoder()
 	handler := getHandler(decoder)
 
@@ -56,6 +59,18 @@ func TestGetHandler(t *testing.T) {
 	actualContentType := resp.Header.Get("Content-Type")
 	if actualContentType != expectedContentType {
 		t.Errorf("expected Content-Type header to be %q, got %q", expectedContentType, actualContentType)
+	}
+
+	responseBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("failed to read response body: %v", err)
+	}
+
+	expectedBody := `47.041811`
+	actualBody := string(responseBody)
+
+	if strings.Contains(expectedBody, actualBody) {
+		t.Errorf("expected response body to contain %q, got %q", expectedBody, actualBody)
 	}
 
 	// test with invalid JSON
@@ -125,14 +140,24 @@ func TestSetHeaders(t *testing.T) {
 }
 
 func TestHTTPCmd(t *testing.T) {
+	logger.NewLogger()
+	defer logger.Sync()
+
+	if httpCmd.Flags().Set("port", "38888") != nil {
+		t.Fatalf("failed to set port flag")
+	}
+	if httpCmd.Flags().Set("host", "127.0.0.1") != nil {
+		t.Fatalf("failed to set host flag")
+	}
+
 	go func() {
 		// call the command handler function
-		httpCmd.Run(nil, []string{"--host", "::1"})
+		httpCmd.Run(nil, []string{})
 	}()
 
 	// create a new HTTP request to simulate the command execution
 	reqBody := `{"port": 105, "payload": "0028672658500172a741b1e238b572a741b1e08bb03498b5c583e2b172a741b1e0cda772a741beed4cc472a741beef53b7"}`
-	req, err := http.NewRequest("POST", "http://localhost:8080/tagsl/v1", strings.NewReader(reqBody))
+	req, err := http.NewRequest("POST", "http://localhost:38888/tagsl/v1", strings.NewReader(reqBody))
 	if err != nil {
 		t.Fatalf("failed to create request: %v", err)
 	}

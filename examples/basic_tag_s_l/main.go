@@ -13,7 +13,7 @@ func main() {
 
 	// decode data
 	log.Println("decoding data...")
-	data, _, err := d.Decode("0002c420ff005ed85a12b4180719142607", 1, "")
+	data, err := d.Decode("0002c420ff005ed85a12b4180719142607", 1, "")
 	if err != nil {
 		panic(err)
 	}

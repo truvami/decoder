@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/truvami/decoder/internal/logger"
 	helpers "github.com/truvami/decoder/pkg/common"
-	"github.com/truvami/decoder/pkg/decoder/nomadxl/v1"
+	nomadxl "github.com/truvami/decoder/pkg/decoder/nomadxl/v1"
 	"go.uber.org/zap"
 )
 
@@ -33,7 +33,7 @@ var nomadxlCmd = &cobra.Command{
 		}
 		logger.Logger.Debug("port parsed successfully", zap.Int("port", port))
 
-		data, metadata, err := d.Decode(args[1], int16(port), "")
+		data, err := d.Decode(args[1], int16(port), "")
 		if err != nil {
 			if errors.Is(err, helpers.ErrValidationFailed) {
 				for _, err := range helpers.UnwrapError(err) {
@@ -46,6 +46,6 @@ var nomadxlCmd = &cobra.Command{
 			}
 		}
 
-		printJSON(data, metadata)
+		printJSON(data.Data, data.Metadata)
 	},
 }
