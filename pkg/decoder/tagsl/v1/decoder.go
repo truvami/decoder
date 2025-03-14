@@ -467,10 +467,7 @@ func (t TagSLv1Decoder) Decode(data string, port int16, devEui string) (*decoder
 		return nil, err
 	}
 
-	statusData, err := parseStatusByte(bytesData[*config.StatusByteIndex])
-	if err != nil {
-		return nil, err
-	}
+	statusData := parseStatusByte(bytesData[*config.StatusByteIndex])
 
 	return decoder.NewDecodedUplink(config.Features, decodedData, statusData), nil
 }
@@ -482,7 +479,7 @@ type Status struct {
 	Moving              bool `json:"moving"`
 }
 
-func parseStatusByte(statusByte byte) (Status, error) {
+func parseStatusByte(statusByte byte) Status {
 	// Extract bits as per the requirements
 	dcFlag := (statusByte >> 7) & 0x01       // Bit 7
 	confChangeID := (statusByte >> 3) & 0x0F // Bits 6:3 (4-bit)
@@ -494,7 +491,7 @@ func parseStatusByte(statusByte byte) (Status, error) {
 		ConfigChangeId:      int(confChangeID),
 		ConfigChangeSuccess: confSuccess == 1,
 		Moving:              movingFlag == 1,
-	}, nil
+	}
 }
 
 func moving(v interface{}) interface{} {
@@ -504,10 +501,7 @@ func moving(v interface{}) interface{} {
 	}
 
 	b := byte(i)
-	status, err := parseStatusByte(b)
-	if err != nil {
-		return false
-	}
+	status := parseStatusByte(b)
 
 	return status.Moving
 }
@@ -519,10 +513,7 @@ func dutyCycle(v interface{}) interface{} {
 	}
 
 	b := byte(i)
-	status, err := parseStatusByte(b)
-	if err != nil {
-		return false
-	}
+	status := parseStatusByte(b)
 
 	return status.DutyCycle
 }

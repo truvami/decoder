@@ -1537,7 +1537,6 @@ func TestParseStatusByte(t *testing.T) {
 	tests := []struct {
 		input    byte
 		expected Status
-		err      error
 	}{
 		{
 			input: 0x80,
@@ -1547,7 +1546,6 @@ func TestParseStatusByte(t *testing.T) {
 				ConfigChangeSuccess: false,
 				Moving:              false,
 			},
-			err: nil,
 		},
 		{
 			input: 0xFF,
@@ -1557,7 +1555,6 @@ func TestParseStatusByte(t *testing.T) {
 				ConfigChangeSuccess: true,
 				Moving:              true,
 			},
-			err: nil,
 		},
 		{
 			input: 0x00,
@@ -1567,7 +1564,6 @@ func TestParseStatusByte(t *testing.T) {
 				ConfigChangeSuccess: false,
 				Moving:              false,
 			},
-			err: nil,
 		},
 		{
 			input: 0x4A,
@@ -1577,7 +1573,6 @@ func TestParseStatusByte(t *testing.T) {
 				ConfigChangeSuccess: false,
 				Moving:              false,
 			},
-			err: nil,
 		},
 		{
 			input: 0x8D,
@@ -1587,22 +1582,12 @@ func TestParseStatusByte(t *testing.T) {
 				ConfigChangeSuccess: true,
 				Moving:              true,
 			},
-			err: nil,
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestStatusByteInput%v", test.input), func(t *testing.T) {
-			got, err := parseStatusByte(test.input)
-			if err != nil && test.err == nil {
-				t.Fatalf("unexpected error: %v", err)
-			}
-			if err == nil && test.err != nil {
-				t.Fatalf("expected error: %v, got: %v", test.err, err)
-			}
-			if err != nil && test.err != nil && err.Error() != test.err.Error() {
-				t.Fatalf("expected error: %v, got: %v", test.err, err)
-			}
+			got := parseStatusByte(test.input)
 			if got != test.expected {
 				t.Errorf("expected: %v\ngot: %v", test.expected, got)
 			}
