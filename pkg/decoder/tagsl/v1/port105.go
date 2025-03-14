@@ -21,6 +21,7 @@ import (
 
 type Port105Payload struct {
 	Moving      bool      `json:"moving"`
+	DutyCycle   bool      `json:"dutyCycle"`
 	BufferLevel uint16    `json:"bufferLevel"`
 	Timestamp   time.Time `json:"timestamp"`
 	Mac1        string    `json:"mac1"`
@@ -41,6 +42,7 @@ var _ decoder.UplinkFeatureBase = &Port105Payload{}
 var _ decoder.UplinkFeatureWiFi = &Port105Payload{}
 var _ decoder.UplinkFeatureBuffered = &Port105Payload{}
 var _ decoder.UplinkFeatureMoving = &Port105Payload{}
+var _ decoder.UplinkFeatureDutyCycle = &Port105Payload{}
 
 func (p Port105Payload) GetTimestamp() *time.Time {
 	return &p.Timestamp
@@ -100,4 +102,8 @@ func (p Port105Payload) GetBufferLevel() uint16 {
 
 func (p Port105Payload) IsMoving() bool {
 	return p.Moving
+}
+
+func (p Port105Payload) IsDutyCycle() bool {
+	return p.DutyCycle
 }

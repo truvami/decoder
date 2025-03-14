@@ -23,6 +23,8 @@ func TestDecode(t *testing.T) {
 			port:        1,
 			autoPadding: false,
 			expected: Port1Payload{
+				Moving:    false,
+				DutyCycle: true,
 				Latitude:  47.041811,
 				Longitude: 7.622494,
 				Altitude:  572.8,
@@ -39,6 +41,8 @@ func TestDecode(t *testing.T) {
 			port:        1,
 			autoPadding: true,
 			expected: Port1Payload{
+				Moving:    false,
+				DutyCycle: true,
 				Latitude:  47.041811,
 				Longitude: 7.622494,
 				Altitude:  572.8,
@@ -56,6 +60,8 @@ func TestDecode(t *testing.T) {
 			autoPadding:    false,
 			skipValidation: true,
 			expected: Port1Payload{
+				Moving:    false,
+				DutyCycle: true,
 				Latitude:  47.041811,
 				Longitude: 7.622494,
 				Altitude:  572.8,
@@ -221,8 +227,10 @@ func TestDecode(t *testing.T) {
 			port:        5,
 			autoPadding: false,
 			expected: Port5Payload{
-				Mac1:  "8c59c3c99fc0",
-				Rssi1: -83,
+				Moving:    false,
+				DutyCycle: true,
+				Mac1:      "8c59c3c99fc0",
+				Rssi1:     -83,
 			},
 		},
 		{
@@ -230,8 +238,10 @@ func TestDecode(t *testing.T) {
 			port:        5,
 			autoPadding: false,
 			expected: Port5Payload{
-				Mac1:  "e0286d8a2742",
-				Rssi1: -95,
+				Moving:    false,
+				DutyCycle: true,
+				Mac1:      "e0286d8a2742",
+				Rssi1:     -95,
 			},
 		},
 		{
@@ -239,12 +249,14 @@ func TestDecode(t *testing.T) {
 			port:        5,
 			autoPadding: false,
 			expected: Port5Payload{
-				Mac1:  "1f3fd57cecb4",
-				Rssi1: -16,
-				Mac2:  "b0140c96bbb2",
-				Rssi2: -32,
-				Mac3:  "286d8a9478b8",
-				Rssi3: 0,
+				Moving:    false,
+				DutyCycle: false,
+				Mac1:      "1f3fd57cecb4",
+				Rssi1:     -16,
+				Mac2:      "b0140c96bbb2",
+				Rssi2:     -32,
+				Mac3:      "286d8a9478b8",
+				Rssi3:     0,
 			},
 		},
 		{
@@ -252,16 +264,18 @@ func TestDecode(t *testing.T) {
 			port:        5,
 			autoPadding: false,
 			expected: Port5Payload{
-				Mac1:  "e0286d8aabfc",
-				Rssi1: -88,
-				Mac2:  "e0286d8a9478",
-				Rssi2: -62,
-				Mac3:  "726c9a74b58d",
-				Rssi3: -85,
-				Mac4:  "726cdac8b89d",
-				Rssi4: -84,
-				Mac5:  "f0b0140c96bb",
-				Rssi5: -56,
+				Moving:    false,
+				DutyCycle: false,
+				Mac1:      "e0286d8aabfc",
+				Rssi1:     -88,
+				Mac2:      "e0286d8a9478",
+				Rssi2:     -62,
+				Mac3:      "726c9a74b58d",
+				Rssi3:     -85,
+				Mac4:      "726cdac8b89d",
+				Rssi4:     -84,
+				Mac5:      "f0b0140c96bb",
+				Rssi5:     -56,
 			},
 		},
 		{
@@ -270,20 +284,22 @@ func TestDecode(t *testing.T) {
 			autoPadding:    false,
 			skipValidation: false,
 			expected: Port5Payload{
-				Mac1:  "e0286d8aabfc",
-				Rssi1: -88,
-				Mac2:  "e0286d8a9478",
-				Rssi2: -62,
-				Mac3:  "726c9a74b58d",
-				Rssi3: -85,
-				Mac4:  "726cdac8b89d",
-				Rssi4: -84,
-				Mac5:  "f0b0140c96bb",
-				Rssi5: -56,
-				Mac6:  "deadbeef4242",
-				Rssi6: -42,
-				Mac7:  "deadbeef4242",
-				Rssi7: -42,
+				Moving:    false,
+				DutyCycle: false,
+				Mac1:      "e0286d8aabfc",
+				Rssi1:     -88,
+				Mac2:      "e0286d8a9478",
+				Rssi2:     -62,
+				Mac3:      "726c9a74b58d",
+				Rssi3:     -85,
+				Mac4:      "726cdac8b89d",
+				Rssi4:     -84,
+				Mac5:      "f0b0140c96bb",
+				Rssi5:     -56,
+				Mac6:      "deadbeef4242",
+				Rssi6:     -42,
+				Mac7:      "deadbeef4242",
+				Rssi7:     -42,
 			},
 		},
 		{
@@ -292,20 +308,22 @@ func TestDecode(t *testing.T) {
 			autoPadding:    false,
 			skipValidation: true,
 			expected: Port5Payload{
-				Mac1:  "e0286d8aabfc",
-				Rssi1: -88,
-				Mac2:  "e0286d8a9478",
-				Rssi2: -62,
-				Mac3:  "726c9a74b58d",
-				Rssi3: -85,
-				Mac4:  "726cdac8b89d",
-				Rssi4: -84,
-				Mac5:  "f0b0140c96bb",
-				Rssi5: -56,
-				Mac6:  "deadbeef4242",
-				Rssi6: -42,
-				Mac7:  "deadbeef4242",
-				Rssi7: -42,
+				Moving:    false,
+				DutyCycle: false,
+				Mac1:      "e0286d8aabfc",
+				Rssi1:     -88,
+				Mac2:      "e0286d8a9478",
+				Rssi2:     -62,
+				Mac3:      "726c9a74b58d",
+				Rssi3:     -85,
+				Mac4:      "726cdac8b89d",
+				Rssi4:     -84,
+				Mac5:      "f0b0140c96bb",
+				Rssi5:     -56,
+				Mac6:      "deadbeef4242",
+				Rssi6:     -42,
+				Mac7:      "deadbeef4242",
+				Rssi7:     -42,
 			},
 		},
 		{
@@ -359,6 +377,8 @@ func TestDecode(t *testing.T) {
 			autoPadding: false,
 			expected: Port7Payload{
 				Timestamp: time.Date(2024, 9, 19, 11, 2, 19, 0, time.UTC),
+				Moving:    false,
+				DutyCycle: false,
 				Mac1:      "e0286d8aabfc",
 				Rssi1:     -69,
 				Mac2:      "ec6c9a74b58f",
@@ -380,6 +400,8 @@ func TestDecode(t *testing.T) {
 			skipValidation: true,
 			expected: Port7Payload{
 				Timestamp: time.Date(2024, 9, 19, 11, 2, 19, 0, time.UTC),
+				Moving:    false,
+				DutyCycle: false,
 				Mac1:      "e0286d8aabfc",
 				Rssi1:     -69,
 				Mac2:      "ec6c9a74b58f",
@@ -400,6 +422,8 @@ func TestDecode(t *testing.T) {
 			autoPadding: false,
 			expected: Port7Payload{
 				Timestamp: time.Date(2024, 9, 19, 11, 2, 19, 0, time.UTC),
+				Moving:    false,
+				DutyCycle: false,
 			},
 		},
 		{
@@ -408,6 +432,8 @@ func TestDecode(t *testing.T) {
 			autoPadding: true,
 			expected: Port7Payload{
 				Timestamp: time.Date(2024, 9, 19, 11, 2, 19, 0, time.UTC),
+				Moving:    false,
+				DutyCycle: false,
 			},
 		},
 		{
@@ -568,6 +594,8 @@ func TestDecode(t *testing.T) {
 			port:        50,
 			autoPadding: false,
 			expected: Port50Payload{
+				Moving:    false,
+				DutyCycle: false,
 				Latitude:  47.385747,
 				Longitude: 8.539271,
 				Altitude:  447.3,
@@ -589,6 +617,8 @@ func TestDecode(t *testing.T) {
 			port:        50,
 			autoPadding: false,
 			expected: Port50Payload{
+				Moving:    true,
+				DutyCycle: false,
 				Latitude:  47.385386,
 				Longitude: 8.538524,
 				Altitude:  433.4,
@@ -608,6 +638,8 @@ func TestDecode(t *testing.T) {
 			port:        50,
 			autoPadding: false,
 			expected: Port50Payload{
+				Moving:    true,
+				DutyCycle: false,
 				Latitude:  47.385386,
 				Longitude: 8.538524,
 				Altitude:  433.4,
@@ -633,6 +665,8 @@ func TestDecode(t *testing.T) {
 			autoPadding:    false,
 			skipValidation: true,
 			expected: Port50Payload{
+				Moving:    true,
+				DutyCycle: false,
 				Latitude:  47.385386,
 				Longitude: 8.538524,
 				Altitude:  433.4,
@@ -658,6 +692,8 @@ func TestDecode(t *testing.T) {
 			port:        50,
 			autoPadding: false,
 			expected: Port50Payload{
+				Moving:    true,
+				DutyCycle: false,
 				Latitude:  47.385386,
 				Longitude: 8.538524,
 				Altitude:  433.4,
@@ -671,6 +707,8 @@ func TestDecode(t *testing.T) {
 			port:        50,
 			autoPadding: true,
 			expected: Port50Payload{
+				Moving:    true,
+				DutyCycle: false,
 				Latitude:  47.385386,
 				Longitude: 8.538524,
 				Altitude:  433.4,
@@ -684,6 +722,8 @@ func TestDecode(t *testing.T) {
 			port:        51,
 			autoPadding: false,
 			expected: Port51Payload{
+				Moving:     false,
+				DutyCycle:  false,
 				Latitude:   47.385504,
 				Longitude:  8.53883,
 				Altitude:   438.6,
@@ -707,6 +747,8 @@ func TestDecode(t *testing.T) {
 			port:        51,
 			autoPadding: false,
 			expected: Port51Payload{
+				Moving:     false,
+				DutyCycle:  false,
 				Latitude:   47.385504,
 				Longitude:  8.53883,
 				Altitude:   438.6,
@@ -722,6 +764,8 @@ func TestDecode(t *testing.T) {
 			port:        51,
 			autoPadding: true,
 			expected: Port51Payload{
+				Moving:     false,
+				DutyCycle:  false,
 				Latitude:   47.385504,
 				Longitude:  8.53883,
 				Altitude:   438.6,
@@ -738,6 +782,8 @@ func TestDecode(t *testing.T) {
 			autoPadding: false,
 			expected: Port105Payload{
 				BufferLevel: 1,
+				Moving:      false,
+				DutyCycle:   true,
 				Timestamp:   time.Date(2024, 8, 20, 14, 18, 34, 0, time.UTC),
 				Mac1:        "e0286d8aabfc",
 				Rssi1:       -79,
@@ -757,6 +803,8 @@ func TestDecode(t *testing.T) {
 			autoPadding: false,
 			expected: Port105Payload{
 				BufferLevel: 257,
+				Moving:      false,
+				DutyCycle:   true,
 				Timestamp:   time.Date(2024, 8, 20, 14, 18, 34, 0, time.UTC),
 				Mac1:        "e0286d8aabfc",
 				Rssi1:       -79,
@@ -776,6 +824,8 @@ func TestDecode(t *testing.T) {
 			autoPadding: false,
 			expected: Port105Payload{
 				BufferLevel: 19,
+				Moving:      false,
+				DutyCycle:   true,
 				Timestamp:   time.Date(2024, 9, 21, 2, 28, 29, 0, time.UTC),
 				Mac1:        "c4eb438ddde2",
 				Rssi1:       -91,
@@ -798,6 +848,8 @@ func TestDecode(t *testing.T) {
 			skipValidation: true,
 			expected: Port105Payload{
 				BufferLevel: 19,
+				Moving:      false,
+				DutyCycle:   true,
 				Timestamp:   time.Date(2024, 9, 21, 2, 28, 29, 0, time.UTC),
 				Mac1:        "c4eb438ddde2",
 				Rssi1:       -91,
@@ -819,6 +871,8 @@ func TestDecode(t *testing.T) {
 			autoPadding: false,
 			expected: Port105Payload{
 				BufferLevel: 19,
+				Moving:      false,
+				DutyCycle:   true,
 				Timestamp:   time.Date(2024, 9, 21, 2, 28, 29, 0, time.UTC),
 			},
 		},
@@ -828,6 +882,8 @@ func TestDecode(t *testing.T) {
 			autoPadding: true,
 			expected: Port105Payload{
 				BufferLevel: 19,
+				Moving:      false,
+				DutyCycle:   true,
 				Timestamp:   time.Date(2024, 9, 21, 2, 28, 29, 0, time.UTC),
 			},
 		},
@@ -837,6 +893,8 @@ func TestDecode(t *testing.T) {
 			autoPadding: false,
 			expected: Port110Payload{
 				BufferLevel: 2,
+				Moving:      false,
+				DutyCycle:   false,
 				Latitude:    47.385006,
 				Longitude:   8.538053,
 				Altitude:    440.9,
@@ -850,6 +908,8 @@ func TestDecode(t *testing.T) {
 			autoPadding: false,
 			expected: Port110Payload{
 				BufferLevel: 258,
+				Moving:      false,
+				DutyCycle:   false,
 				Latitude:    47.385006,
 				Longitude:   8.538053,
 				Altitude:    440.9,
@@ -864,6 +924,8 @@ func TestDecode(t *testing.T) {
 			skipValidation: true,
 			expected: Port110Payload{
 				BufferLevel: 258,
+				Moving:      false,
+				DutyCycle:   false,
 				Latitude:    47.385006,
 				Longitude:   8.538053,
 				Altitude:    440.9,
@@ -877,6 +939,8 @@ func TestDecode(t *testing.T) {
 			autoPadding: false,
 			expected: Port110Payload{
 				BufferLevel: 4,
+				Moving:      false,
+				DutyCycle:   false,
 				Latitude:    47.385484,
 				Longitude:   8.538677,
 				Altitude:    438.6,
@@ -890,6 +954,8 @@ func TestDecode(t *testing.T) {
 			autoPadding: true,
 			expected: Port110Payload{
 				BufferLevel: 4,
+				Moving:      false,
+				DutyCycle:   false,
 				Latitude:    47.385484,
 				Longitude:   8.538677,
 				Altitude:    438.6,
@@ -947,6 +1013,7 @@ func TestDecode(t *testing.T) {
 			autoPadding: false,
 			expected: Port150Payload{
 				BufferLevel: 0,
+				Moving:      true,
 				Latitude:    47.38524,
 				Longitude:   8.538294,
 				Altitude:    452.4,
@@ -969,6 +1036,7 @@ func TestDecode(t *testing.T) {
 			autoPadding: false,
 			expected: Port150Payload{
 				BufferLevel: 0,
+				Moving:      true,
 				Latitude:    47.38524,
 				Longitude:   8.538294,
 				Altitude:    452.4,
@@ -996,6 +1064,8 @@ func TestDecode(t *testing.T) {
 			skipValidation: true,
 			expected: Port150Payload{
 				BufferLevel: 0,
+				Moving:      true,
+				DutyCycle:   false,
 				Latitude:    47.38524,
 				Longitude:   8.538294,
 				Altitude:    452.4,
@@ -1022,6 +1092,8 @@ func TestDecode(t *testing.T) {
 			autoPadding: false,
 			expected: Port150Payload{
 				BufferLevel: 0,
+				Moving:      true,
+				DutyCycle:   false,
 				Latitude:    47.38524,
 				Longitude:   8.538294,
 				Altitude:    452.4,
@@ -1036,6 +1108,8 @@ func TestDecode(t *testing.T) {
 			autoPadding: true,
 			expected: Port150Payload{
 				BufferLevel: 0,
+				Moving:      true,
+				DutyCycle:   false,
 				Latitude:    47.38524,
 				Longitude:   8.538294,
 				Altitude:    452.4,
@@ -1050,6 +1124,8 @@ func TestDecode(t *testing.T) {
 			autoPadding: false,
 			expected: Port151Payload{
 				BufferLevel: 0,
+				Moving:      false,
+				DutyCycle:   false,
 				Latitude:    47.385383,
 				Longitude:   8.53804,
 				Altitude:    488.2,
@@ -1070,6 +1146,8 @@ func TestDecode(t *testing.T) {
 			autoPadding: false,
 			expected: Port151Payload{
 				BufferLevel: 0,
+				Moving:      false,
+				DutyCycle:   false,
 				Latitude:    47.385383,
 				Longitude:   8.53804,
 				Altitude:    488.2,
@@ -1099,6 +1177,8 @@ func TestDecode(t *testing.T) {
 			skipValidation: true,
 			expected: Port151Payload{
 				BufferLevel: 0,
+				Moving:      false,
+				DutyCycle:   false,
 				Latitude:    47.385383,
 				Longitude:   8.53804,
 				Altitude:    488.2,
@@ -1127,6 +1207,8 @@ func TestDecode(t *testing.T) {
 			autoPadding: false,
 			expected: Port151Payload{
 				BufferLevel: 0,
+				Moving:      false,
+				DutyCycle:   false,
 				Latitude:    47.385383,
 				Longitude:   8.53804,
 				Altitude:    488.2,
@@ -1143,6 +1225,8 @@ func TestDecode(t *testing.T) {
 			autoPadding: true,
 			expected: Port151Payload{
 				BufferLevel: 0,
+				Moving:      false,
+				DutyCycle:   false,
 				Latitude:    47.385383,
 				Longitude:   8.53804,
 				Altitude:    488.2,
@@ -1453,7 +1537,6 @@ func TestParseStatusByte(t *testing.T) {
 	tests := []struct {
 		input    byte
 		expected Status
-		err      error
 	}{
 		{
 			input: 0x80,
@@ -1463,7 +1546,6 @@ func TestParseStatusByte(t *testing.T) {
 				ConfigChangeSuccess: false,
 				Moving:              false,
 			},
-			err: nil,
 		},
 		{
 			input: 0xFF,
@@ -1473,7 +1555,6 @@ func TestParseStatusByte(t *testing.T) {
 				ConfigChangeSuccess: true,
 				Moving:              true,
 			},
-			err: nil,
 		},
 		{
 			input: 0x00,
@@ -1483,7 +1564,6 @@ func TestParseStatusByte(t *testing.T) {
 				ConfigChangeSuccess: false,
 				Moving:              false,
 			},
-			err: nil,
 		},
 		{
 			input: 0x4A,
@@ -1493,7 +1573,6 @@ func TestParseStatusByte(t *testing.T) {
 				ConfigChangeSuccess: false,
 				Moving:              false,
 			},
-			err: nil,
 		},
 		{
 			input: 0x8D,
@@ -1503,22 +1582,12 @@ func TestParseStatusByte(t *testing.T) {
 				ConfigChangeSuccess: true,
 				Moving:              true,
 			},
-			err: nil,
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestStatusByteInput%v", test.input), func(t *testing.T) {
-			got, err := parseStatusByte(test.input)
-			if err != nil && test.err == nil {
-				t.Fatalf("unexpected error: %v", err)
-			}
-			if err == nil && test.err != nil {
-				t.Fatalf("expected error: %v, got: %v", test.err, err)
-			}
-			if err != nil && test.err != nil && err.Error() != test.err.Error() {
-				t.Fatalf("expected error: %v, got: %v", test.err, err)
-			}
+			got := parseStatusByte(test.input)
 			if got != test.expected {
 				t.Errorf("expected: %v\ngot: %v", test.expected, got)
 			}
@@ -1538,6 +1607,8 @@ func TestFullDecode(t *testing.T) {
 		{
 			payload: "8002cdcd1300744f5e166018040b14341a",
 			expectedData: Port1Payload{
+				Moving:    false,
+				DutyCycle: true,
 				Latitude:  47.041811,
 				Longitude: 7.622494,
 				Altitude:  572.8,
@@ -1611,6 +1682,7 @@ func TestFullDecode(t *testing.T) {
 			payload: "00430102d43ffa00772d870ea367250ef60eda",
 			expectedData: Port110Payload{
 				BufferLevel: 67,
+				Moving:      true,
 				Latitude:    47.464442,
 				Longitude:   7.810439,
 				Altitude:    374.7,
@@ -1838,6 +1910,14 @@ func TestFeatures(t *testing.T) {
 				}
 				// call function to check if it panics
 				moving.IsMoving()
+			}
+			if decodedPayload.Is(decoder.FeatureDutyCycle) {
+				dutyCycle, ok := decodedPayload.Data.(decoder.UplinkFeatureDutyCycle)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureDutyCycle, got %T", decodedPayload)
+				}
+				// call function to check if it panics
+				dutyCycle.IsDutyCycle()
 			}
 			if decodedPayload.Is(decoder.FeatureFirmwareVersion) {
 				firmwareVersion, ok := decodedPayload.Data.(decoder.UplinkFeatureFirmwareVersion)

@@ -20,6 +20,7 @@ const (
 	FeatureButton          Feature = "button"
 	FeatureConfig          Feature = "config"
 	FeatureMoving          Feature = "moving"
+	FeatureDutyCycle       Feature = "dutyCycle"
 	FeatureFirmwareVersion Feature = "firmware_version"
 	FeatureHardwareVersion Feature = "hardware_version"
 )
@@ -106,6 +107,10 @@ type UplinkFeatureWiFi interface {
 type UplinkFeatureMoving interface {
 	// IsMoving returns true if the device is moving, otherwise it returns false.
 	IsMoving() bool
+}
+
+type UplinkFeatureDutyCycle interface {
+	IsDutyCycle() bool
 }
 
 type UplinkFeatureFirmwareVersion interface {
