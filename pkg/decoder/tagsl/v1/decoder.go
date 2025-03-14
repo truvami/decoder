@@ -188,6 +188,7 @@ func (t TagSLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
 				{Name: "Moving", Start: 0, Length: 1, Transform: moving},
+				{Name: "DutyCycle", Start: 0, Length: 1, Transform: dutyCycle},
 				{Name: "Latitude", Start: 1, Length: 4, Transform: func(v interface{}) interface{} {
 					return float64(v.(int)) / 1000000
 				}},
@@ -209,7 +210,7 @@ func (t TagSLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 			},
 			TargetType:      reflect.TypeOf(Port10Payload{}),
 			StatusByteIndex: common.ToIntPointer(0),
-			Features:        []decoder.Feature{decoder.FeatureGNSS, decoder.FeatureBattery, decoder.FeatureMoving},
+			Features:        []decoder.Feature{decoder.FeatureMoving, decoder.FeatureDutyCycle, decoder.FeatureGNSS, decoder.FeatureBattery},
 		}, nil
 	case 15:
 		return common.PayloadConfig{
@@ -488,15 +489,31 @@ func parseStatusByte(statusByte byte) (Status, error) {
 }
 
 func moving(v interface{}) interface{} {
-	b, ok := v.(byte)
+	i, ok := v.(int)
 	if !ok {
 		return false
 	}
 
+	b := byte(i)
 	status, err := parseStatusByte(b)
 	if err != nil {
 		return false
 	}
 
-	return &status.Moving
+	return status.Moving
+}
+
+func dutyCycle(v interface{}) interface{} {
+	i, ok := v.(int)
+	if !ok {
+		return false
+	}
+
+	b := byte(i)
+	status, err := parseStatusByte(b)
+	if err != nil {
+		return false
+	}
+
+	return status.DutyCycle
 }
