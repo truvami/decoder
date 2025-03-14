@@ -1926,6 +1926,14 @@ func TestFeatures(t *testing.T) {
 				// call function to check if it panics
 				moving.IsMoving()
 			}
+			if decodedPayload.Is(decoder.FeatureDutyCycle) {
+				dutyCycle, ok := decodedPayload.Data.(decoder.UplinkFeatureDutyCycle)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureDutyCycle, got %T", decodedPayload)
+				}
+				// call function to check if it panics
+				dutyCycle.IsDutyCycle()
+			}
 			if decodedPayload.Is(decoder.FeatureFirmwareVersion) {
 				firmwareVersion, ok := decodedPayload.Data.(decoder.UplinkFeatureFirmwareVersion)
 				if !ok {
