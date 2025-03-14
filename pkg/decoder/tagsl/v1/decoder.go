@@ -169,7 +169,7 @@ func (t TagSLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 			},
 			TargetType:      reflect.TypeOf(Port7Payload{}),
 			StatusByteIndex: common.ToIntPointer(4),
-			Features:        []decoder.Feature{decoder.FeatureWiFi, decoder.FeatureMoving},
+			Features:        []decoder.Feature{decoder.FeatureMoving, decoder.FeatureDutyCycle, decoder.FeatureWiFi},
 		}, nil
 	case 8:
 		return common.PayloadConfig{
@@ -301,7 +301,7 @@ func (t TagSLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 			},
 			TargetType:      reflect.TypeOf(Port51Payload{}),
 			StatusByteIndex: common.ToIntPointer(0),
-			Features:        []decoder.Feature{decoder.FeatureGNSS, decoder.FeatureBattery, decoder.FeatureWiFi, decoder.FeatureMoving},
+			Features:        []decoder.Feature{decoder.FeatureMoving, decoder.FeatureDutyCycle, decoder.FeatureGNSS, decoder.FeatureBattery, decoder.FeatureWiFi},
 		}, nil
 	case 105:
 		return common.PayloadConfig{
@@ -325,7 +325,7 @@ func (t TagSLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 			},
 			TargetType:      reflect.TypeOf(Port105Payload{}),
 			StatusByteIndex: common.ToIntPointer(6),
-			Features:        []decoder.Feature{decoder.FeatureWiFi, decoder.FeatureBuffered, decoder.FeatureMoving},
+			Features:        []decoder.Feature{decoder.FeatureMoving, decoder.FeatureDutyCycle, decoder.FeatureWiFi, decoder.FeatureBuffered},
 		}, nil
 	case 110:
 		return common.PayloadConfig{
@@ -386,7 +386,7 @@ func (t TagSLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 			},
 			TargetType:      reflect.TypeOf(Port150Payload{}),
 			StatusByteIndex: common.ToIntPointer(2),
-			Features:        []decoder.Feature{decoder.FeatureGNSS, decoder.FeatureBattery, decoder.FeatureWiFi, decoder.FeatureBuffered, decoder.FeatureMoving},
+			Features:        []decoder.Feature{decoder.FeatureMoving, decoder.FeatureDutyCycle, decoder.FeatureGNSS, decoder.FeatureBattery, decoder.FeatureWiFi, decoder.FeatureBuffered},
 		}, nil
 	case 151:
 		return common.PayloadConfig{
@@ -427,7 +427,7 @@ func (t TagSLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 			},
 			TargetType:      reflect.TypeOf(Port151Payload{}),
 			StatusByteIndex: common.ToIntPointer(2),
-			Features:        []decoder.Feature{decoder.FeatureGNSS, decoder.FeatureBattery, decoder.FeatureWiFi, decoder.FeatureBuffered, decoder.FeatureMoving},
+			Features:        []decoder.Feature{decoder.FeatureMoving, decoder.FeatureDutyCycle, decoder.FeatureGNSS, decoder.FeatureBattery, decoder.FeatureWiFi, decoder.FeatureBuffered},
 		}, nil
 	}
 
