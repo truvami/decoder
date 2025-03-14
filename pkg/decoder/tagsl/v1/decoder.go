@@ -45,6 +45,7 @@ func (t TagSLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
 				{Name: "Moving", Start: 0, Length: 1, Transform: moving},
+				{Name: "DutyCycle", Start: 0, Length: 1, Transform: dutyCycle},
 				{Name: "Latitude", Start: 1, Length: 4, Transform: func(v interface{}) interface{} {
 					return float64(v.(int)) / 1000000
 				}},
@@ -63,7 +64,7 @@ func (t TagSLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 			},
 			TargetType:      reflect.TypeOf(Port1Payload{}),
 			StatusByteIndex: common.ToIntPointer(0),
-			Features:        []decoder.Feature{decoder.FeatureGNSS, decoder.FeatureMoving},
+			Features:        []decoder.Feature{decoder.FeatureMoving, decoder.FeatureDutyCycle, decoder.FeatureGNSS},
 		}, nil
 	case 2:
 		return common.PayloadConfig{
