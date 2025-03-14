@@ -144,13 +144,6 @@ func (p Port151Payload) GetAccessPoints() []decoder.AccessPoint {
 		})
 	}
 
-	if p.Mac7 != "" {
-		accessPoints = append(accessPoints, decoder.AccessPoint{
-			MAC:  p.Mac7,
-			RSSI: p.Rssi7,
-		})
-	}
-
 	return accessPoints
 }
 

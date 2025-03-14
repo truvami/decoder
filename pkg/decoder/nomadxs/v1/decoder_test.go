@@ -367,6 +367,7 @@ func TestFeatures(t *testing.T) {
 				gnss.GetPDOP()
 				gnss.GetSatellites()
 				gnss.GetTTF()
+				gnss.GetAccuracy()
 			}
 			if decodedPayload.Is(decoder.FeatureBuffered) {
 				buffered, ok := decodedPayload.Data.(decoder.UplinkFeatureBuffered)

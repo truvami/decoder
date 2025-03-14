@@ -21,8 +21,8 @@ const (
 	FeatureConfig          Feature = "config"
 	FeatureMoving          Feature = "moving"
 	FeatureDutyCycle       Feature = "dutyCycle"
-	FeatureFirmwareVersion Feature = "firmware_version"
-	FeatureHardwareVersion Feature = "hardware_version"
+	FeatureFirmwareVersion Feature = "firmwareVersion"
+	FeatureHardwareVersion Feature = "hardwareVersion"
 )
 
 type DecodedUplink struct {

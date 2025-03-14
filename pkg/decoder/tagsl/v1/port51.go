@@ -127,27 +127,6 @@ func (p Port51Payload) GetAccessPoints() []decoder.AccessPoint {
 		})
 	}
 
-	if p.Mac5 != "" {
-		accessPoints = append(accessPoints, decoder.AccessPoint{
-			MAC:  p.Mac5,
-			RSSI: p.Rssi5,
-		})
-	}
-
-	if p.Mac6 != "" {
-		accessPoints = append(accessPoints, decoder.AccessPoint{
-			MAC:  p.Mac6,
-			RSSI: p.Rssi6,
-		})
-	}
-
-	if p.Mac7 != "" {
-		accessPoints = append(accessPoints, decoder.AccessPoint{
-			MAC:  p.Mac7,
-			RSSI: p.Rssi7,
-		})
-	}
-
 	return accessPoints
 }
 

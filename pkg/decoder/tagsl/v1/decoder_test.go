@@ -1533,6 +1533,14 @@ func TestInvalidPort(t *testing.T) {
 	}
 }
 
+func TestInvalidHexString(t *testing.T) {
+	decoder := NewTagSLv1Decoder()
+	_, err := decoder.Decode("xx", 6, "")
+	if err == nil || err.Error() != "encoding/hex: invalid byte: U+0078 'x'" {
+		t.Fatal("expected invalid hex byte")
+	}
+}
+
 func TestParseStatusByte(t *testing.T) {
 	tests := []struct {
 		input    byte
@@ -1785,7 +1793,7 @@ func TestFeatures(t *testing.T) {
 			skipValidation: true,
 		},
 		{
-			payload: "822f0101f052fab920feafd0e4158b38b9afe05994cb2f5cb2",
+			payload: "822f0101f052fab920feafd0e4158b38b9afe05994cb2f5cb2a1b2c3d4e5f6aea1b2c3d4e5f6aea1b2c3d4e5f6ae",
 			port:    3,
 		},
 		{
@@ -1817,7 +1825,7 @@ func TestFeatures(t *testing.T) {
 			port:    15,
 		},
 		{
-			payload: "0002d30c9300824c87117966c45dcd0f8118e0286d8aabfca9f0b0140c96bbc8726c9a74b58da8e0286d8a9478bf",
+			payload: "0002d30c9300824c87117966c45dcd0f8118e0286d8aabfca9f0b0140c96bbc8726c9a74b58da8e0286d8a9478bfa1b2c3d4e5f6aea1b2c3d4e5f6ae",
 			port:    50,
 		},
 		{
@@ -1825,7 +1833,7 @@ func TestFeatures(t *testing.T) {
 			port:    51,
 		},
 		{
-			payload: "000166c4a5ba00e0286d8aabfcb1e0286d8a9478c2ec6c9a74b58fad726c9a74b58dadf0b0140c96bbd0",
+			payload: "000166c4a5ba00e0286d8aabfcb1e0286d8a9478c2ec6c9a74b58fad726c9a74b58dadf0b0140c96bbd0a1b2c3d4e5f6ae",
 			port:    105,
 		},
 		{
@@ -1833,11 +1841,11 @@ func TestFeatures(t *testing.T) {
 			port:    110,
 		},
 		{
-			payload: "00020002d30c9300824c87117966c45dcd0f8118e0286d8aabfca9f0b0140c96bbc8726c9a74b58da8e0286d8a9478bf",
+			payload: "00020002d30c9300824c87117966c45dcd0f8118e0286d8aabfca9f0b0140c96bbc8726c9a74b58da8e0286d8a9478bfa1b2c3d4e5f6aea1b2c3d4e5f6ae",
 			port:    150,
 		},
 		{
-			payload: "00000002D30B27008247B81312671BD164133718030BE0286D8A9478CBF0B0140C96BBCE",
+			payload: "00000002d30b27008247b81312671bd164133718030be0286d8a9478cbf0b0140c96bbcea1b2c3d4e5f6aea1b2c3d4e5f6aea1b2c3d4e5f6aea1b2c3d4e5f6ae",
 			port:    151,
 		},
 	}
@@ -1876,6 +1884,7 @@ func TestFeatures(t *testing.T) {
 				gnss.GetPDOP()
 				gnss.GetSatellites()
 				gnss.GetTTF()
+				gnss.GetAccuracy()
 			}
 			if decodedPayload.Is(decoder.FeatureBuffered) {
 				buffered, ok := decodedPayload.Data.(decoder.UplinkFeatureBuffered)
