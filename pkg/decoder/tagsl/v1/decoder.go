@@ -153,6 +153,7 @@ func (t TagSLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 			Fields: []common.FieldConfig{
 				{Name: "Timestamp", Start: 0, Length: 4},
 				{Name: "Moving", Start: 4, Length: 1, Transform: moving},
+				{Name: "DutyCycle", Start: 4, Length: 1, Transform: dutyCycle},
 				{Name: "Mac1", Start: 5, Length: 6, Optional: true, Hex: true},
 				{Name: "Rssi1", Start: 11, Length: 1, Optional: true},
 				{Name: "Mac2", Start: 12, Length: 6, Optional: true, Hex: true},
@@ -230,6 +231,7 @@ func (t TagSLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
 				{Name: "Moving", Start: 0, Length: 1, Transform: moving},
+				{Name: "DutyCycle", Start: 0, Length: 1, Transform: dutyCycle},
 				{Name: "Latitude", Start: 1, Length: 4, Transform: func(v interface{}) interface{} {
 					return float64(v.(int)) / 1000000
 				}},
@@ -259,12 +261,13 @@ func (t TagSLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 			},
 			TargetType:      reflect.TypeOf(Port50Payload{}),
 			StatusByteIndex: common.ToIntPointer(0),
-			Features:        []decoder.Feature{decoder.FeatureGNSS, decoder.FeatureBattery, decoder.FeatureWiFi, decoder.FeatureMoving},
+			Features:        []decoder.Feature{decoder.FeatureMoving, decoder.FeatureDutyCycle, decoder.FeatureGNSS, decoder.FeatureBattery, decoder.FeatureWiFi},
 		}, nil
 	case 51:
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
 				{Name: "Moving", Start: 0, Length: 1, Transform: moving},
+				{Name: "DutyCycle", Start: 0, Length: 1, Transform: dutyCycle},
 				{Name: "Latitude", Start: 1, Length: 4, Transform: func(v interface{}) interface{} {
 					return float64(v.(int)) / 1000000
 				}},
@@ -306,6 +309,7 @@ func (t TagSLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 				{Name: "BufferLevel", Start: 0, Length: 2},
 				{Name: "Timestamp", Start: 2, Length: 4},
 				{Name: "Moving", Start: 7, Length: 1, Transform: moving},
+				{Name: "DutyCycle", Start: 7, Length: 1, Transform: dutyCycle},
 				{Name: "Mac1", Start: 7, Length: 6, Optional: true, Hex: true},
 				{Name: "Rssi1", Start: 13, Length: 1, Optional: true},
 				{Name: "Mac2", Start: 14, Length: 6, Optional: true, Hex: true},
@@ -328,6 +332,7 @@ func (t TagSLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 			Fields: []common.FieldConfig{
 				{Name: "BufferLevel", Start: 0, Length: 2},
 				{Name: "Moving", Start: 2, Length: 1, Transform: moving},
+				{Name: "DutyCycle", Start: 2, Length: 1, Transform: dutyCycle},
 				{Name: "Latitude", Start: 3, Length: 4, Transform: func(v interface{}) interface{} {
 					return float64(v.(int)) / 1000000
 				}},
@@ -344,13 +349,14 @@ func (t TagSLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 			},
 			TargetType:      reflect.TypeOf(Port110Payload{}),
 			StatusByteIndex: common.ToIntPointer(2),
-			Features:        []decoder.Feature{decoder.FeatureGNSS, decoder.FeatureBattery, decoder.FeatureBuffered, decoder.FeatureMoving},
+			Features:        []decoder.Feature{decoder.FeatureMoving, decoder.FeatureDutyCycle, decoder.FeatureGNSS, decoder.FeatureBattery, decoder.FeatureBuffered},
 		}, nil
 	case 150:
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
 				{Name: "BufferLevel", Start: 0, Length: 2},
 				{Name: "Moving", Start: 2, Length: 1, Transform: moving},
+				{Name: "DutyCycle", Start: 2, Length: 1, Transform: dutyCycle},
 				{Name: "Latitude", Start: 3, Length: 4, Transform: func(v interface{}) interface{} {
 					return float64(v.(int)) / 1000000
 				}},
@@ -387,6 +393,7 @@ func (t TagSLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 			Fields: []common.FieldConfig{
 				{Name: "BufferLevel", Start: 0, Length: 2},
 				{Name: "Moving", Start: 2, Length: 1, Transform: moving},
+				{Name: "DutyCycle", Start: 2, Length: 1, Transform: dutyCycle},
 				{Name: "Latitude", Start: 3, Length: 4, Transform: func(v interface{}) interface{} {
 					return float64(v.(int)) / 1000000
 				}},

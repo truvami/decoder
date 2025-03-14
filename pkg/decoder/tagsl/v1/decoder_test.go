@@ -377,6 +377,8 @@ func TestDecode(t *testing.T) {
 			autoPadding: false,
 			expected: Port7Payload{
 				Timestamp: time.Date(2024, 9, 19, 11, 2, 19, 0, time.UTC),
+				Moving:    false,
+				DutyCycle: false,
 				Mac1:      "e0286d8aabfc",
 				Rssi1:     -69,
 				Mac2:      "ec6c9a74b58f",
@@ -398,6 +400,8 @@ func TestDecode(t *testing.T) {
 			skipValidation: true,
 			expected: Port7Payload{
 				Timestamp: time.Date(2024, 9, 19, 11, 2, 19, 0, time.UTC),
+				Moving:    false,
+				DutyCycle: false,
 				Mac1:      "e0286d8aabfc",
 				Rssi1:     -69,
 				Mac2:      "ec6c9a74b58f",
@@ -418,6 +422,8 @@ func TestDecode(t *testing.T) {
 			autoPadding: false,
 			expected: Port7Payload{
 				Timestamp: time.Date(2024, 9, 19, 11, 2, 19, 0, time.UTC),
+				Moving:    false,
+				DutyCycle: false,
 			},
 		},
 		{
@@ -426,6 +432,8 @@ func TestDecode(t *testing.T) {
 			autoPadding: true,
 			expected: Port7Payload{
 				Timestamp: time.Date(2024, 9, 19, 11, 2, 19, 0, time.UTC),
+				Moving:    false,
+				DutyCycle: false,
 			},
 		},
 		{
@@ -586,6 +594,8 @@ func TestDecode(t *testing.T) {
 			port:        50,
 			autoPadding: false,
 			expected: Port50Payload{
+				Moving:    false,
+				DutyCycle: false,
 				Latitude:  47.385747,
 				Longitude: 8.539271,
 				Altitude:  447.3,
@@ -608,6 +618,7 @@ func TestDecode(t *testing.T) {
 			autoPadding: false,
 			expected: Port50Payload{
 				Moving:    true,
+				DutyCycle: false,
 				Latitude:  47.385386,
 				Longitude: 8.538524,
 				Altitude:  433.4,
@@ -628,6 +639,7 @@ func TestDecode(t *testing.T) {
 			autoPadding: false,
 			expected: Port50Payload{
 				Moving:    true,
+				DutyCycle: false,
 				Latitude:  47.385386,
 				Longitude: 8.538524,
 				Altitude:  433.4,
@@ -654,6 +666,7 @@ func TestDecode(t *testing.T) {
 			skipValidation: true,
 			expected: Port50Payload{
 				Moving:    true,
+				DutyCycle: false,
 				Latitude:  47.385386,
 				Longitude: 8.538524,
 				Altitude:  433.4,
@@ -680,6 +693,7 @@ func TestDecode(t *testing.T) {
 			autoPadding: false,
 			expected: Port50Payload{
 				Moving:    true,
+				DutyCycle: false,
 				Latitude:  47.385386,
 				Longitude: 8.538524,
 				Altitude:  433.4,
@@ -694,6 +708,7 @@ func TestDecode(t *testing.T) {
 			autoPadding: true,
 			expected: Port50Payload{
 				Moving:    true,
+				DutyCycle: false,
 				Latitude:  47.385386,
 				Longitude: 8.538524,
 				Altitude:  433.4,
@@ -707,6 +722,8 @@ func TestDecode(t *testing.T) {
 			port:        51,
 			autoPadding: false,
 			expected: Port51Payload{
+				Moving:     false,
+				DutyCycle:  false,
 				Latitude:   47.385504,
 				Longitude:  8.53883,
 				Altitude:   438.6,
@@ -730,6 +747,8 @@ func TestDecode(t *testing.T) {
 			port:        51,
 			autoPadding: false,
 			expected: Port51Payload{
+				Moving:     false,
+				DutyCycle:  false,
 				Latitude:   47.385504,
 				Longitude:  8.53883,
 				Altitude:   438.6,
@@ -745,6 +764,8 @@ func TestDecode(t *testing.T) {
 			port:        51,
 			autoPadding: true,
 			expected: Port51Payload{
+				Moving:     false,
+				DutyCycle:  false,
 				Latitude:   47.385504,
 				Longitude:  8.53883,
 				Altitude:   438.6,
@@ -761,6 +782,8 @@ func TestDecode(t *testing.T) {
 			autoPadding: false,
 			expected: Port105Payload{
 				BufferLevel: 1,
+				Moving:      false,
+				DutyCycle:   true,
 				Timestamp:   time.Date(2024, 8, 20, 14, 18, 34, 0, time.UTC),
 				Mac1:        "e0286d8aabfc",
 				Rssi1:       -79,
@@ -780,6 +803,8 @@ func TestDecode(t *testing.T) {
 			autoPadding: false,
 			expected: Port105Payload{
 				BufferLevel: 257,
+				Moving:      false,
+				DutyCycle:   true,
 				Timestamp:   time.Date(2024, 8, 20, 14, 18, 34, 0, time.UTC),
 				Mac1:        "e0286d8aabfc",
 				Rssi1:       -79,
@@ -799,6 +824,8 @@ func TestDecode(t *testing.T) {
 			autoPadding: false,
 			expected: Port105Payload{
 				BufferLevel: 19,
+				Moving:      false,
+				DutyCycle:   true,
 				Timestamp:   time.Date(2024, 9, 21, 2, 28, 29, 0, time.UTC),
 				Mac1:        "c4eb438ddde2",
 				Rssi1:       -91,
@@ -821,6 +848,8 @@ func TestDecode(t *testing.T) {
 			skipValidation: true,
 			expected: Port105Payload{
 				BufferLevel: 19,
+				Moving:      false,
+				DutyCycle:   true,
 				Timestamp:   time.Date(2024, 9, 21, 2, 28, 29, 0, time.UTC),
 				Mac1:        "c4eb438ddde2",
 				Rssi1:       -91,
@@ -842,6 +871,8 @@ func TestDecode(t *testing.T) {
 			autoPadding: false,
 			expected: Port105Payload{
 				BufferLevel: 19,
+				Moving:      false,
+				DutyCycle:   true,
 				Timestamp:   time.Date(2024, 9, 21, 2, 28, 29, 0, time.UTC),
 			},
 		},
@@ -851,6 +882,8 @@ func TestDecode(t *testing.T) {
 			autoPadding: true,
 			expected: Port105Payload{
 				BufferLevel: 19,
+				Moving:      false,
+				DutyCycle:   true,
 				Timestamp:   time.Date(2024, 9, 21, 2, 28, 29, 0, time.UTC),
 			},
 		},
@@ -860,6 +893,8 @@ func TestDecode(t *testing.T) {
 			autoPadding: false,
 			expected: Port110Payload{
 				BufferLevel: 2,
+				Moving:      false,
+				DutyCycle:   false,
 				Latitude:    47.385006,
 				Longitude:   8.538053,
 				Altitude:    440.9,
@@ -873,6 +908,8 @@ func TestDecode(t *testing.T) {
 			autoPadding: false,
 			expected: Port110Payload{
 				BufferLevel: 258,
+				Moving:      false,
+				DutyCycle:   false,
 				Latitude:    47.385006,
 				Longitude:   8.538053,
 				Altitude:    440.9,
@@ -887,6 +924,8 @@ func TestDecode(t *testing.T) {
 			skipValidation: true,
 			expected: Port110Payload{
 				BufferLevel: 258,
+				Moving:      false,
+				DutyCycle:   false,
 				Latitude:    47.385006,
 				Longitude:   8.538053,
 				Altitude:    440.9,
@@ -900,6 +939,8 @@ func TestDecode(t *testing.T) {
 			autoPadding: false,
 			expected: Port110Payload{
 				BufferLevel: 4,
+				Moving:      false,
+				DutyCycle:   false,
 				Latitude:    47.385484,
 				Longitude:   8.538677,
 				Altitude:    438.6,
@@ -913,6 +954,8 @@ func TestDecode(t *testing.T) {
 			autoPadding: true,
 			expected: Port110Payload{
 				BufferLevel: 4,
+				Moving:      false,
+				DutyCycle:   false,
 				Latitude:    47.385484,
 				Longitude:   8.538677,
 				Altitude:    438.6,
@@ -1022,6 +1065,7 @@ func TestDecode(t *testing.T) {
 			expected: Port150Payload{
 				BufferLevel: 0,
 				Moving:      true,
+				DutyCycle:   false,
 				Latitude:    47.38524,
 				Longitude:   8.538294,
 				Altitude:    452.4,
@@ -1049,6 +1093,7 @@ func TestDecode(t *testing.T) {
 			expected: Port150Payload{
 				BufferLevel: 0,
 				Moving:      true,
+				DutyCycle:   false,
 				Latitude:    47.38524,
 				Longitude:   8.538294,
 				Altitude:    452.4,
@@ -1064,6 +1109,7 @@ func TestDecode(t *testing.T) {
 			expected: Port150Payload{
 				BufferLevel: 0,
 				Moving:      true,
+				DutyCycle:   false,
 				Latitude:    47.38524,
 				Longitude:   8.538294,
 				Altitude:    452.4,
@@ -1078,6 +1124,8 @@ func TestDecode(t *testing.T) {
 			autoPadding: false,
 			expected: Port151Payload{
 				BufferLevel: 0,
+				Moving:      false,
+				DutyCycle:   false,
 				Latitude:    47.385383,
 				Longitude:   8.53804,
 				Altitude:    488.2,
@@ -1098,6 +1146,8 @@ func TestDecode(t *testing.T) {
 			autoPadding: false,
 			expected: Port151Payload{
 				BufferLevel: 0,
+				Moving:      false,
+				DutyCycle:   false,
 				Latitude:    47.385383,
 				Longitude:   8.53804,
 				Altitude:    488.2,
@@ -1127,6 +1177,8 @@ func TestDecode(t *testing.T) {
 			skipValidation: true,
 			expected: Port151Payload{
 				BufferLevel: 0,
+				Moving:      false,
+				DutyCycle:   false,
 				Latitude:    47.385383,
 				Longitude:   8.53804,
 				Altitude:    488.2,
@@ -1155,6 +1207,8 @@ func TestDecode(t *testing.T) {
 			autoPadding: false,
 			expected: Port151Payload{
 				BufferLevel: 0,
+				Moving:      false,
+				DutyCycle:   false,
 				Latitude:    47.385383,
 				Longitude:   8.53804,
 				Altitude:    488.2,
@@ -1171,6 +1225,8 @@ func TestDecode(t *testing.T) {
 			autoPadding: true,
 			expected: Port151Payload{
 				BufferLevel: 0,
+				Moving:      false,
+				DutyCycle:   false,
 				Latitude:    47.385383,
 				Longitude:   8.53804,
 				Altitude:    488.2,

@@ -29,6 +29,7 @@ import (
 // Timestamp for the Wi-Fi scanning is TSGNSS – TTF + 10 seconds.
 type Port151Payload struct {
 	Moving      bool      `json:"moving"`
+	DutyCycle   bool      `json:"dutyCycle"`
 	BufferLevel uint16    `json:"bufferLevel"`
 	Latitude    float64   `json:"latitude" validate:"gte=-90,lte=90"`
 	Longitude   float64   `json:"longitude" validate:"gte=-180,lte=180"`
@@ -60,6 +61,7 @@ var _ decoder.UpLinkFeatureBattery = &Port151Payload{}
 var _ decoder.UplinkFeatureWiFi = &Port151Payload{}
 var _ decoder.UplinkFeatureBuffered = &Port151Payload{}
 var _ decoder.UplinkFeatureMoving = &Port151Payload{}
+var _ decoder.UplinkFeatureDutyCycle = &Port151Payload{}
 
 func (p Port151Payload) GetTimestamp() *time.Time {
 	return &p.Timestamp
@@ -158,4 +160,8 @@ func (p Port151Payload) GetBufferLevel() uint16 {
 
 func (p Port151Payload) IsMoving() bool {
 	return p.Moving
+}
+
+func (p Port151Payload) IsDutyCycle() bool {
+	return p.DutyCycle
 }
