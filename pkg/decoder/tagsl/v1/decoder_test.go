@@ -23,6 +23,8 @@ func TestDecode(t *testing.T) {
 			port:        1,
 			autoPadding: false,
 			expected: Port1Payload{
+				Moving:    false,
+				DutyCycle: true,
 				Latitude:  47.041811,
 				Longitude: 7.622494,
 				Altitude:  572.8,
@@ -39,6 +41,8 @@ func TestDecode(t *testing.T) {
 			port:        1,
 			autoPadding: true,
 			expected: Port1Payload{
+				Moving:    false,
+				DutyCycle: true,
 				Latitude:  47.041811,
 				Longitude: 7.622494,
 				Altitude:  572.8,
@@ -56,6 +60,8 @@ func TestDecode(t *testing.T) {
 			autoPadding:    false,
 			skipValidation: true,
 			expected: Port1Payload{
+				Moving:    false,
+				DutyCycle: true,
 				Latitude:  47.041811,
 				Longitude: 7.622494,
 				Altitude:  572.8,
@@ -589,6 +595,7 @@ func TestDecode(t *testing.T) {
 			port:        50,
 			autoPadding: false,
 			expected: Port50Payload{
+				Moving:    true,
 				Latitude:  47.385386,
 				Longitude: 8.538524,
 				Altitude:  433.4,
@@ -608,6 +615,7 @@ func TestDecode(t *testing.T) {
 			port:        50,
 			autoPadding: false,
 			expected: Port50Payload{
+				Moving:    true,
 				Latitude:  47.385386,
 				Longitude: 8.538524,
 				Altitude:  433.4,
@@ -633,6 +641,7 @@ func TestDecode(t *testing.T) {
 			autoPadding:    false,
 			skipValidation: true,
 			expected: Port50Payload{
+				Moving:    true,
 				Latitude:  47.385386,
 				Longitude: 8.538524,
 				Altitude:  433.4,
@@ -658,6 +667,7 @@ func TestDecode(t *testing.T) {
 			port:        50,
 			autoPadding: false,
 			expected: Port50Payload{
+				Moving:    true,
 				Latitude:  47.385386,
 				Longitude: 8.538524,
 				Altitude:  433.4,
@@ -671,6 +681,7 @@ func TestDecode(t *testing.T) {
 			port:        50,
 			autoPadding: true,
 			expected: Port50Payload{
+				Moving:    true,
 				Latitude:  47.385386,
 				Longitude: 8.538524,
 				Altitude:  433.4,
@@ -947,6 +958,7 @@ func TestDecode(t *testing.T) {
 			autoPadding: false,
 			expected: Port150Payload{
 				BufferLevel: 0,
+				Moving:      true,
 				Latitude:    47.38524,
 				Longitude:   8.538294,
 				Altitude:    452.4,
@@ -969,6 +981,7 @@ func TestDecode(t *testing.T) {
 			autoPadding: false,
 			expected: Port150Payload{
 				BufferLevel: 0,
+				Moving:      true,
 				Latitude:    47.38524,
 				Longitude:   8.538294,
 				Altitude:    452.4,
@@ -996,6 +1009,7 @@ func TestDecode(t *testing.T) {
 			skipValidation: true,
 			expected: Port150Payload{
 				BufferLevel: 0,
+				Moving:      true,
 				Latitude:    47.38524,
 				Longitude:   8.538294,
 				Altitude:    452.4,
@@ -1022,6 +1036,7 @@ func TestDecode(t *testing.T) {
 			autoPadding: false,
 			expected: Port150Payload{
 				BufferLevel: 0,
+				Moving:      true,
 				Latitude:    47.38524,
 				Longitude:   8.538294,
 				Altitude:    452.4,
@@ -1036,6 +1051,7 @@ func TestDecode(t *testing.T) {
 			autoPadding: true,
 			expected: Port150Payload{
 				BufferLevel: 0,
+				Moving:      true,
 				Latitude:    47.38524,
 				Longitude:   8.538294,
 				Altitude:    452.4,
@@ -1538,6 +1554,8 @@ func TestFullDecode(t *testing.T) {
 		{
 			payload: "8002cdcd1300744f5e166018040b14341a",
 			expectedData: Port1Payload{
+				Moving:    false,
+				DutyCycle: true,
 				Latitude:  47.041811,
 				Longitude: 7.622494,
 				Altitude:  572.8,
@@ -1611,6 +1629,7 @@ func TestFullDecode(t *testing.T) {
 			payload: "00430102d43ffa00772d870ea367250ef60eda",
 			expectedData: Port110Payload{
 				BufferLevel: 67,
+				Moving:      true,
 				Latitude:    47.464442,
 				Longitude:   7.810439,
 				Altitude:    374.7,
