@@ -120,6 +120,7 @@ func (t TagSLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
 				{Name: "Moving", Start: 0, Length: 1, Transform: moving},
+				{Name: "DutyCycle", Start: 0, Length: 1, Transform: dutyCycle},
 				{Name: "Mac1", Start: 1, Length: 6, Optional: true, Hex: true},
 				{Name: "Rssi1", Start: 7, Length: 1, Optional: true},
 				{Name: "Mac2", Start: 8, Length: 6, Optional: true, Hex: true},
@@ -137,7 +138,7 @@ func (t TagSLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 			},
 			TargetType:      reflect.TypeOf(Port5Payload{}),
 			StatusByteIndex: common.ToIntPointer(0),
-			Features:        []decoder.Feature{decoder.FeatureWiFi, decoder.FeatureMoving},
+			Features:        []decoder.Feature{decoder.FeatureMoving, decoder.FeatureDutyCycle, decoder.FeatureWiFi},
 		}, nil
 	case 6:
 		return common.PayloadConfig{
