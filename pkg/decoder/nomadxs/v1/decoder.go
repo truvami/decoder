@@ -3,6 +3,7 @@ package nomadxs
 import (
 	"fmt"
 	"reflect"
+	"time"
 
 	"github.com/truvami/decoder/pkg/common"
 	"github.com/truvami/decoder/pkg/decoder"
@@ -59,7 +60,9 @@ func (t NomadXSv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 				{Name: "Hour", Start: 14, Length: 1},
 				{Name: "Minute", Start: 15, Length: 1},
 				{Name: "Second", Start: 16, Length: 1},
-				{Name: "TimeToFix", Start: 17, Length: 1},
+				{Name: "TimeToFix", Start: 17, Length: 1, Transform: func(v interface{}) interface{} {
+					return time.Duration(v.(int)) * time.Second
+				}},
 				{Name: "AmbientLight", Start: 18, Length: 2},
 				{Name: "AccelerometerXAxis", Start: 20, Length: 2},
 				{Name: "AccelerometerYAxis", Start: 22, Length: 2},

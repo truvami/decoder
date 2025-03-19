@@ -3,6 +3,7 @@ package nomadxs
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	helpers "github.com/truvami/decoder/pkg/common"
 	"github.com/truvami/decoder/pkg/decoder"
@@ -30,7 +31,7 @@ func TestDecode(t *testing.T) {
 				Latitude:           46.407935,
 				Longitude:          6.21577,
 				Altitude:           478.8,
-				TimeToFix:          36,
+				TimeToFix:          time.Duration(36) * time.Second,
 				AmbientLight:       1,
 				AccelerometerXAxis: -70,
 				AccelerometerYAxis: -62,
@@ -54,7 +55,7 @@ func TestDecode(t *testing.T) {
 				Latitude:           46.407935,
 				Longitude:          6.21577,
 				Altitude:           478.8,
-				TimeToFix:          36,
+				TimeToFix:          time.Duration(36) * time.Second,
 				AmbientLight:       1,
 				AccelerometerXAxis: -70,
 				AccelerometerYAxis: -62,
@@ -84,7 +85,7 @@ func TestDecode(t *testing.T) {
 				Latitude:           46.407935,
 				Longitude:          6.21577,
 				Altitude:           478.8,
-				TimeToFix:          36,
+				TimeToFix:          time.Duration(36) * time.Second,
 				AmbientLight:       1,
 				AccelerometerXAxis: -70,
 				AccelerometerYAxis: -62,
@@ -106,7 +107,7 @@ func TestDecode(t *testing.T) {
 				Latitude:           46.407935,
 				Longitude:          6.21577,
 				Altitude:           478.8,
-				TimeToFix:          36,
+				TimeToFix:          time.Duration(36) * time.Second,
 				AmbientLight:       1,
 				AccelerometerXAxis: -70,
 				AccelerometerYAxis: -62,

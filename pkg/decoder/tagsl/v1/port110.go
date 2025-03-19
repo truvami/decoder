@@ -56,7 +56,7 @@ func (p Port110Payload) GetAccuracy() *float64 {
 	return nil
 }
 
-func (p Port110Payload) GetTTF() *float64 {
+func (p Port110Payload) GetTTF() *time.Duration {
 	return nil
 }
 

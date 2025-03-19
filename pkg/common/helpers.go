@@ -21,41 +21,40 @@ func HexStringToBytes(hexString string) ([]byte, error) {
 	return bytes, nil
 }
 
-func convertFieldToType(value interface{}, fieldType reflect.Kind) interface{} {
+func convertFieldToType(value interface{}, fieldType reflect.Type) interface{} {
 	switch fieldType {
-	case reflect.Int:
+	case reflect.TypeOf(int(0)):
 		return int(value.(int))
-	case reflect.Int8:
+	case reflect.TypeOf(int8(0)):
 		return int8(value.(int))
-	case reflect.Int16:
+	case reflect.TypeOf(int16(0)):
 		return int16(value.(int))
-	case reflect.Int32:
+	case reflect.TypeOf(int32(0)):
 		return int32(value.(int))
-	case reflect.Int64:
+	case reflect.TypeOf(int64(0)):
 		return int64(value.(int))
-	case reflect.Uint:
+	case reflect.TypeOf(uint(0)):
 		return uint(value.(int))
-	case reflect.Uint8:
+	case reflect.TypeOf(uint8(0)):
 		return uint8(value.(int))
-	case reflect.Uint16:
+	case reflect.TypeOf(uint16(0)):
 		return uint16(value.(int))
-	case reflect.Uint32:
+	case reflect.TypeOf(uint32(0)):
 		return uint32(value.(int))
-	case reflect.Uint64:
+	case reflect.TypeOf(uint64(0)):
 		return uint64(value.(int))
-	case reflect.Float32:
+	case reflect.TypeOf(float32(0)):
 		return float32(value.(int))
-	case reflect.Float64:
+	case reflect.TypeOf(float64(0)):
 		return float64(value.(int))
-	case reflect.String:
+	case reflect.TypeOf(string("")):
 		return fmt.Sprintf("%v", value)
-	case reflect.Bool:
+	case reflect.TypeOf(bool(false)):
 		return value.(int)&0x01 == 1
-	case reflect.Struct:
-		if fieldType == reflect.TypeOf(time.Time{}).Kind() {
-			return ParseTimestamp(value.(int))
-		}
-		fallthrough
+	case reflect.TypeOf(time.Duration(0)):
+		return time.Duration(value.(int))
+	case reflect.TypeOf(time.Time{}):
+		return ParseTimestamp(value.(int))
 	default:
 		panic(fmt.Sprintf("unsupported field type: %v", fieldType))
 	}
@@ -141,7 +140,7 @@ func Parse(payloadHex string, config *PayloadConfig) (interface{}, error) {
 				continue
 			}
 
-			fieldType := convertFieldToType(value, fieldValue.Type().Kind())
+			fieldType := convertFieldToType(value, fieldValue.Type())
 			fieldValue.Set(reflect.ValueOf(fieldType))
 		}
 

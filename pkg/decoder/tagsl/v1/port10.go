@@ -21,16 +21,16 @@ import (
 // +------+------+-------------------------------------------+------------------------+
 
 type Port10Payload struct {
-	Moving     bool      `json:"moving"`
-	DutyCycle  bool      `json:"dutyCycle"`
-	Latitude   float64   `json:"latitude" validate:"gte=-90,lte=90"`
-	Longitude  float64   `json:"longitude" validate:"gte=-180,lte=180"`
-	Altitude   float64   `json:"altitude"`
-	Timestamp  time.Time `json:"timestamp"`
-	Battery    float64   `json:"battery" validate:"gte=1,lte=5"`
-	TTF        float64   `json:"ttf"`
-	PDOP       float64   `json:"pdop"`
-	Satellites uint8     `json:"satellites" validate:"gte=3,lte=27"`
+	Moving     bool          `json:"moving"`
+	DutyCycle  bool          `json:"dutyCycle"`
+	Latitude   float64       `json:"latitude" validate:"gte=-90,lte=90"`
+	Longitude  float64       `json:"longitude" validate:"gte=-180,lte=180"`
+	Altitude   float64       `json:"altitude"`
+	Timestamp  time.Time     `json:"timestamp"`
+	Battery    float64       `json:"battery" validate:"gte=1,lte=5"`
+	TTF        time.Duration `json:"ttf"`
+	PDOP       float64       `json:"pdop"`
+	Satellites uint8         `json:"satellites" validate:"gte=3,lte=27"`
 }
 
 var _ decoder.UplinkFeatureBase = &Port10Payload{}
@@ -59,7 +59,7 @@ func (p Port10Payload) GetAccuracy() *float64 {
 	return nil
 }
 
-func (p Port10Payload) GetTTF() *float64 {
+func (p Port10Payload) GetTTF() *time.Duration {
 	return &p.TTF
 }
 

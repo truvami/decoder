@@ -3,6 +3,7 @@ package nomadxl
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/truvami/decoder/pkg/decoder"
 )
@@ -24,7 +25,7 @@ func TestDecode(t *testing.T) {
 				UTCTime:            111709,
 				Temperature:        21.5,
 				Pressure:           0,
-				TimeToFix:          36,
+				TimeToFix:          time.Duration(36) * time.Second,
 				AccelerometerXAxis: 0,
 				AccelerometerYAxis: 0,
 				AccelerometerZAxis: 0,
@@ -42,7 +43,7 @@ func TestDecode(t *testing.T) {
 				UTCTime:            111709,
 				Temperature:        21.5,
 				Pressure:           0,
-				TimeToFix:          36,
+				TimeToFix:          time.Duration(36) * time.Second,
 				AccelerometerXAxis: 0,
 				AccelerometerYAxis: 0,
 				AccelerometerZAxis: 0,
