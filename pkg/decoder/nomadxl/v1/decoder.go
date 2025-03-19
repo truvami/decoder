@@ -3,6 +3,7 @@ package nomadxl
 import (
 	"fmt"
 	"reflect"
+	"time"
 
 	"github.com/truvami/decoder/pkg/common"
 	"github.com/truvami/decoder/pkg/decoder"
@@ -63,7 +64,9 @@ func (t NomadXLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 					return float64(v.(int)) / 1000
 				}},
 				{Name: "BatteryLorawan", Start: 36, Length: 1},
-				{Name: "TimeToFix", Start: 37, Length: 1},
+				{Name: "TimeToFix", Start: 37, Length: 1, Transform: func(v interface{}) interface{} {
+					return time.Duration(v.(int)) * time.Second
+				}},
 			},
 			TargetType: reflect.TypeOf(Port101Payload{}),
 			Features:   []decoder.Feature{decoder.FeatureBattery, decoder.FeatureTemperature, decoder.FeatureBuffered},

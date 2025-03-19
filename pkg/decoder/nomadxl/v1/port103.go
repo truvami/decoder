@@ -56,7 +56,7 @@ func (p Port103Payload) GetSatellites() *uint8 {
 }
 
 // GetTTF implements decoder.UplinkFeatureGNSS.
-func (p Port103Payload) GetTTF() *float64 {
+func (p Port103Payload) GetTTF() *time.Duration {
 	return nil
 }
 

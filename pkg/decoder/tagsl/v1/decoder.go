@@ -3,6 +3,7 @@ package tagsl
 import (
 	"fmt"
 	"reflect"
+	"time"
 
 	"github.com/truvami/decoder/pkg/common"
 	"github.com/truvami/decoder/pkg/decoder"
@@ -205,7 +206,9 @@ func (t TagSLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 				{Name: "Battery", Start: 15, Length: 2, Transform: func(v interface{}) interface{} {
 					return float64(v.(int)) / 1000
 				}},
-				{Name: "TTF", Start: 17, Length: 1, Optional: true},
+				{Name: "TTF", Start: 17, Length: 1, Optional: true, Transform: func(v interface{}) interface{} {
+					return time.Duration(v.(int)) * time.Second
+				}},
 				{Name: "PDOP", Start: 18, Length: 1, Optional: true, Transform: func(v interface{}) interface{} {
 					return float64(v.(int)) / 2
 				}},
@@ -245,7 +248,9 @@ func (t TagSLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 				{Name: "Battery", Start: 15, Length: 2, Transform: func(v interface{}) interface{} {
 					return float64(v.(int)) / 1000
 				}},
-				{Name: "TTF", Start: 17, Length: 1},
+				{Name: "TTF", Start: 17, Length: 1, Transform: func(v interface{}) interface{} {
+					return time.Duration(v.(int)) * time.Second
+				}},
 				{Name: "Mac1", Start: 18, Length: 6, Optional: true, Hex: true},
 				{Name: "Rssi1", Start: 24, Length: 1, Optional: true},
 				{Name: "Mac2", Start: 25, Length: 6, Optional: true, Hex: true},
@@ -281,7 +286,9 @@ func (t TagSLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 				{Name: "Battery", Start: 15, Length: 2, Transform: func(v interface{}) interface{} {
 					return float64(v.(int)) / 1000
 				}},
-				{Name: "TTF", Start: 17, Length: 1},
+				{Name: "TTF", Start: 17, Length: 1, Transform: func(v interface{}) interface{} {
+					return time.Duration(v.(int)) * time.Second
+				}},
 				{Name: "PDOP", Start: 18, Length: 1, Transform: func(v interface{}) interface{} {
 					return float64(v.(int)) / 2
 				}},
@@ -370,7 +377,9 @@ func (t TagSLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 				{Name: "Battery", Start: 17, Length: 2, Transform: func(v interface{}) interface{} {
 					return float64(v.(int)) / 1000
 				}},
-				{Name: "TTF", Start: 19, Length: 1},
+				{Name: "TTF", Start: 19, Length: 1, Transform: func(v interface{}) interface{} {
+					return time.Duration(v.(int)) * time.Second
+				}},
 				{Name: "Mac1", Start: 20, Length: 6, Optional: true, Hex: true},
 				{Name: "Rssi1", Start: 26, Length: 1, Optional: true},
 				{Name: "Mac2", Start: 27, Length: 6, Optional: true, Hex: true},
@@ -407,7 +416,9 @@ func (t TagSLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 				{Name: "Battery", Start: 17, Length: 2, Transform: func(v interface{}) interface{} {
 					return float64(v.(int)) / 1000
 				}},
-				{Name: "TTF", Start: 19, Length: 1},
+				{Name: "TTF", Start: 19, Length: 1, Transform: func(v interface{}) interface{} {
+					return time.Duration(v.(int)) * time.Second
+				}},
 				{Name: "PDOP", Start: 20, Length: 1, Transform: func(v interface{}) interface{} {
 					return float64(v.(int)) / 2
 				}},

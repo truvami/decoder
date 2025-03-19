@@ -77,7 +77,7 @@ type UplinkFeatureGNSS interface {
 	// GetAccuracy returns the accuracy of the GNSS position.
 	GetAccuracy() *float64
 	// GetTTF returns the time to fix of the GNSS position.
-	GetTTF() *float64
+	GetTTF() *time.Duration
 	// GetPDOP returns the position dilution of precision of the GNSS position.
 	GetPDOP() *float64
 	// GetSatellites returns the number of satellites used to calculate the GNSS position.

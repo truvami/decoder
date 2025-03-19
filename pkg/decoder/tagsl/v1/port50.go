@@ -25,28 +25,28 @@ import (
 
 // Timestamp for the Wi-Fi scanning is TSGNSS – TTF + 10 seconds.
 type Port50Payload struct {
-	Moving    bool      `json:"moving"`
-	DutyCycle bool      `json:"dutyCycle"`
-	Latitude  float64   `json:"latitude" validate:"gte=-90,lte=90"`
-	Longitude float64   `json:"longitude" validate:"gte=-180,lte=180"`
-	Altitude  float64   `json:"altitude"`
-	Timestamp time.Time `json:"timestamp"`
-	Battery   float64   `json:"battery" validate:"gte=1,lte=5"`
-	TTF       uint16    `json:"ttf"`
-	Mac1      string    `json:"mac1"`
-	Rssi1     int8      `json:"rssi1"`
-	Mac2      string    `json:"mac2"`
-	Rssi2     int8      `json:"rssi2"`
-	Mac3      string    `json:"mac3"`
-	Rssi3     int8      `json:"rssi3"`
-	Mac4      string    `json:"mac4"`
-	Rssi4     int8      `json:"rssi4"`
-	Mac5      string    `json:"mac5"`
-	Rssi5     int8      `json:"rssi5"`
-	Mac6      string    `json:"mac6"`
-	Rssi6     int8      `json:"rssi6"`
-	Mac7      string    `json:"mac7"`
-	Rssi7     int8      `json:"rssi7"`
+	Moving    bool          `json:"moving"`
+	DutyCycle bool          `json:"dutyCycle"`
+	Latitude  float64       `json:"latitude" validate:"gte=-90,lte=90"`
+	Longitude float64       `json:"longitude" validate:"gte=-180,lte=180"`
+	Altitude  float64       `json:"altitude"`
+	Timestamp time.Time     `json:"timestamp"`
+	Battery   float64       `json:"battery" validate:"gte=1,lte=5"`
+	TTF       time.Duration `json:"ttf"`
+	Mac1      string        `json:"mac1"`
+	Rssi1     int8          `json:"rssi1"`
+	Mac2      string        `json:"mac2"`
+	Rssi2     int8          `json:"rssi2"`
+	Mac3      string        `json:"mac3"`
+	Rssi3     int8          `json:"rssi3"`
+	Mac4      string        `json:"mac4"`
+	Rssi4     int8          `json:"rssi4"`
+	Mac5      string        `json:"mac5"`
+	Rssi5     int8          `json:"rssi5"`
+	Mac6      string        `json:"mac6"`
+	Rssi6     int8          `json:"rssi6"`
+	Mac7      string        `json:"mac7"`
+	Rssi7     int8          `json:"rssi7"`
 }
 
 var _ decoder.UplinkFeatureBase = &Port50Payload{}
@@ -76,7 +76,7 @@ func (p Port50Payload) GetAccuracy() *float64 {
 	return nil
 }
 
-func (p Port50Payload) GetTTF() *float64 {
+func (p Port50Payload) GetTTF() *time.Duration {
 	return nil
 }
 
