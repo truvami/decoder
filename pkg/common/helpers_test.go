@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"testing"
+	"time"
 )
 
 func TestInvalidHexString(t *testing.T) {
@@ -98,73 +99,88 @@ func TestParse(t *testing.T) {
 func TestConvertFieldToType(t *testing.T) {
 	tests := []struct {
 		value     interface{}
-		fieldType reflect.Kind
+		fieldType reflect.Type
 		expected  interface{}
 	}{
 		{
 			value:     10,
-			fieldType: reflect.Int,
+			fieldType: reflect.TypeOf(int(0)),
 			expected:  10,
 		},
 		{
 			value:     10,
-			fieldType: reflect.Int8,
+			fieldType: reflect.TypeOf(int8(0)),
 			expected:  int8(10),
 		},
 		{
 			value:     10,
-			fieldType: reflect.Int16,
+			fieldType: reflect.TypeOf(int16(0)),
 			expected:  int16(10),
 		},
 		{
 			value:     10,
-			fieldType: reflect.Int32,
+			fieldType: reflect.TypeOf(int32(0)),
 			expected:  int32(10),
 		},
 		{
 			value:     10,
-			fieldType: reflect.Int64,
+			fieldType: reflect.TypeOf(int64(0)),
 			expected:  int64(10),
 		},
 		{
 			value:     10,
-			fieldType: reflect.Uint,
+			fieldType: reflect.TypeOf(uint(0)),
 			expected:  uint(10),
 		},
 		{
 			value:     10,
-			fieldType: reflect.Uint8,
+			fieldType: reflect.TypeOf(uint8(0)),
 			expected:  uint8(10),
 		},
 		{
 			value:     10,
-			fieldType: reflect.Uint16,
+			fieldType: reflect.TypeOf(uint16(0)),
 			expected:  uint16(10),
 		},
 		{
 			value:     10,
-			fieldType: reflect.Uint32,
+			fieldType: reflect.TypeOf(uint32(0)),
 			expected:  uint32(10),
 		},
 		{
 			value:     10,
-			fieldType: reflect.Uint64,
+			fieldType: reflect.TypeOf(uint64(0)),
 			expected:  uint64(10),
 		},
 		{
 			value:     10,
-			fieldType: reflect.Float64,
+			fieldType: reflect.TypeOf(float32(0)),
+			expected:  float32(10),
+		},
+		{
+			value:     10,
+			fieldType: reflect.TypeOf(float64(0)),
 			expected:  float64(10),
 		},
 		{
 			value:     "hello",
-			fieldType: reflect.String,
+			fieldType: reflect.TypeOf(string("")),
 			expected:  "hello",
 		},
 		{
 			value:     1,
-			fieldType: reflect.Bool,
+			fieldType: reflect.TypeOf(bool(false)),
 			expected:  true,
+		},
+		{
+			value:     200,
+			fieldType: reflect.TypeOf(time.Duration(0)),
+			expected:  time.Duration(200) * time.Nanosecond,
+		},
+		{
+			value:     42,
+			fieldType: reflect.TypeOf(time.Time{}),
+			expected:  time.Date(1970, 1, 1, 0, 0, 42, 0, time.UTC),
 		},
 	}
 
