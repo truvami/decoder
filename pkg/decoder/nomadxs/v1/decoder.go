@@ -117,7 +117,7 @@ func (t NomadXSv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 				{Name: "LightUpperThreshold", Start: 34, Length: 2},
 			},
 			TargetType: reflect.TypeOf(Port4Payload{}),
-			Features:   []decoder.Feature{decoder.FeatureConfig},
+			Features:   []decoder.Feature{decoder.FeatureConfig, decoder.FeatureFirmwareVersion, decoder.FeatureHardwareVersion},
 		}, nil
 	case 15:
 		return common.PayloadConfig{

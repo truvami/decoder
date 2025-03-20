@@ -404,6 +404,26 @@ func TestFeatures(t *testing.T) {
 				// call function to check if it panics
 				moving.IsMoving()
 			}
+
+			if decodedPayload.Is(decoder.FeatureFirmwareVersion) {
+				firmwareVersion, ok := decodedPayload.Data.(decoder.UplinkFeatureFirmwareVersion)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureFirmwareVersion, got %T", decodedPayload)
+				}
+				if firmwareVersion.GetFirmwareVersion() == "" {
+					t.Fatalf("expected non empty firmware version")
+				}
+			}
+
+			if decodedPayload.Is(decoder.FeatureHardwareVersion) {
+				hardwareVersion, ok := decodedPayload.Data.(decoder.UplinkFeatureHardwareVersion)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureHardwareVersion, got %T", decodedPayload)
+				}
+				if hardwareVersion.GetHardwareVersion() == "" {
+					t.Fatalf("expected non empty hardware version")
+				}
+			}
 		})
 	}
 }
