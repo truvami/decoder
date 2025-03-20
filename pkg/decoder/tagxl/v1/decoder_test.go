@@ -153,7 +153,7 @@ func TestDecode(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestPort%vWith%v", test.port, test.payload), func(t *testing.T) {
-			decoder := NewTagXLv1Decoder(middleware, WithAutoPadding(test.autoPadding))
+			decoder := NewTagXLv1Decoder(middleware, WithAutoPadding(test.autoPadding), WithFCount(1))
 			got, err := decoder.Decode(test.payload, test.port, test.devEui)
 			if err != nil && len(test.expectedErr) == 0 {
 				t.Fatalf("unexpected error: %v", err)
@@ -306,5 +306,15 @@ func TestFeatures(t *testing.T) {
 				moving.IsMoving()
 			}
 		})
+	}
+}
+
+func TestWithFCount(t *testing.T) {
+	decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"), WithFCount(123))
+
+	// cast to TagXLv1Decoder to access fCount
+	tagXLv1Decoder := decoder.(*TagXLv1Decoder)
+	if tagXLv1Decoder.fCount != 123 {
+		t.Fatalf("expected fCount to be 123, got %v", tagXLv1Decoder.fCount)
 	}
 }
