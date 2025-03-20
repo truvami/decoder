@@ -159,7 +159,7 @@ func TestDecode(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestPort%vWith%v", test.port, test.payload), func(t *testing.T) {
-			decoder := NewSmartLabelv1Decoder(middleware)
+			decoder := NewSmartLabelv1Decoder(middleware, WithFCount(1))
 			got, err := decoder.Decode(test.payload, test.port, test.devEui)
 			if err != nil && len(test.expectedErr) == 0 {
 				t.Fatalf("unexpected error: %v", err)
@@ -265,5 +265,15 @@ func TestGetPort11PayloadType(t *testing.T) {
 				t.Errorf("getPort11PayloadType() = %v, want %v", got, tt.want)
 			}
 		})
+	}
+}
+
+func TestWithFCount(t *testing.T) {
+	decoder := NewSmartLabelv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"), WithFCount(123))
+
+	// cast to SmartLabelv1Decoder to access fCount
+	tagXLv1Decoder := decoder.(*SmartLabelv1Decoder)
+	if tagXLv1Decoder.fCount != 123 {
+		t.Fatalf("expected fCount to be 123, got %v", tagXLv1Decoder.fCount)
 	}
 }

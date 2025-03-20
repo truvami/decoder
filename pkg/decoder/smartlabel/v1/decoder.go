@@ -16,6 +16,7 @@ type SmartLabelv1Decoder struct {
 	loracloudMiddleware loracloud.LoracloudMiddleware
 	autoPadding         bool
 	skipValidation      bool
+	fCount              uint32
 }
 
 func NewSmartLabelv1Decoder(loracloudMiddleware loracloud.LoracloudMiddleware, options ...Option) decoder.Decoder {
@@ -39,6 +40,14 @@ func WithAutoPadding(autoPadding bool) Option {
 func WithSkipValidation(skipValidation bool) Option {
 	return func(t *SmartLabelv1Decoder) {
 		t.skipValidation = skipValidation
+	}
+}
+
+// WithFCount sets the frame counter for the decoder.
+// This is required for the loracloud middleware.
+func WithFCount(fCount uint32) Option {
+	return func(t *SmartLabelv1Decoder) {
+		t.fCount = fCount
 	}
 }
 
@@ -124,6 +133,7 @@ func (t SmartLabelv1Decoder) Decode(data string, port int16, devEui string) (*de
 			MsgType: "updf",
 			Port:    uint8(port),
 			Payload: data,
+			FCount:  t.fCount,
 		})
 		return decoder.NewDecodedUplink([]decoder.Feature{}, decodedData, nil), err
 	default:

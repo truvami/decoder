@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+
+	"github.com/go-playground/validator"
 )
 
 type LoracloudMiddleware struct {
@@ -76,6 +78,13 @@ func (m LoracloudMiddleware) post(url string, body []byte) (*http.Response, erro
 //
 // errors: If set and non-empty, error message in case the operation did not succeed.
 func (m LoracloudMiddleware) DeliverUplinkMessage(devEui string, uplinkMsg UplinkMsg) (*UplinkMsgResponse, error) {
+	// validate uplinkMsg
+	validate := validator.New()
+	err := validate.Struct(uplinkMsg)
+	if err != nil {
+		return nil, fmt.Errorf("error validating uplink message: %v", err)
+	}
+
 	url := fmt.Sprintf("%v/api/v1/device/send", m.BaseUrl)
 
 	// format devEui to match ^([0-9a-fA-F]){2}(-([0-9a-fA-F]){2}){7}$
@@ -93,7 +102,7 @@ func (m LoracloudMiddleware) DeliverUplinkMessage(devEui string, uplinkMsg Uplin
 		}, "-")
 	}
 
-	body := map[string]interface{}{
+	body := map[string]any{
 		"deveui": devEui,
 		"uplink": uplinkMsg,
 	}
@@ -109,7 +118,7 @@ func (m LoracloudMiddleware) DeliverUplinkMessage(devEui string, uplinkMsg Uplin
 	}
 
 	if response.StatusCode != http.StatusOK {
-		responseJson := map[string]interface{}{}
+		responseJson := map[string]any{}
 		err = json.NewDecoder(response.Body).Decode(&responseJson)
 		if err != nil {
 			return nil, fmt.Errorf("unexpected status code returned by loracloud: HTTP %v", response.StatusCode)
@@ -130,19 +139,19 @@ func (m LoracloudMiddleware) DeliverUplinkMessage(devEui string, uplinkMsg Uplin
 }
 
 type UplinkMsg struct {
-	MsgType                 string     `json:"msgtype"`
-	FCount                  uint32     `json:"fcnt"`
-	Port                    uint8      `json:"port"`
-	Payload                 string     `json:"payload"` // HEX string with LoRaWAN message payload
-	DR                      *uint8     `json:"dr"`
-	Frequency               *uint32    `json:"freq"`
-	Timestamp               *float64   `json:"timestamp"` // RX timestamp in seconds, UTC
-	DNMTU                   *uint32    `json:"dn_mtu"`
-	GNSSCaptureTime         *float64   `json:"gnss_capture_time"`
-	GNSSCaptureTimeAccuracy *float64   `json:"gnss_capture_time_accuracy"`
-	GNSSAssistPosition      *[]float64 `json:"gnss_assist_position"`
-	GNSSAssistAltitude      *float64   `json:"gnss_assist_altitude"`
-	GNSSUse2DSolver         *bool      `json:"gnss_use_2D_solver"`
+	MsgType                 string     `json:"msgtype" validate:"required"`
+	FCount                  uint32     `json:"fcnt" validate:"required"`
+	Port                    uint8      `json:"port" validate:"required"`
+	Payload                 string     `json:"payload" validate:"required"` // HEX string with LoRaWAN message payload
+	DR                      *uint8     `json:"dr,omitempty"`
+	Frequency               *uint32    `json:"freq,omitempty"`
+	Timestamp               *float64   `json:"timestamp,omitempty"` // RX timestamp in seconds, UTC
+	DNMTU                   *uint32    `json:"dn_mtu,omitempty"`
+	GNSSCaptureTime         *float64   `json:"gnss_capture_time,omitempty"`
+	GNSSCaptureTimeAccuracy *float64   `json:"gnss_capture_time_accuracy,omitempty"`
+	GNSSAssistPosition      *[]float64 `json:"gnss_assist_position,omitempty"`
+	GNSSAssistAltitude      *float64   `json:"gnss_assist_altitude,omitempty"`
+	GNSSUse2DSolver         *bool      `json:"gnss_use_2D_solver,omitempty"`
 }
 
 // An “Uplink Response” object reflects the current device state as well as new items resulting from the submitted uplink message.
@@ -174,22 +183,22 @@ type UplinkMsgResponse struct {
 	Result struct {
 		Deveui          string `json:"deveui"`
 		PendingRequests struct {
-			Requests []interface{} `json:"requests"`
-			ID       int           `json:"id"`
-			Updelay  int           `json:"updelay"`
-			Upcount  int           `json:"upcount"`
+			Requests []any `json:"requests"`
+			ID       int   `json:"id"`
+			Updelay  int   `json:"updelay"`
+			Upcount  int   `json:"upcount"`
 		} `json:"pending_requests"`
 		InfoFields struct {
-			Rfu     interface{} `json:"rfu"`
-			Temp    interface{} `json:"temp"`
-			Charge  interface{} `json:"charge"`
-			Deveui  interface{} `json:"deveui"`
-			Region  interface{} `json:"region"`
-			Rxtime  interface{} `json:"rxtime"`
-			Signal  interface{} `json:"signal"`
-			Status  interface{} `json:"status"`
-			Uptime  interface{} `json:"uptime"`
-			Adrmode interface{} `json:"adrmode"`
+			Rfu     any `json:"rfu"`
+			Temp    any `json:"temp"`
+			Charge  any `json:"charge"`
+			Deveui  any `json:"deveui"`
+			Region  any `json:"region"`
+			Rxtime  any `json:"rxtime"`
+			Signal  any `json:"signal"`
+			Status  any `json:"status"`
+			Uptime  any `json:"uptime"`
+			Adrmode any `json:"adrmode"`
 			Alcsync struct {
 				Value struct {
 					Time  int `json:"time"`
@@ -197,13 +206,13 @@ type UplinkMsgResponse struct {
 				} `json:"value"`
 				Timestamp float64 `json:"timestamp"`
 			} `json:"alcsync"`
-			Chipeui interface{} `json:"chipeui"`
-			Joineui interface{} `json:"joineui"`
+			Chipeui any `json:"chipeui"`
+			Joineui any `json:"joineui"`
 			Session struct {
 				Value     int     `json:"value"`
 				Timestamp float64 `json:"timestamp"`
 			} `json:"session"`
-			Voltage  interface{} `json:"voltage"`
+			Voltage  any `json:"voltage"`
 			Crashlog struct {
 				Value     string  `json:"value"`
 				Timestamp float64 `json:"timestamp"`
@@ -216,15 +225,15 @@ type UplinkMsgResponse struct {
 				} `json:"value"`
 				Timestamp float64 `json:"timestamp"`
 			} `json:"firmware"`
-			Interval interface{} `json:"interval"`
+			Interval any `json:"interval"`
 			Rstcount struct {
 				Value     int     `json:"value"`
 				Timestamp float64 `json:"timestamp"`
 			} `json:"rstcount"`
-			Appstatus interface{} `json:"appstatus"`
-			Streampar interface{} `json:"streampar"`
+			Appstatus any `json:"appstatus"`
+			Streampar any `json:"streampar"`
 		} `json:"info_fields"`
-		LogMessages []interface{} `json:"log_messages"`
+		LogMessages []any `json:"log_messages"`
 		Fports      struct {
 			Dmport     int `json:"dmport"`
 			Gnssport   int `json:"gnssport"`
@@ -233,11 +242,11 @@ type UplinkMsgResponse struct {
 			Streamport int `json:"streamport"`
 			Gnssngport int `json:"gnssngport"`
 		} `json:"fports"`
-		Dnlink            interface{}   `json:"dnlink"`
-		FulfilledRequests []interface{} `json:"fulfilled_requests"`
-		CancelledRequests []interface{} `json:"cancelled_requests"`
-		File              interface{}   `json:"file"`
-		StreamRecords     interface{}   `json:"stream_records"`
+		Dnlink            any   `json:"dnlink"`
+		FulfilledRequests []any `json:"fulfilled_requests"`
+		CancelledRequests []any `json:"cancelled_requests"`
+		File              any   `json:"file"`
+		StreamRecords     any   `json:"stream_records"`
 		PositionSolution  struct {
 			Llh             []float64 `json:"llh"`
 			Accuracy        float64   `json:"accuracy"`
