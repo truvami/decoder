@@ -186,7 +186,7 @@ func (t TagSLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 				{Name: "BLECurrentConfigurationUplinkInterval", Start: 20, Length: 2},
 			},
 			TargetType: reflect.TypeOf(Port8Payload{}),
-			Features:   []decoder.Feature{decoder.FeatureConfig},
+			Features:   []decoder.Feature{},
 		}, nil
 	case 10:
 		return common.PayloadConfig{

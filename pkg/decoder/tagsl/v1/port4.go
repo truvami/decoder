@@ -41,11 +41,72 @@ type Port4Payload struct {
 }
 
 var _ decoder.UplinkFeatureBase = &Port4Payload{}
+var _ decoder.UplinkFeatureConfig = &Port4Payload{}
 var _ decoder.UplinkFeatureFirmwareVersion = &Port4Payload{}
 var _ decoder.UplinkFeatureHardwareVersion = &Port4Payload{}
 
 func (p Port4Payload) GetTimestamp() *time.Time {
 	return nil
+}
+
+func (p Port4Payload) GetBle() *bool {
+	return nil
+}
+
+func (p Port4Payload) GetGps() *bool {
+	return nil
+}
+
+func (p Port4Payload) GetWifi() *bool {
+	return nil
+}
+
+func (p Port4Payload) GetMovingInterval() *uint32 {
+	return &p.LocalizationIntervalWhileMoving
+}
+
+func (p Port4Payload) GetSteadyInterval() *uint32 {
+	return &p.LocalizationIntervalWhileSteady
+}
+
+func (p Port4Payload) GetConfigInterval() *uint32 {
+	return &p.HeartbeatInterval
+}
+
+func (p Port4Payload) GetGpsTimeout() *uint16 {
+	return &p.GPSTimeoutWhileWaitingForFix
+}
+
+func (p Port4Payload) GetAccelerometerThreshold() *uint16 {
+	return &p.AccelerometerWakeupThreshold
+}
+
+func (p Port4Payload) GetAccelerometerDelay() *uint16 {
+	return &p.AccelerometerDelay
+}
+
+func (p Port4Payload) GetBatteryInterval() *uint32 {
+	return &p.BatteryKeepAliveMessageInterval
+}
+
+func (p Port4Payload) GetRejoinInterval() *uint32 {
+	return nil
+}
+
+func (p Port4Payload) GetLowLightThreshold() *uint16 {
+	return nil
+}
+
+func (p Port4Payload) GetHighLightThreshold() *uint16 {
+	return nil
+}
+
+func (p Port4Payload) GetBatchSize() *uint16 {
+	return &p.BatchSize
+}
+
+func (p Port4Payload) GetBufferSize() *uint16 {
+	return &p.BufferSize
 }
 
 // GetHardwareVersion implements decoder.UplinkFeatureHardwareVersion.

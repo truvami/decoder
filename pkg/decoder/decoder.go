@@ -113,6 +113,24 @@ type UplinkFeatureDutyCycle interface {
 	IsDutyCycle() bool
 }
 
+type UplinkFeatureConfig interface {
+	GetBle() *bool
+	GetGps() *bool
+	GetWifi() *bool
+	GetMovingInterval() *uint32
+	GetSteadyInterval() *uint32
+	GetConfigInterval() *uint32
+	GetGpsTimeout() *uint16
+	GetAccelerometerThreshold() *uint16
+	GetAccelerometerDelay() *uint16
+	GetBatteryInterval() *uint32
+	GetRejoinInterval() *uint32
+	GetLowLightThreshold() *uint16
+	GetHighLightThreshold() *uint16
+	GetBatchSize() *uint16
+	GetBufferSize() *uint16
+}
+
 type UplinkFeatureFirmwareVersion interface {
 	// GetFirmwareVersion returns the firmware version of the device.
 	GetFirmwareVersion() string
