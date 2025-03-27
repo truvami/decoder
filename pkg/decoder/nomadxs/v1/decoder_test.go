@@ -404,7 +404,28 @@ func TestFeatures(t *testing.T) {
 				// call function to check if it panics
 				moving.IsMoving()
 			}
-
+			if decodedPayload.Is(decoder.FeatureConfig) {
+				config, ok := decodedPayload.Data.(decoder.UplinkFeatureConfig)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureConfig, got %T", decodedPayload)
+				}
+				// call functions to check if it panics
+				config.GetBle()
+				config.GetGps()
+				config.GetWifi()
+				config.GetMovingInterval()
+				config.GetSteadyInterval()
+				config.GetConfigInterval()
+				config.GetGpsTimeout()
+				config.GetAccelerometerThreshold()
+				config.GetAccelerometerDelay()
+				config.GetBatteryInterval()
+				config.GetRejoinInterval()
+				config.GetLowLightThreshold()
+				config.GetHighLightThreshold()
+				config.GetBatchSize()
+				config.GetBufferSize()
+			}
 			if decodedPayload.Is(decoder.FeatureFirmwareVersion) {
 				firmwareVersion, ok := decodedPayload.Data.(decoder.UplinkFeatureFirmwareVersion)
 				if !ok {
