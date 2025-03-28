@@ -244,6 +244,11 @@ func TestValidationErrors(t *testing.T) {
 			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Second", 73),
 		},
 		{
+			payload:  "0002c420ff005ed85a12b4180719142607240001ffbaffc2fc6f17d41d2e",
+			port:     1,
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Temperature", 61),
+		},
+		{
 			payload:  "0002c420ff005ed85a12b4180719142607240001ffbaffc2fc6f00d72ee0",
 			port:     1,
 			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Pressure", 1200),
