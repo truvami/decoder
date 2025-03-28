@@ -1,7 +1,9 @@
 package nomadxl
 
 import (
+	"encoding/json"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -205,6 +207,51 @@ func TestFeatures(t *testing.T) {
 				}
 				// call function to check if it panics
 				moving.IsMoving()
+			}
+		})
+	}
+}
+
+func TestMarshal(t *testing.T) {
+	tests := []struct {
+		payload  string
+		port     int16
+		expected []string
+	}{
+		{
+			payload:  "00000001fdd5c693000079300001b45d000000000000000000d700000000000000000b3fd724",
+			port:     101,
+			expected: []string{"\"temperature\": 21.5", "\"battery\": 2.879", "\"timeToFix\": \"36s\""},
+		},
+		{
+			payload:  "0000793000020152004B6076000C838C00003994",
+			port:     103,
+			expected: []string{"\"latitude\": 49.39894", "\"longitude\": 8.20108", "\"altitude\": 147.4"},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(fmt.Sprintf("TestMarshalWithPort%vAndPayload%v", test.port, test.payload), func(t *testing.T) {
+			decoder := NewNomadXLv1Decoder()
+
+			data, _ := decoder.Decode(test.payload, test.port, "")
+
+			marshaled, err := json.MarshalIndent(map[string]interface{}{
+				"data":     data.Data,
+				"metadata": data.Metadata,
+			}, "", "   ")
+
+			if err != nil {
+				t.Fatalf("marshalling json failed because %s", err)
+			}
+
+			t.Logf("%s\n", marshaled)
+
+			for _, value := range test.expected {
+				fmt.Printf("value:%s\n", value)
+				if !strings.Contains(string(marshaled), value) {
+					t.Fatalf("expected to find %s\n", value)
+				}
 			}
 		})
 	}
