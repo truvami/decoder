@@ -26,7 +26,7 @@ import (
 // | 20-21 | 2    | Accelerometer X-axis                      | int16, mg              |
 // | 22-23 | 2    | Accelerometer Y-axis                      | int16, mg              |
 // | 24-25 | 2    | Accelerometer Z-axis                      | int16, mg              |
-// | 26-27 | 2    | Temperature*                              | int16, 0.1 °C          |
+// | 26-27 | 2    | Temperature*                              | int16, 0.01 °C         |
 // | 28-29 | 2    | Pressure*                                 | uint16, 0.1 hPa        |
 // | 30-31 | 2    | Gyroscope* X-axis                         | int16, 0.1 dps         |
 // | 32-33 | 2    | Gyroscope* Y-axis                         | int16, 0.1 dps         |
