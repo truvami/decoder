@@ -1,8 +1,10 @@
 package tagsl
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 
@@ -1966,6 +1968,116 @@ func TestFeatures(t *testing.T) {
 				}
 				if hardwareVersion.GetHardwareVersion() == "" {
 					t.Fatalf("expected non empty hardware version")
+				}
+			}
+		})
+	}
+}
+
+func TestMarshal(t *testing.T) {
+	tests := []struct {
+		payload  string
+		port     int16
+		expected []string
+	}{
+		{
+			payload:  "8002cdcd1300744f5e166018040b14341a",
+			port:     1,
+			expected: []string{"\"latitude\": 47.041811", "\"longitude\": 7.622494", "\"altitude\": 572.8"},
+		},
+		{
+			payload:  "822f0101f052fab920feafd0e4158b38b9afe05994cb2f5cb2a1b2c3d4e5f6aea1b2c3d4e5f6aea1b2c3d4e5f6ae",
+			port:     3,
+			expected: []string{"\"scanPointer\": 33327", "\"mac1\": \"f052fab920fe\"", "\"rssi1\": -81"},
+		},
+		{
+			payload:  "0000012c00000e1000001c200078012c05dc02020100010200002328",
+			port:     4,
+			expected: []string{"\"batteryKeepAliveMessageInterval\": 9000"},
+		},
+		{
+			payload:  "00e0286d8aabfca8e0286d8a9478c2726c9a74b58dab726cdac8b89dacf0b0140c96bbc8deadbeef4242d6deadbeef4242d6",
+			port:     5,
+			expected: []string{"\"moving\": false", "\"mac1\": \"e0286d8aabfc\"", "\"rssi1\": -88"},
+		},
+		{
+			payload:  "01",
+			port:     6,
+			expected: []string{"\"buttonPressed\": true"},
+		},
+		{
+			payload:  "66ec04bb00e0286d8aabfcbbec6c9a74b58fb2726c9a74b58db1e0286d8a9478cbf0b0140c96bbd2260122180d42ad",
+			port:     7,
+			expected: []string{"\"timestamp\": \"2024-09-19T11:02:19Z\"", "\"mac1\": \"e0286d8aabfc\"", "\"rssi1\": -69"},
+		},
+		{
+			payload:  "012c141e9c455738304543434343460078012c01a8c0",
+			port:     8,
+			expected: []string{"\"minRssiValue\": -100", "\"advertisingFilter\": \"4048812220199682886\""},
+		},
+		{
+			payload:  "0002d308b50082457f16eb66c4a5cd0ed3",
+			port:     10,
+			expected: []string{"\"timestamp\": \"2024-08-20T14:18:53Z\"", "\"battery\": 3.795", "\"ttf\": \"0s\""},
+		},
+		{
+			payload:  "800ee5",
+			port:     15,
+			expected: []string{"\"lowBattery\": false", "\"battery\": 3.813"},
+		},
+		{
+			payload:  "0002d30c9300824c87117966c45dcd0f8118e0286d8aabfca9f0b0140c96bbc8726c9a74b58da8e0286d8a9478bfa1b2c3d4e5f6aea1b2c3d4e5f6ae",
+			port:     50,
+			expected: []string{"\"moving\": false", "\"timestamp\": \"2024-08-20T09:11:41Z\"", "\"mac1\": \"e0286d8aabfc\"", "\"rssi1\": -87"},
+		},
+		{
+			payload:  "0002d30ba000824ace1122671b983e0eea340b06726c9a74b58db1fcf528f8634fb552a8db7bd6b5b9e0286d8aabfcbc",
+			port:     51,
+			expected: []string{"\"moving\": false", "\"timestamp\": \"2024-10-25T13:08:14Z\"", "\"pdop\": 5.5", "\"mac1\": \"726c9a74b58d\"", "\"rssi1\": -79"},
+		},
+		{
+			payload:  "000166c4a5ba00e0286d8aabfcb1e0286d8a9478c2ec6c9a74b58fad726c9a74b58dadf0b0140c96bbd0a1b2c3d4e5f6ae",
+			port:     105,
+			expected: []string{"\"moving\": false", "\"mac1\": \"e0286d8aabfc\"", "\"rssi1\": -79"},
+		},
+		{
+			payload:  "00020002d309ae008247c5113966c45d640f7e",
+			port:     110,
+			expected: []string{"\"timestamp\": \"2024-08-20T09:09:56Z\"", "\"battery\": 3.966"},
+		},
+		{
+			payload:  "00020002d30c9300824c87117966c45dcd0f8118e0286d8aabfca9f0b0140c96bbc8726c9a74b58da8e0286d8a9478bfa1b2c3d4e5f6aea1b2c3d4e5f6ae",
+			port:     150,
+			expected: []string{"\"moving\": false", "\"timestamp\": \"2024-08-20T09:11:41Z\"", "\"mac1\": \"e0286d8aabfc\"", "\"rssi1\": -87", "\"ttf\": \"24s\""},
+		},
+		{
+			payload:  "00000002d30b27008247b81312671bd164133718030be0286d8a9478cbf0b0140c96bbcea1b2c3d4e5f6aea1b2c3d4e5f6aea1b2c3d4e5f6aea1b2c3d4e5f6ae",
+			port:     151,
+			expected: []string{"\"moving\": false", "\"timestamp\": \"2024-10-25T17:12:04Z\"", "\"pdop\": 1.5", "\"mac1\": \"e0286d8a9478\"", "\"rssi1\": -53", "\"ttf\": \"24s\""},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(fmt.Sprintf("TestMarshalWithPort%vAndPayload%v", test.port, test.payload), func(t *testing.T) {
+			decoder := NewTagSLv1Decoder()
+
+			data, _ := decoder.Decode(test.payload, test.port, "")
+
+			marshaled, err := json.MarshalIndent(map[string]interface{}{
+				"data":     data.Data,
+				"metadata": data.Metadata,
+			}, "", "   ")
+
+			if err != nil {
+				t.Fatalf("marshalling json failed because %s", err)
+			}
+
+			t.Logf("%s\n", marshaled)
+
+			for _, value := range test.expected {
+				fmt.Printf("value:%s\n", value)
+				if !strings.Contains(string(marshaled), value) {
+					t.Fatalf("expected to find %s\n", value)
 				}
 			}
 		})
