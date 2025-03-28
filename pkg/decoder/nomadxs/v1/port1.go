@@ -1,6 +1,8 @@
 package nomadxs
 
 import (
+	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/truvami/decoder/pkg/decoder"
@@ -58,6 +60,17 @@ type Port1Payload struct {
 	MagnetometerXAxis  float32       `json:"magnetometerXAxis"`
 	MagnetometerYAxis  float32       `json:"magnetometerYAxis"`
 	MagnetometerZAxis  float32       `json:"magnetometerZAxis"`
+}
+
+func (p Port1Payload) MarshalJSON() ([]byte, error) {
+	type Alias Port1Payload
+	return json.Marshal(&struct {
+		*Alias
+		TimeToFix string `json:"ttf"`
+	}{
+		Alias:     (*Alias)(&p),
+		TimeToFix: fmt.Sprintf("%.0fs", p.TimeToFix.Seconds()),
+	})
 }
 
 var _ decoder.UplinkFeatureBase = &Port1Payload{}
