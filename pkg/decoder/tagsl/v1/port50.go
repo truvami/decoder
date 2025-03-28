@@ -1,6 +1,8 @@
 package tagsl
 
 import (
+	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/truvami/decoder/pkg/decoder"
@@ -47,6 +49,17 @@ type Port50Payload struct {
 	Rssi6     int8          `json:"rssi6"`
 	Mac7      string        `json:"mac7"`
 	Rssi7     int8          `json:"rssi7"`
+}
+
+func (p Port50Payload) MarshalJSON() ([]byte, error) {
+	type Alias Port50Payload
+	return json.Marshal(&struct {
+		*Alias
+		TTF string `json:"ttf"`
+	}{
+		Alias: (*Alias)(&p),
+		TTF:   fmt.Sprintf("%.0fs", p.TTF.Seconds()),
+	})
 }
 
 var _ decoder.UplinkFeatureBase = &Port50Payload{}

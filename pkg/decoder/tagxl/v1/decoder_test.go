@@ -309,6 +309,46 @@ func TestFeatures(t *testing.T) {
 	}
 }
 
+func TestMarshal(t *testing.T) {
+	tests := []struct {
+		payload  string
+		port     int16
+		expected []string
+	}{
+		{
+			payload:  "010b0266acbcf0000000000756",
+			port:     152,
+			expected: []string{"\"timestamp\": 1722596592", "\"elapsedSeconds\": 1878"},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(fmt.Sprintf("TestMarshalWithPort%vAndPayload%v", test.port, test.payload), func(t *testing.T) {
+			decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"))
+
+			data, _ := decoder.Decode(test.payload, test.port, "")
+
+			marshaled, err := json.MarshalIndent(map[string]interface{}{
+				"data":     data.Data,
+				"metadata": data.Metadata,
+			}, "", "   ")
+
+			if err != nil {
+				t.Fatalf("marshalling json failed because %s", err)
+			}
+
+			t.Logf("%s\n", marshaled)
+
+			for _, value := range test.expected {
+				fmt.Printf("value:%s\n", value)
+				if !strings.Contains(string(marshaled), value) {
+					t.Fatalf("expected to find %s\n", value)
+				}
+			}
+		})
+	}
+}
+
 func TestWithFCount(t *testing.T) {
 	decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"), WithFCount(123))
 

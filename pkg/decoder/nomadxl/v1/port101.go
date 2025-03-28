@@ -1,6 +1,8 @@
 package nomadxl
 
 import (
+	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/truvami/decoder/pkg/decoder"
@@ -44,6 +46,17 @@ type Port101Payload struct {
 	AccelerometerZAxis int16         `json:"accelerometerZAxis"`
 	Battery            float64       `json:"battery" validate:"gte=1,lte=5"`
 	BatteryLorawan     uint8         `json:"batteryLorawan"`
+}
+
+func (p Port101Payload) MarshalJSON() ([]byte, error) {
+	type Alias Port101Payload
+	return json.Marshal(&struct {
+		*Alias
+		TimeToFix string `json:"timeToFix"`
+	}{
+		Alias:     (*Alias)(&p),
+		TimeToFix: fmt.Sprintf("%.0fs", p.TimeToFix.Seconds()),
+	})
 }
 
 var _ decoder.UplinkFeatureBase = &Port101Payload{}

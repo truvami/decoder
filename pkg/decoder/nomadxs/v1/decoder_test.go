@@ -1,7 +1,9 @@
 package nomadxs
 
 import (
+	"encoding/json"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -438,6 +440,56 @@ func TestFeatures(t *testing.T) {
 				}
 				if hardwareVersion.GetHardwareVersion() == "" {
 					t.Fatalf("expected non empty hardware version")
+				}
+			}
+		})
+	}
+}
+
+func TestMarshal(t *testing.T) {
+	tests := []struct {
+		payload  string
+		port     int16
+		expected []string
+	}{
+		{
+			payload:  "0002c420ff005ed85a12b4180719142607240001ffbaffc2fc6f00d71d2e",
+			port:     1,
+			expected: []string{"\"altitude\": 478.8", "\"temperature\": 2.15", "\"timeToFix\": \"36s\""},
+		},
+		{
+			payload:  "0000007800000708000151800078012c05dc000100010100000258000002580500000000",
+			port:     4,
+			expected: []string{"\"heartbeatInterval\": 86400", "\"reJoinInterval\": 600"},
+		},
+		{
+			payload:  "010df6",
+			port:     15,
+			expected: []string{"\"lowBattery\": true", "\"battery\": 3.574"},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(fmt.Sprintf("TestMarshalWithPort%vAndPayload%v", test.port, test.payload), func(t *testing.T) {
+			decoder := NewNomadXSv1Decoder()
+
+			data, _ := decoder.Decode(test.payload, test.port, "")
+
+			marshaled, err := json.MarshalIndent(map[string]interface{}{
+				"data":     data.Data,
+				"metadata": data.Metadata,
+			}, "", "   ")
+
+			if err != nil {
+				t.Fatalf("marshalling json failed because %s", err)
+			}
+
+			t.Logf("%s\n", marshaled)
+
+			for _, value := range test.expected {
+				fmt.Printf("value:%s\n", value)
+				if !strings.Contains(string(marshaled), value) {
+					t.Fatalf("expected to find %s\n", value)
 				}
 			}
 		})
