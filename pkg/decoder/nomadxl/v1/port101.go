@@ -52,7 +52,7 @@ func (p Port101Payload) MarshalJSON() ([]byte, error) {
 	type Alias Port101Payload
 	return json.Marshal(&struct {
 		*Alias
-		TimeToFix string `json:"ttf"`
+		TimeToFix string `json:"timeToFix"`
 	}{
 		Alias:     (*Alias)(&p),
 		TimeToFix: fmt.Sprintf("%.0fs", p.TimeToFix.Seconds()),
