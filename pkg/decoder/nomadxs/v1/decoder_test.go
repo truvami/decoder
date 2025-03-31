@@ -408,12 +408,12 @@ func TestFeatures(t *testing.T) {
 				}
 				// call functions to check if it panics
 				config.GetBle()
-				config.GetGps()
+				config.GetGnss()
 				config.GetWifi()
 				config.GetMovingInterval()
 				config.GetSteadyInterval()
 				config.GetConfigInterval()
-				config.GetGpsTimeout()
+				config.GetGnssTimeout()
 				config.GetAccelerometerThreshold()
 				config.GetAccelerometerDelay()
 				config.GetBatteryInterval()
