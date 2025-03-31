@@ -183,7 +183,7 @@ func TestFeatures(t *testing.T) {
 				buffered.GetBufferLevel()
 			}
 			if decodedPayload.Is(decoder.FeatureBattery) {
-				batteryVoltage, ok := decodedPayload.Data.(decoder.UpLinkFeatureBattery)
+				batteryVoltage, ok := decodedPayload.Data.(decoder.UplinkFeatureBattery)
 				if !ok {
 					t.Fatalf("expected UplinkFeatureBattery, got %T", decodedPayload)
 				}

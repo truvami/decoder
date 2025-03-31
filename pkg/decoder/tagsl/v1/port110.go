@@ -31,7 +31,7 @@ type Port110Payload struct {
 
 var _ decoder.UplinkFeatureBase = &Port110Payload{}
 var _ decoder.UplinkFeatureGNSS = &Port110Payload{}
-var _ decoder.UpLinkFeatureBattery = &Port110Payload{}
+var _ decoder.UplinkFeatureBattery = &Port110Payload{}
 var _ decoder.UplinkFeatureBuffered = &Port110Payload{}
 var _ decoder.UplinkFeatureMoving = &Port110Payload{}
 var _ decoder.UplinkFeatureDutyCycle = &Port110Payload{}
