@@ -1,5 +1,7 @@
 package tagxl
 
+import "github.com/truvami/decoder/pkg/decoder"
+
 // +------+------+-----------------------------------------------+------------+
 // | Byte | Size | Description                                   | Format     |
 // +------+------+-----------------------------------------------+------------+
@@ -36,4 +38,73 @@ type Port151Payload struct {
 	ResetCause               uint32  `json:"resetCause"`
 	GnssScans                uint16  `json:"gnssScans"`
 	WifiScans                uint16  `json:"wifiScans"`
+}
+
+var _ decoder.UpLinkFeatureBattery = Port151Payload{}
+var _ decoder.UplinkFeatureConfig = &Port151Payload{}
+
+func (p Port151Payload) GetBatteryVoltage() float64 {
+	return float64(p.BatteryVoltage)
+}
+
+func (p Port151Payload) GetBle() *bool {
+	return &p.Ble
+}
+
+func (p Port151Payload) GetGnss() *bool {
+	return &p.Gnss
+}
+
+func (p Port151Payload) GetWifi() *bool {
+	return &p.Wifi
+}
+
+func (p Port151Payload) GetMovingInterval() *uint32 {
+	movingInterval := uint32(p.MovingInterval)
+	return &movingInterval
+}
+
+func (p Port151Payload) GetSteadyInterval() *uint32 {
+	steadyInterval := uint32(p.SteadyInterval)
+	return &steadyInterval
+}
+
+func (p Port151Payload) GetConfigInterval() *uint32 {
+	return nil
+}
+
+func (p Port151Payload) GetGnssTimeout() *uint16 {
+	return nil
+}
+
+func (p Port151Payload) GetAccelerometerThreshold() *uint16 {
+	return &p.AccelerationThreshold
+}
+
+func (p Port151Payload) GetAccelerometerDelay() *uint16 {
+	return &p.AccelerationDelay
+}
+
+func (p Port151Payload) GetBatteryInterval() *uint32 {
+	return nil
+}
+
+func (p Port151Payload) GetRejoinInterval() *uint32 {
+	return nil
+}
+
+func (p Port151Payload) GetLowLightThreshold() *uint16 {
+	return nil
+}
+
+func (p Port151Payload) GetHighLightThreshold() *uint16 {
+	return nil
+}
+
+func (p Port151Payload) GetBatchSize() *uint16 {
+	return nil
+}
+
+func (p Port151Payload) GetBufferSize() *uint16 {
+	return nil
 }

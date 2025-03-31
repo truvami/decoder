@@ -89,6 +89,7 @@ func (t TagXLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 				{Name: "WifiScans", Start: 25, Length: 2},
 			},
 			TargetType: reflect.TypeOf(Port151Payload{}),
+			Features:   []decoder.Feature{decoder.FeatureBattery, decoder.FeatureConfig},
 		}, nil
 	case 152:
 		return common.PayloadConfig{
