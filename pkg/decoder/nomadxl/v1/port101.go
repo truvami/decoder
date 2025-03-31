@@ -60,10 +60,10 @@ func (p Port101Payload) MarshalJSON() ([]byte, error) {
 }
 
 var _ decoder.UplinkFeatureBase = &Port101Payload{}
-var _ decoder.UpLinkFeatureBattery = &Port101Payload{}
+var _ decoder.UplinkFeatureBattery = &Port101Payload{}
 var _ decoder.UplinkFeatureBuffered = &Port101Payload{}
 
-// GetBatteryVoltage implements decoder.UpLinkFeatureBattery.
+// GetBatteryVoltage implements decoder.UplinkFeatureBattery.
 func (p Port101Payload) GetBatteryVoltage() float64 {
 	return p.Battery
 }

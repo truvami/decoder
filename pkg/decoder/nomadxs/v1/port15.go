@@ -19,14 +19,14 @@ type Port15Payload struct {
 }
 
 var _ decoder.UplinkFeatureBase = &Port15Payload{}
-var _ decoder.UpLinkFeatureBattery = &Port15Payload{}
+var _ decoder.UplinkFeatureBattery = &Port15Payload{}
 
 // GetTimestamp implements decoder.UplinkFeatureBase.
 func (p Port15Payload) GetTimestamp() *time.Time {
 	return nil
 }
 
-// GetBattery implements decoder.UpLinkFeatureBattery.
+// GetBattery implements decoder.UplinkFeatureBattery.
 func (p Port15Payload) GetBatteryVoltage() float64 {
 	return p.Battery
 }

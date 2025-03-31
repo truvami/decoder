@@ -89,7 +89,7 @@ type UplinkFeatureBuffered interface {
 	GetBufferLevel() uint16
 }
 
-type UpLinkFeatureBattery interface {
+type UplinkFeatureBattery interface {
 	// GetBatteryVoltage returns the battery voltage of the device.
 	GetBatteryVoltage() float64
 }
