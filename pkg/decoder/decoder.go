@@ -115,12 +115,12 @@ type UplinkFeatureDutyCycle interface {
 
 type UplinkFeatureConfig interface {
 	GetBle() *bool
-	GetGps() *bool
+	GetGnss() *bool
 	GetWifi() *bool
 	GetMovingInterval() *uint32
 	GetSteadyInterval() *uint32
 	GetConfigInterval() *uint32
-	GetGpsTimeout() *uint16
+	GetGnssTimeout() *uint16
 	GetAccelerometerThreshold() *uint16
 	GetAccelerometerDelay() *uint16
 	GetBatteryInterval() *uint32

@@ -53,7 +53,7 @@ func (p Port4Payload) GetBle() *bool {
 	return nil
 }
 
-func (p Port4Payload) GetGps() *bool {
+func (p Port4Payload) GetGnss() *bool {
 	return nil
 }
 
@@ -73,7 +73,7 @@ func (p Port4Payload) GetConfigInterval() *uint32 {
 	return &p.HeartbeatInterval
 }
 
-func (p Port4Payload) GetGpsTimeout() *uint16 {
+func (p Port4Payload) GetGnssTimeout() *uint16 {
 	return &p.GPSTimeoutWhileWaitingForFix
 }
 

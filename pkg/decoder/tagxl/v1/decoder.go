@@ -54,22 +54,43 @@ func WithFCount(fCount uint32) Option {
 func (t TagXLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 	switch port {
 	case 151:
-		// return decoder.PayloadConfig{
-		// 	Fields: []decoder.FieldConfig{
-		// 		{Name: "DeviceFlags", Start: 2, Length: 1},
-		// 		// {Name: "AssetTrackingIntervals", Start: 3, Length: 4, Transform: func(v interface{}) interface{} {
-		// 		// 	return []uint16{uint16(v.(int) >> 16), uint16(v.(int) & 0xFFFF)}
-		// 		// }},
-		// 		// {Name: "AccelerationSensor", Start: 7, Length: 4, Transform: func(v interface{}) interface{} {
-		// 		// 	return []uint16{uint16(v.(int) >> 16), uint16(v.(int) & 0xFFFF)}
-		// 		// }},
-		// 		{Name: "HeartbeatInterval", Start: 11, Length: 1, Optional: true},
-		// 		{Name: "AdvertisementFwuInterval", Start: 12, Length: 1},
-		// 		{Name: "Battery", Start: 13, Length: 2},
-		// 		{Name: "FirmwareHash", Start: 15, Length: 4},
-		// 	},
-		// 	TargetType: reflect.TypeOf(Port151Payload{}),
-		// }, nil
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
+				{Name: "Ble", Start: 0, Length: 1, Transform: func(v interface{}) interface{} {
+					return ((v.(int) >> 7) & 0x1) != 0
+				}},
+				{Name: "Gnss", Start: 0, Length: 1, Transform: func(v interface{}) interface{} {
+					return ((v.(int) >> 6) & 0x1) != 0
+				}},
+				{Name: "Wifi", Start: 0, Length: 1, Transform: func(v interface{}) interface{} {
+					return ((v.(int) >> 5) & 0x1) != 0
+				}},
+				{Name: "Acceleration", Start: 0, Length: 1, Transform: func(v interface{}) interface{} {
+					return ((v.(int) >> 4) & 0x1) != 0
+				}},
+				{Name: "Rfu", Start: 0, Length: 1, Transform: func(v interface{}) interface{} {
+					return uint8(v.(int) & 0xf)
+				}},
+				{Name: "MovingInterval", Start: 1, Length: 2},
+				{Name: "SteadyInterval", Start: 3, Length: 2},
+				{Name: "AccelerationThreshold", Start: 5, Length: 2},
+				{Name: "AccelerationDelay", Start: 7, Length: 2},
+				{Name: "HeartbeatInterval", Start: 9, Length: 1},
+				{Name: "FwuAdvertisementInterval", Start: 10, Length: 1},
+				{Name: "BatteryVoltage", Start: 11, Length: 2, Transform: func(v interface{}) interface{} {
+					return float32(v.(int)) / 1000
+				}},
+				{Name: "FirmwareHash", Start: 13, Length: 4, Transform: func(v interface{}) interface{} {
+					return fmt.Sprintf("%8x", v.(int))
+				}},
+				{Name: "ResetCount", Start: 17, Length: 2},
+				{Name: "ResetCause", Start: 19, Length: 4},
+				{Name: "GnssScans", Start: 23, Length: 2},
+				{Name: "WifiScans", Start: 25, Length: 2},
+			},
+			TargetType: reflect.TypeOf(Port151Payload{}),
+			Features:   []decoder.Feature{decoder.FeatureBattery, decoder.FeatureConfig},
+		}, nil
 	case 152:
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{

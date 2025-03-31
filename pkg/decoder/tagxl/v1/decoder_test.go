@@ -95,6 +95,98 @@ func TestDecode(t *testing.T) {
 			expectedErr: "port 0 not supported",
 		},
 		{
+			payload: "0f0078012c000a03e80f1e0e9e7393fffe0002dead10cc0953046e",
+			port:    151,
+			expected: Port151Payload{
+				Ble:                      false,
+				Gnss:                     false,
+				Wifi:                     false,
+				Acceleration:             false,
+				Rfu:                      15,
+				MovingInterval:           120,
+				SteadyInterval:           300,
+				AccelerationThreshold:    10,
+				AccelerationDelay:        1000,
+				HeartbeatInterval:        15,
+				FwuAdvertisementInterval: 30,
+				BatteryVoltage:           3.742,
+				FirmwareHash:             "7393fffe",
+				ResetCount:               2,
+				ResetCause:               3735883980,
+				GnssScans:                2387,
+				WifiScans:                1134,
+			},
+		},
+		{
+			payload: "57012c0258006403e81e3c0dbfd6ce814d0003c0debabe0acd04b9",
+			port:    151,
+			expected: Port151Payload{
+				Ble:                      false,
+				Gnss:                     true,
+				Wifi:                     false,
+				Acceleration:             true,
+				Rfu:                      7,
+				MovingInterval:           300,
+				SteadyInterval:           600,
+				AccelerationThreshold:    100,
+				AccelerationDelay:        1000,
+				HeartbeatInterval:        30,
+				FwuAdvertisementInterval: 60,
+				BatteryVoltage:           3.519,
+				FirmwareHash:             "d6ce814d",
+				ResetCount:               3,
+				ResetCause:               3235822270,
+				GnssScans:                2765,
+				WifiScans:                1209,
+			},
+		},
+		{
+			payload: "a3025804b0012c05dc3c780d70ca6a55150005feedface0cae09b0",
+			port:    151,
+			expected: Port151Payload{
+				Ble:                      true,
+				Gnss:                     false,
+				Wifi:                     true,
+				Acceleration:             false,
+				Rfu:                      3,
+				MovingInterval:           600,
+				SteadyInterval:           1200,
+				AccelerationThreshold:    300,
+				AccelerationDelay:        1500,
+				HeartbeatInterval:        60,
+				FwuAdvertisementInterval: 120,
+				BatteryVoltage:           3.440,
+				FirmwareHash:             "ca6a5515",
+				ResetCount:               5,
+				ResetCause:               4277009102,
+				GnssScans:                3246,
+				WifiScans:                2480,
+			},
+		},
+		{
+			payload: "f007080e1001c207d078f00c893113870f00088badf00d10000c00",
+			port:    151,
+			expected: Port151Payload{
+				Ble:                      true,
+				Gnss:                     true,
+				Wifi:                     true,
+				Acceleration:             true,
+				Rfu:                      0,
+				MovingInterval:           1800,
+				SteadyInterval:           3600,
+				AccelerationThreshold:    450,
+				AccelerationDelay:        2000,
+				HeartbeatInterval:        120,
+				FwuAdvertisementInterval: 240,
+				BatteryVoltage:           3.209,
+				FirmwareHash:             "3113870f",
+				ResetCount:               8,
+				ResetCause:               2343432205,
+				GnssScans:                4096,
+				WifiScans:                3072,
+			},
+		},
+		{
 			payload:     "010b0266acbcf0000000000756",
 			port:        152,
 			autoPadding: false,
@@ -230,6 +322,10 @@ func TestFeatures(t *testing.T) {
 		skipValidation bool
 	}{
 		{
+			payload: "57012c0258006403e81e3c0dbfd6ce814d0003c0debabe0acd04b9",
+			port:    151,
+		},
+		{
 			payload: "010b0266acbcf0000000000756",
 			port:    152,
 		},
@@ -304,6 +400,28 @@ func TestFeatures(t *testing.T) {
 				}
 				// call function to check if it panics
 				moving.IsMoving()
+			}
+			if decodedPayload.Is(decoder.FeatureConfig) {
+				config, ok := decodedPayload.Data.(decoder.UplinkFeatureConfig)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureConfig, got %T", decodedPayload)
+				}
+				// call functions to check if it panics
+				config.GetBle()
+				config.GetGnss()
+				config.GetWifi()
+				config.GetMovingInterval()
+				config.GetSteadyInterval()
+				config.GetConfigInterval()
+				config.GetGnssTimeout()
+				config.GetAccelerometerThreshold()
+				config.GetAccelerometerDelay()
+				config.GetBatteryInterval()
+				config.GetRejoinInterval()
+				config.GetLowLightThreshold()
+				config.GetHighLightThreshold()
+				config.GetBatchSize()
+				config.GetBufferSize()
 			}
 		})
 	}
