@@ -1,6 +1,10 @@
 package tagxl
 
-import "github.com/truvami/decoder/pkg/decoder"
+import (
+	"time"
+
+	"github.com/truvami/decoder/pkg/decoder"
+)
 
 // +------+------+-----------------------------------------------+------------+
 // | Byte | Size | Description                                   | Format     |
@@ -40,8 +44,13 @@ type Port151Payload struct {
 	WifiScans                uint16  `json:"wifiScans"`
 }
 
-var _ decoder.UpLinkFeatureBattery = Port151Payload{}
+var _ decoder.UplinkFeatureBase = &Port151Payload{}
+var _ decoder.UpLinkFeatureBattery = &Port151Payload{}
 var _ decoder.UplinkFeatureConfig = &Port151Payload{}
+
+func (p Port151Payload) GetTimestamp() *time.Time {
+	return nil
+}
 
 func (p Port151Payload) GetBatteryVoltage() float64 {
 	return float64(p.BatteryVoltage)

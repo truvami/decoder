@@ -322,6 +322,10 @@ func TestFeatures(t *testing.T) {
 		skipValidation bool
 	}{
 		{
+			payload: "57012c0258006403e81e3c0dbfd6ce814d0003c0debabe0acd04b9",
+			port:    151,
+		},
+		{
 			payload: "010b0266acbcf0000000000756",
 			port:    152,
 		},
