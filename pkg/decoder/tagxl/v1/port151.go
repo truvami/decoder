@@ -45,7 +45,7 @@ type Port151Payload struct {
 }
 
 var _ decoder.UplinkFeatureBase = &Port151Payload{}
-var _ decoder.UpLinkFeatureBattery = &Port151Payload{}
+var _ decoder.UplinkFeatureBattery = &Port151Payload{}
 var _ decoder.UplinkFeatureConfig = &Port151Payload{}
 
 func (p Port151Payload) GetTimestamp() *time.Time {
