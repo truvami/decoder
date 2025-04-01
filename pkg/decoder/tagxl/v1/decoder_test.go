@@ -234,13 +234,62 @@ func TestDecode(t *testing.T) {
 				ElapsedSeconds:    135,
 			},
 		},
-		// {
-		// 	payload: "4C050145020B8C",
-		// 	port:    151,
-		// 	expected: Port151Payload{
-		// 		Battery: 2.956,
-		// 	},
-		// },
+		{
+			payload: "00d63385f8ee30c2d0a0382c2601db",
+			port:    197,
+			expected: Port197Payload{
+				Tag:   byte(0x00),
+				Rssi1: -42,
+				Mac1:  "3385f8ee30c2",
+				Rssi2: -48,
+				Mac2:  "a0382c2601db",
+			},
+		},
+		{
+			payload: "64c8b5eded55a313c0a0b8b5e86e31b894a765f3ad40",
+			port:    197,
+			expected: Port197Payload{
+				Tag:   byte(0x64),
+				Rssi1: -56,
+				Mac1:  "b5eded55a313",
+				Rssi2: -64,
+				Mac2:  "a0b8b5e86e31",
+				Rssi3: -72,
+				Mac3:  "94a765f3ad40",
+			},
+		},
+		{
+			payload: "aebd6fbcfdd76434bb7e7cbff22fc5b900dc0af60588b7010161302d9c",
+			port:    197,
+			expected: Port197Payload{
+				Tag:   byte(0xae),
+				Rssi1: -67,
+				Mac1:  "6fbcfdd76434",
+				Rssi2: -69,
+				Mac2:  "7e7cbff22fc5",
+				Rssi3: -71,
+				Mac3:  "00dc0af60588",
+				Rssi4: -73,
+				Mac4:  "010161302d9c",
+			},
+		},
+		{
+			payload: "fdb7218f6c166fadb359ea3bdec77daff72faac81784ab263386a455d3a73592a063900b",
+			port:    197,
+			expected: Port197Payload{
+				Tag:   byte(0xfd),
+				Rssi1: -73,
+				Mac1:  "218f6c166fad",
+				Rssi2: -77,
+				Mac2:  "59ea3bdec77d",
+				Rssi3: -81,
+				Mac3:  "f72faac81784",
+				Rssi4: -85,
+				Mac4:  "263386a455d3",
+				Rssi5: -89,
+				Mac5:  "3592a063900b",
+			},
+		},
 	}
 
 	for _, test := range tests {

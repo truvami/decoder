@@ -110,14 +110,31 @@ func (t TagXLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 			},
 			TargetType: reflect.TypeOf(Port152Payload{}),
 		}, nil
-
+	case 197:
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
+				{Name: "Tag", Start: 0, Length: 1},
+				{Name: "Rssi1", Start: 1, Length: 1},
+				{Name: "Mac1", Start: 2, Length: 6, Hex: true},
+				{Name: "Rssi2", Start: 8, Length: 1, Optional: true},
+				{Name: "Mac2", Start: 9, Length: 6, Optional: true, Hex: true},
+				{Name: "Rssi3", Start: 15, Length: 1, Optional: true},
+				{Name: "Mac3", Start: 16, Length: 6, Optional: true, Hex: true},
+				{Name: "Rssi4", Start: 22, Length: 1, Optional: true},
+				{Name: "Mac4", Start: 23, Length: 6, Optional: true, Hex: true},
+				{Name: "Rssi5", Start: 29, Length: 1, Optional: true},
+				{Name: "Mac5", Start: 30, Length: 6, Optional: true, Hex: true},
+			},
+			TargetType: reflect.TypeOf(Port197Payload{}),
+			Features:   []decoder.Feature{decoder.FeatureWiFi},
+		}, nil
 	}
 	return common.PayloadConfig{}, fmt.Errorf("port %v not supported", port)
 }
 
 func (t TagXLv1Decoder) Decode(data string, port int16, devEui string) (*decoder.DecodedUplink, error) {
 	switch port {
-	case 192, 197, 199:
+	case 192, 199:
 		decodedData, err := t.loracloudMiddleware.DeliverUplinkMessage(devEui, loracloud.UplinkMsg{
 			MsgType: "updf",
 			Port:    uint8(port),
