@@ -168,10 +168,6 @@ func (t SmartLabelv1Decoder) Decode(data string, port int16, devEui string) (*de
 			return nil, err
 		}
 
-		if t.autoPadding {
-			data = common.HexNullPad(&data, &config)
-		}
-
 		if !t.skipValidation {
 			err := common.ValidateLength(&data, &config)
 			if err != nil {
