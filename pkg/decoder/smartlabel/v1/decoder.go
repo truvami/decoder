@@ -80,6 +80,19 @@ func (t SmartLabelv1Decoder) getConfig(port int16, data string) (common.PayloadC
 			TargetType: reflect.TypeOf(Port1Payload{}),
 			Features:   []decoder.Feature{decoder.FeatureBattery, decoder.FeaturePhotovoltaic},
 		}, nil
+	case 2:
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
+				{Name: "Temperature", Start: 0, Length: 2, Transform: func(v any) any {
+					return float32(v.(int)) / 100
+				}},
+				{Name: "Humidity", Start: 2, Length: 1, Transform: func(v any) any {
+					return float32(v.(int)) / 2
+				}},
+			},
+			TargetType: reflect.TypeOf(Port2Payload{}),
+			Features:   []decoder.Feature{decoder.FeatureTemperature, decoder.FeatureHumidity},
+		}, nil
 	case 11:
 		// Check first byte length to determine message type
 		payloadType, err := getPort11PayloadType(data)

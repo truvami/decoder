@@ -102,6 +102,38 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
+			payload: "07fa69",
+			port:    2,
+			expected: Port2Payload{
+				Temperature: 20.42,
+				Humidity:    52.5,
+			},
+		},
+		{
+			payload: "074070",
+			port:    2,
+			expected: Port2Payload{
+				Temperature: 18.56,
+				Humidity:    56.0,
+			},
+		},
+		{
+			payload: "06947d",
+			port:    2,
+			expected: Port2Payload{
+				Temperature: 16.84,
+				Humidity:    62.5,
+			},
+		},
+		{
+			payload: "04da8d",
+			port:    2,
+			expected: Port2Payload{
+				Temperature: 12.42,
+				Humidity:    70.5,
+			},
+		},
+		{
 			payload:  "87821F50490200B520FBE977844D222A3A14A89293956245CC75A9CA1BBC25DDF658542909",
 			port:     192,
 			devEui:   "10CE45FFFE00C7EC",
@@ -246,6 +278,10 @@ func TestFeatures(t *testing.T) {
 			payload: "0f501079",
 			port:    1,
 		},
+		{
+			payload: "04da8d",
+			port:    2,
+		},
 	}
 
 	for _, test := range tests {
@@ -277,6 +313,24 @@ func TestFeatures(t *testing.T) {
 				}
 				if photovoltaicVoltage.GetPhotovoltaicVoltage() == 0 {
 					t.Fatalf("expected non zero photovoltaic voltage")
+				}
+			}
+			if data.Is(decoder.FeatureTemperature) {
+				temperature, ok := data.Data.(decoder.UplinkFeatureTemperature)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureTemperature, got %T", data)
+				}
+				if temperature.GetTemperature() == 0 {
+					t.Fatalf("expected non zero temperature")
+				}
+			}
+			if data.Is(decoder.FeatureHumidity) {
+				humidity, ok := data.Data.(decoder.UplinkFeatureHumidity)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureHumidity, got %T", data)
+				}
+				if humidity.GetHumidity() == 0 {
+					t.Fatalf("expected non zero humidity")
 				}
 			}
 		})

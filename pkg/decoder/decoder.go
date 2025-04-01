@@ -16,6 +16,7 @@ const (
 	FeatureBattery         Feature = "battery"
 	FeaturePhotovoltaic    Feature = "photovoltaic"
 	FeatureTemperature     Feature = "temperature"
+	FeatureHumidity        Feature = "humidity"
 	FeatureWiFi            Feature = "wifi"
 	FeatureBle             Feature = "ble"
 	FeatureButton          Feature = "button"
@@ -97,6 +98,14 @@ type UplinkFeatureBattery interface {
 
 type UplinkFeaturePhotovoltaic interface {
 	GetPhotovoltaicVoltage() float32
+}
+
+type UplinkFeatureTemperature interface {
+	GetTemperature() float32
+}
+
+type UplinkFeatureHumidity interface {
+	GetHumidity() float32
 }
 
 type AccessPoint struct {
