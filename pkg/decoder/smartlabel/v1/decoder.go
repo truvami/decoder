@@ -67,6 +67,19 @@ func getPort11PayloadType(data string) (string, error) {
 // https://docs.truvami.com/docs/payloads/smartlabel
 func (t SmartLabelv1Decoder) getConfig(port int16, data string) (common.PayloadConfig, error) {
 	switch port {
+	case 1:
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
+				{Name: "BatteryVoltage", Start: 0, Length: 2, Transform: func(v any) any {
+					return float32(v.(int)) / 1000
+				}},
+				{Name: "PhotovoltaicVoltage", Start: 2, Length: 2, Transform: func(v any) any {
+					return float32(v.(int)) / 1000
+				}},
+			},
+			TargetType: reflect.TypeOf(Port1Payload{}),
+			Features:   []decoder.Feature{decoder.FeatureBattery, decoder.FeaturePhotovoltaic},
+		}, nil
 	case 11:
 		// Check first byte length to determine message type
 		payloadType, err := getPort11PayloadType(data)
@@ -140,6 +153,17 @@ func (t SmartLabelv1Decoder) Decode(data string, port int16, devEui string) (*de
 		config, err := t.getConfig(port, data)
 		if err != nil {
 			return nil, err
+		}
+
+		if t.autoPadding {
+			data = common.HexNullPad(&data, &config)
+		}
+
+		if !t.skipValidation {
+			err := common.ValidateLength(&data, &config)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		decodedData, err := common.Parse(data, &config)

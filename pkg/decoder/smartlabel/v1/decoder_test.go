@@ -11,6 +11,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/truvami/decoder/pkg/decoder"
 	"github.com/truvami/decoder/pkg/loracloud"
 )
 
@@ -68,6 +69,38 @@ func TestDecode(t *testing.T) {
 		expected    interface{}
 		expectedErr string
 	}{
+		{
+			payload: "0ca90dbd",
+			port:    1,
+			expected: Port1Payload{
+				BatteryVoltage:      3.241,
+				PhotovoltaicVoltage: 3.517,
+			},
+		},
+		{
+			payload: "0dfa0e1a",
+			port:    1,
+			expected: Port1Payload{
+				BatteryVoltage:      3.578,
+				PhotovoltaicVoltage: 3.610,
+			},
+		},
+		{
+			payload: "0e860ef7",
+			port:    1,
+			expected: Port1Payload{
+				BatteryVoltage:      3.718,
+				PhotovoltaicVoltage: 3.831,
+			},
+		},
+		{
+			payload: "0f501079",
+			port:    1,
+			expected: Port1Payload{
+				BatteryVoltage:      3.920,
+				PhotovoltaicVoltage: 4.217,
+			},
+		},
 		{
 			payload:  "87821F50490200B520FBE977844D222A3A14A89293956245CC75A9CA1BBC25DDF658542909",
 			port:     192,
@@ -142,14 +175,14 @@ func TestDecode(t *testing.T) {
 			expectedErr: "data length is less than 2",
 		},
 		{
-			payload:     "0eXX",
+			payload:     "0e02f9f3eae48ae7523948d0d5xx",
 			port:        11,
 			devEui:      "",
 			expected:    nil,
 			expectedErr: "encoding/hex",
 		},
 		{
-			payload:     "FF00",
+			payload:     "ff00",
 			port:        11,
 			devEui:      "",
 			expected:    nil,
@@ -183,6 +216,70 @@ func TestInvalidPort(t *testing.T) {
 	_, err := decoder.Decode("00", 0, "")
 	if err == nil || err.Error() != "port 0 not supported" {
 		t.Fatal("expected port not supported")
+	}
+}
+
+func TestPayloadTooShort(t *testing.T) {
+	decoder := NewSmartLabelv1Decoder(loracloud.NewLoracloudMiddleware("appEui"))
+	_, err := decoder.Decode("0ff0", 1, "")
+
+	if err == nil || err.Error() != "payload too short" {
+		t.Fatal("expected error payload too short")
+	}
+}
+
+func TestPayloadTooLong(t *testing.T) {
+	decoder := NewSmartLabelv1Decoder(loracloud.NewLoracloudMiddleware("appEui"))
+	_, err := decoder.Decode("0ff00ff00ff0", 1, "")
+
+	if err == nil || err.Error() != "payload too long" {
+		t.Fatal("expected error payload too long")
+	}
+}
+
+func TestFeatures(t *testing.T) {
+	tests := []struct {
+		payload string
+		port    int16
+	}{
+		{
+			payload: "0f501079",
+			port:    1,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(fmt.Sprintf("TestFeaturesWithPort%vAndPayload%v", test.port, test.payload), func(t *testing.T) {
+			d := NewSmartLabelv1Decoder(loracloud.NewLoracloudMiddleware("appEui"))
+			data, _ := d.Decode(test.payload, test.port, "")
+
+			// should be able to decode base feature
+			base, ok := data.Data.(decoder.UplinkFeatureBase)
+			if !ok {
+				t.Fatalf("expected UplinkFeatureBase, got %T", data)
+			}
+			// check if it panics
+			base.GetTimestamp()
+
+			if data.Is(decoder.FeatureBattery) {
+				batteryVoltage, ok := data.Data.(decoder.UplinkFeatureBattery)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureBattery, got %T", data)
+				}
+				if batteryVoltage.GetBatteryVoltage() == 0 {
+					t.Fatalf("expected non zero battery voltage")
+				}
+			}
+			if data.Is(decoder.FeaturePhotovoltaic) {
+				photovoltaicVoltage, ok := data.Data.(decoder.UplinkFeaturePhotovoltaic)
+				if !ok {
+					t.Fatalf("expected UplinkFeaturePhotovoltaic, got %T", data)
+				}
+				if photovoltaicVoltage.GetPhotovoltaicVoltage() == 0 {
+					t.Fatalf("expected non zero photovoltaic voltage")
+				}
+			}
+		})
 	}
 }
 

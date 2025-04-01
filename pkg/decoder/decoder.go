@@ -14,6 +14,7 @@ const (
 	FeatureGNSS            Feature = "gnss"
 	FeatureBuffered        Feature = "buffered"
 	FeatureBattery         Feature = "battery"
+	FeaturePhotovoltaic    Feature = "photovoltaic"
 	FeatureTemperature     Feature = "temperature"
 	FeatureWiFi            Feature = "wifi"
 	FeatureBle             Feature = "ble"
@@ -92,6 +93,10 @@ type UplinkFeatureBuffered interface {
 type UplinkFeatureBattery interface {
 	// GetBatteryVoltage returns the battery voltage of the device.
 	GetBatteryVoltage() float64
+}
+
+type UplinkFeaturePhotovoltaic interface {
+	GetPhotovoltaicVoltage() float32
 }
 
 type AccessPoint struct {
