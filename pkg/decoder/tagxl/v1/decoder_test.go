@@ -378,6 +378,10 @@ func TestFeatures(t *testing.T) {
 			payload: "010b0266acbcf0000000000756",
 			port:    152,
 		},
+		{
+			payload: "fdb7218f6c166fadb359ea3bdec77daff72faac81784ab263386a455d3a73592a063900b",
+			port:    197,
+		},
 	}
 
 	for _, test := range tests {
