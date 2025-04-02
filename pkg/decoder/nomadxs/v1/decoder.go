@@ -39,7 +39,7 @@ func WithSkipValidation(skipValidation bool) Option {
 }
 
 // https://docs.truvami.com/docs/payloads/nomad-xs
-func (t NomadXSv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
+func (t NomadXSv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 	switch port {
 	case 1:
 		return common.PayloadConfig{
@@ -136,7 +136,7 @@ func (t NomadXSv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 	return common.PayloadConfig{}, fmt.Errorf("port %v not supported", port)
 }
 
-func (t NomadXSv1Decoder) Decode(data string, port int16, devEui string) (*decoder.DecodedUplink, error) {
+func (t NomadXSv1Decoder) Decode(data string, port uint8, devEui string) (*decoder.DecodedUplink, error) {
 	config, err := t.getConfig(port)
 	if err != nil {
 		return nil, err

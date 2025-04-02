@@ -5,7 +5,7 @@ import (
 )
 
 type Decoder interface {
-	Decode(payload string, port int16, devEui string) (*DecodedUplink, error)
+	Decode(payload string, port uint8, devEui string) (*DecodedUplink, error)
 }
 
 type Feature string

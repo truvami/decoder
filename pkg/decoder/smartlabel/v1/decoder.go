@@ -65,7 +65,7 @@ func getPort11PayloadType(data string) (string, error) {
 }
 
 // https://docs.truvami.com/docs/payloads/smartlabel
-func (t SmartLabelv1Decoder) getConfig(port int16, data string) (common.PayloadConfig, error) {
+func (t SmartLabelv1Decoder) getConfig(port uint8, data string) (common.PayloadConfig, error) {
 	switch port {
 	case 1:
 		return common.PayloadConfig{
@@ -152,7 +152,7 @@ func (t SmartLabelv1Decoder) getConfig(port int16, data string) (common.PayloadC
 	}
 }
 
-func (t SmartLabelv1Decoder) Decode(data string, port int16, devEui string) (*decoder.DecodedUplink, error) {
+func (t SmartLabelv1Decoder) Decode(data string, port uint8, devEui string) (*decoder.DecodedUplink, error) {
 	switch port {
 	case 192, 197:
 		decodedData, err := t.loracloudMiddleware.DeliverUplinkMessage(devEui, loracloud.UplinkMsg{

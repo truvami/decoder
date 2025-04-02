@@ -13,7 +13,7 @@ import (
 func TestDecode(t *testing.T) {
 	tests := []struct {
 		payload     string
-		port        int16
+		port        uint8
 		autoPadding bool
 		expected    any
 	}{
@@ -125,7 +125,7 @@ func TestPayloadTooLong(t *testing.T) {
 func TestFeatures(t *testing.T) {
 	tests := []struct {
 		payload        string
-		port           int16
+		port           uint8
 		skipValidation bool
 	}{
 		{
@@ -215,7 +215,7 @@ func TestFeatures(t *testing.T) {
 func TestMarshal(t *testing.T) {
 	tests := []struct {
 		payload  string
-		port     int16
+		port     uint8
 		expected []string
 	}{
 		{

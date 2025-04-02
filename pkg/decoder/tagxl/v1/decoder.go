@@ -51,7 +51,7 @@ func WithFCount(fCount uint32) Option {
 }
 
 // https://docs.truvami.com/docs/payloads/tag-xl
-func (t TagXLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
+func (t TagXLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 	switch port {
 	case 151:
 		return common.PayloadConfig{
@@ -132,7 +132,7 @@ func (t TagXLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 	return common.PayloadConfig{}, fmt.Errorf("port %v not supported", port)
 }
 
-func (t TagXLv1Decoder) Decode(data string, port int16, devEui string) (*decoder.DecodedUplink, error) {
+func (t TagXLv1Decoder) Decode(data string, port uint8, devEui string) (*decoder.DecodedUplink, error) {
 	switch port {
 	case 192, 199:
 		decodedData, err := t.loracloudMiddleware.DeliverUplinkMessage(devEui, loracloud.UplinkMsg{

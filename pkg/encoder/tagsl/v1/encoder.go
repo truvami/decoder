@@ -23,7 +23,7 @@ func NewTagSLv1Encoder(options ...Option) encoder.Encoder {
 }
 
 // Encode encodes the provided data into a payload string
-func (t TagSLv1Encoder) Encode(data any, port int16, extra string) (any, any, error) {
+func (t TagSLv1Encoder) Encode(data any, port uint8, extra string) (any, any, error) {
 	config, err := t.getConfig(port)
 	if err != nil {
 		return nil, nil, err
@@ -39,7 +39,7 @@ func (t TagSLv1Encoder) Encode(data any, port int16, extra string) (any, any, er
 
 // https://docs.truvami.com/docs/payloads/tag-S
 // https://docs.truvami.com/docs/payloads/tag-L
-func (t TagSLv1Encoder) getConfig(port int16) (common.PayloadConfig, error) {
+func (t TagSLv1Encoder) getConfig(port uint8) (common.PayloadConfig, error) {
 	switch port {
 	case 128:
 		return common.PayloadConfig{
