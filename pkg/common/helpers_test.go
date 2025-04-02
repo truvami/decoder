@@ -39,10 +39,10 @@ func TestParse(t *testing.T) {
 	config := PayloadConfig{
 		Fields: []FieldConfig{
 			{Name: "Moving", Start: 0, Length: 1},
-			{Name: "Lat", Start: 1, Length: 4, Transform: func(v interface{}) interface{} {
+			{Name: "Lat", Start: 1, Length: 4, Transform: func(v any) any {
 				return float64(v.(int)) / 1000000
 			}},
-			{Name: "Lon", Start: 5, Length: 4, Transform: func(v interface{}) interface{} {
+			{Name: "Lon", Start: 5, Length: 4, Transform: func(v any) any {
 				return float64(v.(int)) / 1000000
 			}},
 			{Name: "Alt", Start: 9, Length: 2},
@@ -59,7 +59,7 @@ func TestParse(t *testing.T) {
 	tests := []struct {
 		payload  string
 		config   PayloadConfig
-		expected interface{}
+		expected any
 	}{
 		{
 			payload: "8002cdcd1300744f5e166018040b14341a",
@@ -98,9 +98,9 @@ func TestParse(t *testing.T) {
 }
 func TestConvertFieldToType(t *testing.T) {
 	tests := []struct {
-		value     interface{}
+		value     any
 		fieldType reflect.Type
-		expected  interface{}
+		expected  any
 	}{
 		{
 			value:     10,

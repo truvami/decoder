@@ -10,7 +10,7 @@ type FieldConfig struct {
 	Name      string
 	Start     int
 	Length    int
-	Transform func(interface{}) interface{}
+	Transform func(any) any
 	Optional  bool
 	Hex       bool
 }

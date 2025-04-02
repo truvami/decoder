@@ -66,7 +66,7 @@ func TestDecode(t *testing.T) {
 		payload     string
 		port        int16
 		devEui      string
-		expected    interface{}
+		expected    any
 		expectedErr string
 	}{
 		{

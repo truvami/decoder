@@ -15,7 +15,7 @@ func TestDecode(t *testing.T) {
 		payload     string
 		port        int16
 		autoPadding bool
-		expected    interface{}
+		expected    any
 	}{
 		{
 			payload:     "00000001fdd5c693000079300001b45d000000000000000000d700000000000000000b3fd724",
@@ -236,7 +236,7 @@ func TestMarshal(t *testing.T) {
 
 			data, _ := decoder.Decode(test.payload, test.port, "")
 
-			marshaled, err := json.MarshalIndent(map[string]interface{}{
+			marshaled, err := json.MarshalIndent(map[string]any{
 				"data":     data.Data,
 				"metadata": data.Metadata,
 			}, "", "   ")

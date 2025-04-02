@@ -29,11 +29,11 @@ const (
 
 type DecodedUplink struct {
 	features []Feature
-	Data     interface{} `json:"data"`
-	Metadata interface{} `json:"metadata"`
+	Data     any `json:"data"`
+	Metadata any `json:"metadata"`
 }
 
-func NewDecodedUplink(features []Feature, data interface{}, metadata interface{}) *DecodedUplink {
+func NewDecodedUplink(features []Feature, data any, metadata any) *DecodedUplink {
 	return &DecodedUplink{
 		features: features,
 		Data:     data,

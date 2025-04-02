@@ -23,7 +23,7 @@ func NewTagSLv1Encoder(options ...Option) encoder.Encoder {
 }
 
 // Encode encodes the provided data into a payload string
-func (t TagSLv1Encoder) Encode(data interface{}, port int16, extra string) (interface{}, interface{}, error) {
+func (t TagSLv1Encoder) Encode(data any, port int16, extra string) (any, any, error) {
 	config, err := t.getConfig(port)
 	if err != nil {
 		return nil, nil, err
@@ -80,7 +80,7 @@ func (t TagSLv1Encoder) getConfig(port int16) (common.PayloadConfig, error) {
 				{Name: "ScanTime", Start: 2, Length: 1},
 				{Name: "MaxBeacons", Start: 3, Length: 1},
 				{Name: "MinRssi", Start: 4, Length: 1},
-				{Name: "AdvertisingName", Start: 5, Length: 10, Transform: func(v interface{}) interface{} {
+				{Name: "AdvertisingName", Start: 5, Length: 10, Transform: func(v any) any {
 					if len(v.([]byte)) > 9 {
 						v = v.([]byte)[:9]
 					}

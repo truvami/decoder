@@ -21,7 +21,7 @@ func HexStringToBytes(hexString string) ([]byte, error) {
 	return bytes, nil
 }
 
-func convertFieldToType(value interface{}, fieldType reflect.Type) interface{} {
+func convertFieldToType(value any, fieldType reflect.Type) any {
 	switch fieldType {
 	case reflect.TypeOf(int(0)):
 		return int(value.(int))
@@ -60,7 +60,7 @@ func convertFieldToType(value interface{}, fieldType reflect.Type) interface{} {
 	}
 }
 
-func extractFieldValue(payloadBytes []byte, start int, length int, optional bool, hexadecimal bool) (interface{}, error) {
+func extractFieldValue(payloadBytes []byte, start int, length int, optional bool, hexadecimal bool) (any, error) {
 	if length == -1 {
 		if start >= len(payloadBytes) {
 			return nil, fmt.Errorf("field start out of bounds")
@@ -75,7 +75,7 @@ func extractFieldValue(payloadBytes []byte, start int, length int, optional bool
 	}
 
 	// Extract the field value based on its length
-	var value interface{}
+	var value any
 	if hexadecimal {
 		value = hex.EncodeToString(payloadBytes[start : start+length])
 	} else {
@@ -108,7 +108,7 @@ func UnwrapError(err error) []error {
 }
 
 // DecodeLoRaWANPayload decodes the payload based on the provided configuration and populates the target struct
-func Parse(payloadHex string, config *PayloadConfig) (interface{}, error) {
+func Parse(payloadHex string, config *PayloadConfig) (any, error) {
 	// Convert hex payload to bytes
 	payloadBytes, err := HexStringToBytes(payloadHex)
 	if err != nil {
@@ -224,7 +224,7 @@ func ValidateLength(payload *string, config *PayloadConfig) error {
 	return nil
 }
 
-func Encode(data interface{}, config PayloadConfig) (string, error) {
+func Encode(data any, config PayloadConfig) (string, error) {
 	v := reflect.ValueOf(data)
 
 	// Validate input data is a struct

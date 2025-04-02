@@ -56,19 +56,19 @@ func (t TagXLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 	case 151:
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
-				{Name: "Ble", Start: 0, Length: 1, Transform: func(v interface{}) interface{} {
+				{Name: "Ble", Start: 0, Length: 1, Transform: func(v any) any {
 					return ((v.(int) >> 7) & 0x1) != 0
 				}},
-				{Name: "Gnss", Start: 0, Length: 1, Transform: func(v interface{}) interface{} {
+				{Name: "Gnss", Start: 0, Length: 1, Transform: func(v any) any {
 					return ((v.(int) >> 6) & 0x1) != 0
 				}},
-				{Name: "Wifi", Start: 0, Length: 1, Transform: func(v interface{}) interface{} {
+				{Name: "Wifi", Start: 0, Length: 1, Transform: func(v any) any {
 					return ((v.(int) >> 5) & 0x1) != 0
 				}},
-				{Name: "Acceleration", Start: 0, Length: 1, Transform: func(v interface{}) interface{} {
+				{Name: "Acceleration", Start: 0, Length: 1, Transform: func(v any) any {
 					return ((v.(int) >> 4) & 0x1) != 0
 				}},
-				{Name: "Rfu", Start: 0, Length: 1, Transform: func(v interface{}) interface{} {
+				{Name: "Rfu", Start: 0, Length: 1, Transform: func(v any) any {
 					return uint8(v.(int) & 0xf)
 				}},
 				{Name: "MovingInterval", Start: 1, Length: 2},
@@ -77,10 +77,10 @@ func (t TagXLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 				{Name: "AccelerationDelay", Start: 7, Length: 2},
 				{Name: "HeartbeatInterval", Start: 9, Length: 1},
 				{Name: "FwuAdvertisementInterval", Start: 10, Length: 1},
-				{Name: "BatteryVoltage", Start: 11, Length: 2, Transform: func(v interface{}) interface{} {
+				{Name: "BatteryVoltage", Start: 11, Length: 2, Transform: func(v any) any {
 					return float32(v.(int)) / 1000
 				}},
-				{Name: "FirmwareHash", Start: 13, Length: 4, Transform: func(v interface{}) interface{} {
+				{Name: "FirmwareHash", Start: 13, Length: 4, Transform: func(v any) any {
 					return fmt.Sprintf("%8x", v.(int))
 				}},
 				{Name: "ResetCount", Start: 17, Length: 2},
@@ -94,16 +94,16 @@ func (t TagXLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 	case 152:
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
-				{Name: "OldRotationState", Start: 2, Length: 1, Transform: func(v interface{}) interface{} {
+				{Name: "OldRotationState", Start: 2, Length: 1, Transform: func(v any) any {
 					// get bit 0-3 and return
 					return uint8((v.(int) >> 4) & 0xF)
 				}},
-				{Name: "NewRotationState", Start: 2, Length: 1, Transform: func(v interface{}) interface{} {
+				{Name: "NewRotationState", Start: 2, Length: 1, Transform: func(v any) any {
 					// get bit 4-7 and return
 					return uint8(v.(int) & 0xF)
 				}},
 				{Name: "Timestamp", Start: 3, Length: 4},
-				{Name: "NumberOfRotations", Start: 7, Length: 2, Transform: func(v interface{}) interface{} {
+				{Name: "NumberOfRotations", Start: 7, Length: 2, Transform: func(v any) any {
 					return float64(v.(int)) / 10
 				}},
 				{Name: "ElapsedSeconds", Start: 9, Length: 4},
