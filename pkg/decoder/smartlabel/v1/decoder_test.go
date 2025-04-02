@@ -64,9 +64,9 @@ func TestDecode(t *testing.T) {
 
 	tests := []struct {
 		payload     string
-		port        int16
+		port        uint8
 		devEui      string
-		expected    interface{}
+		expected    any
 		expectedErr string
 	}{
 		{
@@ -364,7 +364,7 @@ func TestPayloadTooLong(t *testing.T) {
 func TestFeatures(t *testing.T) {
 	tests := []struct {
 		payload string
-		port    int16
+		port    uint8
 	}{
 		{
 			payload: "0f501079",

@@ -15,10 +15,10 @@ import (
 func TestDecode(t *testing.T) {
 	tests := []struct {
 		payload        string
-		port           int16
+		port           uint8
 		autoPadding    bool
 		skipValidation bool
-		expected       interface{}
+		expected       any
 	}{
 		{
 			payload:     "8002cdcd1300744f5e166018040b14341a",
@@ -1269,7 +1269,7 @@ func TestDecode(t *testing.T) {
 func TestValidationErrors(t *testing.T) {
 	tests := []struct {
 		payload  string
-		port     int16
+		port     uint8
 		expected error
 	}{
 		{
@@ -1610,9 +1610,9 @@ func TestFullDecode(t *testing.T) {
 		payload        string
 		autoPadding    bool
 		skipValidation bool
-		expectedData   interface{}
+		expectedData   any
 		expectedStatus *Status
-		port           int16
+		port           uint8
 	}{
 		{
 			payload: "8002cdcd1300744f5e166018040b14341a",
@@ -1782,7 +1782,7 @@ func TestPayloadTooLong(t *testing.T) {
 func TestFeatures(t *testing.T) {
 	tests := []struct {
 		payload        string
-		port           int16
+		port           uint8
 		skipValidation bool
 	}{
 		{
@@ -1981,7 +1981,7 @@ func TestFeatures(t *testing.T) {
 func TestMarshal(t *testing.T) {
 	tests := []struct {
 		payload  string
-		port     int16
+		port     uint8
 		expected []string
 	}{
 		{
@@ -2067,7 +2067,7 @@ func TestMarshal(t *testing.T) {
 
 			data, _ := decoder.Decode(test.payload, test.port, "")
 
-			marshaled, err := json.MarshalIndent(map[string]interface{}{
+			marshaled, err := json.MarshalIndent(map[string]any{
 				"data":     data.Data,
 				"metadata": data.Metadata,
 			}, "", "   ")

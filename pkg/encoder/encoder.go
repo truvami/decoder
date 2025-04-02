@@ -1,5 +1,5 @@
 package encoder
 
 type Encoder interface {
-	Encode(interface{}, int16, string) (interface{}, interface{}, error)
+	Encode(any, uint8, string) (any, any, error)
 }

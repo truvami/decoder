@@ -40,20 +40,20 @@ func WithSkipValidation(skipValidation bool) Option {
 
 // https://docs.truvami.com/docs/payloads/tag-S
 // https://docs.truvami.com/docs/payloads/tag-L
-func (t TagSLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
+func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 	switch port {
 	case 1:
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
 				{Name: "Moving", Start: 0, Length: 1, Transform: moving},
 				{Name: "DutyCycle", Start: 0, Length: 1, Transform: dutyCycle},
-				{Name: "Latitude", Start: 1, Length: 4, Transform: func(v interface{}) interface{} {
+				{Name: "Latitude", Start: 1, Length: 4, Transform: func(v any) any {
 					return float64(v.(int)) / 1000000
 				}},
-				{Name: "Longitude", Start: 5, Length: 4, Transform: func(v interface{}) interface{} {
+				{Name: "Longitude", Start: 5, Length: 4, Transform: func(v any) any {
 					return float64(v.(int)) / 1000000
 				}},
-				{Name: "Altitude", Start: 9, Length: 2, Transform: func(v interface{}) interface{} {
+				{Name: "Altitude", Start: 9, Length: 2, Transform: func(v any) any {
 					return float64(v.(int)) / 10
 				}},
 				{Name: "Year", Start: 11, Length: 1},
@@ -193,23 +193,23 @@ func (t TagSLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 			Fields: []common.FieldConfig{
 				{Name: "Moving", Start: 0, Length: 1, Transform: moving},
 				{Name: "DutyCycle", Start: 0, Length: 1, Transform: dutyCycle},
-				{Name: "Latitude", Start: 1, Length: 4, Transform: func(v interface{}) interface{} {
+				{Name: "Latitude", Start: 1, Length: 4, Transform: func(v any) any {
 					return float64(v.(int)) / 1000000
 				}},
-				{Name: "Longitude", Start: 5, Length: 4, Transform: func(v interface{}) interface{} {
+				{Name: "Longitude", Start: 5, Length: 4, Transform: func(v any) any {
 					return float64(v.(int)) / 1000000
 				}},
-				{Name: "Altitude", Start: 9, Length: 2, Transform: func(v interface{}) interface{} {
+				{Name: "Altitude", Start: 9, Length: 2, Transform: func(v any) any {
 					return float64(v.(int)) / 10
 				}},
 				{Name: "Timestamp", Start: 11, Length: 4},
-				{Name: "Battery", Start: 15, Length: 2, Transform: func(v interface{}) interface{} {
+				{Name: "Battery", Start: 15, Length: 2, Transform: func(v any) any {
 					return float64(v.(int)) / 1000
 				}},
-				{Name: "TTF", Start: 17, Length: 1, Optional: true, Transform: func(v interface{}) interface{} {
+				{Name: "TTF", Start: 17, Length: 1, Optional: true, Transform: func(v any) any {
 					return time.Duration(v.(int)) * time.Second
 				}},
-				{Name: "PDOP", Start: 18, Length: 1, Optional: true, Transform: func(v interface{}) interface{} {
+				{Name: "PDOP", Start: 18, Length: 1, Optional: true, Transform: func(v any) any {
 					return float64(v.(int)) / 2
 				}},
 				{Name: "Satellites", Start: 19, Length: 1, Optional: true},
@@ -222,7 +222,7 @@ func (t TagSLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
 				{Name: "LowBattery", Start: 0, Length: 1},
-				{Name: "Battery", Start: 1, Length: 2, Transform: func(v interface{}) interface{} {
+				{Name: "Battery", Start: 1, Length: 2, Transform: func(v any) any {
 					return float64(v.(int)) / 1000
 				}},
 			},
@@ -235,20 +235,20 @@ func (t TagSLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 			Fields: []common.FieldConfig{
 				{Name: "Moving", Start: 0, Length: 1, Transform: moving},
 				{Name: "DutyCycle", Start: 0, Length: 1, Transform: dutyCycle},
-				{Name: "Latitude", Start: 1, Length: 4, Transform: func(v interface{}) interface{} {
+				{Name: "Latitude", Start: 1, Length: 4, Transform: func(v any) any {
 					return float64(v.(int)) / 1000000
 				}},
-				{Name: "Longitude", Start: 5, Length: 4, Transform: func(v interface{}) interface{} {
+				{Name: "Longitude", Start: 5, Length: 4, Transform: func(v any) any {
 					return float64(v.(int)) / 1000000
 				}},
-				{Name: "Altitude", Start: 9, Length: 2, Transform: func(v interface{}) interface{} {
+				{Name: "Altitude", Start: 9, Length: 2, Transform: func(v any) any {
 					return float64(v.(int)) / 10
 				}},
 				{Name: "Timestamp", Start: 11, Length: 4},
-				{Name: "Battery", Start: 15, Length: 2, Transform: func(v interface{}) interface{} {
+				{Name: "Battery", Start: 15, Length: 2, Transform: func(v any) any {
 					return float64(v.(int)) / 1000
 				}},
-				{Name: "TTF", Start: 17, Length: 1, Transform: func(v interface{}) interface{} {
+				{Name: "TTF", Start: 17, Length: 1, Transform: func(v any) any {
 					return time.Duration(v.(int)) * time.Second
 				}},
 				{Name: "Mac1", Start: 18, Length: 6, Optional: true, Hex: true},
@@ -273,23 +273,23 @@ func (t TagSLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 			Fields: []common.FieldConfig{
 				{Name: "Moving", Start: 0, Length: 1, Transform: moving},
 				{Name: "DutyCycle", Start: 0, Length: 1, Transform: dutyCycle},
-				{Name: "Latitude", Start: 1, Length: 4, Transform: func(v interface{}) interface{} {
+				{Name: "Latitude", Start: 1, Length: 4, Transform: func(v any) any {
 					return float64(v.(int)) / 1000000
 				}},
-				{Name: "Longitude", Start: 5, Length: 4, Transform: func(v interface{}) interface{} {
+				{Name: "Longitude", Start: 5, Length: 4, Transform: func(v any) any {
 					return float64(v.(int)) / 1000000
 				}},
-				{Name: "Altitude", Start: 9, Length: 2, Transform: func(v interface{}) interface{} {
+				{Name: "Altitude", Start: 9, Length: 2, Transform: func(v any) any {
 					return float64(v.(int)) / 10
 				}},
 				{Name: "Timestamp", Start: 11, Length: 4},
-				{Name: "Battery", Start: 15, Length: 2, Transform: func(v interface{}) interface{} {
+				{Name: "Battery", Start: 15, Length: 2, Transform: func(v any) any {
 					return float64(v.(int)) / 1000
 				}},
-				{Name: "TTF", Start: 17, Length: 1, Transform: func(v interface{}) interface{} {
+				{Name: "TTF", Start: 17, Length: 1, Transform: func(v any) any {
 					return time.Duration(v.(int)) * time.Second
 				}},
-				{Name: "PDOP", Start: 18, Length: 1, Transform: func(v interface{}) interface{} {
+				{Name: "PDOP", Start: 18, Length: 1, Transform: func(v any) any {
 					return float64(v.(int)) / 2
 				}},
 				{Name: "Satellites", Start: 19, Length: 1},
@@ -340,17 +340,17 @@ func (t TagSLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 				{Name: "BufferLevel", Start: 0, Length: 2},
 				{Name: "Moving", Start: 2, Length: 1, Transform: moving},
 				{Name: "DutyCycle", Start: 2, Length: 1, Transform: dutyCycle},
-				{Name: "Latitude", Start: 3, Length: 4, Transform: func(v interface{}) interface{} {
+				{Name: "Latitude", Start: 3, Length: 4, Transform: func(v any) any {
 					return float64(v.(int)) / 1000000
 				}},
-				{Name: "Longitude", Start: 7, Length: 4, Transform: func(v interface{}) interface{} {
+				{Name: "Longitude", Start: 7, Length: 4, Transform: func(v any) any {
 					return float64(v.(int)) / 1000000
 				}},
-				{Name: "Altitude", Start: 11, Length: 2, Transform: func(v interface{}) interface{} {
+				{Name: "Altitude", Start: 11, Length: 2, Transform: func(v any) any {
 					return float64(v.(int)) / 10
 				}},
 				{Name: "Timestamp", Start: 13, Length: 4},
-				{Name: "Battery", Start: 17, Length: 2, Transform: func(v interface{}) interface{} {
+				{Name: "Battery", Start: 17, Length: 2, Transform: func(v any) any {
 					return float64(v.(int)) / 1000
 				}},
 			},
@@ -364,20 +364,20 @@ func (t TagSLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 				{Name: "BufferLevel", Start: 0, Length: 2},
 				{Name: "Moving", Start: 2, Length: 1, Transform: moving},
 				{Name: "DutyCycle", Start: 2, Length: 1, Transform: dutyCycle},
-				{Name: "Latitude", Start: 3, Length: 4, Transform: func(v interface{}) interface{} {
+				{Name: "Latitude", Start: 3, Length: 4, Transform: func(v any) any {
 					return float64(v.(int)) / 1000000
 				}},
-				{Name: "Longitude", Start: 7, Length: 4, Transform: func(v interface{}) interface{} {
+				{Name: "Longitude", Start: 7, Length: 4, Transform: func(v any) any {
 					return float64(v.(int)) / 1000000
 				}},
-				{Name: "Altitude", Start: 11, Length: 2, Transform: func(v interface{}) interface{} {
+				{Name: "Altitude", Start: 11, Length: 2, Transform: func(v any) any {
 					return float64(v.(int)) / 10
 				}},
 				{Name: "Timestamp", Start: 13, Length: 4},
-				{Name: "Battery", Start: 17, Length: 2, Transform: func(v interface{}) interface{} {
+				{Name: "Battery", Start: 17, Length: 2, Transform: func(v any) any {
 					return float64(v.(int)) / 1000
 				}},
-				{Name: "TTF", Start: 19, Length: 1, Transform: func(v interface{}) interface{} {
+				{Name: "TTF", Start: 19, Length: 1, Transform: func(v any) any {
 					return time.Duration(v.(int)) * time.Second
 				}},
 				{Name: "Mac1", Start: 20, Length: 6, Optional: true, Hex: true},
@@ -403,23 +403,23 @@ func (t TagSLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 				{Name: "BufferLevel", Start: 0, Length: 2},
 				{Name: "Moving", Start: 2, Length: 1, Transform: moving},
 				{Name: "DutyCycle", Start: 2, Length: 1, Transform: dutyCycle},
-				{Name: "Latitude", Start: 3, Length: 4, Transform: func(v interface{}) interface{} {
+				{Name: "Latitude", Start: 3, Length: 4, Transform: func(v any) any {
 					return float64(v.(int)) / 1000000
 				}},
-				{Name: "Longitude", Start: 7, Length: 4, Transform: func(v interface{}) interface{} {
+				{Name: "Longitude", Start: 7, Length: 4, Transform: func(v any) any {
 					return float64(v.(int)) / 1000000
 				}},
-				{Name: "Altitude", Start: 11, Length: 2, Transform: func(v interface{}) interface{} {
+				{Name: "Altitude", Start: 11, Length: 2, Transform: func(v any) any {
 					return float64(v.(int)) / 10
 				}},
 				{Name: "Timestamp", Start: 13, Length: 4},
-				{Name: "Battery", Start: 17, Length: 2, Transform: func(v interface{}) interface{} {
+				{Name: "Battery", Start: 17, Length: 2, Transform: func(v any) any {
 					return float64(v.(int)) / 1000
 				}},
-				{Name: "TTF", Start: 19, Length: 1, Transform: func(v interface{}) interface{} {
+				{Name: "TTF", Start: 19, Length: 1, Transform: func(v any) any {
 					return time.Duration(v.(int)) * time.Second
 				}},
-				{Name: "PDOP", Start: 20, Length: 1, Transform: func(v interface{}) interface{} {
+				{Name: "PDOP", Start: 20, Length: 1, Transform: func(v any) any {
 					return float64(v.(int)) / 2
 				}},
 				{Name: "Satellites", Start: 21, Length: 1},
@@ -445,7 +445,7 @@ func (t TagSLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 	return common.PayloadConfig{}, fmt.Errorf("port %v not supported", port)
 }
 
-func (t TagSLv1Decoder) Decode(data string, port int16, devEui string) (*decoder.DecodedUplink, error) {
+func (t TagSLv1Decoder) Decode(data string, port uint8, devEui string) (*decoder.DecodedUplink, error) {
 	config, err := t.getConfig(port)
 	if err != nil {
 		return nil, err
@@ -505,7 +505,7 @@ func parseStatusByte(statusByte byte) Status {
 	}
 }
 
-func moving(v interface{}) interface{} {
+func moving(v any) any {
 	i, ok := v.(int)
 	if !ok {
 		return false
@@ -517,7 +517,7 @@ func moving(v interface{}) interface{} {
 	return status.Moving
 }
 
-func dutyCycle(v interface{}) interface{} {
+func dutyCycle(v any) any {
 	i, ok := v.(int)
 	if !ok {
 		return false

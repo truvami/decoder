@@ -14,9 +14,9 @@ import (
 func TestDecode(t *testing.T) {
 	tests := []struct {
 		payload     string
-		port        int16
+		port        uint8
 		autoPadding bool
-		expected    interface{}
+		expected    any
 	}{
 		{
 			payload:     "0102d2b47a0081f3f6115219031412361629002300170046fc19098625e3",
@@ -43,7 +43,7 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "0002c420ff005ed85a12b4180719142607240001ffbaffc2fc6f00d71d2e000000000000",
+			payload:     "0002c420ff005ed85a12b4180719142607240001ffbaffc2fc6f00d71d2e00d6ffc5ff8405310b3810b1",
 			port:        1,
 			autoPadding: false,
 			expected: Port1Payload{
@@ -64,12 +64,12 @@ func TestDecode(t *testing.T) {
 				AccelerometerZAxis: -913,
 				Temperature:        2.15,
 				Pressure:           747,
-				GyroscopeXAxis:     0.0,
-				GyroscopeYAxis:     0.0,
-				GyroscopeZAxis:     0.0,
-				MagnetometerXAxis:  0.0,
-				MagnetometerYAxis:  0.0,
-				MagnetometerZAxis:  0.0,
+				GyroscopeXAxis:     21.4,
+				GyroscopeYAxis:     -5.9,
+				GyroscopeZAxis:     -12.4,
+				MagnetometerXAxis:  1.329,
+				MagnetometerYAxis:  2.872,
+				MagnetometerZAxis:  4.273,
 			},
 		},
 		{
@@ -202,7 +202,7 @@ func TestDecode(t *testing.T) {
 func TestValidationErrors(t *testing.T) {
 	tests := []struct {
 		payload  string
-		port     int16
+		port     uint8
 		expected error
 	}{
 		{
@@ -319,7 +319,7 @@ func TestPayloadTooLong(t *testing.T) {
 func TestFeatures(t *testing.T) {
 	tests := []struct {
 		payload        string
-		port           int16
+		port           uint8
 		skipValidation bool
 	}{
 		{
@@ -458,7 +458,7 @@ func TestFeatures(t *testing.T) {
 func TestMarshal(t *testing.T) {
 	tests := []struct {
 		payload  string
-		port     int16
+		port     uint8
 		expected []string
 	}{
 		{
@@ -484,7 +484,7 @@ func TestMarshal(t *testing.T) {
 
 			data, _ := decoder.Decode(test.payload, test.port, "")
 
-			marshaled, err := json.MarshalIndent(map[string]interface{}{
+			marshaled, err := json.MarshalIndent(map[string]any{
 				"data":     data.Data,
 				"metadata": data.Metadata,
 			}, "", "   ")

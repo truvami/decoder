@@ -65,7 +65,7 @@ func getPort11PayloadType(data string) (string, error) {
 }
 
 // https://docs.truvami.com/docs/payloads/smartlabel
-func (t SmartLabelv1Decoder) getConfig(port int16, data string) (common.PayloadConfig, error) {
+func (t SmartLabelv1Decoder) getConfig(port uint8, data string) (common.PayloadConfig, error) {
 	switch port {
 	case 1:
 		return common.PayloadConfig{
@@ -136,16 +136,16 @@ func (t SmartLabelv1Decoder) getConfig(port int16, data string) (common.PayloadC
 			return common.PayloadConfig{
 				Fields: []common.FieldConfig{
 					{Name: "Flags", Start: 2, Length: 1},
-					{Name: "GNSSEnabled", Start: 2, Length: 1, Transform: func(v interface{}) interface{} {
+					{Name: "GNSSEnabled", Start: 2, Length: 1, Transform: func(v any) any {
 						return uint8((v.(int) >> 1) & 0x1)
 					}},
-					{Name: "WiFiEnabled", Start: 2, Length: 1, Transform: func(v interface{}) interface{} {
+					{Name: "WiFiEnabled", Start: 2, Length: 1, Transform: func(v any) any {
 						return uint8((v.(int) >> 2) & 0x1)
 					}},
-					{Name: "AccEnabled", Start: 2, Length: 1, Transform: func(v interface{}) interface{} {
+					{Name: "AccEnabled", Start: 2, Length: 1, Transform: func(v any) any {
 						return uint8((v.(int) >> 3) & 0x1)
 					}},
-					{Name: "StaticSF", Start: 2, Length: 1, Transform: func(v interface{}) interface{} {
+					{Name: "StaticSF", Start: 2, Length: 1, Transform: func(v any) any {
 						return fmt.Sprintf("SF%d", 9) // TODO: Hardcoded to SF9 for now
 					}},
 					{Name: "SteadyIntervalS", Start: 3, Length: 2},
@@ -154,7 +154,7 @@ func (t SmartLabelv1Decoder) getConfig(port int16, data string) (common.PayloadC
 					{Name: "LEDBlinkIntervalS", Start: 8, Length: 2},
 					{Name: "AccThresholdMS", Start: 10, Length: 2},
 					{Name: "AccDelayMS", Start: 12, Length: 2},
-					{Name: "GitHash", Start: 14, Length: 4, Optional: true, Transform: func(v interface{}) interface{} {
+					{Name: "GitHash", Start: 14, Length: 4, Optional: true, Transform: func(v any) any {
 						return fmt.Sprintf("%08x", v.(int))
 					}},
 				},
@@ -163,13 +163,13 @@ func (t SmartLabelv1Decoder) getConfig(port int16, data string) (common.PayloadC
 		case "heartbeat":
 			return common.PayloadConfig{
 				Fields: []common.FieldConfig{
-					{Name: "Battery", Start: 2, Length: 2, Transform: func(v interface{}) interface{} {
+					{Name: "Battery", Start: 2, Length: 2, Transform: func(v any) any {
 						return float64(v.(int)) / 1000
 					}},
-					{Name: "Temperature", Start: 4, Length: 2, Transform: func(v interface{}) interface{} {
+					{Name: "Temperature", Start: 4, Length: 2, Transform: func(v any) any {
 						return float64(v.(int)) / 100
 					}},
-					{Name: "RH", Start: 6, Length: 1, Transform: func(v interface{}) interface{} {
+					{Name: "RH", Start: 6, Length: 1, Transform: func(v any) any {
 						return float64(v.(int)) / 2
 					}},
 					{Name: "GNSSScansCount", Start: 7, Length: 2},
@@ -184,7 +184,7 @@ func (t SmartLabelv1Decoder) getConfig(port int16, data string) (common.PayloadC
 	}
 }
 
-func (t SmartLabelv1Decoder) Decode(data string, port int16, devEui string) (*decoder.DecodedUplink, error) {
+func (t SmartLabelv1Decoder) Decode(data string, port uint8, devEui string) (*decoder.DecodedUplink, error) {
 	switch port {
 	case 192, 197:
 		decodedData, err := t.loracloudMiddleware.DeliverUplinkMessage(devEui, loracloud.UplinkMsg{

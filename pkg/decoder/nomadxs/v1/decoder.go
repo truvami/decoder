@@ -39,19 +39,19 @@ func WithSkipValidation(skipValidation bool) Option {
 }
 
 // https://docs.truvami.com/docs/payloads/nomad-xs
-func (t NomadXSv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
+func (t NomadXSv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 	switch port {
 	case 1:
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
 				{Name: "Moving", Start: 0, Length: 1},
-				{Name: "Latitude", Start: 1, Length: 4, Transform: func(v interface{}) interface{} {
+				{Name: "Latitude", Start: 1, Length: 4, Transform: func(v any) any {
 					return float64(v.(int)) / 1000000
 				}},
-				{Name: "Longitude", Start: 5, Length: 4, Transform: func(v interface{}) interface{} {
+				{Name: "Longitude", Start: 5, Length: 4, Transform: func(v any) any {
 					return float64(v.(int)) / 1000000
 				}},
-				{Name: "Altitude", Start: 9, Length: 2, Transform: func(v interface{}) interface{} {
+				{Name: "Altitude", Start: 9, Length: 2, Transform: func(v any) any {
 					return float64(v.(int)) / 10
 				}},
 				{Name: "Year", Start: 11, Length: 1},
@@ -60,36 +60,36 @@ func (t NomadXSv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 				{Name: "Hour", Start: 14, Length: 1},
 				{Name: "Minute", Start: 15, Length: 1},
 				{Name: "Second", Start: 16, Length: 1},
-				{Name: "TimeToFix", Start: 17, Length: 1, Transform: func(v interface{}) interface{} {
+				{Name: "TimeToFix", Start: 17, Length: 1, Transform: func(v any) any {
 					return time.Duration(v.(int)) * time.Second
 				}},
 				{Name: "AmbientLight", Start: 18, Length: 2},
 				{Name: "AccelerometerXAxis", Start: 20, Length: 2},
 				{Name: "AccelerometerYAxis", Start: 22, Length: 2},
 				{Name: "AccelerometerZAxis", Start: 24, Length: 2},
-				{Name: "Temperature", Start: 26, Length: 2, Optional: true, Transform: func(v interface{}) interface{} {
+				{Name: "Temperature", Start: 26, Length: 2, Optional: true, Transform: func(v any) any {
 					return float32(v.(int)) / 100
 				}},
-				{Name: "Pressure", Start: 28, Length: 2, Optional: true, Transform: func(v interface{}) interface{} {
+				{Name: "Pressure", Start: 28, Length: 2, Optional: true, Transform: func(v any) any {
 					return float32(v.(int)) / 10
 				}},
-				{Name: "GyroscopeXAxis", Start: 30, Length: 2, Optional: true, Transform: func(v interface{}) interface{} {
-					return float32(v.(int)) / 10
+				{Name: "GyroscopeXAxis", Start: 30, Length: 2, Optional: true, Transform: func(v any) any {
+					return float32(int16(v.(int))) / 10
 				}},
-				{Name: "GyroscopeYAxis", Start: 32, Length: 2, Optional: true, Transform: func(v interface{}) interface{} {
-					return float32(v.(int)) / 10
+				{Name: "GyroscopeYAxis", Start: 32, Length: 2, Optional: true, Transform: func(v any) any {
+					return float32(int16(v.(int))) / 10
 				}},
-				{Name: "GyroscopeZAxis", Start: 34, Length: 2, Optional: true, Transform: func(v interface{}) interface{} {
-					return float32(v.(int)) / 10
+				{Name: "GyroscopeZAxis", Start: 34, Length: 2, Optional: true, Transform: func(v any) any {
+					return float32(int16(v.(int))) / 10
 				}},
-				{Name: "MagnetometerXAxis", Start: 36, Length: 2, Optional: true, Transform: func(v interface{}) interface{} {
-					return float32(v.(int))
+				{Name: "MagnetometerXAxis", Start: 36, Length: 2, Optional: true, Transform: func(v any) any {
+					return float32(int16(v.(int))) / 1000
 				}},
-				{Name: "MagnetometerYAxis", Start: 38, Length: 2, Optional: true, Transform: func(v interface{}) interface{} {
-					return float32(v.(int))
+				{Name: "MagnetometerYAxis", Start: 38, Length: 2, Optional: true, Transform: func(v any) any {
+					return float32(int16(v.(int))) / 1000
 				}},
-				{Name: "MagnetometerZAxis", Start: 40, Length: 2, Optional: true, Transform: func(v interface{}) interface{} {
-					return float32(v.(int))
+				{Name: "MagnetometerZAxis", Start: 40, Length: 2, Optional: true, Transform: func(v any) any {
+					return float32(int16(v.(int))) / 1000
 				}},
 			},
 			TargetType:      reflect.TypeOf(Port1Payload{}),
@@ -123,7 +123,7 @@ func (t NomadXSv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
 				{Name: "LowBattery", Start: 0, Length: 1},
-				{Name: "Battery", Start: 1, Length: 2, Transform: func(v interface{}) interface{} {
+				{Name: "Battery", Start: 1, Length: 2, Transform: func(v any) any {
 					return float64(v.(int)) / 1000
 				}},
 			},
@@ -136,7 +136,7 @@ func (t NomadXSv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 	return common.PayloadConfig{}, fmt.Errorf("port %v not supported", port)
 }
 
-func (t NomadXSv1Decoder) Decode(data string, port int16, devEui string) (*decoder.DecodedUplink, error) {
+func (t NomadXSv1Decoder) Decode(data string, port uint8, devEui string) (*decoder.DecodedUplink, error) {
 	config, err := t.getConfig(port)
 	if err != nil {
 		return nil, err

@@ -109,7 +109,7 @@ func addDecoder(router *http.ServeMux, path string, decoder decoder.Decoder) {
 func getHandler(decoder decoder.Decoder) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		type request struct {
-			Port    int16  `json:"port" validate:"required,gt=0,lte=255"`
+			Port    uint8  `json:"port" validate:"required,gt=0,lte=255"`
 			Payload string `json:"payload" validate:"required,hexadecimal"`
 			DevEUI  string `json:"devEui" validate:"omitempty,hexadecimal,len=16"`
 		}
@@ -122,7 +122,7 @@ func getHandler(decoder decoder.Decoder) func(http.ResponseWriter, *http.Request
 		if err != nil {
 			logger.Logger.Error("error while decoding request", zap.Error(err))
 
-			setBody(w, http.StatusBadRequest, map[string]interface{}{
+			setBody(w, http.StatusBadRequest, map[string]any{
 				"error": err.Error(),
 				"docs":  "https://docs.truvami.com",
 			})
@@ -131,7 +131,7 @@ func getHandler(decoder decoder.Decoder) func(http.ResponseWriter, *http.Request
 
 		if err := validator.New().Struct(req); err != nil {
 			logger.Logger.Error("request validation failed", zap.Error(err))
-			setBody(w, http.StatusBadRequest, map[string]interface{}{
+			setBody(w, http.StatusBadRequest, map[string]any{
 				"error": "request validation failed",
 				"docs":  "https://docs.truvami.com",
 			})
@@ -146,14 +146,14 @@ func getHandler(decoder decoder.Decoder) func(http.ResponseWriter, *http.Request
 			if errors.Is(err, helpers.ErrValidationFailed) {
 				warnings = []string{}
 				for _, err := range helpers.UnwrapError(err) {
-					logger.Logger.Warn("validation error", zap.Error(err), zap.String("devEui", req.DevEUI), zap.Int16("port", req.Port))
+					logger.Logger.Warn("validation error", zap.Error(err), zap.String("devEui", req.DevEUI), zap.Uint8("port", req.Port))
 					warnings = append(warnings, err.Error())
 				}
 				logger.Logger.Warn("validation for some fields failed - are you using the correct port?")
 			} else {
-				logger.Logger.Error("error while decoding payload", zap.Error(err), zap.String("devEui", req.DevEUI), zap.Int16("port", req.Port))
+				logger.Logger.Error("error while decoding payload", zap.Error(err), zap.String("devEui", req.DevEUI), zap.Uint8("port", req.Port))
 
-				setBody(w, http.StatusBadRequest, map[string]interface{}{
+				setBody(w, http.StatusBadRequest, map[string]any{
 					"error": err.Error(),
 					"docs":  "https://docs.truvami.com",
 				})
@@ -161,8 +161,8 @@ func getHandler(decoder decoder.Decoder) func(http.ResponseWriter, *http.Request
 			}
 		}
 
-		logger.Logger.Info("payload decoded successfully", zap.String("devEui", req.DevEUI), zap.Int16("port", req.Port))
-		setBody(w, http.StatusOK, map[string]interface{}{
+		logger.Logger.Info("payload decoded successfully", zap.String("devEui", req.DevEUI), zap.Uint8("port", req.Port))
+		setBody(w, http.StatusOK, map[string]any{
 			"data":     data.Data,
 			"metadata": data.Metadata,
 			"warnings": warnings,
@@ -186,7 +186,7 @@ func setHeaders(w http.ResponseWriter, status int) {
 	w.WriteHeader(status)
 }
 
-func setBody(w http.ResponseWriter, status int, body map[string]interface{}) {
+func setBody(w http.ResponseWriter, status int, body map[string]any) {
 	logger.Logger.Debug("encoding response")
 
 	// add traceId

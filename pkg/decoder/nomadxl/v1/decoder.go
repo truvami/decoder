@@ -39,7 +39,7 @@ func WithSkipValidation(skipValidation bool) Option {
 }
 
 // https://docs.truvami.com/docs/payloads/nomad-XL
-func (t NomadXLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
+func (t NomadXLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 	switch port {
 	case 101:
 		return common.PayloadConfig{
@@ -51,20 +51,20 @@ func (t NomadXLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 				{Name: "BufferLevel", Start: 18, Length: 2}, //GPS
 				//{Name: "BufferLevelACC", Start: 20, Length: 2},
 				//{Name: "BufferLevelLOG", Start: 22, Length: 2},
-				{Name: "Temperature", Start: 24, Length: 2, Transform: func(v interface{}) interface{} {
+				{Name: "Temperature", Start: 24, Length: 2, Transform: func(v any) any {
 					return float32(v.(int)) / 10
 				}},
-				{Name: "Pressure", Start: 26, Length: 2, Transform: func(v interface{}) interface{} {
+				{Name: "Pressure", Start: 26, Length: 2, Transform: func(v any) any {
 					return float32(v.(int)) / 10
 				}},
 				{Name: "AccelerometerXAxis", Start: 28, Length: 2},
 				{Name: "AccelerometerYAxis", Start: 30, Length: 2},
 				{Name: "AccelerometerZAxis", Start: 32, Length: 2},
-				{Name: "Battery", Start: 34, Length: 2, Transform: func(v interface{}) interface{} {
+				{Name: "Battery", Start: 34, Length: 2, Transform: func(v any) any {
 					return float64(v.(int)) / 1000
 				}},
 				{Name: "BatteryLorawan", Start: 36, Length: 1},
-				{Name: "TimeToFix", Start: 37, Length: 1, Transform: func(v interface{}) interface{} {
+				{Name: "TimeToFix", Start: 37, Length: 1, Transform: func(v any) any {
 					return time.Duration(v.(int)) * time.Second
 				}},
 			},
@@ -78,13 +78,13 @@ func (t NomadXLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 				{Name: "UTCDate", Start: 0, Length: 4},
 				{Name: "UTCTime", Start: 4, Length: 4},
 				{},
-				{Name: "Latitude", Start: 8, Length: 4, Transform: func(v interface{}) interface{} {
+				{Name: "Latitude", Start: 8, Length: 4, Transform: func(v any) any {
 					return float64(v.(int)) / 100000
 				}},
-				{Name: "Longitude", Start: 12, Length: 4, Transform: func(v interface{}) interface{} {
+				{Name: "Longitude", Start: 12, Length: 4, Transform: func(v any) any {
 					return float64(v.(int)) / 100000
 				}},
-				{Name: "Altitude", Start: 16, Length: 4, Transform: func(v interface{}) interface{} {
+				{Name: "Altitude", Start: 16, Length: 4, Transform: func(v any) any {
 					return float64(v.(int)) / 100
 				}},
 			},
@@ -96,7 +96,7 @@ func (t NomadXLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
 	return common.PayloadConfig{}, fmt.Errorf("port %v not supported", port)
 }
 
-func (t NomadXLv1Decoder) Decode(data string, port int16, devEui string) (*decoder.DecodedUplink, error) {
+func (t NomadXLv1Decoder) Decode(data string, port uint8, devEui string) (*decoder.DecodedUplink, error) {
 	config, err := t.getConfig(port)
 	if err != nil {
 		return nil, err

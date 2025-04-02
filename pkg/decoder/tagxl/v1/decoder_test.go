@@ -65,10 +65,10 @@ func TestDecode(t *testing.T) {
 
 	tests := []struct {
 		payload     string
-		port        int16
+		port        uint8
 		devEui      string
 		autoPadding bool
-		expected    interface{}
+		expected    any
 		expectedErr string
 	}{
 		{
@@ -316,7 +316,7 @@ func TestDecode(t *testing.T) {
 func TestValidationErrors(t *testing.T) {
 	tests := []struct {
 		payload  string
-		port     int16
+		port     uint8
 		expected error
 	}{}
 
@@ -367,7 +367,7 @@ func TestPayloadTooLong(t *testing.T) {
 func TestFeatures(t *testing.T) {
 	tests := []struct {
 		payload        string
-		port           int16
+		port           uint8
 		skipValidation bool
 	}{
 		{
@@ -487,7 +487,7 @@ func TestFeatures(t *testing.T) {
 func TestMarshal(t *testing.T) {
 	tests := []struct {
 		payload  string
-		port     int16
+		port     uint8
 		expected []string
 	}{
 		{
@@ -503,7 +503,7 @@ func TestMarshal(t *testing.T) {
 
 			data, _ := decoder.Decode(test.payload, test.port, "")
 
-			marshaled, err := json.MarshalIndent(map[string]interface{}{
+			marshaled, err := json.MarshalIndent(map[string]any{
 				"data":     data.Data,
 				"metadata": data.Metadata,
 			}, "", "   ")

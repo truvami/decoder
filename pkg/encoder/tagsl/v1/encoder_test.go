@@ -7,8 +7,8 @@ import (
 
 func TestEncode(t *testing.T) {
 	tests := []struct {
-		data     interface{}
-		port     int16
+		data     any
+		port     uint8
 		expected string
 	}{
 		{
