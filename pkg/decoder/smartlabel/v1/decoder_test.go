@@ -374,6 +374,10 @@ func TestFeatures(t *testing.T) {
 			payload: "04da8d",
 			port:    2,
 		},
+		{
+			payload: "3f0e1007087801c207d0003c04b0ec280603020c",
+			port:    4,
+		},
 	}
 
 	for _, test := range tests {
@@ -423,6 +427,41 @@ func TestFeatures(t *testing.T) {
 				}
 				if humidity.GetHumidity() == 0 {
 					t.Fatalf("expected non zero humidity")
+				}
+			}
+			if data.Is(decoder.FeatureConfig) {
+				config, ok := data.Data.(decoder.UplinkFeatureConfig)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureConfig, got %T", data)
+				}
+				// call functions to check if it panics
+				config.GetBle()
+				config.GetGnss()
+				config.GetWifi()
+				config.GetAcceleration()
+				config.GetMovingInterval()
+				config.GetSteadyInterval()
+				config.GetConfigInterval()
+				config.GetGnssTimeout()
+				config.GetAccelerometerThreshold()
+				config.GetAccelerometerDelay()
+				config.GetBatteryInterval()
+				config.GetRejoinInterval()
+				config.GetLowLightThreshold()
+				config.GetHighLightThreshold()
+				config.GetLowTemperatureThreshold()
+				config.GetHighTemperatureThreshold()
+				config.GetAccessPointsThreshold()
+				config.GetBatchSize()
+				config.GetBufferSize()
+			}
+			if data.Is(decoder.FeatureFirmwareVersion) {
+				firmwareVersion, ok := data.Data.(decoder.UplinkFeatureFirmwareVersion)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureFirmwareVersion, got %T", data)
+				}
+				if firmwareVersion.GetFirmwareVersion() == "" {
+					t.Fatalf("expected non empty firmware version")
 				}
 			}
 		})

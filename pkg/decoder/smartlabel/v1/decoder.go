@@ -123,7 +123,7 @@ func (t SmartLabelv1Decoder) getConfig(port int16, data string) (common.PayloadC
 				{Name: "FirmwareVersionPatch", Start: 19, Length: 1, Optional: true}, // FIXME: after firmware changes field will be required
 			},
 			TargetType: reflect.TypeOf(Port4Payload{}),
-			Features:   []decoder.Feature{},
+			Features:   []decoder.Feature{decoder.FeatureConfig, decoder.FeatureFirmwareVersion},
 		}, nil
 	case 11:
 		// Check first byte length to determine message type
