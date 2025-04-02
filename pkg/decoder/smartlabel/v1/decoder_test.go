@@ -134,6 +134,98 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
+			payload: "00012c00780f000a03e8003c0078f81c01000402",
+			port:    4,
+			expected: Port4Payload{
+				DataRate:                   0,
+				Acceleration:               false,
+				Wifi:                       false,
+				Gnss:                       false,
+				SteadyInterval:             300,
+				MovingInterval:             120,
+				HeartbeatInterval:          15,
+				AccelerationThreshold:      10,
+				AccelerationDelay:          1000,
+				TemperaturePollingInterval: 60,
+				TemperatureUplinkInterval:  120,
+				TemperatureLowerThreshold:  -8,
+				TemperatureUpperThreshold:  +28,
+				AccessPointsThreshold:      1,
+				FirmwareVersionMajor:       0,
+				FirmwareVersionMinor:       4,
+				FirmwareVersionPatch:       2,
+			},
+		},
+		{
+			payload: "2a0258012c1e006403e8003c012cf61e02010307",
+			port:    4,
+			expected: Port4Payload{
+				DataRate:                   2,
+				Acceleration:               true,
+				Wifi:                       false,
+				Gnss:                       true,
+				SteadyInterval:             600,
+				MovingInterval:             300,
+				HeartbeatInterval:          30,
+				AccelerationThreshold:      100,
+				AccelerationDelay:          1000,
+				TemperaturePollingInterval: 60,
+				TemperatureUplinkInterval:  300,
+				TemperatureLowerThreshold:  -10,
+				TemperatureUpperThreshold:  +30,
+				AccessPointsThreshold:      2,
+				FirmwareVersionMajor:       1,
+				FirmwareVersionMinor:       3,
+				FirmwareVersionPatch:       7,
+			},
+		},
+		{
+			payload: "1b04b002583c012c05dc003c0258f12304020400",
+			port:    4,
+			expected: Port4Payload{
+				DataRate:                   3,
+				Acceleration:               true,
+				Wifi:                       true,
+				Gnss:                       false,
+				SteadyInterval:             1200,
+				MovingInterval:             600,
+				HeartbeatInterval:          60,
+				AccelerationThreshold:      300,
+				AccelerationDelay:          1500,
+				TemperaturePollingInterval: 60,
+				TemperatureUplinkInterval:  600,
+				TemperatureLowerThreshold:  -15,
+				TemperatureUpperThreshold:  +35,
+				AccessPointsThreshold:      4,
+				FirmwareVersionMajor:       2,
+				FirmwareVersionMinor:       4,
+				FirmwareVersionPatch:       0,
+			},
+		},
+		{
+			payload: "3f0e1007087801c207d0003c04b0ec280603020c",
+			port:    4,
+			expected: Port4Payload{
+				DataRate:                   7,
+				Acceleration:               true,
+				Wifi:                       true,
+				Gnss:                       true,
+				SteadyInterval:             3600,
+				MovingInterval:             1800,
+				HeartbeatInterval:          120,
+				AccelerationThreshold:      450,
+				AccelerationDelay:          2000,
+				TemperaturePollingInterval: 60,
+				TemperatureUplinkInterval:  1200,
+				TemperatureLowerThreshold:  -20,
+				TemperatureUpperThreshold:  +40,
+				AccessPointsThreshold:      6,
+				FirmwareVersionMajor:       3,
+				FirmwareVersionMinor:       2,
+				FirmwareVersionPatch:       12,
+			},
+		},
+		{
 			payload:  "87821F50490200B520FBE977844D222A3A14A89293956245CC75A9CA1BBC25DDF658542909",
 			port:     192,
 			devEui:   "10CE45FFFE00C7EC",
@@ -282,6 +374,10 @@ func TestFeatures(t *testing.T) {
 			payload: "04da8d",
 			port:    2,
 		},
+		{
+			payload: "3f0e1007087801c207d0003c04b0ec280603020c",
+			port:    4,
+		},
 	}
 
 	for _, test := range tests {
@@ -331,6 +427,41 @@ func TestFeatures(t *testing.T) {
 				}
 				if humidity.GetHumidity() == 0 {
 					t.Fatalf("expected non zero humidity")
+				}
+			}
+			if data.Is(decoder.FeatureConfig) {
+				config, ok := data.Data.(decoder.UplinkFeatureConfig)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureConfig, got %T", data)
+				}
+				// call functions to check if it panics
+				config.GetBle()
+				config.GetGnss()
+				config.GetWifi()
+				config.GetAcceleration()
+				config.GetMovingInterval()
+				config.GetSteadyInterval()
+				config.GetConfigInterval()
+				config.GetGnssTimeout()
+				config.GetAccelerometerThreshold()
+				config.GetAccelerometerDelay()
+				config.GetBatteryInterval()
+				config.GetRejoinInterval()
+				config.GetLowLightThreshold()
+				config.GetHighLightThreshold()
+				config.GetLowTemperatureThreshold()
+				config.GetHighTemperatureThreshold()
+				config.GetAccessPointsThreshold()
+				config.GetBatchSize()
+				config.GetBufferSize()
+			}
+			if data.Is(decoder.FeatureFirmwareVersion) {
+				firmwareVersion, ok := data.Data.(decoder.UplinkFeatureFirmwareVersion)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureFirmwareVersion, got %T", data)
+				}
+				if firmwareVersion.GetFirmwareVersion() == "" {
+					t.Fatalf("expected non empty firmware version")
 				}
 			}
 		})

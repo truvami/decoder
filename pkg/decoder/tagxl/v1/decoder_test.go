@@ -463,6 +463,7 @@ func TestFeatures(t *testing.T) {
 				config.GetBle()
 				config.GetGnss()
 				config.GetWifi()
+				config.GetAcceleration()
 				config.GetMovingInterval()
 				config.GetSteadyInterval()
 				config.GetConfigInterval()
@@ -473,6 +474,9 @@ func TestFeatures(t *testing.T) {
 				config.GetRejoinInterval()
 				config.GetLowLightThreshold()
 				config.GetHighLightThreshold()
+				config.GetLowTemperatureThreshold()
+				config.GetHighTemperatureThreshold()
+				config.GetAccessPointsThreshold()
 				config.GetBatchSize()
 				config.GetBufferSize()
 			}

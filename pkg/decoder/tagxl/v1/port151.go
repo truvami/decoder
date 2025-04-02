@@ -68,6 +68,10 @@ func (p Port151Payload) GetWifi() *bool {
 	return &p.Wifi
 }
 
+func (p Port151Payload) GetAcceleration() *bool {
+	return nil
+}
+
 func (p Port151Payload) GetMovingInterval() *uint32 {
 	movingInterval := uint32(p.MovingInterval)
 	return &movingInterval
@@ -107,6 +111,18 @@ func (p Port151Payload) GetLowLightThreshold() *uint16 {
 }
 
 func (p Port151Payload) GetHighLightThreshold() *uint16 {
+	return nil
+}
+
+func (p Port151Payload) GetLowTemperatureThreshold() *int8 {
+	return nil
+}
+
+func (p Port151Payload) GetHighTemperatureThreshold() *int8 {
+	return nil
+}
+
+func (p Port151Payload) GetAccessPointsThreshold() *uint8 {
 	return nil
 }
 
