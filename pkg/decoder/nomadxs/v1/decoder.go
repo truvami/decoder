@@ -74,22 +74,22 @@ func (t NomadXSv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 					return float32(v.(int)) / 10
 				}},
 				{Name: "GyroscopeXAxis", Start: 30, Length: 2, Optional: true, Transform: func(v any) any {
-					return float32(v.(int)) / 10
+					return float32(int16(v.(int))) / 10
 				}},
 				{Name: "GyroscopeYAxis", Start: 32, Length: 2, Optional: true, Transform: func(v any) any {
-					return float32(v.(int)) / 10
+					return float32(int16(v.(int))) / 10
 				}},
 				{Name: "GyroscopeZAxis", Start: 34, Length: 2, Optional: true, Transform: func(v any) any {
-					return float32(v.(int)) / 10
+					return float32(int16(v.(int))) / 10
 				}},
 				{Name: "MagnetometerXAxis", Start: 36, Length: 2, Optional: true, Transform: func(v any) any {
-					return float32(v.(int))
+					return float32(int16(v.(int))) / 1000
 				}},
 				{Name: "MagnetometerYAxis", Start: 38, Length: 2, Optional: true, Transform: func(v any) any {
-					return float32(v.(int))
+					return float32(int16(v.(int))) / 1000
 				}},
 				{Name: "MagnetometerZAxis", Start: 40, Length: 2, Optional: true, Transform: func(v any) any {
-					return float32(v.(int))
+					return float32(int16(v.(int))) / 1000
 				}},
 			},
 			TargetType:      reflect.TypeOf(Port1Payload{}),

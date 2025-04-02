@@ -43,7 +43,7 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "0002c420ff005ed85a12b4180719142607240001ffbaffc2fc6f00d71d2e000000000000",
+			payload:     "0002c420ff005ed85a12b4180719142607240001ffbaffc2fc6f00d71d2e00d6ffc5ff8405310b3810b1",
 			port:        1,
 			autoPadding: false,
 			expected: Port1Payload{
@@ -64,12 +64,12 @@ func TestDecode(t *testing.T) {
 				AccelerometerZAxis: -913,
 				Temperature:        2.15,
 				Pressure:           747,
-				GyroscopeXAxis:     0.0,
-				GyroscopeYAxis:     0.0,
-				GyroscopeZAxis:     0.0,
-				MagnetometerXAxis:  0.0,
-				MagnetometerYAxis:  0.0,
-				MagnetometerZAxis:  0.0,
+				GyroscopeXAxis:     21.4,
+				GyroscopeYAxis:     -5.9,
+				GyroscopeZAxis:     -12.4,
+				MagnetometerXAxis:  1.329,
+				MagnetometerYAxis:  2.872,
+				MagnetometerZAxis:  4.273,
 			},
 		},
 		{
