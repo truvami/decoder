@@ -131,6 +131,7 @@ type UplinkFeatureConfig interface {
 	GetBle() *bool
 	GetGnss() *bool
 	GetWifi() *bool
+	GetAcceleration() *bool
 	GetMovingInterval() *uint32
 	GetSteadyInterval() *uint32
 	GetConfigInterval() *uint32
@@ -141,6 +142,9 @@ type UplinkFeatureConfig interface {
 	GetRejoinInterval() *uint32
 	GetLowLightThreshold() *uint16
 	GetHighLightThreshold() *uint16
+	GetLowTemperatureThreshold() *int8
+	GetHighTemperatureThreshold() *int8
+	GetAccessPointsThreshold() *uint8
 	GetBatchSize() *uint16
 	GetBufferSize() *uint16
 }

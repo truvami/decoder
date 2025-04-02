@@ -93,6 +93,38 @@ func (t SmartLabelv1Decoder) getConfig(port int16, data string) (common.PayloadC
 			TargetType: reflect.TypeOf(Port2Payload{}),
 			Features:   []decoder.Feature{decoder.FeatureTemperature, decoder.FeatureHumidity},
 		}, nil
+	case 4:
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
+				{Name: "DataRate", Start: 0, Length: 1, Transform: func(v any) any {
+					return uint8(v.(int) & 0x7)
+				}},
+				{Name: "Acceleration", Start: 0, Length: 1, Transform: func(v any) any {
+					return ((v.(int) >> 3) & 0x1) != 0
+				}},
+				{Name: "Wifi", Start: 0, Length: 1, Transform: func(v any) any {
+					return ((v.(int) >> 4) & 0x1) != 0
+				}},
+				{Name: "Gnss", Start: 0, Length: 1, Transform: func(v any) any {
+					return ((v.(int) >> 5) & 0x1) != 0
+				}},
+				{Name: "SteadyInterval", Start: 1, Length: 2},
+				{Name: "MovingInterval", Start: 3, Length: 2},
+				{Name: "HeartbeatInterval", Start: 5, Length: 1},
+				{Name: "AccelerationThreshold", Start: 6, Length: 2},
+				{Name: "AccelerationDelay", Start: 8, Length: 2},
+				{Name: "TemperaturePollingInterval", Start: 10, Length: 2},
+				{Name: "TemperatureUplinkInterval", Start: 12, Length: 2},
+				{Name: "TemperatureLowerThreshold", Start: 14, Length: 1},
+				{Name: "TemperatureUpperThreshold", Start: 15, Length: 1},
+				{Name: "AccessPointsThreshold", Start: 16, Length: 1},
+				{Name: "FirmwareVersionMajor", Start: 17, Length: 1, Optional: true}, // FIXME: after firmware changes field will be required
+				{Name: "FirmwareVersionMinor", Start: 18, Length: 1, Optional: true}, // FIXME: after firmware changes field will be required
+				{Name: "FirmwareVersionPatch", Start: 19, Length: 1, Optional: true}, // FIXME: after firmware changes field will be required
+			},
+			TargetType: reflect.TypeOf(Port4Payload{}),
+			Features:   []decoder.Feature{},
+		}, nil
 	case 11:
 		// Check first byte length to determine message type
 		payloadType, err := getPort11PayloadType(data)
