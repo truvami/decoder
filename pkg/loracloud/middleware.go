@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/go-playground/validator"
+	"github.com/truvami/decoder/pkg/decoder"
 )
 
 type LoracloudMiddleware struct {
@@ -261,4 +263,42 @@ type UplinkMsgResponse struct {
 		} `json:"position_solution"`
 		Operation string `json:"operation"`
 	} `json:"result"`
+}
+
+var _ decoder.UplinkFeatureBase = &UplinkMsgResponse{}
+var _ decoder.UplinkFeatureGNSS = &UplinkMsgResponse{}
+
+func (p UplinkMsgResponse) GetTimestamp() *time.Time {
+	seconds := int64(p.Result.PositionSolution.CaptureTimeUtc)
+	nanoseconds := int64((p.Result.PositionSolution.CaptureTimeUtc - float64(seconds)) * 1e9)
+	timestamp := time.Unix(seconds, nanoseconds)
+	return &timestamp
+}
+
+func (p UplinkMsgResponse) GetLatitude() float64 {
+	return p.Result.PositionSolution.Llh[0]
+}
+
+func (p UplinkMsgResponse) GetLongitude() float64 {
+	return p.Result.PositionSolution.Llh[1]
+}
+
+func (p UplinkMsgResponse) GetAltitude() float64 {
+	return p.Result.PositionSolution.Llh[2]
+}
+
+func (p UplinkMsgResponse) GetAccuracy() *float64 {
+	return &p.Result.PositionSolution.Accuracy
+}
+
+func (p UplinkMsgResponse) GetTTF() *time.Duration {
+	return nil
+}
+
+func (p UplinkMsgResponse) GetPDOP() *float64 {
+	return &p.Result.PositionSolution.Gdop
+}
+
+func (p UplinkMsgResponse) GetSatellites() *uint8 {
+	return nil
 }

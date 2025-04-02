@@ -15,8 +15,8 @@ import (
 	"github.com/truvami/decoder/pkg/loracloud"
 )
 
-func startMockServer() *httptest.Server {
-	server := httptest.NewServer(nil)
+func startMockServer(handler http.Handler) *httptest.Server {
+	server := httptest.NewServer(handler)
 	return server
 }
 
@@ -49,7 +49,7 @@ func TestDecode(t *testing.T) {
 		_, _ = w.Write(data)
 	})
 
-	server := startMockServer()
+	server := startMockServer(nil)
 	middleware := loracloud.NewLoracloudMiddleware("access_token")
 	middleware.BaseUrl = server.URL
 	defer server.Close()
@@ -378,12 +378,49 @@ func TestFeatures(t *testing.T) {
 			payload: "3f0e1007087801c207d0003c04b0ec280603020c",
 			port:    4,
 		},
+		{
+			payload: "87821f50490200b520fbe977844d222a3a14a89293956245cc75a9ca1bbc25ddf658542909",
+			port:    192,
+		},
+		{
+			payload: "fdb7218f6c166fadb359ea3bdec77daff72faac81784ab263386a455d3a73592a063900b",
+			port:    197,
+		},
 	}
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/v1/device/send", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{
+				"result": {
+					"deveui": "927da4b72110927d",
+					"position_solution": {
+							"llh": [51.49278, 0.0212, 83.93],
+							"accuracy": 20.7,
+							"gdop": 2.48,
+							"capture_time_utc": 1722433373.18046
+					},
+					"operation": "gnss"
+				}
+			}`))
+	})
+
+	server := startMockServer(mux)
+	middleware := loracloud.NewLoracloudMiddleware("access_token")
+	middleware.BaseUrl = server.URL
+	defer server.Close()
 
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestFeaturesWithPort%vAndPayload%v", test.port, test.payload), func(t *testing.T) {
-			d := NewSmartLabelv1Decoder(loracloud.NewLoracloudMiddleware("appEui"))
-			data, _ := d.Decode(test.payload, test.port, "")
+			d := NewSmartLabelv1Decoder(
+				middleware,
+				WithFCount(42),
+			)
+			data, err := d.Decode(test.payload, test.port, "927da4b72110927d")
+			if err != nil {
+				t.Fatalf("error %s", err)
+			}
 
 			// should be able to decode base feature
 			base, ok := data.Data.(decoder.UplinkFeatureBase)
@@ -393,6 +430,27 @@ func TestFeatures(t *testing.T) {
 			// check if it panics
 			base.GetTimestamp()
 
+			if data.Is(decoder.FeatureGNSS) {
+				gnss, ok := data.Data.(decoder.UplinkFeatureGNSS)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureGNSS, got %T", data)
+				}
+				if gnss.GetLatitude() == 0 {
+					t.Fatalf("expected non zero latitude")
+				}
+				if gnss.GetLongitude() == 0 {
+					t.Fatalf("expected non zero longitude")
+				}
+				if gnss.GetAltitude() == 0 {
+					t.Fatalf("expected non zero altitude")
+				}
+				// call function to check if it panics
+				gnss.GetAltitude()
+				gnss.GetPDOP()
+				gnss.GetSatellites()
+				gnss.GetTTF()
+				gnss.GetAccuracy()
+			}
 			if data.Is(decoder.FeatureBattery) {
 				batteryVoltage, ok := data.Data.(decoder.UplinkFeatureBattery)
 				if !ok {
