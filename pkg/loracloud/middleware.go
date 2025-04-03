@@ -269,8 +269,25 @@ var _ decoder.UplinkFeatureBase = &UplinkMsgResponse{}
 var _ decoder.UplinkFeatureGNSS = &UplinkMsgResponse{}
 
 func (p UplinkMsgResponse) GetTimestamp() *time.Time {
-	seconds := int64(p.Result.PositionSolution.CaptureTimeUtc)
-	nanoseconds := int64((p.Result.PositionSolution.CaptureTimeUtc - float64(seconds)) * 1e9)
+	var captureTs float64
+	if p.Result.PositionSolution.AlgorithmType == "gnssng" {
+		// Use the last non-null element of capture_times_utc if available
+		for i := len(p.Result.PositionSolution.CaptureTimesUtc) - 1; i >= 0; i-- {
+			if p.Result.PositionSolution.CaptureTimesUtc[i] != 0 {
+				captureTs = p.Result.PositionSolution.CaptureTimesUtc[i]
+				break
+			}
+		}
+	} else {
+		captureTs = p.Result.PositionSolution.CaptureTimeUtc
+	}
+
+	if captureTs == 0 {
+		return nil
+	}
+
+	seconds := int64(captureTs)
+	nanoseconds := int64((captureTs - float64(seconds)) * 1e9)
 	timestamp := time.Unix(seconds, nanoseconds)
 	return &timestamp
 }

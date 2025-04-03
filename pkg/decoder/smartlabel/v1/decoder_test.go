@@ -312,6 +312,17 @@ func TestDecode(t *testing.T) {
 			expected:    nil,
 			expectedErr: "invalid payload for port 11",
 		},
+		{
+			payload: "01b5e0286d8aabfcc3e0286d8a9478",
+			port:    197,
+			devEui:  "",
+			expected: Port197Payload{
+				Mac1:  "e0286d8aabfc",
+				Rssi1: -75,
+				Mac2:  "e0286d8a9478",
+				Rssi2: -61,
+			},
+		},
 	}
 
 	for _, test := range tests {

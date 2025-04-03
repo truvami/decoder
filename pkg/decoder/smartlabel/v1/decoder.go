@@ -179,6 +179,25 @@ func (t SmartLabelv1Decoder) getConfig(port uint8, data string) (common.PayloadC
 			}, nil
 		}
 		return common.PayloadConfig{}, fmt.Errorf("invalid payload for port 11")
+	case 197:
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
+				{Name: "Rssi1", Start: 1, Length: 1, Optional: true},
+				{Name: "Mac1", Start: 2, Length: 6, Optional: true, Hex: true},
+				{Name: "Rssi2", Start: 8, Length: 1, Optional: true},
+				{Name: "Mac2", Start: 9, Length: 6, Optional: true, Hex: true},
+				{Name: "Rssi3", Start: 15, Length: 1, Optional: true},
+				{Name: "Mac3", Start: 16, Length: 6, Optional: true, Hex: true},
+				{Name: "Rssi4", Start: 22, Length: 1, Optional: true},
+				{Name: "Mac4", Start: 23, Length: 6, Optional: true, Hex: true},
+				{Name: "Rssi5", Start: 29, Length: 1, Optional: true},
+				{Name: "Mac5", Start: 30, Length: 6, Optional: true, Hex: true},
+				{Name: "Rssi6", Start: 36, Length: 1, Optional: true},
+				{Name: "Mac6", Start: 37, Length: 6, Optional: true, Hex: true},
+			},
+			TargetType: reflect.TypeOf(Port197Payload{}),
+			Features:   []decoder.Feature{decoder.FeatureWiFi},
+		}, nil
 	default:
 		return common.PayloadConfig{}, fmt.Errorf("port %v not supported", port)
 	}
@@ -194,14 +213,14 @@ func (t SmartLabelv1Decoder) Decode(data string, port uint8, devEui string) (*de
 			FCount:  t.fCount,
 		})
 		return decoder.NewDecodedUplink([]decoder.Feature{decoder.FeatureGNSS}, decodedData, nil), err
-	case 197:
-		decodedData, err := t.loracloudMiddleware.DeliverUplinkMessage(devEui, loracloud.UplinkMsg{
-			MsgType: "updf",
-			Port:    port,
-			Payload: data,
-			FCount:  t.fCount,
-		})
-		return decoder.NewDecodedUplink([]decoder.Feature{}, decodedData, nil), err
+	// case 197:
+	// 	decodedData, err := t.loracloudMiddleware.DeliverUplinkMessage(devEui, loracloud.UplinkMsg{
+	// 		MsgType: "updf",
+	// 		Port:    port,
+	// 		Payload: data,
+	// 		FCount:  t.fCount,
+	// 	})
+	// 	return decoder.NewDecodedUplink([]decoder.Feature{}, decodedData, nil), err
 	default:
 		config, err := t.getConfig(port, data)
 		if err != nil {
