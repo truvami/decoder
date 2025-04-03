@@ -276,15 +276,24 @@ func (p UplinkMsgResponse) GetTimestamp() *time.Time {
 }
 
 func (p UplinkMsgResponse) GetLatitude() float64 {
-	return p.Result.PositionSolution.Llh[0]
+	if len(p.Result.PositionSolution.Llh) > 0 {
+		return p.Result.PositionSolution.Llh[0]
+	}
+	return 0
 }
 
 func (p UplinkMsgResponse) GetLongitude() float64 {
-	return p.Result.PositionSolution.Llh[1]
+	if len(p.Result.PositionSolution.Llh) > 1 {
+		return p.Result.PositionSolution.Llh[1]
+	}
+	return 0
 }
 
 func (p UplinkMsgResponse) GetAltitude() float64 {
-	return p.Result.PositionSolution.Llh[2]
+	if len(p.Result.PositionSolution.Llh) > 2 {
+		return p.Result.PositionSolution.Llh[2]
+	}
+	return 0
 }
 
 func (p UplinkMsgResponse) GetAccuracy() *float64 {
