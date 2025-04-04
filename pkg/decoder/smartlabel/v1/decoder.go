@@ -182,8 +182,9 @@ func (t SmartLabelv1Decoder) getConfig(port uint8, data string) (common.PayloadC
 	case 197:
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
-				{Name: "Rssi1", Start: 1, Length: 1, Optional: true},
-				{Name: "Mac1", Start: 2, Length: 6, Optional: true, Hex: true},
+				{Name: "Tag", Start: 0, Length: 1},
+				{Name: "Rssi1", Start: 1, Length: 1},
+				{Name: "Mac1", Start: 2, Length: 6, Hex: true},
 				{Name: "Rssi2", Start: 8, Length: 1, Optional: true},
 				{Name: "Mac2", Start: 9, Length: 6, Optional: true, Hex: true},
 				{Name: "Rssi3", Start: 15, Length: 1, Optional: true},

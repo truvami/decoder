@@ -6,14 +6,26 @@ import (
 	"github.com/truvami/decoder/pkg/decoder"
 )
 
-// Uplink port: 197
-
-// Byte 0	Byte 1	Bytes[2:7]	Byte 8	Bytes[9:14]	...
-// Value	0x01	AP1 RSSI	AP1 MAC	AP2 RSSI	AP2 MAC		APN RSSI	APN MAC
-// Size [Bytes]	1	1	6	1	6		1	6
-// Type	UINT8	UINT8	UINT8	UINT8	UINT8		UINT8	UINT8
+// +------+------+-----------------------------------------------+------------+
+// | Byte | Size | Description                                   | Format     |
+// +------+------+-----------------------------------------------+------------+
+// | 0    | 1    | unknown tag probably bit field                | byte       |
+// | 1    | 1    | rssi signal 1                                 | int8       |
+// | 2    | 6    | mac address signal 1                          | byte[6]    |
+// | 8    | 1    | rssi signal 2                                 | int8       |
+// | 9    | 6    | mac address signal 2                          | byte[6]    |
+// | 15   | 1    | rssi signal 3                                 | int8       |
+// | 16   | 6    | mac address signal 3                          | byte[6]    |
+// | 22   | 1    | rssi signal 4                                 | int8       |
+// | 23   | 6    | mac address signal 4                          | byte[6]    |
+// | 29   | 1    | rssi signal 5                                 | int8       |
+// | 30   | 6    | mac address signal 5                          | byte[6]    |
+// | 36   | 1    | rssi signal 6                                 | int8       |
+// | 37   | 6    | mac address signal 6                          | byte[6]    |
+// +------+------+-----------------------------------------------+------------+
 
 type Port197Payload struct {
+	Tag   byte   `json:"tag"`
 	Mac1  string `json:"mac1"`
 	Rssi1 int8   `json:"rssi1"`
 	Mac2  string `json:"mac2"`
@@ -38,42 +50,42 @@ func (p Port197Payload) GetTimestamp() *time.Time {
 func (p Port197Payload) GetAccessPoints() []decoder.AccessPoint {
 	accessPoints := []decoder.AccessPoint{}
 
-	if p.Mac1 != "" {
+	if p.Rssi1 != 0 && p.Mac1 != "" {
 		accessPoints = append(accessPoints, decoder.AccessPoint{
 			MAC:  p.Mac1,
 			RSSI: p.Rssi1,
 		})
 	}
 
-	if p.Mac2 != "" {
+	if p.Rssi2 != 0 && p.Mac2 != "" {
 		accessPoints = append(accessPoints, decoder.AccessPoint{
 			MAC:  p.Mac2,
 			RSSI: p.Rssi2,
 		})
 	}
 
-	if p.Mac3 != "" {
+	if p.Rssi3 != 0 && p.Mac3 != "" {
 		accessPoints = append(accessPoints, decoder.AccessPoint{
 			MAC:  p.Mac3,
 			RSSI: p.Rssi3,
 		})
 	}
 
-	if p.Mac4 != "" {
+	if p.Rssi4 != 0 && p.Mac4 != "" {
 		accessPoints = append(accessPoints, decoder.AccessPoint{
 			MAC:  p.Mac4,
 			RSSI: p.Rssi4,
 		})
 	}
 
-	if p.Mac5 != "" {
+	if p.Rssi5 != 0 && p.Mac5 != "" {
 		accessPoints = append(accessPoints, decoder.AccessPoint{
 			MAC:  p.Mac5,
 			RSSI: p.Rssi5,
 		})
 	}
 
-	if p.Mac6 != "" {
+	if p.Rssi6 != 0 && p.Mac6 != "" {
 		accessPoints = append(accessPoints, decoder.AccessPoint{
 			MAC:  p.Mac6,
 			RSSI: p.Rssi6,
