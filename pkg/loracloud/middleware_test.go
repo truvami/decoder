@@ -6,6 +6,9 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
+
+	"github.com/truvami/decoder/pkg/common"
 )
 
 func startMockServer(handler http.Handler) *httptest.Server {
@@ -184,9 +187,16 @@ func TestDeliverUplinkMessage(t *testing.T) {
 }
 
 func TestResponseVariants(t *testing.T) {
+	type Expected = struct {
+		timestamp *time.Time
+		latitude  float64
+		longitude float64
+		altitude  float64
+	}
 	var tests = []struct {
-		name   string
-		result []byte
+		name     string
+		result   []byte
+		expected Expected
 	}{
 		{
 			name: "normal response",
@@ -202,6 +212,12 @@ func TestResponseVariants(t *testing.T) {
 				"operation": "gnss"
 			}
 		}`),
+			expected: Expected{
+				timestamp: common.TimePointer(1722433373.18046),
+				latitude:  51.49278,
+				longitude: 0.0212,
+				altitude:  83.93,
+			},
 		},
 		{
 			name: "llh empty array",
@@ -217,6 +233,33 @@ func TestResponseVariants(t *testing.T) {
 				"operation": "gnss"
 			}
 		}`),
+			expected: Expected{
+				timestamp: common.TimePointer(1722433373.18046),
+				latitude:  0,
+				longitude: 0,
+				altitude:  0,
+			},
+		},
+		{
+			name: "captured at null",
+			result: []byte(`{
+			"result": {
+				"deveui": "927da4b72110927d",
+				"position_solution": {
+						"llh": [51.49278, 0.0212, 83.93],
+						"accuracy": 20.7,
+						"gdop": 2.48,
+						"capture_time_utc": null
+				},
+				"operation": "gnss"
+			}
+		}`),
+			expected: Expected{
+				timestamp: nil,
+				latitude:  51.49278,
+				longitude: 0.0212,
+				altitude:  83.93,
+			},
 		},
 	}
 
@@ -227,25 +270,38 @@ func TestResponseVariants(t *testing.T) {
 				w.Header().Add("content-type", "application/json")
 				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(test.result)
-
-				server := startMockServer(mux)
-				middleware := NewLoracloudMiddleware("token")
-				middleware.BaseUrl = server.URL
-				defer server.Close()
-
-				devEui := "b2e6876e64be9692"
-				uplinkMsg := UplinkMsg{
-					MsgType: "uplink",
-					FCount:  42,
-					Port:    192,
-					Payload: "8c9e50de366a460e8a70fe72e04445db95d1eca8dcdac252",
-				}
-
-				_, err := middleware.DeliverUplinkMessage(devEui, uplinkMsg)
-				if err != nil {
-					t.Fatalf("error %s", err)
-				}
 			})
+
+			server := startMockServer(mux)
+			middleware := NewLoracloudMiddleware("token")
+			middleware.BaseUrl = server.URL
+			defer server.Close()
+
+			devEui := "b2e6876e64be9692"
+			uplinkMsg := UplinkMsg{
+				MsgType: "uplink",
+				FCount:  42,
+				Port:    192,
+				Payload: "8c9e50de366a460e8a70fe72e04445db95d1eca8dcdac252",
+			}
+
+			response, err := middleware.DeliverUplinkMessage(devEui, uplinkMsg)
+			if err != nil {
+				t.Fatalf("error %s", err)
+			}
+
+			if !common.TimePointerCompare(response.GetTimestamp(), test.expected.timestamp) {
+				t.Fatalf("expected timestamp %s got %s", test.expected.timestamp, response.GetTimestamp())
+			}
+			if response.GetLatitude() != test.expected.latitude {
+				t.Fatalf("expected latitude %f got %f", test.expected.latitude, response.GetLatitude())
+			}
+			if response.GetLongitude() != test.expected.longitude {
+				t.Fatalf("expected longitude %f got %f", test.expected.longitude, response.GetLongitude())
+			}
+			if response.GetAltitude() != test.expected.altitude {
+				t.Fatalf("expected altitude %f got %f", test.expected.altitude, response.GetAltitude())
+			}
 		})
 	}
 }
