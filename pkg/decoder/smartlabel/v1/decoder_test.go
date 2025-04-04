@@ -15,8 +15,8 @@ import (
 	"github.com/truvami/decoder/pkg/loracloud"
 )
 
-func startMockServer() *httptest.Server {
-	server := httptest.NewServer(nil)
+func startMockServer(handler http.Handler) *httptest.Server {
+	server := httptest.NewServer(handler)
 	return server
 }
 
@@ -49,7 +49,7 @@ func TestDecode(t *testing.T) {
 		_, _ = w.Write(data)
 	})
 
-	server := startMockServer()
+	server := startMockServer(nil)
 	middleware := loracloud.NewLoracloudMiddleware("access_token")
 	middleware.BaseUrl = server.URL
 	defer server.Close()
@@ -312,6 +312,66 @@ func TestDecode(t *testing.T) {
 			expected:    nil,
 			expectedErr: "invalid payload for port 11",
 		},
+		{
+			payload: "00d63385f8ee30c2d0a0382c2601db",
+			port:    197,
+			expected: Port197Payload{
+				Tag:   byte(0x00),
+				Rssi1: -42,
+				Mac1:  "3385f8ee30c2",
+				Rssi2: -48,
+				Mac2:  "a0382c2601db",
+			},
+		},
+		{
+			payload: "64c8b5eded55a313c0a0b8b5e86e31b894a765f3ad40",
+			port:    197,
+			expected: Port197Payload{
+				Tag:   byte(0x64),
+				Rssi1: -56,
+				Mac1:  "b5eded55a313",
+				Rssi2: -64,
+				Mac2:  "a0b8b5e86e31",
+				Rssi3: -72,
+				Mac3:  "94a765f3ad40",
+			},
+		},
+		{
+			payload: "aebd6fbcfdd76434bb7e7cbff22fc5b900dc0af60588b7010161302d9cb51bf1f8d1a97b",
+			port:    197,
+			expected: Port197Payload{
+				Tag:   byte(0xae),
+				Rssi1: -67,
+				Mac1:  "6fbcfdd76434",
+				Rssi2: -69,
+				Mac2:  "7e7cbff22fc5",
+				Rssi3: -71,
+				Mac3:  "00dc0af60588",
+				Rssi4: -73,
+				Mac4:  "010161302d9c",
+				Rssi5: -75,
+				Mac5:  "1bf1f8d1a97b",
+			},
+		},
+		{
+			payload: "fdb7218f6c166fadb359ea3bdec77daff72faac81784ab263386a455d3a73592a063900ba262b95a6ffc86",
+			port:    197,
+			expected: Port197Payload{
+				Tag:   byte(0xfd),
+				Rssi1: -73,
+				Mac1:  "218f6c166fad",
+				Rssi2: -77,
+				Mac2:  "59ea3bdec77d",
+				Rssi3: -81,
+				Mac3:  "f72faac81784",
+				Rssi4: -85,
+				Mac4:  "263386a455d3",
+				Rssi5: -89,
+				Mac5:  "3592a063900b",
+				Rssi6: -94,
+				Mac6:  "62b95a6ffc86",
+			},
+		},
 	}
 
 	for _, test := range tests {
@@ -378,12 +438,49 @@ func TestFeatures(t *testing.T) {
 			payload: "3f0e1007087801c207d0003c04b0ec280603020c",
 			port:    4,
 		},
+		{
+			payload: "87821f50490200b520fbe977844d222a3a14a89293956245cc75a9ca1bbc25ddf658542909",
+			port:    192,
+		},
+		{
+			payload: "fdb7218f6c166fadb359ea3bdec77daff72faac81784ab263386a455d3a73592a063900ba262b95a6ffc86",
+			port:    197,
+		},
 	}
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/v1/device/send", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{
+				"result": {
+					"deveui": "927da4b72110927d",
+					"position_solution": {
+							"llh": [51.49278, 0.0212, 83.93],
+							"accuracy": 20.7,
+							"gdop": 2.48,
+							"capture_time_utc": 1722433373.18046
+					},
+					"operation": "gnss"
+				}
+			}`))
+	})
+
+	server := startMockServer(mux)
+	middleware := loracloud.NewLoracloudMiddleware("access_token")
+	middleware.BaseUrl = server.URL
+	defer server.Close()
 
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestFeaturesWithPort%vAndPayload%v", test.port, test.payload), func(t *testing.T) {
-			d := NewSmartLabelv1Decoder(loracloud.NewLoracloudMiddleware("appEui"))
-			data, _ := d.Decode(test.payload, test.port, "")
+			d := NewSmartLabelv1Decoder(
+				middleware,
+				WithFCount(42),
+			)
+			data, err := d.Decode(test.payload, test.port, "927da4b72110927d")
+			if err != nil {
+				t.Fatalf("error %s", err)
+			}
 
 			// should be able to decode base feature
 			base, ok := data.Data.(decoder.UplinkFeatureBase)
@@ -393,6 +490,27 @@ func TestFeatures(t *testing.T) {
 			// check if it panics
 			base.GetTimestamp()
 
+			if data.Is(decoder.FeatureGNSS) {
+				gnss, ok := data.Data.(decoder.UplinkFeatureGNSS)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureGNSS, got %T", data)
+				}
+				if gnss.GetLatitude() == 0 {
+					t.Fatalf("expected non zero latitude")
+				}
+				if gnss.GetLongitude() == 0 {
+					t.Fatalf("expected non zero longitude")
+				}
+				if gnss.GetAltitude() == 0 {
+					t.Fatalf("expected non zero altitude")
+				}
+				// call function to check if it panics
+				gnss.GetAltitude()
+				gnss.GetPDOP()
+				gnss.GetSatellites()
+				gnss.GetTTF()
+				gnss.GetAccuracy()
+			}
 			if data.Is(decoder.FeatureBattery) {
 				batteryVoltage, ok := data.Data.(decoder.UplinkFeatureBattery)
 				if !ok {
@@ -400,6 +518,15 @@ func TestFeatures(t *testing.T) {
 				}
 				if batteryVoltage.GetBatteryVoltage() == 0 {
 					t.Fatalf("expected non zero battery voltage")
+				}
+			}
+			if data.Is(decoder.FeatureWiFi) {
+				wifi, ok := data.Data.(decoder.UplinkFeatureWiFi)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureWiFi, got %T", data)
+				}
+				if wifi.GetAccessPoints() == nil {
+					t.Fatalf("expected non nil access points")
 				}
 			}
 			if data.Is(decoder.FeaturePhotovoltaic) {

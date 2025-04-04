@@ -134,10 +134,18 @@ func (t TagXLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 
 func (t TagXLv1Decoder) Decode(data string, port uint8, devEui string) (*decoder.DecodedUplink, error) {
 	switch port {
-	case 192, 199:
+	case 192:
 		decodedData, err := t.loracloudMiddleware.DeliverUplinkMessage(devEui, loracloud.UplinkMsg{
 			MsgType: "updf",
-			Port:    uint8(port),
+			Port:    port,
+			Payload: data,
+			FCount:  t.fCount,
+		})
+		return decoder.NewDecodedUplink([]decoder.Feature{decoder.FeatureGNSS}, decodedData, nil), err
+	case 199:
+		decodedData, err := t.loracloudMiddleware.DeliverUplinkMessage(devEui, loracloud.UplinkMsg{
+			MsgType: "updf",
+			Port:    port,
 			Payload: data,
 			FCount:  t.fCount,
 		})

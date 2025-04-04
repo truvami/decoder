@@ -277,3 +277,67 @@ func TestUintToBinaryArray(t *testing.T) {
 		})
 	}
 }
+
+func TestTimePointerCompare(t *testing.T) {
+
+	tests := []struct {
+		alpha    *time.Time
+		bravo    *time.Time
+		expected bool
+	}{
+		{
+			alpha:    TimePointer(42),
+			bravo:    TimePointer(73),
+			expected: false,
+		},
+		{
+			alpha:    TimePointer(42.64),
+			bravo:    TimePointer(73.32),
+			expected: false,
+		},
+		{
+			alpha:    TimePointer(56.64),
+			bravo:    TimePointer(56.32),
+			expected: false,
+		},
+		{
+			alpha:    nil,
+			bravo:    TimePointer(56.32),
+			expected: false,
+		},
+		{
+			alpha:    TimePointer(56.64),
+			bravo:    nil,
+			expected: false,
+		},
+		{
+			alpha:    TimePointer(42),
+			bravo:    TimePointer(42),
+			expected: true,
+		},
+		{
+			alpha:    TimePointer(42.64),
+			bravo:    TimePointer(42.64),
+			expected: true,
+		},
+		{
+			alpha:    TimePointer(73.32),
+			bravo:    TimePointer(73.32),
+			expected: true,
+		},
+		{
+			alpha:    nil,
+			bravo:    nil,
+			expected: true,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(fmt.Sprintf("%s - %s", test.alpha, test.bravo), func(t *testing.T) {
+			result := TimePointerCompare(test.alpha, test.bravo)
+			if result != test.expected {
+				t.Fatalf("expected %v got %v", test.expected, result)
+			}
+		})
+	}
+}

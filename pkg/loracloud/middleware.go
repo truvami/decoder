@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/go-playground/validator"
+	"github.com/truvami/decoder/pkg/decoder"
 )
 
 type LoracloudMiddleware struct {
@@ -261,4 +263,68 @@ type UplinkMsgResponse struct {
 		} `json:"position_solution"`
 		Operation string `json:"operation"`
 	} `json:"result"`
+}
+
+var _ decoder.UplinkFeatureBase = &UplinkMsgResponse{}
+var _ decoder.UplinkFeatureGNSS = &UplinkMsgResponse{}
+
+func (p UplinkMsgResponse) GetTimestamp() *time.Time {
+	var captureTs float64
+	if p.Result.PositionSolution.AlgorithmType == "gnssng" {
+		// Use the last non-null element of capture_times_utc if available
+		for i := len(p.Result.PositionSolution.CaptureTimesUtc) - 1; i >= 0; i-- {
+			if p.Result.PositionSolution.CaptureTimesUtc[i] != 0 {
+				captureTs = p.Result.PositionSolution.CaptureTimesUtc[i]
+				break
+			}
+		}
+	} else {
+		captureTs = p.Result.PositionSolution.CaptureTimeUtc
+	}
+
+	if captureTs == 0 {
+		return nil
+	}
+
+	seconds := int64(captureTs)
+	nanoseconds := int64((captureTs - float64(seconds)) * 1e9)
+	timestamp := time.Unix(seconds, nanoseconds)
+	return &timestamp
+}
+
+func (p UplinkMsgResponse) GetLatitude() float64 {
+	if len(p.Result.PositionSolution.Llh) > 0 {
+		return p.Result.PositionSolution.Llh[0]
+	}
+	return 0
+}
+
+func (p UplinkMsgResponse) GetLongitude() float64 {
+	if len(p.Result.PositionSolution.Llh) > 1 {
+		return p.Result.PositionSolution.Llh[1]
+	}
+	return 0
+}
+
+func (p UplinkMsgResponse) GetAltitude() float64 {
+	if len(p.Result.PositionSolution.Llh) > 2 {
+		return p.Result.PositionSolution.Llh[2]
+	}
+	return 0
+}
+
+func (p UplinkMsgResponse) GetAccuracy() *float64 {
+	return &p.Result.PositionSolution.Accuracy
+}
+
+func (p UplinkMsgResponse) GetTTF() *time.Duration {
+	return nil
+}
+
+func (p UplinkMsgResponse) GetPDOP() *float64 {
+	return &p.Result.PositionSolution.Gdop
+}
+
+func (p UplinkMsgResponse) GetSatellites() *uint8 {
+	return nil
 }

@@ -295,3 +295,20 @@ func uintToBytes(value uint64, length int) []byte {
 	}
 	return buf
 }
+
+func TimePointer(timestamp float64) *time.Time {
+	seconds := int64(timestamp)
+	nanoseconds := int64((timestamp - float64(seconds)) * 1e9)
+	time := time.Unix(seconds, nanoseconds)
+	return &time
+}
+
+func TimePointerCompare(alpha *time.Time, bravo *time.Time) bool {
+	if alpha == nil && bravo == nil {
+		return true
+	}
+	if alpha == nil || bravo == nil {
+		return false
+	}
+	return alpha.Equal(*bravo)
+}

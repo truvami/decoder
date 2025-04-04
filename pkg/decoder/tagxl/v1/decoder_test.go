@@ -16,8 +16,8 @@ import (
 	"github.com/truvami/decoder/pkg/loracloud"
 )
 
-func startMockServer() *httptest.Server {
-	server := httptest.NewServer(nil)
+func startMockServer(handler http.Handler) *httptest.Server {
+	server := httptest.NewServer(handler)
 	return server
 }
 
@@ -50,7 +50,7 @@ func TestDecode(t *testing.T) {
 		_, _ = w.Write(data)
 	})
 
-	server := startMockServer()
+	server := startMockServer(nil)
 	middleware := loracloud.NewLoracloudMiddleware("access_token")
 	middleware.BaseUrl = server.URL
 	defer server.Close()
@@ -379,18 +379,53 @@ func TestFeatures(t *testing.T) {
 			port:    152,
 		},
 		{
+			payload: "87821f50490200b520fbe977844d222a3a14a89293956245cc75a9ca1bbc25ddf658542909",
+			port:    192,
+		},
+		{
 			payload: "fdb7218f6c166fadb359ea3bdec77daff72faac81784ab263386a455d3a73592a063900b",
 			port:    197,
 		},
+		{
+			payload: "86b5277140484a89b8f63ccf67affbfeb519b854f9d447808a50785bdfe86a77",
+			port:    199,
+		},
 	}
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/v1/device/send", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{
+				"result": {
+					"deveui": "927da4b72110927d",
+					"position_solution": {
+							"llh": [51.49278, 0.0212, 83.93],
+							"accuracy": 20.7,
+							"gdop": 2.48,
+							"capture_time_utc": 1722433373.18046
+					},
+					"operation": "gnss"
+				}
+			}`))
+	})
+
+	server := startMockServer(mux)
+	middleware := loracloud.NewLoracloudMiddleware("access_token")
+	middleware.BaseUrl = server.URL
+	defer server.Close()
 
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestFeaturesWithPort%vAndPayload%v", test.port, test.payload), func(t *testing.T) {
 			d := NewTagXLv1Decoder(
-				loracloud.NewLoracloudMiddleware("apiKey"),
+				middleware,
 				WithSkipValidation(test.skipValidation),
+				WithFCount(42),
 			)
-			decodedPayload, _ := d.Decode(test.payload, test.port, "")
+			decodedPayload, err := d.Decode(test.payload, test.port, "927da4b72110927d")
+			if err != nil {
+				t.Fatalf("error %s", err)
+			}
 
 			// should be able to decode base feature
 			base, ok := decodedPayload.Data.(decoder.UplinkFeatureBase)
