@@ -226,6 +226,46 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
+			payload: "0ca90dbd07fa69",
+			port:    11,
+			expected: Port11Payload{
+				BatteryVoltage:      3.241,
+				PhotovoltaicVoltage: 3.517,
+				Temperature:         20.42,
+				Humidity:            52.5,
+			},
+		},
+		{
+			payload: "0dfa0e1a074070",
+			port:    11,
+			expected: Port11Payload{
+				BatteryVoltage:      3.578,
+				PhotovoltaicVoltage: 3.610,
+				Temperature:         18.56,
+				Humidity:            56.0,
+			},
+		},
+		{
+			payload: "0e860ef706947d",
+			port:    11,
+			expected: Port11Payload{
+				BatteryVoltage:      3.718,
+				PhotovoltaicVoltage: 3.831,
+				Temperature:         16.84,
+				Humidity:            62.5,
+			},
+		},
+		{
+			payload: "0f50107904da8d",
+			port:    11,
+			expected: Port11Payload{
+				BatteryVoltage:      3.920,
+				PhotovoltaicVoltage: 4.217,
+				Temperature:         12.42,
+				Humidity:            70.5,
+			},
+		},
+		{
 			payload:  "87821F50490200B520FBE977844D222A3A14A89293956245CC75A9CA1BBC25DDF658542909",
 			port:     192,
 			devEui:   "10CE45FFFE00C7EC",
@@ -246,71 +286,37 @@ func TestDecode(t *testing.T) {
 			expectedErr: "port 0 not supported",
 		},
 		{
-			payload: "0e021e0384012c01003c012c03e8",
-			port:    11,
-			expected: Port11ConfigurationPayload{
-				Flags:              30,
-				GNSSEnabled:        1,
-				WiFiEnabled:        1,
-				AccEnabled:         1,
-				StaticSF:           "SF9",
-				SteadyIntervalS:    900,
-				MovingIntervalS:    300,
-				HeartbeatIntervalH: 1,
-				LEDBlinkIntervalS:  60,
-				AccThresholdMS:     300,
-				AccDelayMS:         1000,
+			payload: "0e1a0db60d520c260a96",
+			port:    150,
+			expected: Port150Payload{
+				Battery100Voltage: 3.610,
+				Battery80Voltage:  3.510,
+				Battery60Voltage:  3.410,
+				Battery40Voltage:  3.110,
+				Battery20Voltage:  2.710,
 			},
 		},
 		{
-			payload: "11021e0384012c01003c012c03e8e43420ea",
-			port:    11,
-			expected: Port11ConfigurationPayload{
-				Flags:              30,
-				GNSSEnabled:        1,
-				WiFiEnabled:        1,
-				AccEnabled:         1,
-				StaticSF:           "SF9",
-				SteadyIntervalS:    900,
-				MovingIntervalS:    300,
-				HeartbeatIntervalH: 1,
-				LEDBlinkIntervalS:  60,
-				AccThresholdMS:     300,
-				AccDelayMS:         1000,
-				GitHash:            "e43420ea",
+			payload: "0ed80e420dac0cb20b22",
+			port:    150,
+			expected: Port150Payload{
+				Battery100Voltage: 3.800,
+				Battery80Voltage:  3.650,
+				Battery60Voltage:  3.500,
+				Battery40Voltage:  3.250,
+				Battery20Voltage:  2.850,
 			},
 		},
 		{
-			payload: "0a010f05095f4100000000",
-			port:    11,
-			expected: Port11HeartbeatPayload{
-				Battery:        3.845,
-				Temperature:    23.99,
-				RH:             32.5,
-				GNSSScansCount: 0,
-				WiFiScansCount: 0,
+			payload: "0f960e6a0e060d3e0bae",
+			port:    150,
+			expected: Port150Payload{
+				Battery100Voltage: 3.990,
+				Battery80Voltage:  3.690,
+				Battery60Voltage:  3.590,
+				Battery40Voltage:  3.390,
+				Battery20Voltage:  2.990,
 			},
-		},
-		{
-			payload:     "",
-			port:        11,
-			devEui:      "",
-			expected:    nil,
-			expectedErr: "data length is less than 2",
-		},
-		{
-			payload:     "0e02f9f3eae48ae7523948d0d5xx",
-			port:        11,
-			devEui:      "",
-			expected:    nil,
-			expectedErr: "encoding/hex",
-		},
-		{
-			payload:     "ff00",
-			port:        11,
-			devEui:      "",
-			expected:    nil,
-			expectedErr: "invalid payload for port 11",
 		},
 		{
 			payload: "00d63385f8ee30c2d0a0382c2601db",
@@ -437,6 +443,14 @@ func TestFeatures(t *testing.T) {
 		{
 			payload: "3f0e1007087801c207d0003c04b0ec280603020c",
 			port:    4,
+		},
+		{
+			payload: "0f50107904da8d",
+			port:    11,
+		},
+		{
+			payload: "0ed80e420dac0cb20b22",
+			port:    150,
 		},
 		{
 			payload: "87821f50490200b520fbe977844d222a3a14a89293956245cc75a9ca1bbc25ddf658542909",
@@ -610,70 +624,6 @@ func TestWithAutoPadding(t *testing.T) {
 		}
 	} else {
 		t.Error("failed to type assert decoder")
-	}
-}
-
-func TestGetPort11PayloadType(t *testing.T) {
-	tests := []struct {
-		name        string
-		data        string
-		want        string
-		expectedErr string
-	}{
-		{
-			name:        "Empty data",
-			data:        "",
-			want:        "",
-			expectedErr: "data length is less than 2",
-		},
-		{
-			name:        "Single byte",
-			data:        "0",
-			want:        "",
-			expectedErr: "data length is less than 2",
-		},
-		{
-			name:        "Configuration payload 0E",
-			data:        "0E",
-			want:        "configuration",
-			expectedErr: "",
-		},
-		{
-			name:        "Configuration payload 11",
-			data:        "11",
-			want:        "configuration",
-			expectedErr: "",
-		},
-		{
-			name:        "Heartbeat payload",
-			data:        "0A",
-			want:        "heartbeat",
-			expectedErr: "",
-		},
-		{
-			name:        "Invalid payload",
-			data:        "FF",
-			want:        "",
-			expectedErr: "invalid payload for port 11",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := getPort11PayloadType(tt.data)
-			if err != nil && tt.expectedErr == "" {
-				t.Errorf("unexpected error: %v", err)
-			}
-			if err == nil && tt.expectedErr != "" {
-				t.Errorf("expected error containing %q, got nil", tt.expectedErr)
-			}
-			if err != nil && tt.expectedErr != "" && !strings.Contains(err.Error(), tt.expectedErr) {
-				t.Errorf("expected error containing %q, got %q", tt.expectedErr, err.Error())
-			}
-			if got != tt.want {
-				t.Errorf("getPort11PayloadType() = %v, want %v", got, tt.want)
-			}
-		})
 	}
 }
 
