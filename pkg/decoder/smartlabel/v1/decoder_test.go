@@ -313,6 +313,39 @@ func TestDecode(t *testing.T) {
 			expectedErr: "invalid payload for port 11",
 		},
 		{
+			payload: "0e1a0db60d520c260a96",
+			port:    150,
+			expected: Port150Payload{
+				Battery100Voltage: 3.610,
+				Battery80Voltage:  3.510,
+				Battery60Voltage:  3.410,
+				Battery40Voltage:  3.110,
+				Battery20Voltage:  2.710,
+			},
+		},
+		{
+			payload: "0ed80e420dac0cb20b22",
+			port:    150,
+			expected: Port150Payload{
+				Battery100Voltage: 3.800,
+				Battery80Voltage:  3.650,
+				Battery60Voltage:  3.500,
+				Battery40Voltage:  3.250,
+				Battery20Voltage:  2.850,
+			},
+		},
+		{
+			payload: "0f960e6a0e060d3e0bae",
+			port:    150,
+			expected: Port150Payload{
+				Battery100Voltage: 3.990,
+				Battery80Voltage:  3.690,
+				Battery60Voltage:  3.590,
+				Battery40Voltage:  3.390,
+				Battery20Voltage:  2.990,
+			},
+		},
+		{
 			payload: "00d63385f8ee30c2d0a0382c2601db",
 			port:    197,
 			expected: Port197Payload{
@@ -437,6 +470,10 @@ func TestFeatures(t *testing.T) {
 		{
 			payload: "3f0e1007087801c207d0003c04b0ec280603020c",
 			port:    4,
+		},
+		{
+			payload: "0ed80e420dac0cb20b22",
+			port:    150,
 		},
 		{
 			payload: "87821f50490200b520fbe977844d222a3a14a89293956245cc75a9ca1bbc25ddf658542909",

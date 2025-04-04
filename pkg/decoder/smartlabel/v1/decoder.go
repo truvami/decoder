@@ -179,6 +179,28 @@ func (t SmartLabelv1Decoder) getConfig(port uint8, data string) (common.PayloadC
 			}, nil
 		}
 		return common.PayloadConfig{}, fmt.Errorf("invalid payload for port 11")
+	case 150:
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
+				{Name: "Battery100Voltage", Start: 0, Length: 2, Transform: func(v any) any {
+					return float32(v.(int)) / 1000
+				}},
+				{Name: "Battery80Voltage", Start: 2, Length: 2, Transform: func(v any) any {
+					return float32(v.(int)) / 1000
+				}},
+				{Name: "Battery60Voltage", Start: 4, Length: 2, Transform: func(v any) any {
+					return float32(v.(int)) / 1000
+				}},
+				{Name: "Battery40Voltage", Start: 6, Length: 2, Transform: func(v any) any {
+					return float32(v.(int)) / 1000
+				}},
+				{Name: "Battery20Voltage", Start: 8, Length: 2, Transform: func(v any) any {
+					return float32(v.(int)) / 1000
+				}},
+			},
+			TargetType: reflect.TypeOf(Port150Payload{}),
+			Features:   []decoder.Feature{},
+		}, nil
 	case 197:
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
