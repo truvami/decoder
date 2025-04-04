@@ -443,7 +443,7 @@ func TestFeatures(t *testing.T) {
 			port:    192,
 		},
 		{
-			payload: "fdb7218f6c166fadb359ea3bdec77daff72faac81784ab263386a455d3a73592a063900b",
+			payload: "fdb7218f6c166fadb359ea3bdec77daff72faac81784ab263386a455d3a73592a063900ba262b95a6ffc86",
 			port:    197,
 		},
 	}
@@ -518,6 +518,15 @@ func TestFeatures(t *testing.T) {
 				}
 				if batteryVoltage.GetBatteryVoltage() == 0 {
 					t.Fatalf("expected non zero battery voltage")
+				}
+			}
+			if data.Is(decoder.FeatureWiFi) {
+				wifi, ok := data.Data.(decoder.UplinkFeatureWiFi)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureWiFi, got %T", data)
+				}
+				if wifi.GetAccessPoints() == nil {
+					t.Fatalf("expected non nil access points")
 				}
 			}
 			if data.Is(decoder.FeaturePhotovoltaic) {
