@@ -386,6 +386,10 @@ func TestFeatures(t *testing.T) {
 			payload: "fdb7218f6c166fadb359ea3bdec77daff72faac81784ab263386a455d3a73592a063900b",
 			port:    197,
 		},
+		{
+			payload: "86b5277140484a89b8f63ccf67affbfeb519b854f9d447808a50785bdfe86a77",
+			port:    199,
+		},
 	}
 
 	mux := http.NewServeMux()
