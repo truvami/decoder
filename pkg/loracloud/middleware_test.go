@@ -182,3 +182,70 @@ func TestDeliverUplinkMessage(t *testing.T) {
 		}
 	})
 }
+
+func TestResponseVariants(t *testing.T) {
+	var tests = []struct {
+		name   string
+		result []byte
+	}{
+		{
+			name: "normal response",
+			result: []byte(`{
+			"result": {
+				"deveui": "927da4b72110927d",
+				"position_solution": {
+						"llh": [51.49278, 0.0212, 83.93],
+						"accuracy": 20.7,
+						"gdop": 2.48,
+						"capture_time_utc": 1722433373.18046
+				},
+				"operation": "gnss"
+			}
+		}`),
+		},
+		{
+			name: "llh empty array",
+			result: []byte(`{
+			"result": {
+				"deveui": "927da4b72110927d",
+				"position_solution": {
+						"llh": [],
+						"accuracy": 20.7,
+						"gdop": 2.48,
+						"capture_time_utc": 1722433373.18046
+				},
+				"operation": "gnss"
+			}
+		}`),
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			mux := http.NewServeMux()
+			mux.HandleFunc("/api/v1/device/send", func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Add("content-type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(test.result)
+
+				server := startMockServer(mux)
+				middleware := NewLoracloudMiddleware("token")
+				middleware.BaseUrl = server.URL
+				defer server.Close()
+
+				devEui := "b2e6876e64be9692"
+				uplinkMsg := UplinkMsg{
+					MsgType: "uplink",
+					FCount:  42,
+					Port:    192,
+					Payload: "8c9e50de366a460e8a70fe72e04445db95d1eca8dcdac252",
+				}
+
+				_, err := middleware.DeliverUplinkMessage(devEui, uplinkMsg)
+				if err != nil {
+					t.Fatalf("error %s", err)
+				}
+			})
+		})
+	}
+}
