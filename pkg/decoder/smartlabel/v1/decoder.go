@@ -3,7 +3,6 @@ package smartlabel
 import (
 	"fmt"
 	"reflect"
-	"strings"
 
 	"github.com/truvami/decoder/pkg/common"
 	"github.com/truvami/decoder/pkg/decoder"
@@ -49,19 +48,6 @@ func WithFCount(fCount uint32) Option {
 	return func(t *SmartLabelv1Decoder) {
 		t.fCount = fCount
 	}
-}
-
-func getPort11PayloadType(data string) (string, error) {
-	if len(data) < 2 {
-		return "", fmt.Errorf("data length is less than 2")
-	}
-	firstByte := strings.ToUpper(data[0:2])
-	if firstByte == "0E" || firstByte == "11" { // 14 || 17
-		return "configuration", nil
-	} else if firstByte == "0A" { // 10
-		return "heartbeat", nil
-	}
-	return "", fmt.Errorf("invalid payload for port 11")
 }
 
 // https://docs.truvami.com/docs/payloads/smartlabel
