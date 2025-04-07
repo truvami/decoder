@@ -17,7 +17,12 @@ type Port6Payload struct {
 }
 
 var _ decoder.UplinkFeatureBase = &Port6Payload{}
+var _ decoder.UplinkFeatureButton = &Port6Payload{}
 
 func (p Port6Payload) GetTimestamp() *time.Time {
 	return nil
+}
+
+func (p Port6Payload) GetPressed() bool {
+	return p.ButtonPressed
 }

@@ -1956,6 +1956,14 @@ func TestFeatures(t *testing.T) {
 				config.GetBatchSize()
 				config.GetBufferSize()
 			}
+			if decodedPayload.Is(decoder.FeatureButton) {
+				button, ok := decodedPayload.Data.(decoder.UplinkFeatureButton)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureButton, got %T", decodedPayload)
+				}
+				// call function to check if it panics
+				button.GetPressed()
+			}
 			if decodedPayload.Is(decoder.FeatureFirmwareVersion) {
 				firmwareVersion, ok := decodedPayload.Data.(decoder.UplinkFeatureFirmwareVersion)
 				if !ok {
