@@ -158,3 +158,7 @@ type UplinkFeatureHardwareVersion interface {
 	// GetHardwareVersion returns the hardware version of the device.
 	GetHardwareVersion() string
 }
+
+type UplinkFeatureButton interface {
+	GetPressed() bool
+}
