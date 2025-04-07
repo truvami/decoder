@@ -413,7 +413,7 @@ func TestPayloadTooShort(t *testing.T) {
 	decoder := NewSmartLabelv1Decoder(loracloud.NewLoracloudMiddleware("appEui"))
 	_, err := decoder.Decode("0ff0", 1, "")
 
-	if err == nil || err.Error() != "payload too short" {
+	if err == nil || !strings.Contains(err.Error(), "payload too short") {
 		t.Fatal("expected error payload too short")
 	}
 }
@@ -422,7 +422,7 @@ func TestPayloadTooLong(t *testing.T) {
 	decoder := NewSmartLabelv1Decoder(loracloud.NewLoracloudMiddleware("appEui"))
 	_, err := decoder.Decode("0ff00ff00ff0", 1, "")
 
-	if err == nil || err.Error() != "payload too long" {
+	if err == nil || !strings.Contains(err.Error(), "payload too long") {
 		t.Fatal("expected error payload too long")
 	}
 }

@@ -108,7 +108,7 @@ func TestPayloadTooShort(t *testing.T) {
 	decoder := NewNomadXLv1Decoder()
 	_, err := decoder.Decode("deadbeef", 101, "")
 
-	if err == nil || err.Error() != "payload too short" {
+	if err == nil || !strings.Contains(err.Error(), "payload too short") {
 		t.Fatal("expected error payload too short")
 	}
 }
@@ -117,7 +117,7 @@ func TestPayloadTooLong(t *testing.T) {
 	decoder := NewNomadXLv1Decoder()
 	_, err := decoder.Decode("deadbeef4242deadbeef4242deadbeef4242deadbeef4242deadbeef4242deadbeef4242deadbeef4242", 101, "")
 
-	if err == nil || err.Error() != "payload too long" {
+	if err == nil || !strings.Contains(err.Error(), "payload too long") {
 		t.Fatal("expected error payload too long")
 	}
 }
