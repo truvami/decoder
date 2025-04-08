@@ -95,5 +95,5 @@ func (t TagSLv1Encoder) getConfig(port uint8) (common.PayloadConfig, error) {
 		}, nil
 	}
 
-	return common.PayloadConfig{}, fmt.Errorf("port %v not supported", port)
+	return common.PayloadConfig{}, fmt.Errorf("%w: port %v not supported", common.ErrPortNotSupported, port)
 }

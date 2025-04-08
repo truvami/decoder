@@ -173,7 +173,7 @@ func (t SmartLabelv1Decoder) getConfig(port uint8, data string) (common.PayloadC
 			Features:   []decoder.Feature{decoder.FeatureWiFi},
 		}, nil
 	default:
-		return common.PayloadConfig{}, fmt.Errorf("port %v not supported", port)
+		return common.PayloadConfig{}, fmt.Errorf("%w: port %v not supported", common.ErrPortNotSupported, port)
 	}
 }
 

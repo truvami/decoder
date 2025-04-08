@@ -2,11 +2,13 @@ package nomadxs
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/truvami/decoder/pkg/common"
 	helpers "github.com/truvami/decoder/pkg/common"
 	"github.com/truvami/decoder/pkg/decoder"
 )
@@ -293,7 +295,7 @@ func TestValidationErrors(t *testing.T) {
 func TestInvalidPort(t *testing.T) {
 	decoder := NewNomadXSv1Decoder()
 	_, err := decoder.Decode("00", 0, "")
-	if err == nil || err.Error() != "port 0 not supported" {
+	if err == nil || !errors.Is(err, common.ErrPortNotSupported) {
 		t.Fatal("expected port not supported")
 	}
 }
@@ -302,7 +304,7 @@ func TestPayloadTooShort(t *testing.T) {
 	decoder := NewNomadXSv1Decoder()
 	_, err := decoder.Decode("deadbeef", 1, "")
 
-	if err == nil || !strings.Contains(err.Error(), "payload too short") {
+	if err == nil || !errors.Is(err, common.ErrPayloadTooShort) {
 		t.Fatal("expected error payload too short")
 	}
 }
@@ -311,7 +313,7 @@ func TestPayloadTooLong(t *testing.T) {
 	decoder := NewNomadXSv1Decoder()
 	_, err := decoder.Decode("deadbeef4242deadbeef4242deadbeef4242deadbeef4242deadbeef4242deadbeef4242deadbeef4242deadbeef4242", 1, "")
 
-	if err == nil || !strings.Contains(err.Error(), "payload too long") {
+	if err == nil || !errors.Is(err, common.ErrPayloadTooLong) {
 		t.Fatal("expected error payload too long")
 	}
 }
