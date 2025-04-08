@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/truvami/decoder/pkg/common"
+	helpers "github.com/truvami/decoder/pkg/common"
 	"github.com/truvami/decoder/pkg/decoder"
 	"github.com/truvami/decoder/pkg/loracloud"
 )
@@ -344,7 +344,7 @@ func TestInvalidPort(t *testing.T) {
 	decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"))
 	_, err := decoder.Decode("00", 0, "")
 
-	if err == nil || !errors.Is(err, common.ErrPortNotSupported) {
+	if err == nil || !errors.Is(err, helpers.ErrPortNotSupported) {
 		t.Fatal("expected port not supported")
 	}
 }
@@ -353,7 +353,7 @@ func TestPayloadTooShort(t *testing.T) {
 	decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"))
 	_, err := decoder.Decode("deadbeef", 152, "")
 
-	if err == nil || !errors.Is(err, common.ErrPayloadTooShort) {
+	if err == nil || !errors.Is(err, helpers.ErrPayloadTooShort) {
 		t.Fatal("expected error payload too short")
 	}
 }
@@ -362,7 +362,7 @@ func TestPayloadTooLong(t *testing.T) {
 	decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"))
 	_, err := decoder.Decode("deadbeef4242deadbeef4242deadbeef4242", 152, "")
 
-	if err == nil || !errors.Is(err, common.ErrPayloadTooLong) {
+	if err == nil || !errors.Is(err, helpers.ErrPayloadTooLong) {
 		t.Fatal("expected error payload too long")
 	}
 }

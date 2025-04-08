@@ -12,7 +12,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/truvami/decoder/pkg/common"
+	helpers "github.com/truvami/decoder/pkg/common"
 	"github.com/truvami/decoder/pkg/decoder"
 	"github.com/truvami/decoder/pkg/loracloud"
 )
@@ -406,7 +406,7 @@ func TestDecode(t *testing.T) {
 func TestInvalidPort(t *testing.T) {
 	decoder := NewSmartLabelv1Decoder(loracloud.NewLoracloudMiddleware("appEui"))
 	_, err := decoder.Decode("00", 0, "")
-	if err == nil || !errors.Is(err, common.ErrPortNotSupported) {
+	if err == nil || !errors.Is(err, helpers.ErrPortNotSupported) {
 		t.Fatal("expected port not supported")
 	}
 }
@@ -415,7 +415,7 @@ func TestPayloadTooShort(t *testing.T) {
 	decoder := NewSmartLabelv1Decoder(loracloud.NewLoracloudMiddleware("appEui"))
 	_, err := decoder.Decode("0ff0", 1, "")
 
-	if err == nil || !errors.Is(err, common.ErrPayloadTooShort) {
+	if err == nil || !errors.Is(err, helpers.ErrPayloadTooShort) {
 		t.Fatal("expected error payload too short")
 	}
 }
@@ -424,7 +424,7 @@ func TestPayloadTooLong(t *testing.T) {
 	decoder := NewSmartLabelv1Decoder(loracloud.NewLoracloudMiddleware("appEui"))
 	_, err := decoder.Decode("0ff00ff00ff0", 1, "")
 
-	if err == nil || !errors.Is(err, common.ErrPayloadTooLong) {
+	if err == nil || !errors.Is(err, helpers.ErrPayloadTooLong) {
 		t.Fatal("expected error payload too long")
 	}
 }
