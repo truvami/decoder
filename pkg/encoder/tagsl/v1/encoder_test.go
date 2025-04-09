@@ -1,8 +1,11 @@
 package tagsl
 
 import (
+	"errors"
 	"fmt"
 	"testing"
+
+	helpers "github.com/truvami/decoder/pkg/common"
 )
 
 func TestEncode(t *testing.T) {
@@ -149,7 +152,7 @@ func TestInvalidData(t *testing.T) {
 func TestInvalidPort(t *testing.T) {
 	encoder := NewTagSLv1Encoder()
 	_, _, err := encoder.Encode(nil, 0, "")
-	if err == nil || err.Error() != "port 0 not supported" {
+	if err == nil || !errors.Is(err, helpers.ErrPortNotSupported) {
 		t.Fatal("expected port not supported")
 	}
 }

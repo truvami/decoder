@@ -214,11 +214,11 @@ func ValidateLength(payload *string, config *PayloadConfig) error {
 	}
 
 	if payloadLength < minLength {
-		return fmt.Errorf("payload too short")
+		return WrapErrorWithMessage(ErrInvalidPayloadLength, ErrPayloadTooShort, fmt.Sprintf("payload length %d is less than minimum required length %d", payloadLength, minLength))
 	}
 
 	if payloadLength > maxLength {
-		return fmt.Errorf("payload too long")
+		return WrapErrorWithMessage(ErrInvalidPayloadLength, ErrPayloadTooLong, fmt.Sprintf("payload length %d is greater than maximum allowed length %d", payloadLength, maxLength))
 	}
 
 	return nil
