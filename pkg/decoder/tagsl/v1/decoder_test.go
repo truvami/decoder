@@ -1734,6 +1734,20 @@ func TestFullDecode(t *testing.T) {
 			},
 			port: 105,
 		},
+		{
+			port:    198,
+			payload: "01",
+			expectedData: Port198Payload{
+				Reason: 1,
+			},
+		},
+		{
+			port:    198,
+			payload: "02",
+			expectedData: Port198Payload{
+				Reason: 2,
+			},
+		},
 	}
 
 	for _, test := range tests {
@@ -1755,7 +1769,7 @@ func TestFullDecode(t *testing.T) {
 			}
 
 			// check if status is equal to expected status using reflect.DeepEqual
-			if reflect.DeepEqual(decoded.Metadata, *test.expectedStatus) == false {
+			if test.expectedStatus != nil && reflect.DeepEqual(decoded.Metadata, *test.expectedStatus) == false {
 				t.Errorf("expected status: %v, got: %v", *test.expectedStatus, decoded.Metadata)
 			}
 		})
@@ -1982,6 +1996,15 @@ func TestFeatures(t *testing.T) {
 				if hardwareVersion.GetHardwareVersion() == "" {
 					t.Fatalf("expected non empty hardware version")
 				}
+			}
+
+			if decodedPayload.Is(decoder.FeatureResetReason) {
+				resetReason, ok := decodedPayload.Data.(decoder.UplinkFeatureResetReason)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureResetReason, got %T", decodedPayload)
+				}
+				// call function to check if it panics
+				resetReason.GetResetReason()
 			}
 		})
 	}

@@ -440,6 +440,14 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 			StatusByteIndex: common.ToIntPointer(2),
 			Features:        []decoder.Feature{decoder.FeatureMoving, decoder.FeatureDutyCycle, decoder.FeatureGNSS, decoder.FeatureBattery, decoder.FeatureWiFi, decoder.FeatureBuffered},
 		}, nil
+	case 198:
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
+				{Name: "Reason", Start: 0, Length: 1},
+			},
+			TargetType: reflect.TypeOf(Port198Payload{}),
+			Features:   []decoder.Feature{decoder.FeatureResetReason},
+		}, nil
 	}
 
 	return common.PayloadConfig{}, fmt.Errorf("%w: port %v not supported", common.ErrPortNotSupported, port)

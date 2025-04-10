@@ -11,6 +11,7 @@ type Decoder interface {
 type Feature string
 
 const (
+	FeatureResetReason     Feature = "resetReason"
 	FeatureGNSS            Feature = "gnss"
 	FeatureBuffered        Feature = "buffered"
 	FeatureBattery         Feature = "battery"
@@ -161,4 +162,8 @@ type UplinkFeatureHardwareVersion interface {
 
 type UplinkFeatureButton interface {
 	GetPressed() bool
+}
+
+type UplinkFeatureResetReason interface {
+	GetResetReason() ResetReason
 }
