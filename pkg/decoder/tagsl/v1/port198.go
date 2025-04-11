@@ -18,20 +18,21 @@ func (p Port198Payload) GetTimestamp() *time.Time {
 }
 
 func (p Port198Payload) GetResetReason() decoder.ResetReason {
-	switch p.Reason {
-	case 1:
-		return decoder.ResetReasonLrr1110FailCode
-	case 2:
-		return decoder.ResetReasonPowerReset
-	case 3:
-		return decoder.ResetReasonPinReset
-	case 4:
-		return decoder.ResetReasonWatchdog
-	case 5:
-		return decoder.ResetReasonSystemReset
-	case 6:
-		return decoder.ResetReasonOtherReset
-	default:
-		return decoder.ResetReasonUnknown
+	var reasonMapping = map[uint8]decoder.ResetReason{
+		1: decoder.ResetReasonLrr1110FailCode,
+		2: decoder.ResetReasonPowerReset,
+		3: decoder.ResetReasonPinReset,
+		4: decoder.ResetReasonWatchdog,
+		5: decoder.ResetReasonSystemReset,
+		6: decoder.ResetReasonOtherReset,
 	}
+
+	// Check if the reason is in the mapping
+	// If it is, return the corresponding ResetReason
+	// If not, return ResetReasonUnknown
+	if reason, ok := reasonMapping[p.Reason]; ok {
+		return reason
+	}
+
+	return decoder.ResetReasonUnknown
 }

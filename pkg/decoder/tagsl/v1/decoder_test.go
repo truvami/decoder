@@ -2095,6 +2095,11 @@ func TestMarshal(t *testing.T) {
 			port:     151,
 			expected: []string{"\"moving\": false", "\"timestamp\": \"2024-10-25T17:12:04Z\"", "\"pdop\": 1.5", "\"mac1\": \"e0286d8a9478\"", "\"rssi1\": -53", "\"ttf\": \"24s\""},
 		},
+		{
+			payload:  "01",
+			port:     198,
+			expected: []string{"\"reason\": 1"},
+		},
 	}
 
 	for _, test := range tests {
