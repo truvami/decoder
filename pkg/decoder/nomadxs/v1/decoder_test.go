@@ -432,6 +432,7 @@ func TestFeatures(t *testing.T) {
 				config.GetAccessPointsThreshold()
 				config.GetBatchSize()
 				config.GetBufferSize()
+				config.GetDataRate()
 			}
 			if decodedPayload.Is(decoder.FeatureFirmwareVersion) {
 				firmwareVersion, ok := decodedPayload.Data.(decoder.UplinkFeatureFirmwareVersion)

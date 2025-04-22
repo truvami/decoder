@@ -611,6 +611,71 @@ func TestFeatures(t *testing.T) {
 	}
 }
 
+func TestMarshal(t *testing.T) {
+	tests := []struct {
+		payload  string
+		port     uint8
+		expected []string
+	}{
+		{
+			payload:  "0f501079",
+			port:     1,
+			expected: []string{"\"batteryVoltage\": 3.92", "\"photovoltaicVoltage\": 4.217"},
+		},
+		{
+			payload:  "04da8d",
+			port:     2,
+			expected: []string{"\"temperature\": 12.42", "\"humidity\": 70.5"},
+		},
+		{
+			payload:  "3f0e1007087801c207d0003c04b0ec280603020c",
+			port:     4,
+			expected: []string{"\"dataRate\": \"automatic-wide\"", "\"gnss\": true", "\"temperatureLowerThreshold\": -20", "\"temperatureUpperThreshold\": 40"},
+		},
+		{
+			payload:  "0f50107904da8d",
+			port:     11,
+			expected: []string{"\"batteryVoltage\": 3.92", "\"temperature\": 12.42"},
+		},
+		{
+			payload:  "0ed80e420dac0cb20b22",
+			port:     150,
+			expected: []string{"\"battery100Voltage\": 3.8", "\"battery20Voltage\": 2.85"},
+		},
+		{
+			payload:  "fdb7218f6c166fadb359ea3bdec77daff72faac81784ab263386a455d3a73592a063900ba262b95a6ffc86",
+			port:     197,
+			expected: []string{"\"tag\": 253", "\"mac1\": \"218f6c166fad\"", "\"rssi1\": -73"},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(fmt.Sprintf("TestMarshalWithPort%vAndPayload%v", test.port, test.payload), func(t *testing.T) {
+			decoder := NewSmartLabelv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"))
+
+			data, _ := decoder.Decode(test.payload, test.port, "")
+
+			marshaled, err := json.MarshalIndent(map[string]any{
+				"data":     data.Data,
+				"metadata": data.Metadata,
+			}, "", "   ")
+
+			if err != nil {
+				t.Fatalf("marshalling json failed because %s", err)
+			}
+
+			t.Logf("%s\n", marshaled)
+
+			for _, value := range test.expected {
+				fmt.Printf("value:%s\n", value)
+				if !strings.Contains(string(marshaled), value) {
+					t.Fatalf("expected to find %s\n", value)
+				}
+			}
+		})
+	}
+}
+
 func TestWithAutoPadding(t *testing.T) {
 	middleware := loracloud.NewLoracloudMiddleware("access_token")
 

@@ -1,6 +1,7 @@
 package smartlabel
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -42,6 +43,17 @@ type Port4Payload struct {
 	FirmwareVersionMajor       uint8  `json:"firmwareVersionMajor"`
 	FirmwareVersionMinor       uint8  `json:"firmwareVersionMinor"`
 	FirmwareVersionPatch       uint8  `json:"firmwareVersionPatch"`
+}
+
+func (p Port4Payload) MarshalJSON() ([]byte, error) {
+	type Alias Port4Payload
+	return json.Marshal(&struct {
+		DataRate decoder.DataRate `json:"dataRate"`
+		*Alias
+	}{
+		DataRate: *p.GetDataRate(),
+		Alias:    (*Alias)(&p),
+	})
 }
 
 var _ decoder.UplinkFeatureBase = &Port4Payload{}
@@ -127,6 +139,25 @@ func (p Port4Payload) GetBatchSize() *uint16 {
 }
 
 func (p Port4Payload) GetBufferSize() *uint16 {
+	return nil
+}
+
+func (p Port4Payload) GetDataRate() *decoder.DataRate {
+	var dataRates = map[uint8]decoder.DataRate{
+		0: decoder.DataRateBlazing,
+		1: decoder.DataRateFast,
+		2: decoder.DataRateQuick,
+		3: decoder.DataRateModerate,
+		4: decoder.DataRateSlow,
+		5: decoder.DataRateGlacial,
+		6: decoder.DataRateAutomaticNarrow,
+		7: decoder.DataRateAutomaticWide,
+	}
+
+	if dataRate, ok := dataRates[p.DataRate]; ok {
+		return &dataRate
+	}
+
 	return nil
 }
 
