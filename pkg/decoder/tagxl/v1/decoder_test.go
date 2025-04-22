@@ -517,6 +517,7 @@ func TestFeatures(t *testing.T) {
 				config.GetAccessPointsThreshold()
 				config.GetBatchSize()
 				config.GetBufferSize()
+				config.GetDataRate()
 			}
 		})
 	}

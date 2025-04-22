@@ -1974,6 +1974,7 @@ func TestFeatures(t *testing.T) {
 				config.GetAccessPointsThreshold()
 				config.GetBatchSize()
 				config.GetBufferSize()
+				config.GetDataRate()
 			}
 			if decodedPayload.Is(decoder.FeatureButton) {
 				button, ok := decodedPayload.Data.(decoder.UplinkFeatureButton)
