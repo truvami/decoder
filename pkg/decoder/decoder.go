@@ -148,6 +148,7 @@ type UplinkFeatureConfig interface {
 	GetAccessPointsThreshold() *uint8
 	GetBatchSize() *uint16
 	GetBufferSize() *uint16
+	GetDataRate() *DataRate
 }
 
 type UplinkFeatureFirmwareVersion interface {

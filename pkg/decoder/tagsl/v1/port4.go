@@ -125,6 +125,10 @@ func (p Port4Payload) GetBufferSize() *uint16 {
 	return &p.BufferSize
 }
 
+func (p Port4Payload) GetDataRate() *decoder.DataRate {
+	return nil
+}
+
 // GetHardwareVersion implements decoder.UplinkFeatureHardwareVersion.
 func (p Port4Payload) GetHardwareVersion() string {
 	return fmt.Sprintf("%d.%d", p.HardwareVersionType, p.HardwareVersionRevision)

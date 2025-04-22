@@ -130,6 +130,10 @@ func (p Port4Payload) GetBufferSize() *uint16 {
 	return nil
 }
 
+func (p Port4Payload) GetDataRate() *decoder.DataRate {
+	return nil
+}
+
 // GetFirmwareVersion implements decoder.UplinkFeatureFirmwareVersion.
 func (p Port4Payload) GetFirmwareVersion() string {
 	return fmt.Sprintf("%d.%d.%d", p.FirmwareVersionMajor, p.FirmwareVersionMinor, p.FirmwareVersionPatch)

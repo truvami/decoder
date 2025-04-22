@@ -133,3 +133,7 @@ func (p Port151Payload) GetBatchSize() *uint16 {
 func (p Port151Payload) GetBufferSize() *uint16 {
 	return nil
 }
+
+func (p Port151Payload) GetDataRate() *decoder.DataRate {
+	return nil
+}
