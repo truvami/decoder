@@ -1844,6 +1844,10 @@ func TestFeatures(t *testing.T) {
 			port:    10,
 		},
 		{
+			payload: "0002d308b50082457f16eb66c4a5cd0ed32a0807",
+			port:    10,
+		},
+		{
 			payload: "800ee5",
 			port:    15,
 		},
@@ -1858,6 +1862,10 @@ func TestFeatures(t *testing.T) {
 		{
 			payload: "000166c4a5ba00e0286d8aabfcb1e0286d8a9478c2ec6c9a74b58fad726c9a74b58dadf0b0140c96bbd0a1b2c3d4e5f6ae",
 			port:    105,
+		},
+		{
+			payload: "00020002d309ae008247c5113966c45d640f7e",
+			port:    110,
 		},
 		{
 			payload: "00020002d309ae008247c5113966c45d640f7e2a0807",
