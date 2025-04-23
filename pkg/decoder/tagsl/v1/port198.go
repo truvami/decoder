@@ -17,7 +17,7 @@ func (p Port198Payload) MarshalJSON() ([]byte, error) {
 		Reason decoder.ResetReason `json:"reason"`
 		*Alias
 	}{
-		Reason: *p.GetResetReason(),
+		Reason: p.GetResetReason(),
 		Alias:  (*Alias)(&p),
 	})
 }
@@ -29,9 +29,9 @@ func (p Port198Payload) GetTimestamp() *time.Time {
 	return nil
 }
 
-func (p Port198Payload) GetResetReason() *decoder.ResetReason {
+func (p Port198Payload) GetResetReason() decoder.ResetReason {
 	var reasons = map[uint8]decoder.ResetReason{
-		1: decoder.ResetReasonLrr1110FailCode,
+		1: decoder.ResetReasonLrr1110Failure,
 		2: decoder.ResetReasonPowerReset,
 		3: decoder.ResetReasonPinReset,
 		4: decoder.ResetReasonWatchdog,
@@ -40,8 +40,8 @@ func (p Port198Payload) GetResetReason() *decoder.ResetReason {
 	}
 
 	if reason, ok := reasons[p.Reason]; ok {
-		return &reason
+		return reason
 	}
 
-	return nil
+	return decoder.ResetReasonUnknown
 }
