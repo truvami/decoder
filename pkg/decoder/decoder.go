@@ -166,5 +166,5 @@ type UplinkFeatureButton interface {
 }
 
 type UplinkFeatureResetReason interface {
-	GetResetReason() ResetReason
+	GetResetReason() *ResetReason
 }
