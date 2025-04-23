@@ -921,7 +921,7 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:        "01020002d309ae008247c5113966c45d640f7edeadbeef",
+			payload:        "01020002d309ae008247c5113966c45d640f7ee72004deadbeef",
 			port:           110,
 			autoPadding:    false,
 			skipValidation: true,
@@ -934,10 +934,13 @@ func TestDecode(t *testing.T) {
 				Altitude:    440.9,
 				Timestamp:   time.Date(2024, 8, 20, 9, 9, 56, 0, time.UTC),
 				Battery:     3.966,
+				TTF:         time.Duration(231) * time.Second,
+				PDOP:        16,
+				Satellites:  4,
 			},
 		},
 		{
-			payload:     "00040002d30b8c00824a35112266c45c440f83",
+			payload:     "00040002d30b8c00824a35112266c45c440f832a0807",
 			port:        110,
 			autoPadding: false,
 			expected: Port110Payload{
@@ -949,6 +952,9 @@ func TestDecode(t *testing.T) {
 				Altitude:    438.6,
 				Timestamp:   time.Date(2024, 8, 20, 9, 5, 8, 0, time.UTC),
 				Battery:     3.971,
+				TTF:         time.Duration(42) * time.Second,
+				PDOP:        4,
+				Satellites:  7,
 			},
 		},
 		{
@@ -1838,6 +1844,10 @@ func TestFeatures(t *testing.T) {
 			port:    10,
 		},
 		{
+			payload: "0002d308b50082457f16eb66c4a5cd0ed32a0807",
+			port:    10,
+		},
+		{
 			payload: "800ee5",
 			port:    15,
 		},
@@ -1855,6 +1865,10 @@ func TestFeatures(t *testing.T) {
 		},
 		{
 			payload: "00020002d309ae008247c5113966c45d640f7e",
+			port:    110,
+		},
+		{
+			payload: "00020002d309ae008247c5113966c45d640f7e2a0807",
 			port:    110,
 		},
 		{

@@ -73,15 +73,24 @@ func (p Port10Payload) GetAccuracy() *float64 {
 }
 
 func (p Port10Payload) GetTTF() *time.Duration {
-	return &p.TTF
+	if p.TTF.Nanoseconds() != 0 {
+		return &p.TTF
+	}
+	return nil
 }
 
 func (p Port10Payload) GetPDOP() *float64 {
-	return &p.PDOP
+	if p.PDOP != 0 {
+		return &p.PDOP
+	}
+	return nil
 }
 
 func (p Port10Payload) GetSatellites() *uint8 {
-	return &p.Satellites
+	if p.Satellites != 0 {
+		return &p.Satellites
+	}
+	return nil
 }
 
 func (p Port10Payload) GetBatteryVoltage() float64 {
