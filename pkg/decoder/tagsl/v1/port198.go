@@ -31,7 +31,7 @@ func (p Port198Payload) GetTimestamp() *time.Time {
 
 func (p Port198Payload) GetResetReason() decoder.ResetReason {
 	var reasons = map[uint8]decoder.ResetReason{
-		1: decoder.ResetReasonLrr1110Failure,
+		1: decoder.ResetReasonLrr1110FailCode,
 		2: decoder.ResetReasonPowerReset,
 		3: decoder.ResetReasonPinReset,
 		4: decoder.ResetReasonWatchdog,
