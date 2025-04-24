@@ -1,6 +1,7 @@
 package tagsl
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/truvami/decoder/pkg/decoder"
@@ -8,6 +9,17 @@ import (
 
 type Port198Payload struct {
 	Reason uint8 `json:"reason"`
+}
+
+func (p Port198Payload) MarshalJSON() ([]byte, error) {
+	type Alias Port198Payload
+	return json.Marshal(&struct {
+		Reason decoder.ResetReason `json:"reason"`
+		*Alias
+	}{
+		Reason: p.GetResetReason(),
+		Alias:  (*Alias)(&p),
+	})
 }
 
 var _ decoder.UplinkFeatureBase = &Port198Payload{}
@@ -18,7 +30,7 @@ func (p Port198Payload) GetTimestamp() *time.Time {
 }
 
 func (p Port198Payload) GetResetReason() decoder.ResetReason {
-	var reasonMapping = map[uint8]decoder.ResetReason{
+	var reasons = map[uint8]decoder.ResetReason{
 		1: decoder.ResetReasonLrr1110FailCode,
 		2: decoder.ResetReasonPowerReset,
 		3: decoder.ResetReasonPinReset,
@@ -27,10 +39,7 @@ func (p Port198Payload) GetResetReason() decoder.ResetReason {
 		6: decoder.ResetReasonOtherReset,
 	}
 
-	// Check if the reason is in the mapping
-	// If it is, return the corresponding ResetReason
-	// If not, return ResetReasonUnknown
-	if reason, ok := reasonMapping[p.Reason]; ok {
+	if reason, ok := reasons[p.Reason]; ok {
 		return reason
 	}
 

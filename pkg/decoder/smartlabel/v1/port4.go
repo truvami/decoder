@@ -48,10 +48,10 @@ type Port4Payload struct {
 func (p Port4Payload) MarshalJSON() ([]byte, error) {
 	type Alias Port4Payload
 	return json.Marshal(&struct {
-		DataRate decoder.DataRate `json:"dataRate"`
+		DataRate *decoder.DataRate `json:"dataRate"`
 		*Alias
 	}{
-		DataRate: *p.GetDataRate(),
+		DataRate: p.GetDataRate(),
 		Alias:    (*Alias)(&p),
 	})
 }
