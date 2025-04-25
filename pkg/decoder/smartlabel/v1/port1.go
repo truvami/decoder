@@ -15,7 +15,7 @@ import (
 
 type Port1Payload struct {
 	BatteryVoltage      float32 `json:"batteryVoltage" validate:"gte=1,lte=5"`
-	PhotovoltaicVoltage float32 `json:"photovoltaicVoltage" validate:"gte=1,lte=5"`
+	PhotovoltaicVoltage float32 `json:"photovoltaicVoltage" validate:"gte=0,lte=5"`
 }
 
 var _ decoder.UplinkFeatureBase = &Port1Payload{}
