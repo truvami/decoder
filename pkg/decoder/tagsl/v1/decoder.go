@@ -315,8 +315,8 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 			Fields: []common.FieldConfig{
 				{Name: "BufferLevel", Start: 0, Length: 2},
 				{Name: "Timestamp", Start: 2, Length: 4},
-				{Name: "Moving", Start: 7, Length: 1, Transform: moving},
-				{Name: "DutyCycle", Start: 7, Length: 1, Transform: dutyCycle},
+				{Name: "Moving", Start: 6, Length: 1, Transform: moving},
+				{Name: "DutyCycle", Start: 6, Length: 1, Transform: dutyCycle},
 				{Name: "Mac1", Start: 7, Length: 6, Optional: true, Hex: true},
 				{Name: "Rssi1", Start: 13, Length: 1, Optional: true},
 				{Name: "Mac2", Start: 14, Length: 6, Optional: true, Hex: true},

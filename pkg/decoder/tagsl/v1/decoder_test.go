@@ -786,7 +786,7 @@ func TestDecode(t *testing.T) {
 			expected: Port105Payload{
 				BufferLevel: 1,
 				Moving:      false,
-				DutyCycle:   true,
+				DutyCycle:   false,
 				Timestamp:   time.Date(2024, 8, 20, 14, 18, 34, 0, time.UTC),
 				Mac1:        "e0286d8aabfc",
 				Rssi1:       -79,
@@ -801,7 +801,7 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "010166c4a5ba00e0286d8aabfcb1e0286d8a9478c2ec6c9a74b58fad726c9a74b58dadf0b0140c96bbd0",
+			payload:     "010166c4a5ba80e0286d8aabfcb1e0286d8a9478c2ec6c9a74b58fad726c9a74b58dadf0b0140c96bbd0",
 			port:        105,
 			autoPadding: false,
 			expected: Port105Payload{
@@ -822,13 +822,13 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "001366ee2f4d00c4eb438ddde2a504e31aea1b01a7245a4c7a0d2ec026e98d560d2ebbccd42ef92ed4ae704f5708e1d1b9",
+			payload:     "001366ee2f4d01c4eb438ddde2a504e31aea1b01a7245a4c7a0d2ec026e98d560d2ebbccd42ef92ed4ae704f5708e1d1b9",
 			port:        105,
 			autoPadding: false,
 			expected: Port105Payload{
 				BufferLevel: 19,
-				Moving:      false,
-				DutyCycle:   true,
+				Moving:      true,
+				DutyCycle:   false,
 				Timestamp:   time.Date(2024, 9, 21, 2, 28, 29, 0, time.UTC),
 				Mac1:        "c4eb438ddde2",
 				Rssi1:       -91,
@@ -845,13 +845,13 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:        "001366ee2f4d00c4eb438ddde2a504e31aea1b01a7245a4c7a0d2ec026e98d560d2ebbccd42ef92ed4ae704f5708e1d1b9deadbeef",
+			payload:        "001366ee2f4d81c4eb438ddde2a504e31aea1b01a7245a4c7a0d2ec026e98d560d2ebbccd42ef92ed4ae704f5708e1d1b9deadbeef",
 			port:           105,
 			autoPadding:    false,
 			skipValidation: true,
 			expected: Port105Payload{
 				BufferLevel: 19,
-				Moving:      false,
+				Moving:      true,
 				DutyCycle:   true,
 				Timestamp:   time.Date(2024, 9, 21, 2, 28, 29, 0, time.UTC),
 				Mac1:        "c4eb438ddde2",
@@ -869,7 +869,7 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "001366ee2f4d00c4",
+			payload:     "001366ee2f4d80",
 			port:        105,
 			autoPadding: false,
 			expected: Port105Payload{
@@ -880,7 +880,7 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "1366ee2f4d00c4",
+			payload:     "1366ee2f4d80",
 			port:        105,
 			autoPadding: true,
 			expected: Port105Payload{
@@ -1717,6 +1717,8 @@ func TestFullDecode(t *testing.T) {
 		{
 			payload: "0028672658500172a741b1e238b572a741b1e08bb03498b5c583e2b172a741b1e0cda772a741beed4cc472a741beef53b7",
 			expectedData: Port105Payload{
+				DutyCycle:   false,
+				Moving:      true,
 				BufferLevel: 40,
 				Mac1:        "72a741b1e238",
 				Rssi1:       -75,
@@ -1860,7 +1862,7 @@ func TestFeatures(t *testing.T) {
 			port:    51,
 		},
 		{
-			payload: "000166c4a5ba00e0286d8aabfcb1e0286d8a9478c2ec6c9a74b58fad726c9a74b58dadf0b0140c96bbd0a1b2c3d4e5f6ae",
+			payload: "000166c4a5ba80e0286d8aabfcb1e0286d8a9478c2ec6c9a74b58fad726c9a74b58dadf0b0140c96bbd0a1b2c3d4e5f6ae",
 			port:    105,
 		},
 		{
@@ -2091,7 +2093,7 @@ func TestMarshal(t *testing.T) {
 			expected: []string{"\"moving\": false", "\"timestamp\": \"2024-10-25T13:08:14Z\"", "\"pdop\": 5.5", "\"mac1\": \"726c9a74b58d\"", "\"rssi1\": -79"},
 		},
 		{
-			payload:  "000166c4a5ba00e0286d8aabfcb1e0286d8a9478c2ec6c9a74b58fad726c9a74b58dadf0b0140c96bbd0a1b2c3d4e5f6ae",
+			payload:  "000166c4a5ba80e0286d8aabfcb1e0286d8a9478c2ec6c9a74b58fad726c9a74b58dadf0b0140c96bbd0a1b2c3d4e5f6ae",
 			port:     105,
 			expected: []string{"\"moving\": false", "\"mac1\": \"e0286d8aabfc\"", "\"rssi1\": -79"},
 		},
