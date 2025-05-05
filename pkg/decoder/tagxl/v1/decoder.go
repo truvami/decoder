@@ -1,6 +1,7 @@
 package tagxl
 
 import (
+	"encoding/binary"
 	"fmt"
 	"reflect"
 
@@ -53,44 +54,6 @@ func WithFCount(fCount uint32) Option {
 // https://docs.truvami.com/docs/payloads/tag-xl
 func (t TagXLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 	switch port {
-	case 151:
-		return common.PayloadConfig{
-			Fields: []common.FieldConfig{
-				{Name: "Ble", Start: 0, Length: 1, Transform: func(v any) any {
-					return ((v.(int) >> 7) & 0x1) != 0
-				}},
-				{Name: "Gnss", Start: 0, Length: 1, Transform: func(v any) any {
-					return ((v.(int) >> 6) & 0x1) != 0
-				}},
-				{Name: "Wifi", Start: 0, Length: 1, Transform: func(v any) any {
-					return ((v.(int) >> 5) & 0x1) != 0
-				}},
-				{Name: "Acceleration", Start: 0, Length: 1, Transform: func(v any) any {
-					return ((v.(int) >> 4) & 0x1) != 0
-				}},
-				{Name: "Rfu", Start: 0, Length: 1, Transform: func(v any) any {
-					return uint8(v.(int) & 0xf)
-				}},
-				{Name: "MovingInterval", Start: 1, Length: 2},
-				{Name: "SteadyInterval", Start: 3, Length: 2},
-				{Name: "AccelerationThreshold", Start: 5, Length: 2},
-				{Name: "AccelerationDelay", Start: 7, Length: 2},
-				{Name: "HeartbeatInterval", Start: 9, Length: 1},
-				{Name: "FwuAdvertisementInterval", Start: 10, Length: 1},
-				{Name: "BatteryVoltage", Start: 11, Length: 2, Transform: func(v any) any {
-					return float32(v.(int)) / 1000
-				}},
-				{Name: "FirmwareHash", Start: 13, Length: 4, Transform: func(v any) any {
-					return fmt.Sprintf("%8x", v.(int))
-				}},
-				{Name: "ResetCount", Start: 17, Length: 2},
-				{Name: "ResetCause", Start: 19, Length: 4},
-				{Name: "GnssScans", Start: 23, Length: 2},
-				{Name: "WifiScans", Start: 25, Length: 2},
-			},
-			TargetType: reflect.TypeOf(Port151Payload{}),
-			Features:   []decoder.Feature{decoder.FeatureBattery, decoder.FeatureConfig},
-		}, nil
 	case 152:
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
@@ -134,6 +97,44 @@ func (t TagXLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 
 func (t TagXLv1Decoder) Decode(data string, port uint8, devEui string) (*decoder.DecodedUplink, error) {
 	switch port {
+	case 151:
+		payload, err := common.HexStringToBytes(data)
+		if err != nil {
+			return nil, err
+		}
+
+		var payloadLen uint8 = uint8(len(payload))
+		if payloadLen < 3 {
+			return nil, fmt.Errorf("%w: port %d minimum %d", common.ErrPayloadTooShort, port, 3)
+		}
+
+		var payloadType byte = payload[0]
+		if payloadType != 0x4c {
+			return nil, fmt.Errorf("%w: port %d tag %x", common.ErrPortNotSupported, port, payloadType)
+		}
+
+		var dataLen uint8 = payload[1]
+		if payloadLen-2 != dataLen {
+			return nil, fmt.Errorf("%w: port %d expected %d received %d", common.ErrInvalidPayloadLength, port, payloadLen-2, dataLen)
+		}
+
+		var decodedData = Port151Payload{}
+		var features = []decoder.Feature{}
+		var index uint8 = 3
+		for index+1 < payloadLen {
+			var tag byte = payload[index]
+			var len uint8 = payload[index+1]
+			switch tag {
+			case 0x45:
+				var value = payload[index+2 : index+2+len]
+				var battery = float32(binary.BigEndian.Uint16(value)) / 1000
+				decodedData.BatteryVoltage = battery
+				features = append(features, decoder.FeatureBattery)
+			}
+			index += 2
+			index += len
+		}
+		return decoder.NewDecodedUplink(features, decodedData, nil), nil
 	case 192:
 		decodedData, err := t.loracloudMiddleware.DeliverUplinkMessage(devEui, loracloud.UplinkMsg{
 			MsgType: "updf",
