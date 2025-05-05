@@ -2113,7 +2113,7 @@ func TestMarshal(t *testing.T) {
 		{
 			payload:  "01",
 			port:     198,
-			expected: []string{"\"reason\": \"LRR1110_FAILURE\""},
+			expected: []string{"\"reason\": \"lrr1110-failure\""},
 		},
 	}
 

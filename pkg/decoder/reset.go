@@ -5,17 +5,17 @@ type ResetReason string
 // TODO: Add more reset reasons and descriptions, check with Viktor
 const (
 	// Device did reset for an unknown reason
-	ResetReasonUnknown ResetReason = "UNKNOWN"
+	ResetReasonUnknown ResetReason = "unknown"
 	// Device did reset because of LRR1110 failure
-	ResetReasonLrr1110FailCode ResetReason = "LRR1110_FAILURE"
+	ResetReasonLrr1110FailCode ResetReason = "lrr1110-failure"
 	// Device did reset because of a watchdog timeout
-	ResetReasonWatchdog ResetReason = "WATCHDOG"
+	ResetReasonWatchdog ResetReason = "watchdog"
 	// Device did reset because of a pin reset
-	ResetReasonPinReset ResetReason = "PIN_RESET"
+	ResetReasonPinReset ResetReason = "pin-reset"
 	// Device did reset because of a system reset
-	ResetReasonSystemReset ResetReason = "SYSTEM_RESET"
+	ResetReasonSystemReset ResetReason = "system-reset"
 	// Device did reset because of another reason
-	ResetReasonOtherReset ResetReason = "OTHER_RESET"
+	ResetReasonOtherReset ResetReason = "other-reset"
 	// Device did reset because of a power reset
-	ResetReasonPowerReset ResetReason = "POWER_RESET"
+	ResetReasonPowerReset ResetReason = "power-reset"
 )
