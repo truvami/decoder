@@ -194,7 +194,10 @@ func TestHTTPCmd(t *testing.T) {
 
 	// check the response body
 	expectedData := tagsl.Port105Payload{
+		Moving:      true,
+		DutyCycle:   false,
 		BufferLevel: 40,
+		Timestamp:   time.Date(2024, 11, 2, 16, 50, 24, 0, time.UTC),
 		Mac1:        "72a741b1e238",
 		Rssi1:       -75,
 		Mac2:        "72a741b1e08b",
@@ -207,7 +210,6 @@ func TestHTTPCmd(t *testing.T) {
 		Rssi5:       -60,
 		Mac6:        "72a741beef53",
 		Rssi6:       -73,
-		Timestamp:   time.Date(2024, 11, 2, 16, 50, 24, 0, time.UTC),
 	}
 
 	if response.Data != expectedData {
