@@ -3,6 +3,7 @@ package tagxl
 import (
 	"fmt"
 	"reflect"
+	"time"
 
 	"github.com/truvami/decoder/pkg/common"
 	"github.com/truvami/decoder/pkg/decoder"
@@ -53,6 +54,16 @@ func WithFCount(fCount uint32) Option {
 // https://docs.truvami.com/docs/payloads/tag-xl
 func (t TagXLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 	switch port {
+	case 150:
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
+				{Name: "Timestamp", Start: 5, Length: 4, Optional: false, Transform: func(v any) any {
+					return time.Unix(int64(v.(int)), 0).UTC()
+				}},
+			},
+			TargetType: reflect.TypeOf(Port150Payload{}),
+			Features:   []decoder.Feature{},
+		}, nil
 	case 151:
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
