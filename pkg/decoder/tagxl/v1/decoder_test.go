@@ -97,6 +97,20 @@ func TestDecode(t *testing.T) {
 			expectedErr: "port 0 not supported",
 		},
 		{
+			payload: "4c07014c04681a4727",
+			port:    150,
+			expected: Port150Payload{
+				Timestamp: time.Date(2025, 5, 6, 17, 30, 15, 0, time.UTC),
+			},
+		},
+		{
+			payload: "4c07014c04681a5127",
+			port:    150,
+			expected: Port150Payload{
+				Timestamp: time.Date(2025, 5, 6, 18, 12, 55, 0, time.UTC),
+			},
+		},
+		{
 			payload: "0f0078012c000a03e80f1e0e9e7393fffe0002dead10cc0953046e",
 			port:    151,
 			expected: Port151Payload{
