@@ -14,12 +14,14 @@ import (
 // +------+------+---------------------------------------------+------------+
 
 type Port15Payload struct {
+	DutyCycle  bool    `json:"dutyCycle"`
 	LowBattery bool    `json:"lowBattery"`
 	Battery    float64 `json:"battery" validate:"gte=1,lte=5"`
 }
 
 var _ decoder.UplinkFeatureBase = &Port15Payload{}
 var _ decoder.UplinkFeatureBattery = &Port15Payload{}
+var _ decoder.UplinkFeatureDutyCycle = &Port15Payload{}
 
 func (p Port15Payload) GetTimestamp() *time.Time {
 	return nil
@@ -27,4 +29,8 @@ func (p Port15Payload) GetTimestamp() *time.Time {
 
 func (p Port15Payload) GetBatteryVoltage() float64 {
 	return p.Battery
+}
+
+func (p Port15Payload) IsDutyCycle() bool {
+	return p.DutyCycle
 }
