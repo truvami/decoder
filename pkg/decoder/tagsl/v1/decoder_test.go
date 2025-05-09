@@ -556,10 +556,11 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "800ee5",
+			payload:     "000ee5",
 			port:        15,
 			autoPadding: false,
 			expected: Port15Payload{
+				DutyCycle:  false,
 				LowBattery: false,
 				Battery:    3.813,
 			},
@@ -570,16 +571,28 @@ func TestDecode(t *testing.T) {
 			autoPadding:    false,
 			skipValidation: true,
 			expected: Port15Payload{
+				DutyCycle:  true,
 				LowBattery: false,
 				Battery:    3.813,
 			},
 		},
 		{
-			payload:     "001044",
+			payload:     "011044",
 			port:        15,
 			autoPadding: false,
 			expected: Port15Payload{
-				LowBattery: false,
+				DutyCycle:  false,
+				LowBattery: true,
+				Battery:    4.164,
+			},
+		},
+		{
+			payload:     "811044",
+			port:        15,
+			autoPadding: false,
+			expected: Port15Payload{
+				DutyCycle:  true,
+				LowBattery: true,
 				Battery:    4.164,
 			},
 		},
@@ -588,6 +601,7 @@ func TestDecode(t *testing.T) {
 			port:        15,
 			autoPadding: true,
 			expected: Port15Payload{
+				DutyCycle:  false,
 				LowBattery: false,
 				Battery:    4.164,
 			},
