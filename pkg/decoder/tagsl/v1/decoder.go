@@ -480,7 +480,7 @@ func (t TagSLv1Decoder) Decode(data string, port uint8, devEui string) (*decoder
 
 	decodedData, err := common.Parse(data, &config)
 	if err != nil {
-		return nil, err
+		return decoder.NewDecodedUplink(config.Features, decodedData, nil), err
 	}
 
 	// if there is no status byte index, return the decoded data and nil for status data
