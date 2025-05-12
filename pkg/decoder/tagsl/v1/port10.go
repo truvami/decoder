@@ -112,8 +112,8 @@ func (p Port10Payload) IsDutyCycle() bool {
 	return p.DutyCycle
 }
 
-func (p Port10Payload) GetId() uint8 {
-	return p.ConfigChangeId
+func (p Port10Payload) GetId() *uint8 {
+	return &p.ConfigChangeId
 }
 
 func (p Port10Payload) GetSuccess() bool {

@@ -156,7 +156,7 @@ type UplinkFeatureConfig interface {
 }
 
 type UplinkFeatureConfigChange interface {
-	GetId() uint8
+	GetId() *uint8
 	GetSuccess() bool
 }
 
