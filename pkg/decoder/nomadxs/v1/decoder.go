@@ -44,7 +44,10 @@ func (t NomadXSv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 	case 1:
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
-				{Name: "Moving", Start: 0, Length: 1},
+				{Name: "DutyCycle", Start: 0, Length: 1, Transform: dutyCycle},
+				{Name: "ConfigChangeId", Start: 0, Length: 1, Transform: configChangeId},
+				{Name: "ConfigChangeSuccess", Start: 0, Length: 1, Transform: configChangeSuccess},
+				{Name: "Moving", Start: 0, Length: 1, Transform: moving},
 				{Name: "Latitude", Start: 1, Length: 4, Transform: func(v any) any {
 					return float64(v.(int)) / 1000000
 				}},
@@ -92,9 +95,8 @@ func (t NomadXSv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 					return float32(int16(v.(int))) / 1000
 				}},
 			},
-			TargetType:      reflect.TypeOf(Port1Payload{}),
-			StatusByteIndex: common.ToIntPointer(0),
-			Features:        []decoder.Feature{decoder.FeatureGNSS, decoder.FeatureMoving, decoder.FeatureTemperature},
+			TargetType: reflect.TypeOf(Port1Payload{}),
+			Features:   []decoder.Feature{decoder.FeatureDutyCycle, decoder.FeatureConfigChange, decoder.FeatureMoving, decoder.FeatureGNSS, decoder.FeatureTemperature, decoder.FeaturePressure},
 		}, nil
 	case 4:
 		return common.PayloadConfig{
@@ -122,14 +124,14 @@ func (t NomadXSv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 	case 15:
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
-				{Name: "LowBattery", Start: 0, Length: 1},
+				{Name: "DutyCycle", Start: 0, Length: 1, Transform: dutyCycle},
+				{Name: "LowBattery", Start: 0, Length: 1, Transform: lowBattery},
 				{Name: "Battery", Start: 1, Length: 2, Transform: func(v any) any {
 					return float64(v.(int)) / 1000
 				}},
 			},
-			TargetType:      reflect.TypeOf(Port15Payload{}),
-			StatusByteIndex: common.ToIntPointer(0),
-			Features:        []decoder.Feature{decoder.FeatureBattery},
+			TargetType: reflect.TypeOf(Port15Payload{}),
+			Features:   []decoder.Feature{decoder.FeatureDutyCycle, decoder.FeatureBattery},
 		}, nil
 	}
 
@@ -154,5 +156,45 @@ func (t NomadXSv1Decoder) Decode(data string, port uint8, devEui string) (*decod
 	}
 
 	decodedData, err := common.Parse(data, &config)
-	return decoder.NewDecodedUplink(config.Features, decodedData, nil), err
+	return decoder.NewDecodedUplink(config.Features, decodedData), err
+}
+
+func dutyCycle(v any) any {
+	i, ok := v.(int)
+	if !ok {
+		return nil
+	}
+	return (byte(i)>>7)&0x01 == 1
+}
+
+func configChangeId(v any) any {
+	i, ok := v.(int)
+	if !ok {
+		return nil
+	}
+	return (byte(i) >> 3) & 0x0f
+}
+
+func configChangeSuccess(v any) any {
+	i, ok := v.(int)
+	if !ok {
+		return nil
+	}
+	return (byte(i)>>2)&0x01 == 1
+}
+
+func moving(v any) any {
+	i, ok := v.(int)
+	if !ok {
+		return nil
+	}
+	return byte(i)&0x01 == 1
+}
+
+func lowBattery(v any) any {
+	i, ok := v.(int)
+	if !ok {
+		return nil
+	}
+	return byte(i)&0x01 == 1
 }

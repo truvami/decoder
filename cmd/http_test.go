@@ -182,8 +182,7 @@ func TestHTTPCmd(t *testing.T) {
 
 	// parse the response body
 	type Response struct {
-		Data     tagsl.Port105Payload `json:"data"`
-		Metadata tagsl.Status         `json:"metadata"`
+		Data tagsl.Port105Payload `json:"data"`
 	}
 
 	var response Response
@@ -214,16 +213,6 @@ func TestHTTPCmd(t *testing.T) {
 
 	if response.Data != expectedData {
 		t.Errorf("expected response data to be %v, got %v", expectedData, response.Data)
-	}
-
-	expectedMetadata := tagsl.Status{
-		DutyCycle:           false,
-		ConfigChangeId:      0,
-		ConfigChangeSuccess: false,
-		Moving:              true,
-	}
-	if response.Metadata != expectedMetadata {
-		t.Errorf("expected response metadata to be %v, got %v", expectedMetadata, response.Metadata)
 	}
 }
 func TestHealthHandler(t *testing.T) {

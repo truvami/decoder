@@ -98,7 +98,7 @@ func TestDeliverUplinkMessage(t *testing.T) {
 			MsgType: "uplink",
 			FCount:  123,
 			Port:    1,
-			Payload: "0123456789ABCDEF",
+			Payload: "0123456789abcdef",
 		}
 
 		response, err := middleware.DeliverUplinkMessage(devEui, uplinkMsg)
@@ -122,7 +122,7 @@ func TestDeliverUplinkMessage(t *testing.T) {
 			MsgType: "",
 			FCount:  123,
 			Port:    1,
-			Payload: "0123456789ABCDEF",
+			Payload: "0123456789abcdef",
 		}
 
 		_, err := middleware.DeliverUplinkMessage(devEui, uplinkMsg)
@@ -149,7 +149,7 @@ func TestDeliverUplinkMessage(t *testing.T) {
 			MsgType: "uplink",
 			FCount:  123,
 			Port:    1,
-			Payload: "0123456789ABCDEF",
+			Payload: "0123456789abcdef",
 		}
 
 		_, err := middleware.DeliverUplinkMessage(devEui, uplinkMsg)
@@ -176,7 +176,7 @@ func TestDeliverUplinkMessage(t *testing.T) {
 			MsgType: "uplink",
 			FCount:  123,
 			Port:    1,
-			Payload: "0123456789ABCDEF",
+			Payload: "0123456789abcdef",
 		}
 
 		_, err := middleware.DeliverUplinkMessage(devEui, uplinkMsg)

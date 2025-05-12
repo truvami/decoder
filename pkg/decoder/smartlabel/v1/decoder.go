@@ -186,7 +186,7 @@ func (t SmartLabelv1Decoder) Decode(data string, port uint8, devEui string) (*de
 			Payload: data,
 			FCount:  t.fCount,
 		})
-		return decoder.NewDecodedUplink([]decoder.Feature{decoder.FeatureGNSS}, decodedData, nil), err
+		return decoder.NewDecodedUplink([]decoder.Feature{decoder.FeatureGNSS}, decodedData), err
 	default:
 		config, err := t.getConfig(port, data)
 		if err != nil {
@@ -201,6 +201,6 @@ func (t SmartLabelv1Decoder) Decode(data string, port uint8, devEui string) (*de
 		}
 
 		decodedData, err := common.Parse(data, &config)
-		return decoder.NewDecodedUplink(config.Features, decodedData, nil), err
+		return decoder.NewDecodedUplink(config.Features, decodedData), err
 	}
 }

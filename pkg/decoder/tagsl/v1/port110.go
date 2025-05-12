@@ -8,33 +8,39 @@ import (
 	"github.com/truvami/decoder/pkg/decoder"
 )
 
-// +-------+------+-------------------------------------------+------------------------+
-// | Byte  | Size | Description                               | Format                 |
-// +-------+------+-------------------------------------------+------------------------+
-// | 0     | 2    | Buffer level                              | uint16                 |
-// | 2     | 1    | Status[6:2] + Moving flag[0] (moving = 1) | uint8                  |
-// | 3-6   | 4    | Latitude                                  | int32, 1/1’000’000 deg |
-// | 7-10  | 4    | Longitude                                 | int32, 1/1’000’000 deg |
-// | 11-12 | 2    | Altitude                                  | uint16, 1/10 meter     |
-// | 11-14 | 4    | Unix timestamp                            | uint32                 |
-// | 17-18 | 2    | Battery voltage                           | uint16, mV             |
-// | 19    | 1    | Time to fix                               | uint8, s               |
-// | 20    | 1    | Position dilution of precision            | uint8, 0.5m            |
-// | 21    | 1    | Number of satellites                      | uint8                  |
-// +-------+------+-------------------------------------------+------------------------+
+// +------+------+-------------------------------------------+------------------------+
+// | Byte | Size | Description                               | Format                 |
+// +------+------+-------------------------------------------+------------------------+
+// | 0    | 2    | Buffer level                              | uint16                 |
+// | 2    | 1    | Duty cycle flag                           | uint1                  |
+// | 2    | 1    | Config change id                          | uint4                  |
+// | 2    | 1    | Config change success flag                | uint1                  |
+// | 2    | 1    | Reserved                                  | uint1                  |
+// | 2    | 1    | Moving flag                               | uint1                  |
+// | 3    | 4    | Latitude                                  | int32, 1/1’000’000 deg |
+// | 7    | 4    | Longitude                                 | int32, 1/1’000’000 deg |
+// | 11   | 2    | Altitude                                  | uint16, 1/10 meter     |
+// | 11   | 4    | Unix timestamp                            | uint32                 |
+// | 17   | 2    | Battery voltage                           | uint16, mV             |
+// | 19   | 1    | Time to fix                               | uint8, s               |
+// | 20   | 1    | Position dilution of precision            | uint8, 0.5m            |
+// | 21   | 1    | Number of satellites                      | uint8                  |
+// +------+------+-------------------------------------------+------------------------+
 
 type Port110Payload struct {
-	Moving      bool          `json:"moving"`
-	DutyCycle   bool          `json:"dutyCycle"`
-	BufferLevel uint16        `json:"bufferLevel"`
-	Latitude    float64       `json:"latitude" validate:"gte=-90,lte=90"`
-	Longitude   float64       `json:"longitude" validate:"gte=-180,lte=180"`
-	Altitude    float64       `json:"altitude"`
-	Timestamp   time.Time     `json:"timestamp"`
-	Battery     float64       `json:"battery" validate:"gte=1,lte=5"`
-	TTF         time.Duration `json:"ttf"`
-	PDOP        float64       `json:"pdop"`
-	Satellites  uint8         `json:"satellites" validate:"gte=3,lte=27"`
+	BufferLevel         uint16        `json:"bufferLevel"`
+	DutyCycle           bool          `json:"dutyCycle"`
+	ConfigChangeId      uint8         `json:"configChangeId" validate:"gte=0,lte=15"`
+	ConfigChangeSuccess bool          `json:"configChangeSuccess"`
+	Moving              bool          `json:"moving"`
+	Latitude            float64       `json:"latitude" validate:"gte=-90,lte=90"`
+	Longitude           float64       `json:"longitude" validate:"gte=-180,lte=180"`
+	Altitude            float64       `json:"altitude"`
+	Timestamp           time.Time     `json:"timestamp"`
+	Battery             float64       `json:"battery" validate:"gte=1,lte=5"`
+	TTF                 time.Duration `json:"ttf"`
+	PDOP                float64       `json:"pdop"`
+	Satellites          uint8         `json:"satellites" validate:"gte=3,lte=27"`
 }
 
 func (p Port110Payload) MarshalJSON() ([]byte, error) {
@@ -54,6 +60,7 @@ var _ decoder.UplinkFeatureBattery = &Port110Payload{}
 var _ decoder.UplinkFeatureBuffered = &Port110Payload{}
 var _ decoder.UplinkFeatureMoving = &Port110Payload{}
 var _ decoder.UplinkFeatureDutyCycle = &Port110Payload{}
+var _ decoder.UplinkFeatureConfigChange = &Port110Payload{}
 
 func (p Port110Payload) GetTimestamp() *time.Time {
 	return &p.Timestamp
@@ -110,4 +117,12 @@ func (p Port110Payload) IsMoving() bool {
 
 func (p Port110Payload) IsDutyCycle() bool {
 	return p.DutyCycle
+}
+
+func (p Port110Payload) GetId() uint8 {
+	return p.ConfigChangeId
+}
+
+func (p Port110Payload) GetSuccess() bool {
+	return p.ConfigChangeSuccess
 }

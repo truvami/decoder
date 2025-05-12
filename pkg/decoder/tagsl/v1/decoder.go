@@ -45,8 +45,10 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 	case 1:
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
-				{Name: "Moving", Start: 0, Length: 1, Transform: moving},
 				{Name: "DutyCycle", Start: 0, Length: 1, Transform: dutyCycle},
+				{Name: "ConfigChangeId", Start: 0, Length: 1, Transform: configChangeId},
+				{Name: "ConfigChangeSuccess", Start: 0, Length: 1, Transform: configChangeSuccess},
+				{Name: "Moving", Start: 0, Length: 1, Transform: moving},
 				{Name: "Latitude", Start: 1, Length: 4, Transform: func(v any) any {
 					return float64(v.(int)) / 1000000
 				}},
@@ -63,15 +65,19 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 				{Name: "Minute", Start: 15, Length: 1},
 				{Name: "Second", Start: 16, Length: 1},
 			},
-			TargetType:      reflect.TypeOf(Port1Payload{}),
-			StatusByteIndex: common.ToIntPointer(0),
-			Features:        []decoder.Feature{decoder.FeatureMoving, decoder.FeatureDutyCycle, decoder.FeatureGNSS},
+			TargetType: reflect.TypeOf(Port1Payload{}),
+			Features:   []decoder.Feature{decoder.FeatureDutyCycle, decoder.FeatureConfigChange, decoder.FeatureMoving, decoder.FeatureGNSS},
 		}, nil
 	case 2:
 		return common.PayloadConfig{
-			Fields:          []common.FieldConfig{},
-			TargetType:      reflect.TypeOf(Port2Payload{}),
-			StatusByteIndex: common.ToIntPointer(0),
+			Fields: []common.FieldConfig{
+				{Name: "DutyCycle", Start: 0, Length: 1, Transform: dutyCycle},
+				{Name: "ConfigChangeId", Start: 0, Length: 1, Transform: configChangeId},
+				{Name: "ConfigChangeSuccess", Start: 0, Length: 1, Transform: configChangeSuccess},
+				{Name: "Moving", Start: 0, Length: 1, Transform: moving},
+			},
+			TargetType: reflect.TypeOf(Port2Payload{}),
+			Features:   []decoder.Feature{decoder.FeatureDutyCycle, decoder.FeatureConfigChange, decoder.FeatureMoving},
 		}, nil
 	case 3:
 		return common.PayloadConfig{
@@ -120,8 +126,10 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 	case 5:
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
-				{Name: "Moving", Start: 0, Length: 1, Transform: moving},
 				{Name: "DutyCycle", Start: 0, Length: 1, Transform: dutyCycle},
+				{Name: "ConfigChangeId", Start: 0, Length: 1, Transform: configChangeId},
+				{Name: "ConfigChangeSuccess", Start: 0, Length: 1, Transform: configChangeSuccess},
+				{Name: "Moving", Start: 0, Length: 1, Transform: moving},
 				{Name: "Mac1", Start: 1, Length: 6, Optional: true, Hex: true},
 				{Name: "Rssi1", Start: 7, Length: 1, Optional: true},
 				{Name: "Mac2", Start: 8, Length: 6, Optional: true, Hex: true},
@@ -137,9 +145,8 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 				{Name: "Mac7", Start: 43, Length: 6, Optional: true, Hex: true},
 				{Name: "Rssi7", Start: 49, Length: 1, Optional: true},
 			},
-			TargetType:      reflect.TypeOf(Port5Payload{}),
-			StatusByteIndex: common.ToIntPointer(0),
-			Features:        []decoder.Feature{decoder.FeatureMoving, decoder.FeatureDutyCycle, decoder.FeatureWiFi},
+			TargetType: reflect.TypeOf(Port5Payload{}),
+			Features:   []decoder.Feature{decoder.FeatureDutyCycle, decoder.FeatureConfigChange, decoder.FeatureMoving, decoder.FeatureWiFi},
 		}, nil
 	case 6:
 		return common.PayloadConfig{
@@ -153,8 +160,10 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
 				{Name: "Timestamp", Start: 0, Length: 4},
-				{Name: "Moving", Start: 4, Length: 1, Transform: moving},
 				{Name: "DutyCycle", Start: 4, Length: 1, Transform: dutyCycle},
+				{Name: "ConfigChangeId", Start: 4, Length: 1, Transform: configChangeId},
+				{Name: "ConfigChangeSuccess", Start: 4, Length: 1, Transform: configChangeSuccess},
+				{Name: "Moving", Start: 4, Length: 1, Transform: moving},
 				{Name: "Mac1", Start: 5, Length: 6, Optional: true, Hex: true},
 				{Name: "Rssi1", Start: 11, Length: 1, Optional: true},
 				{Name: "Mac2", Start: 12, Length: 6, Optional: true, Hex: true},
@@ -168,9 +177,8 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 				{Name: "Mac6", Start: 40, Length: 6, Optional: true, Hex: true},
 				{Name: "Rssi6", Start: 46, Length: 1, Optional: true},
 			},
-			TargetType:      reflect.TypeOf(Port7Payload{}),
-			StatusByteIndex: common.ToIntPointer(4),
-			Features:        []decoder.Feature{decoder.FeatureMoving, decoder.FeatureDutyCycle, decoder.FeatureWiFi},
+			TargetType: reflect.TypeOf(Port7Payload{}),
+			Features:   []decoder.Feature{decoder.FeatureDutyCycle, decoder.FeatureConfigChange, decoder.FeatureMoving, decoder.FeatureWiFi},
 		}, nil
 	case 8:
 		return common.PayloadConfig{
@@ -191,8 +199,10 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 	case 10:
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
-				{Name: "Moving", Start: 0, Length: 1, Transform: moving},
 				{Name: "DutyCycle", Start: 0, Length: 1, Transform: dutyCycle},
+				{Name: "ConfigChangeId", Start: 0, Length: 1, Transform: configChangeId},
+				{Name: "ConfigChangeSuccess", Start: 0, Length: 1, Transform: configChangeSuccess},
+				{Name: "Moving", Start: 0, Length: 1, Transform: moving},
 				{Name: "Latitude", Start: 1, Length: 4, Transform: func(v any) any {
 					return float64(v.(int)) / 1000000
 				}},
@@ -214,28 +224,28 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 				}},
 				{Name: "Satellites", Start: 19, Length: 1, Optional: true},
 			},
-			TargetType:      reflect.TypeOf(Port10Payload{}),
-			StatusByteIndex: common.ToIntPointer(0),
-			Features:        []decoder.Feature{decoder.FeatureMoving, decoder.FeatureDutyCycle, decoder.FeatureGNSS, decoder.FeatureBattery},
+			TargetType: reflect.TypeOf(Port10Payload{}),
+			Features:   []decoder.Feature{decoder.FeatureDutyCycle, decoder.FeatureConfigChange, decoder.FeatureMoving, decoder.FeatureGNSS, decoder.FeatureBattery},
 		}, nil
 	case 15:
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
 				{Name: "DutyCycle", Start: 0, Length: 1, Transform: dutyCycle},
-				{Name: "LowBattery", Start: 0, Length: 1},
+				{Name: "LowBattery", Start: 0, Length: 1, Transform: lowBattery},
 				{Name: "Battery", Start: 1, Length: 2, Transform: func(v any) any {
 					return float64(v.(int)) / 1000
 				}},
 			},
-			TargetType:      reflect.TypeOf(Port15Payload{}),
-			StatusByteIndex: common.ToIntPointer(0),
-			Features:        []decoder.Feature{decoder.FeatureDutyCycle, decoder.FeatureBattery},
+			TargetType: reflect.TypeOf(Port15Payload{}),
+			Features:   []decoder.Feature{decoder.FeatureDutyCycle, decoder.FeatureBattery},
 		}, nil
 	case 50:
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
-				{Name: "Moving", Start: 0, Length: 1, Transform: moving},
 				{Name: "DutyCycle", Start: 0, Length: 1, Transform: dutyCycle},
+				{Name: "ConfigChangeId", Start: 0, Length: 1, Transform: configChangeId},
+				{Name: "ConfigChangeSuccess", Start: 0, Length: 1, Transform: configChangeSuccess},
+				{Name: "Moving", Start: 0, Length: 1, Transform: moving},
 				{Name: "Latitude", Start: 1, Length: 4, Transform: func(v any) any {
 					return float64(v.(int)) / 1000000
 				}},
@@ -260,20 +270,17 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 				{Name: "Rssi3", Start: 38, Length: 1, Optional: true},
 				{Name: "Mac4", Start: 39, Length: 6, Optional: true, Hex: true},
 				{Name: "Rssi4", Start: 45, Length: 1, Optional: true},
-				{Name: "Mac5", Start: 46, Length: 6, Optional: true, Hex: true},
-				{Name: "Rssi5", Start: 52, Length: 1, Optional: true},
-				{Name: "Mac6", Start: 53, Length: 6, Optional: true, Hex: true},
-				{Name: "Rssi6", Start: 59, Length: 1, Optional: true},
 			},
-			TargetType:      reflect.TypeOf(Port50Payload{}),
-			StatusByteIndex: common.ToIntPointer(0),
-			Features:        []decoder.Feature{decoder.FeatureMoving, decoder.FeatureDutyCycle, decoder.FeatureGNSS, decoder.FeatureBattery, decoder.FeatureWiFi},
+			TargetType: reflect.TypeOf(Port50Payload{}),
+			Features:   []decoder.Feature{decoder.FeatureDutyCycle, decoder.FeatureConfigChange, decoder.FeatureMoving, decoder.FeatureGNSS, decoder.FeatureBattery, decoder.FeatureWiFi},
 		}, nil
 	case 51:
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
-				{Name: "Moving", Start: 0, Length: 1, Transform: moving},
 				{Name: "DutyCycle", Start: 0, Length: 1, Transform: dutyCycle},
+				{Name: "ConfigChangeId", Start: 0, Length: 1, Transform: configChangeId},
+				{Name: "ConfigChangeSuccess", Start: 0, Length: 1, Transform: configChangeSuccess},
+				{Name: "Moving", Start: 0, Length: 1, Transform: moving},
 				{Name: "Latitude", Start: 1, Length: 4, Transform: func(v any) any {
 					return float64(v.(int)) / 1000000
 				}},
@@ -302,22 +309,19 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 				{Name: "Rssi3", Start: 40, Length: 1, Optional: true},
 				{Name: "Mac4", Start: 41, Length: 6, Optional: true, Hex: true},
 				{Name: "Rssi4", Start: 47, Length: 1, Optional: true},
-				{Name: "Mac5", Start: 48, Length: 6, Optional: true, Hex: true},
-				{Name: "Rssi5", Start: 54, Length: 1, Optional: true},
-				{Name: "Mac6", Start: 55, Length: 6, Optional: true, Hex: true},
-				{Name: "Rssi6", Start: 61, Length: 1, Optional: true},
 			},
-			TargetType:      reflect.TypeOf(Port51Payload{}),
-			StatusByteIndex: common.ToIntPointer(0),
-			Features:        []decoder.Feature{decoder.FeatureMoving, decoder.FeatureDutyCycle, decoder.FeatureGNSS, decoder.FeatureBattery, decoder.FeatureWiFi},
+			TargetType: reflect.TypeOf(Port51Payload{}),
+			Features:   []decoder.Feature{decoder.FeatureDutyCycle, decoder.FeatureConfigChange, decoder.FeatureMoving, decoder.FeatureGNSS, decoder.FeatureBattery, decoder.FeatureWiFi},
 		}, nil
 	case 105:
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
 				{Name: "BufferLevel", Start: 0, Length: 2},
 				{Name: "Timestamp", Start: 2, Length: 4},
-				{Name: "Moving", Start: 6, Length: 1, Transform: moving},
 				{Name: "DutyCycle", Start: 6, Length: 1, Transform: dutyCycle},
+				{Name: "ConfigChangeId", Start: 6, Length: 1, Transform: configChangeId},
+				{Name: "ConfigChangeSuccess", Start: 6, Length: 1, Transform: configChangeSuccess},
+				{Name: "Moving", Start: 6, Length: 1, Transform: moving},
 				{Name: "Mac1", Start: 7, Length: 6, Optional: true, Hex: true},
 				{Name: "Rssi1", Start: 13, Length: 1, Optional: true},
 				{Name: "Mac2", Start: 14, Length: 6, Optional: true, Hex: true},
@@ -331,16 +335,17 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 				{Name: "Mac6", Start: 42, Length: 6, Optional: true, Hex: true},
 				{Name: "Rssi6", Start: 48, Length: 1, Optional: true},
 			},
-			TargetType:      reflect.TypeOf(Port105Payload{}),
-			StatusByteIndex: common.ToIntPointer(6),
-			Features:        []decoder.Feature{decoder.FeatureMoving, decoder.FeatureDutyCycle, decoder.FeatureWiFi, decoder.FeatureBuffered},
+			TargetType: reflect.TypeOf(Port105Payload{}),
+			Features:   []decoder.Feature{decoder.FeatureBuffered, decoder.FeatureDutyCycle, decoder.FeatureConfigChange, decoder.FeatureMoving, decoder.FeatureWiFi},
 		}, nil
 	case 110:
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
 				{Name: "BufferLevel", Start: 0, Length: 2},
-				{Name: "Moving", Start: 2, Length: 1, Transform: moving},
 				{Name: "DutyCycle", Start: 2, Length: 1, Transform: dutyCycle},
+				{Name: "ConfigChangeId", Start: 2, Length: 1, Transform: configChangeId},
+				{Name: "ConfigChangeSuccess", Start: 2, Length: 1, Transform: configChangeSuccess},
+				{Name: "Moving", Start: 2, Length: 1, Transform: moving},
 				{Name: "Latitude", Start: 3, Length: 4, Transform: func(v any) any {
 					return float64(v.(int)) / 1000000
 				}},
@@ -362,16 +367,17 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 				}},
 				{Name: "Satellites", Start: 21, Length: 1, Optional: true},
 			},
-			TargetType:      reflect.TypeOf(Port110Payload{}),
-			StatusByteIndex: common.ToIntPointer(2),
-			Features:        []decoder.Feature{decoder.FeatureMoving, decoder.FeatureDutyCycle, decoder.FeatureGNSS, decoder.FeatureBattery, decoder.FeatureBuffered},
+			TargetType: reflect.TypeOf(Port110Payload{}),
+			Features:   []decoder.Feature{decoder.FeatureBuffered, decoder.FeatureDutyCycle, decoder.FeatureConfigChange, decoder.FeatureMoving, decoder.FeatureGNSS, decoder.FeatureBattery},
 		}, nil
 	case 150:
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
 				{Name: "BufferLevel", Start: 0, Length: 2},
-				{Name: "Moving", Start: 2, Length: 1, Transform: moving},
 				{Name: "DutyCycle", Start: 2, Length: 1, Transform: dutyCycle},
+				{Name: "ConfigChangeId", Start: 2, Length: 1, Transform: configChangeId},
+				{Name: "ConfigChangeSuccess", Start: 2, Length: 1, Transform: configChangeSuccess},
+				{Name: "Moving", Start: 2, Length: 1, Transform: moving},
 				{Name: "Latitude", Start: 3, Length: 4, Transform: func(v any) any {
 					return float64(v.(int)) / 1000000
 				}},
@@ -401,9 +407,8 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 				{Name: "Mac6", Start: 55, Length: 6, Optional: true, Hex: true},
 				{Name: "Rssi6", Start: 61, Length: 1, Optional: true},
 			},
-			TargetType:      reflect.TypeOf(Port150Payload{}),
-			StatusByteIndex: common.ToIntPointer(2),
-			Features:        []decoder.Feature{decoder.FeatureMoving, decoder.FeatureDutyCycle, decoder.FeatureGNSS, decoder.FeatureBattery, decoder.FeatureWiFi, decoder.FeatureBuffered},
+			TargetType: reflect.TypeOf(Port150Payload{}),
+			Features:   []decoder.Feature{decoder.FeatureBuffered, decoder.FeatureDutyCycle, decoder.FeatureConfigChange, decoder.FeatureMoving, decoder.FeatureGNSS, decoder.FeatureBattery, decoder.FeatureWiFi},
 		}, nil
 	case 151:
 		return common.PayloadConfig{
@@ -439,14 +444,9 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 				{Name: "Rssi3", Start: 42, Length: 1, Optional: true},
 				{Name: "Mac4", Start: 43, Length: 6, Optional: true, Hex: true},
 				{Name: "Rssi4", Start: 49, Length: 1, Optional: true},
-				{Name: "Mac5", Start: 50, Length: 6, Optional: true, Hex: true},
-				{Name: "Rssi5", Start: 56, Length: 1, Optional: true},
-				{Name: "Mac6", Start: 57, Length: 6, Optional: true, Hex: true},
-				{Name: "Rssi6", Start: 63, Length: 1, Optional: true},
 			},
-			TargetType:      reflect.TypeOf(Port151Payload{}),
-			StatusByteIndex: common.ToIntPointer(2),
-			Features:        []decoder.Feature{decoder.FeatureMoving, decoder.FeatureDutyCycle, decoder.FeatureGNSS, decoder.FeatureBattery, decoder.FeatureWiFi, decoder.FeatureBuffered},
+			TargetType: reflect.TypeOf(Port151Payload{}),
+			Features:   []decoder.Feature{decoder.FeatureBuffered, decoder.FeatureDutyCycle, decoder.FeatureConfigChange, decoder.FeatureMoving, decoder.FeatureGNSS, decoder.FeatureBattery, decoder.FeatureWiFi},
 		}, nil
 	case 198:
 		return common.PayloadConfig{
@@ -479,68 +479,45 @@ func (t TagSLv1Decoder) Decode(data string, port uint8, devEui string) (*decoder
 	}
 
 	decodedData, err := common.Parse(data, &config)
-	if err != nil {
-		return nil, err
-	}
-
-	// if there is no status byte index, return the decoded data and nil for status data
-	if config.StatusByteIndex == nil {
-		return decoder.NewDecodedUplink(config.Features, decodedData, nil), nil
-	}
-
-	// convert hex payload to bytes
-	bytesData, err := common.HexStringToBytes(data)
-	if err != nil {
-		return nil, err
-	}
-
-	statusData := parseStatusByte(bytesData[*config.StatusByteIndex])
-
-	return decoder.NewDecodedUplink(config.Features, decodedData, statusData), nil
-}
-
-type Status struct {
-	DutyCycle           bool `json:"dutyCycle"`
-	ConfigChangeId      int  `json:"configChangeId"`
-	ConfigChangeSuccess bool `json:"configChangeSuccess"`
-	Moving              bool `json:"moving"`
-}
-
-func parseStatusByte(statusByte byte) Status {
-	// Extract bits as per the requirements
-	dcFlag := (statusByte >> 7) & 0x01       // Bit 7
-	confChangeID := (statusByte >> 3) & 0x0F // Bits 6:3 (4-bit)
-	confSuccess := (statusByte >> 2) & 0x01  // Bit 2
-	movingFlag := statusByte & 0x01          // Bit 0
-
-	return Status{
-		DutyCycle:           dcFlag == 1,
-		ConfigChangeId:      int(confChangeID),
-		ConfigChangeSuccess: confSuccess == 1,
-		Moving:              movingFlag == 1,
-	}
-}
-
-func moving(v any) any {
-	i, ok := v.(int)
-	if !ok {
-		return false
-	}
-
-	b := byte(i)
-	status := parseStatusByte(b)
-
-	return status.Moving
+	return decoder.NewDecodedUplink(config.Features, decodedData), err
 }
 
 func dutyCycle(v any) any {
 	i, ok := v.(int)
 	if !ok {
-		return false
+		return nil
 	}
+	return (byte(i)>>7)&0x01 == 1
+}
 
-	b := byte(i)
-	status := parseStatusByte(b)
+func configChangeId(v any) any {
+	i, ok := v.(int)
+	if !ok {
+		return nil
+	}
+	return (byte(i) >> 3) & 0x0f
+}
 
-	return status.DutyCycle
+func configChangeSuccess(v any) any {
+	i, ok := v.(int)
+	if !ok {
+		return nil
+	}
+	return (byte(i)>>2)&0x01 == 1
+}
+
+func moving(v any) any {
+	i, ok := v.(int)
+	if !ok {
+		return nil
+	}
+	return byte(i)&0x01 == 1
+}
+
+func lowBattery(v any) any {
+	i, ok := v.(int)
+	if !ok {
+		return nil
+	}
+	return byte(i)&0x01 == 1
 }

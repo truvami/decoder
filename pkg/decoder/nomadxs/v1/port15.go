@@ -9,24 +9,30 @@ import (
 // +------+------+---------------------------------------------+------------+
 // | Byte | Size | Description                                 | Format     |
 // +------+------+---------------------------------------------+------------+
-// | 0    | 1    | Status[6:2] + Low battery flag[0] (low = 1) | uint8      |
-// | 1-2  | 2    | Battery voltage                             | uint16, mV |
+// | 0    | 1    | Duty cycle flag                             | uint1      |
+// | 0    | 1    | Reserved                                    | uint6      |
+// | 0    | 1    | Low battery flag                            | uint1      |
+// | 1    | 2    | Battery voltage                             | uint16, mV |
 // +------+------+---------------------------------------------+------------+
 
 type Port15Payload struct {
+	DutyCycle  bool    `json:"dutyCycle"`
 	LowBattery bool    `json:"lowBattery"`
 	Battery    float64 `json:"battery" validate:"gte=1,lte=5"`
 }
 
 var _ decoder.UplinkFeatureBase = &Port15Payload{}
 var _ decoder.UplinkFeatureBattery = &Port15Payload{}
+var _ decoder.UplinkFeatureDutyCycle = &Port15Payload{}
 
-// GetTimestamp implements decoder.UplinkFeatureBase.
 func (p Port15Payload) GetTimestamp() *time.Time {
 	return nil
 }
 
-// GetBattery implements decoder.UplinkFeatureBattery.
 func (p Port15Payload) GetBatteryVoltage() float64 {
 	return p.Battery
+}
+
+func (p Port15Payload) IsDutyCycle() bool {
+	return p.DutyCycle
 }

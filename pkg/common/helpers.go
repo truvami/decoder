@@ -178,10 +178,6 @@ func UintToBinaryArray(value uint64, length int) []byte {
 	return binaryArray
 }
 
-func ToIntPointer(value int) *int {
-	return &value
-}
-
 func HexNullPad(payload *string, config *PayloadConfig) string {
 	var requiredBits = 0
 	for _, field := range config.Fields {

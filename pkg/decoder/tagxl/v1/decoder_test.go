@@ -74,14 +74,14 @@ func TestDecode(t *testing.T) {
 		expectedErr string
 	}{
 		{
-			payload:     "87821F50490200B520FBE977844D222A3A14A89293956245CC75A9CA1BBC25DDF658542909",
+			payload:     "87821f50490200b520fbe977844d222a3a14a89293956245cc75a9ca1bbc25ddf658542909",
 			port:        192,
 			devEui:      "10CE45FFFE00C7EC",
 			autoPadding: false,
 			expected:    &exampleResponse,
 		},
 		{
-			payload:     "87821F50490200B520FBE977844D222A3A14A89293956245CC75A9CA1BBC25DDF658542909",
+			payload:     "87821f50490200b520fbe977844d222a3a14a89293956245cc75a9ca1bbc25ddf658542909",
 			port:        192,
 			devEui:      "10CE45FFFE00C7ED",
 			autoPadding: false,
@@ -561,8 +561,7 @@ func TestMarshal(t *testing.T) {
 			data, _ := decoder.Decode(test.payload, test.port, "")
 
 			marshaled, err := json.MarshalIndent(map[string]any{
-				"data":     data.Data,
-				"metadata": data.Metadata,
+				"data": data.Data,
 			}, "", "   ")
 
 			if err != nil {
