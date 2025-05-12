@@ -52,6 +52,6 @@ var smartlabelCmd = &cobra.Command{
 			}
 		}
 
-		printJSON(data.Data, data.Metadata)
+		printJSON(data.Data)
 	},
 }

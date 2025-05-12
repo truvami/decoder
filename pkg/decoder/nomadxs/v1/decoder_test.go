@@ -20,79 +20,113 @@ func TestDecode(t *testing.T) {
 		expected    any
 	}{
 		{
-			payload:     "0102d2b47a0081f3f6115219031412361629002300170046fc19098625e3",
+			payload:     "0002d2b47a0081f3f6115219031412361629002300170046fc19098625e3",
 			port:        1,
 			autoPadding: false,
 			expected: Port1Payload{
-				Moving:             true,
-				Year:               25,
-				Month:              3,
-				Day:                20,
-				Hour:               18,
-				Minute:             54,
-				Second:             22,
-				Latitude:           47.363194,
-				Longitude:          8.516598,
-				Altitude:           443.4,
-				TimeToFix:          time.Duration(41) * time.Second,
-				AmbientLight:       35,
-				AccelerometerXAxis: 23,
-				AccelerometerYAxis: 70,
-				AccelerometerZAxis: -999,
-				Temperature:        24.38,
-				Pressure:           969.9,
+				DutyCycle:           false,
+				ConfigChangeId:      0,
+				ConfigChangeSuccess: false,
+				Moving:              false,
+				Year:                25,
+				Month:               3,
+				Day:                 20,
+				Hour:                18,
+				Minute:              54,
+				Second:              22,
+				Latitude:            47.363194,
+				Longitude:           8.516598,
+				Altitude:            443.4,
+				TimeToFix:           time.Duration(41) * time.Second,
+				AmbientLight:        35,
+				AccelerometerXAxis:  23,
+				AccelerometerYAxis:  70,
+				AccelerometerZAxis:  -999,
+				Temperature:         24.38,
+				Pressure:            969.9,
 			},
 		},
 		{
-			payload:     "0002c420ff005ed85a12b4180719142607240001ffbaffc2fc6f00d71d2e00d6ffc5ff8405310b3810b1",
+			payload:     "8002c420ff005ed85a12b4180719142607240001ffbaffc2fc6f00d71d2e00d6ffc5ff8405310b3810b1",
 			port:        1,
 			autoPadding: false,
 			expected: Port1Payload{
-				Moving:             false,
-				Year:               24,
-				Month:              7,
-				Day:                25,
-				Hour:               20,
-				Minute:             38,
-				Second:             7,
-				Latitude:           46.407935,
-				Longitude:          6.21577,
-				Altitude:           478.8,
-				TimeToFix:          time.Duration(36) * time.Second,
-				AmbientLight:       1,
-				AccelerometerXAxis: -70,
-				AccelerometerYAxis: -62,
-				AccelerometerZAxis: -913,
-				Temperature:        2.15,
-				Pressure:           747,
-				GyroscopeXAxis:     21.4,
-				GyroscopeYAxis:     -5.9,
-				GyroscopeZAxis:     -12.4,
-				MagnetometerXAxis:  1.329,
-				MagnetometerYAxis:  2.872,
-				MagnetometerZAxis:  4.273,
+				DutyCycle:           true,
+				ConfigChangeId:      0,
+				ConfigChangeSuccess: false,
+				Moving:              false,
+				Year:                24,
+				Month:               7,
+				Day:                 25,
+				Hour:                20,
+				Minute:              38,
+				Second:              7,
+				Latitude:            46.407935,
+				Longitude:           6.21577,
+				Altitude:            478.8,
+				TimeToFix:           time.Duration(36) * time.Second,
+				AmbientLight:        1,
+				AccelerometerXAxis:  -70,
+				AccelerometerYAxis:  -62,
+				AccelerometerZAxis:  -913,
+				Temperature:         2.15,
+				Pressure:            747,
+				GyroscopeXAxis:      21.4,
+				GyroscopeYAxis:      -5.9,
+				GyroscopeZAxis:      -12.4,
+				MagnetometerXAxis:   1.329,
+				MagnetometerYAxis:   2.872,
+				MagnetometerZAxis:   4.273,
 			},
 		},
 		{
-			payload:     "0002c420ff005ed85a12b4180719142607240001ffbaffc2fc6f",
+			payload:     "0102c420ff005ed85a12b4180719142607240001ffbaffc2fc6f",
 			port:        1,
 			autoPadding: false,
 			expected: Port1Payload{
-				Moving:             false,
-				Year:               24,
-				Month:              7,
-				Day:                25,
-				Hour:               20,
-				Minute:             38,
-				Second:             7,
-				Latitude:           46.407935,
-				Longitude:          6.21577,
-				Altitude:           478.8,
-				TimeToFix:          time.Duration(36) * time.Second,
-				AmbientLight:       1,
-				AccelerometerXAxis: -70,
-				AccelerometerYAxis: -62,
-				AccelerometerZAxis: -913,
+				DutyCycle:           false,
+				ConfigChangeId:      0,
+				ConfigChangeSuccess: false,
+				Moving:              true,
+				Year:                24,
+				Month:               7,
+				Day:                 25,
+				Hour:                20,
+				Minute:              38,
+				Second:              7,
+				Latitude:            46.407935,
+				Longitude:           6.21577,
+				Altitude:            478.8,
+				TimeToFix:           time.Duration(36) * time.Second,
+				AmbientLight:        1,
+				AccelerometerXAxis:  -70,
+				AccelerometerYAxis:  -62,
+				AccelerometerZAxis:  -913,
+			},
+		},
+		{
+			payload:     "8102c420ff005ed85a12b4180719142607240001ffbaffc2fc6f",
+			port:        1,
+			autoPadding: false,
+			expected: Port1Payload{
+				DutyCycle:           true,
+				ConfigChangeId:      0,
+				ConfigChangeSuccess: false,
+				Moving:              true,
+				Year:                24,
+				Month:               7,
+				Day:                 25,
+				Hour:                20,
+				Minute:              38,
+				Second:              7,
+				Latitude:            46.407935,
+				Longitude:           6.21577,
+				Altitude:            478.8,
+				TimeToFix:           time.Duration(36) * time.Second,
+				AmbientLight:        1,
+				AccelerometerXAxis:  -70,
+				AccelerometerYAxis:  -62,
+				AccelerometerZAxis:  -913,
 			},
 		},
 		{
@@ -100,21 +134,24 @@ func TestDecode(t *testing.T) {
 			port:        1,
 			autoPadding: true,
 			expected: Port1Payload{
-				Moving:             false,
-				Year:               24,
-				Month:              7,
-				Day:                25,
-				Hour:               20,
-				Minute:             38,
-				Second:             7,
-				Latitude:           46.407935,
-				Longitude:          6.21577,
-				Altitude:           478.8,
-				TimeToFix:          time.Duration(36) * time.Second,
-				AmbientLight:       1,
-				AccelerometerXAxis: -70,
-				AccelerometerYAxis: -62,
-				AccelerometerZAxis: -913,
+				DutyCycle:           false,
+				ConfigChangeId:      0,
+				ConfigChangeSuccess: false,
+				Moving:              false,
+				Year:                24,
+				Month:               7,
+				Day:                 25,
+				Hour:                20,
+				Minute:              38,
+				Second:              7,
+				Latitude:            46.407935,
+				Longitude:           6.21577,
+				Altitude:            478.8,
+				TimeToFix:           time.Duration(36) * time.Second,
+				AmbientLight:        1,
+				AccelerometerXAxis:  -70,
+				AccelerometerYAxis:  -62,
+				AccelerometerZAxis:  -913,
 			},
 		},
 		{
@@ -168,6 +205,27 @@ func TestDecode(t *testing.T) {
 			port:        15,
 			autoPadding: false,
 			expected: Port15Payload{
+				DutyCycle:  false,
+				LowBattery: true,
+				Battery:    3.574,
+			},
+		},
+		{
+			payload:     "800df6",
+			port:        15,
+			autoPadding: false,
+			expected: Port15Payload{
+				DutyCycle:  true,
+				LowBattery: false,
+				Battery:    3.574,
+			},
+		},
+		{
+			payload:     "810df6",
+			port:        15,
+			autoPadding: false,
+			expected: Port15Payload{
+				DutyCycle:  true,
 				LowBattery: true,
 				Battery:    3.574,
 			},
@@ -177,6 +235,7 @@ func TestDecode(t *testing.T) {
 			port:        15,
 			autoPadding: true,
 			expected: Port15Payload{
+				DutyCycle:  false,
 				LowBattery: true,
 				Battery:    3.574,
 			},
@@ -373,13 +432,23 @@ func TestFeatures(t *testing.T) {
 				gnss.GetTTF()
 				gnss.GetAccuracy()
 			}
-			if decodedPayload.Is(decoder.FeatureBuffered) {
-				buffered, ok := decodedPayload.Data.(decoder.UplinkFeatureBuffered)
+			if decodedPayload.Is(decoder.FeatureTemperature) {
+				temperature, ok := decodedPayload.Data.(decoder.UplinkFeatureTemperature)
 				if !ok {
-					t.Fatalf("expected UplinkFeatureBuffered, got %T", decodedPayload)
+					t.Fatalf("expected UplinkFeatureTemperature, got %T", decodedPayload)
 				}
-				// call function to check if it panics
-				buffered.GetBufferLevel()
+				if temperature.GetTemperature() == 0 {
+					t.Fatalf("expected non zero temperature")
+				}
+			}
+			if decodedPayload.Is(decoder.FeaturePressure) {
+				pressure, ok := decodedPayload.Data.(decoder.UplinkFeaturePressure)
+				if !ok {
+					t.Fatalf("expected UplinkFeaturePressure, got %T", decodedPayload)
+				}
+				if pressure.GetPressure() == 0 {
+					t.Fatalf("expected non zero pressure")
+				}
 			}
 			if decodedPayload.Is(decoder.FeatureBattery) {
 				batteryVoltage, ok := decodedPayload.Data.(decoder.UplinkFeatureBattery)
@@ -390,15 +459,6 @@ func TestFeatures(t *testing.T) {
 					t.Fatalf("expected non zero battery voltage")
 				}
 			}
-			if decodedPayload.Is(decoder.FeatureWiFi) {
-				wifi, ok := decodedPayload.Data.(decoder.UplinkFeatureWiFi)
-				if !ok {
-					t.Fatalf("expected UplinkFeatureWiFi, got %T", decodedPayload)
-				}
-				if wifi.GetAccessPoints() == nil {
-					t.Fatalf("expected non nil access points")
-				}
-			}
 			if decodedPayload.Is(decoder.FeatureMoving) {
 				moving, ok := decodedPayload.Data.(decoder.UplinkFeatureMoving)
 				if !ok {
@@ -406,6 +466,14 @@ func TestFeatures(t *testing.T) {
 				}
 				// call function to check if it panics
 				moving.IsMoving()
+			}
+			if decodedPayload.Is(decoder.FeatureDutyCycle) {
+				dutyCycle, ok := decodedPayload.Data.(decoder.UplinkFeatureDutyCycle)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureDutyCycle, got %T", decodedPayload)
+				}
+				// call function to check if it panics
+				dutyCycle.IsDutyCycle()
 			}
 			if decodedPayload.Is(decoder.FeatureConfig) {
 				config, ok := decodedPayload.Data.(decoder.UplinkFeatureConfig)
@@ -434,6 +502,15 @@ func TestFeatures(t *testing.T) {
 				config.GetBufferSize()
 				config.GetDataRate()
 			}
+			if decodedPayload.Is(decoder.FeatureConfigChange) {
+				configChange, ok := decodedPayload.Data.(decoder.UplinkFeatureConfigChange)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureConfigChange, got %T", decodedPayload)
+				}
+				// call functions to check if it panics
+				configChange.GetId()
+				configChange.GetSuccess()
+			}
 			if decodedPayload.Is(decoder.FeatureFirmwareVersion) {
 				firmwareVersion, ok := decodedPayload.Data.(decoder.UplinkFeatureFirmwareVersion)
 				if !ok {
@@ -443,7 +520,6 @@ func TestFeatures(t *testing.T) {
 					t.Fatalf("expected non empty firmware version")
 				}
 			}
-
 			if decodedPayload.Is(decoder.FeatureHardwareVersion) {
 				hardwareVersion, ok := decodedPayload.Data.(decoder.UplinkFeatureHardwareVersion)
 				if !ok {
@@ -487,8 +563,7 @@ func TestMarshal(t *testing.T) {
 			data, _ := decoder.Decode(test.payload, test.port, "")
 
 			marshaled, err := json.MarshalIndent(map[string]any{
-				"data":     data.Data,
-				"metadata": data.Metadata,
+				"data": data.Data,
 			}, "", "   ")
 
 			if err != nil {

@@ -11,46 +11,49 @@ import (
 // +------+------+-------------------------------------------+------------------------+
 // | Byte | Size | Description                               | Format                 |
 // +------+------+-------------------------------------------+------------------------+
-// | 0    | 1    | Buffer level                              | uint16                 |
-// | 2    | 1    | Status[6:2] + Moving flag[0] (moving = 1) | uint8                  |
-// | 3-6  | 4    | Latitude                                  | int32, 1/1’000’000 deg |
-// | 7-10 | 4    | Longitude                                 | int32, 1/1’000’000 deg |
-// | 11-12| 2    | Altitude                                  | uint16, 1/10 meter     |
-// | 13-16| 4    | Unix timestamp                            | uint32                 |
-// | 17-18| 2    | Battery voltage                           | uint16, mV             |
-// | 19   | 1    | TTF                                       | uint8                  |
-// | 20-25| 6    | MAC1                                      | 6 x uint8              |
-// | 26   | 1    | RSSI1                                     | int8                   |
-// | …    |      |                                           |                        |
-// |      | 6    | MACN                                      | 6 x uint8              |
-// |      | 1    | RSSIN                                     | int8                   |
+// | 0    | 2    | Buffer level                              | uint16                 |
+// | 2    | 1    | Duty cycle flag                           | uint1                  |
+// | 2    | 1    | Config change id                          | uint4                  |
+// | 2    | 1    | Config change success flag                | uint1                  |
+// | 2    | 1    | Reserved                                  | uint1                  |
+// | 2    | 1    | Moving flag                               | uint1                  |
+// | 3    | 4    | Latitude                                  | int32, 1/1’000’000 deg |
+// | 7    | 4    | Longitude                                 | int32, 1/1’000’000 deg |
+// | 11   | 2    | Altitude                                  | uint16, 1/10 meter     |
+// | 13   | 4    | Unix timestamp                            | uint32                 |
+// | 17   | 2    | Battery voltage                           | uint16, mV             |
+// | 19   | 1    | Time to fix                               | uint8                  |
+// | 20   | 6    | Mac 1                                     | uint8[6]               |
+// | 26   | 1    | Rssi 1                                    | int8                   |
+// | 27   | 6    | Mac 2                                     | uint8[6]               |
+// | 33   | 1    | Rssi 2                                    | int8                   |
+// | 34   | 6    | Mac 3                                     | uint8[6]               |
+// | 40   | 1    | Rssi 3                                    | int8                   |
+// | 41   | 6    | Mac 4                                     | uint8[6]               |
+// | 47   | 1    | Rssi 4                                    | int8                   |
 // +------+------+-------------------------------------------+------------------------+
 
 // Timestamp for the Wi-Fi scanning is TSGNSS – TTF + 10 seconds.
 type Port150Payload struct {
-	Moving      bool          `json:"moving"`
-	DutyCycle   bool          `json:"dutyCycle"`
-	BufferLevel uint16        `json:"bufferLevel"`
-	Latitude    float64       `json:"latitude" validate:"gte=-90,lte=90"`
-	Longitude   float64       `json:"longitude" validate:"gte=-180,lte=180"`
-	Altitude    float64       `json:"altitude"`
-	Timestamp   time.Time     `json:"timestamp"`
-	Battery     float64       `json:"battery" validate:"gte=1,lte=5"`
-	TTF         time.Duration `json:"ttf"`
-	Mac1        string        `json:"mac1"`
-	Rssi1       int8          `json:"rssi1"`
-	Mac2        string        `json:"mac2"`
-	Rssi2       int8          `json:"rssi2"`
-	Mac3        string        `json:"mac3"`
-	Rssi3       int8          `json:"rssi3"`
-	Mac4        string        `json:"mac4"`
-	Rssi4       int8          `json:"rssi4"`
-	Mac5        string        `json:"mac5"`
-	Rssi5       int8          `json:"rssi5"`
-	Mac6        string        `json:"mac6"`
-	Rssi6       int8          `json:"rssi6"`
-	Mac7        string        `json:"mac7"`
-	Rssi7       int8          `json:"rssi7"`
+	BufferLevel         uint16        `json:"bufferLevel"`
+	DutyCycle           bool          `json:"dutyCycle"`
+	ConfigChangeId      uint8         `json:"configChangeId" validate:"gte=0,lte=15"`
+	ConfigChangeSuccess bool          `json:"configChangeSuccess"`
+	Moving              bool          `json:"moving"`
+	Latitude            float64       `json:"latitude" validate:"gte=-90,lte=90"`
+	Longitude           float64       `json:"longitude" validate:"gte=-180,lte=180"`
+	Altitude            float64       `json:"altitude"`
+	Timestamp           time.Time     `json:"timestamp"`
+	Battery             float64       `json:"battery" validate:"gte=1,lte=5"`
+	TTF                 time.Duration `json:"ttf"`
+	Mac1                string        `json:"mac1"`
+	Rssi1               int8          `json:"rssi1"`
+	Mac2                string        `json:"mac2"`
+	Rssi2               int8          `json:"rssi2"`
+	Mac3                string        `json:"mac3"`
+	Rssi3               int8          `json:"rssi3"`
+	Mac4                string        `json:"mac4"`
+	Rssi4               int8          `json:"rssi4"`
 }
 
 func (p Port150Payload) MarshalJSON() ([]byte, error) {
@@ -71,6 +74,7 @@ var _ decoder.UplinkFeatureWiFi = &Port150Payload{}
 var _ decoder.UplinkFeatureBuffered = &Port150Payload{}
 var _ decoder.UplinkFeatureMoving = &Port150Payload{}
 var _ decoder.UplinkFeatureDutyCycle = &Port150Payload{}
+var _ decoder.UplinkFeatureConfigChange = &Port150Payload{}
 
 func (p Port150Payload) GetTimestamp() *time.Time {
 	return &p.Timestamp
@@ -139,20 +143,6 @@ func (p Port150Payload) GetAccessPoints() []decoder.AccessPoint {
 		})
 	}
 
-	if p.Mac5 != "" {
-		accessPoints = append(accessPoints, decoder.AccessPoint{
-			MAC:  p.Mac5,
-			RSSI: p.Rssi5,
-		})
-	}
-
-	if p.Mac6 != "" {
-		accessPoints = append(accessPoints, decoder.AccessPoint{
-			MAC:  p.Mac6,
-			RSSI: p.Rssi6,
-		})
-	}
-
 	return accessPoints
 }
 
@@ -166,4 +156,12 @@ func (p Port150Payload) IsMoving() bool {
 
 func (p Port150Payload) IsDutyCycle() bool {
 	return p.DutyCycle
+}
+
+func (p Port150Payload) GetId() *uint8 {
+	return &p.ConfigChangeId
+}
+
+func (p Port150Payload) GetSuccess() bool {
+	return p.ConfigChangeSuccess
 }

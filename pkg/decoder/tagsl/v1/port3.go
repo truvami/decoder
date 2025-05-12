@@ -6,18 +6,25 @@ import (
 	"github.com/truvami/decoder/pkg/decoder"
 )
 
-// +------+------+----------------+-----------+
-// | Byte | Size | Description    | Format    |
-// +------+------+----------------+-----------+
-// | 0    | 2    | Scan pointer   | uint16    |
-// | 2    | 1    | Total messages | uint8     |
-// | 3    | 1    | #Message       | uint8     |
-// | 4-9  | 6    | MAC1           | 6 x uint8 |
-// | 10   | 1    | RSSI1          | int8      |
-// | …    |      |                |           |
-// |      | 6    | MACN           | 6 x uint8 |
-// |      | 1    | RSSIN          | int8      |
-// +------+------+----------------+-----------+
+// +------+------+----------------------------------------+-----------+
+// | Byte | Size | Description                            | Format    |
+// +------+------+----------------------------------------+-----------+
+// | 0    | 2    | Scan pointer                           | uint16    |
+// | 2    | 1    | Total messages                         | uint8     |
+// | 3    | 1    | Message                                | uint8     |
+// | 4    | 6    | Mac 1                                  | uint8[6]  |
+// | 10   | 1    | Rssi 1                                 | int8      |
+// | 11   | 6    | Mac 2                                  | uint8[6]  |
+// | 17   | 1    | Rssi 2                                 | int8      |
+// | 18   | 6    | Mac 3                                  | uint8[6]  |
+// | 24   | 1    | Rssi 3                                 | int8      |
+// | 25   | 6    | Mac 4                                  | uint8[6]  |
+// | 31   | 1    | Rssi 4                                 | int8      |
+// | 32   | 6    | Mac 5                                  | uint8[6]  |
+// | 38   | 1    | Rssi 5                                 | int8      |
+// | 39   | 6    | Mac 6                                  | uint8[6]  |
+// | 45   | 1    | Rssi 6                                 | int8      |
+// +------+------+----------------------------------------+-----------+
 
 type Port3Payload struct {
 	ScanPointer    uint16 `json:"scanPointer"`

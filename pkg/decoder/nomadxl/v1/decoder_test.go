@@ -56,7 +56,7 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "0000793000020152004B6076000C838C00003994",
+			payload:     "0000793000020152004b6076000c838c00003994",
 			port:        103,
 			autoPadding: false,
 			expected: Port103Payload{
@@ -68,7 +68,7 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "793000020152004B6076000C838C00003994",
+			payload:     "793000020152004b6076000c838c00003994",
 			port:        103,
 			autoPadding: true,
 			expected: Port103Payload{
@@ -131,11 +131,11 @@ func TestFeatures(t *testing.T) {
 		skipValidation bool
 	}{
 		{
-			payload: "00000001fdd5c693000079300001b45d000000000000000000d700000000000000000b3fd724",
+			payload: "00000001fdd5c693000079300001b45d000000000000000000d71ce60000000000000b3fd724",
 			port:    101,
 		},
 		{
-			payload: "0000793000020152004B6076000C838C00003994",
+			payload: "0000793000020152004b6076000c838c00003994",
 			port:    103,
 		},
 	}
@@ -175,6 +175,24 @@ func TestFeatures(t *testing.T) {
 				gnss.GetSatellites()
 				gnss.GetTTF()
 				gnss.GetAccuracy()
+			}
+			if decodedPayload.Is(decoder.FeatureTemperature) {
+				temperature, ok := decodedPayload.Data.(decoder.UplinkFeatureTemperature)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureTemperature, got %T", decodedPayload)
+				}
+				if temperature.GetTemperature() == 0 {
+					t.Fatalf("expected non zero temperature")
+				}
+			}
+			if decodedPayload.Is(decoder.FeaturePressure) {
+				temperature, ok := decodedPayload.Data.(decoder.UplinkFeaturePressure)
+				if !ok {
+					t.Fatalf("expected UplinkFeaturePressure, got %T", decodedPayload)
+				}
+				if temperature.GetPressure() == 0 {
+					t.Fatalf("expected non zero pressure")
+				}
 			}
 			if decodedPayload.Is(decoder.FeatureBuffered) {
 				buffered, ok := decodedPayload.Data.(decoder.UplinkFeatureBuffered)
@@ -226,7 +244,7 @@ func TestMarshal(t *testing.T) {
 			expected: []string{"\"temperature\": 21.5", "\"battery\": 2.879", "\"timeToFix\": \"36s\""},
 		},
 		{
-			payload:  "0000793000020152004B6076000C838C00003994",
+			payload:  "0000793000020152004b6076000c838c00003994",
 			port:     103,
 			expected: []string{"\"latitude\": 49.39894", "\"longitude\": 8.20108", "\"altitude\": 147.4"},
 		},
@@ -239,8 +257,7 @@ func TestMarshal(t *testing.T) {
 			data, _ := decoder.Decode(test.payload, test.port, "")
 
 			marshaled, err := json.MarshalIndent(map[string]any{
-				"data":     data.Data,
-				"metadata": data.Metadata,
+				"data": data.Data,
 			}, "", "   ")
 
 			if err != nil {

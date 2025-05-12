@@ -18,10 +18,12 @@ const (
 	FeaturePhotovoltaic    Feature = "photovoltaic"
 	FeatureTemperature     Feature = "temperature"
 	FeatureHumidity        Feature = "humidity"
+	FeaturePressure        Feature = "pressure"
 	FeatureWiFi            Feature = "wifi"
 	FeatureBle             Feature = "ble"
 	FeatureButton          Feature = "button"
 	FeatureConfig          Feature = "config"
+	FeatureConfigChange    Feature = "configChange"
 	FeatureMoving          Feature = "moving"
 	FeatureDutyCycle       Feature = "dutyCycle"
 	FeatureFirmwareVersion Feature = "firmwareVersion"
@@ -31,14 +33,12 @@ const (
 type DecodedUplink struct {
 	features []Feature
 	Data     any `json:"data"`
-	Metadata any `json:"metadata"`
 }
 
-func NewDecodedUplink(features []Feature, data any, metadata any) *DecodedUplink {
+func NewDecodedUplink(features []Feature, data any) *DecodedUplink {
 	return &DecodedUplink{
 		features: features,
 		Data:     data,
-		Metadata: metadata,
 	}
 }
 
@@ -109,6 +109,10 @@ type UplinkFeatureHumidity interface {
 	GetHumidity() float32
 }
 
+type UplinkFeaturePressure interface {
+	GetPressure() float32
+}
+
 type AccessPoint struct {
 	MAC  string `json:"mac"`
 	RSSI int8   `json:"rssi"`
@@ -149,6 +153,11 @@ type UplinkFeatureConfig interface {
 	GetBatchSize() *uint16
 	GetBufferSize() *uint16
 	GetDataRate() *DataRate
+}
+
+type UplinkFeatureConfigChange interface {
+	GetId() *uint8
+	GetSuccess() bool
 }
 
 type UplinkFeatureFirmwareVersion interface {

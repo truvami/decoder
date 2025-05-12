@@ -49,7 +49,6 @@ var _ decoder.UplinkFeatureConfig = &Port4Payload{}
 var _ decoder.UplinkFeatureFirmwareVersion = &Port4Payload{}
 var _ decoder.UplinkFeatureHardwareVersion = &Port4Payload{}
 
-// GetTimestamp implements decoder.UplinkFeatureBase.
 func (p Port4Payload) GetTimestamp() *time.Time {
 	return nil
 }
@@ -134,12 +133,10 @@ func (p Port4Payload) GetDataRate() *decoder.DataRate {
 	return nil
 }
 
-// GetFirmwareVersion implements decoder.UplinkFeatureFirmwareVersion.
 func (p Port4Payload) GetFirmwareVersion() string {
 	return fmt.Sprintf("%d.%d.%d", p.FirmwareVersionMajor, p.FirmwareVersionMinor, p.FirmwareVersionPatch)
 }
 
-// GetHardwareVersion implements decoder.UplinkFeatureHardwareVersion.
 func (p Port4Payload) GetHardwareVersion() string {
 	return fmt.Sprintf("%d.%d", p.HardwareVersionType, p.HardwareVersionRevision)
 }

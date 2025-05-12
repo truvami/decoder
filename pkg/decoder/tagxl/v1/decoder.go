@@ -152,7 +152,7 @@ func (t TagXLv1Decoder) Decode(data string, port uint8, devEui string) (*decoder
 			Payload: data,
 			FCount:  t.fCount,
 		})
-		return decoder.NewDecodedUplink([]decoder.Feature{decoder.FeatureGNSS}, decodedData, nil), err
+		return decoder.NewDecodedUplink([]decoder.Feature{decoder.FeatureGNSS}, decodedData), err
 	case 199:
 		decodedData, err := t.loracloudMiddleware.DeliverUplinkMessage(devEui, loracloud.UplinkMsg{
 			MsgType: "updf",
@@ -160,7 +160,7 @@ func (t TagXLv1Decoder) Decode(data string, port uint8, devEui string) (*decoder
 			Payload: data,
 			FCount:  t.fCount,
 		})
-		return decoder.NewDecodedUplink([]decoder.Feature{}, decodedData, nil), err
+		return decoder.NewDecodedUplink([]decoder.Feature{}, decodedData), err
 	default:
 		config, err := t.getConfig(port)
 		if err != nil {
@@ -179,6 +179,6 @@ func (t TagXLv1Decoder) Decode(data string, port uint8, devEui string) (*decoder
 		}
 
 		decodedData, err := common.Parse(data, &config)
-		return decoder.NewDecodedUplink(config.Features, decodedData, nil), err
+		return decoder.NewDecodedUplink(config.Features, decodedData), err
 	}
 }

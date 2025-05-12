@@ -11,48 +11,51 @@ import (
 // +------+------+-------------------------------------------+------------------------+
 // | Byte | Size | Description                               | Format                 |
 // +------+------+-------------------------------------------+------------------------+
-// | 0    | 1    | Status[6:2] + Moving flag[0] (moving = 1) | uint8                  |
-// | 1-4  | 4    | Latitude                                  | int32, 1/1’000’000 deg |
-// | 5-8  | 4    | Longitude                                 | int32, 1/1’000’000 deg |
-// | 9-10 | 2    | Altitude                                  | uint16, 1/10 meter     |
-// | 11-14| 4    | Unix timestamp                            | uint32                 |
-// | 15-16| 2    | Battery voltage                           | uint16, mV             |
-// | 17   | 1    | TTF                                       | uint8                  |
-// | 18   | 1    | PDOP  		                                 | uint8, 1/2 meter       |
+// | 0    | 1    | Duty cycle flag                           | uint1                  |
+// | 0    | 1    | Config change id                          | uint4                  |
+// | 0    | 1    | Config change success flag                | uint1                  |
+// | 0    | 1    | Reserved                                  | uint1                  |
+// | 0    | 1    | Moving flag                               | uint1                  |
+// | 1    | 4    | Latitude                                  | int32, 1/1’000’000 deg |
+// | 5    | 4    | Longitude                                 | int32, 1/1’000’000 deg |
+// | 9    | 2    | Altitude                                  | uint16, 1/10 meter     |
+// | 11   | 4    | Unix timestamp                            | uint32                 |
+// | 15   | 2    | Battery voltage                           | uint16, mV             |
+// | 17   | 1    | Time to fix                               | uint8                  |
+// | 18   | 1    | Position dilution of precision            | uint8, 1/2 meter       |
 // | 19   | 1    | Number of satellites                      | uint8, 		            |
-// | 20-25| 6    | MAC1                                      | 6 x uint8              |
-// | 26   | 1    | RSSI1                                     | int8                   |
-// | …    |      |                                           |                        |
-// |      | 6    | MACN                                      | 6 x uint8              |
-// |      | 1    | RSSIN                                     | int8                   |
+// | 20   | 6    | Mac 1                                     | uint8[6]               |
+// | 26   | 1    | Rssi 1                                    | int8                   |
+// | 27   | 6    | Mac 2                                     | uint8[6]               |
+// | 33   | 1    | Rssi 2                                    | int8                   |
+// | 34   | 6    | Mac 3                                     | uint8[6]               |
+// | 40   | 1    | Rssi 3                                    | int8                   |
+// | 41   | 6    | Mac 4                                     | uint8[6]               |
+// | 47   | 1    | Rssi 4                                    | int8                   |
 // +------+------+-------------------------------------------+------------------------+
 
 // Timestamp for the Wi-Fi scanning is TSGNSS – TTF + 10 seconds.
 type Port51Payload struct {
-	Moving     bool          `json:"moving"`
-	DutyCycle  bool          `json:"dutyCycle"`
-	Latitude   float64       `json:"latitude" validate:"gte=-90,lte=90"`
-	Longitude  float64       `json:"longitude" validate:"gte=-180,lte=180"`
-	Altitude   float64       `json:"altitude"`
-	Timestamp  time.Time     `json:"timestamp"`
-	Battery    float64       `json:"battery" validate:"gte=1,lte=5"`
-	TTF        time.Duration `json:"ttf"`
-	PDOP       float64       `json:"pdop"`
-	Satellites uint8         `json:"satellites" validate:"gte=3,lte=27"`
-	Mac1       string        `json:"mac1"`
-	Rssi1      int8          `json:"rssi1"`
-	Mac2       string        `json:"mac2"`
-	Rssi2      int8          `json:"rssi2"`
-	Mac3       string        `json:"mac3"`
-	Rssi3      int8          `json:"rssi3"`
-	Mac4       string        `json:"mac4"`
-	Rssi4      int8          `json:"rssi4"`
-	Mac5       string        `json:"mac5"`
-	Rssi5      int8          `json:"rssi5"`
-	Mac6       string        `json:"mac6"`
-	Rssi6      int8          `json:"rssi6"`
-	Mac7       string        `json:"mac7"`
-	Rssi7      int8          `json:"rssi7"`
+	DutyCycle           bool          `json:"dutyCycle"`
+	ConfigChangeId      uint8         `json:"configChangeId" validate:"gte=0,lte=15"`
+	ConfigChangeSuccess bool          `json:"configChangeSuccess"`
+	Moving              bool          `json:"moving"`
+	Latitude            float64       `json:"latitude" validate:"gte=-90,lte=90"`
+	Longitude           float64       `json:"longitude" validate:"gte=-180,lte=180"`
+	Altitude            float64       `json:"altitude"`
+	Timestamp           time.Time     `json:"timestamp"`
+	Battery             float64       `json:"battery" validate:"gte=1,lte=5"`
+	TTF                 time.Duration `json:"ttf"`
+	PDOP                float64       `json:"pdop"`
+	Satellites          uint8         `json:"satellites" validate:"gte=3,lte=27"`
+	Mac1                string        `json:"mac1"`
+	Rssi1               int8          `json:"rssi1"`
+	Mac2                string        `json:"mac2"`
+	Rssi2               int8          `json:"rssi2"`
+	Mac3                string        `json:"mac3"`
+	Rssi3               int8          `json:"rssi3"`
+	Mac4                string        `json:"mac4"`
+	Rssi4               int8          `json:"rssi4"`
 }
 
 func (p Port51Payload) MarshalJSON() ([]byte, error) {
@@ -72,6 +75,7 @@ var _ decoder.UplinkFeatureBattery = &Port51Payload{}
 var _ decoder.UplinkFeatureWiFi = &Port51Payload{}
 var _ decoder.UplinkFeatureMoving = &Port51Payload{}
 var _ decoder.UplinkFeatureDutyCycle = &Port51Payload{}
+var _ decoder.UplinkFeatureConfigChange = &Port51Payload{}
 
 func (p Port51Payload) GetTimestamp() *time.Time {
 	return &p.Timestamp
@@ -149,4 +153,12 @@ func (p Port51Payload) IsMoving() bool {
 
 func (p Port51Payload) IsDutyCycle() bool {
 	return p.DutyCycle
+}
+
+func (p Port51Payload) GetId() *uint8 {
+	return &p.ConfigChangeId
+}
+
+func (p Port51Payload) GetSuccess() bool {
+	return p.ConfigChangeSuccess
 }

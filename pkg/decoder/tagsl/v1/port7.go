@@ -10,43 +10,50 @@ import (
 // | Byte | Size | Description                               | Format    |
 // +------+------+-------------------------------------------+-----------+
 // | 0    | 4    | Timestamp                                 | uint32    |
-// | 4    | 1    | Status Byte                               | uint8     |
-// | 5    | 6    | MAC1                                      | uint8[6]  |
-// | 11   | 1    | RSSI1                                     | int8      |
-// | 12   | 6    | MAC2                                      | uint8[6]  |
-// | 18   | 1    | RSSI2                                     | int8      |
-// | 19   | 6    | MAC3                                      | uint8[6]  |
-// | 25   | 1    | RSSI3                                     | int8      |
-// | 26   | 6    | MAC4                                      | uint8[6]  |
-// | 32   | 1    | RSSI4                                     | int8      |
-// | 33   | 6    | MAC5                                      | uint8[6]  |
-// | 39   | 1    | RSSI5                                     | int8      |
-// | 40   | 6    | MAC6                                      | uint8[6]  |
-// | 46   | 1    | RSSI6                                     | int8      |
+// | 4    | 1    | Duty cycle flag                           | uint1     |
+// | 4    | 1    | Config change id                          | uint4     |
+// | 4    | 1    | Config change success flag                | uint1     |
+// | 4    | 1    | Reserved                                  | uint1     |
+// | 4    | 1    | Moving flag                               | uint1     |
+// | 5    | 6    | Mac 1                                     | uint8[6]  |
+// | 11   | 1    | Rssi 1                                    | int8      |
+// | 12   | 6    | Mac 2                                     | uint8[6]  |
+// | 18   | 1    | Rssi 2                                    | int8      |
+// | 19   | 6    | Mac 3                                     | uint8[6]  |
+// | 25   | 1    | Rssi 3                                    | int8      |
+// | 26   | 6    | Mac 4                                     | uint8[6]  |
+// | 32   | 1    | Rssi 4                                    | int8      |
+// | 33   | 6    | Mac 5                                     | uint8[6]  |
+// | 39   | 1    | Rssi 5                                    | int8      |
+// | 40   | 6    | Mac 6                                     | uint8[6]  |
+// | 46   | 1    | Rssi 6                                    | int8      |
 // +------+------+-------------------------------------------+-----------+
 
 type Port7Payload struct {
-	Moving    bool      `json:"moving"`
-	DutyCycle bool      `json:"dutyCycle"`
-	Timestamp time.Time `json:"timestamp"`
-	Mac1      string    `json:"mac1"`
-	Rssi1     int8      `json:"rssi1"`
-	Mac2      string    `json:"mac2"`
-	Rssi2     int8      `json:"rssi2"`
-	Mac3      string    `json:"mac3"`
-	Rssi3     int8      `json:"rssi3"`
-	Mac4      string    `json:"mac4"`
-	Rssi4     int8      `json:"rssi4"`
-	Mac5      string    `json:"mac5"`
-	Rssi5     int8      `json:"rssi5"`
-	Mac6      string    `json:"mac6"`
-	Rssi6     int8      `json:"rssi6"`
+	Timestamp           time.Time `json:"timestamp"`
+	DutyCycle           bool      `json:"dutyCycle"`
+	ConfigChangeId      uint8     `json:"configChangeId" validate:"gte=0,lte=15"`
+	ConfigChangeSuccess bool      `json:"configChangeSuccess"`
+	Moving              bool      `json:"moving"`
+	Mac1                string    `json:"mac1"`
+	Rssi1               int8      `json:"rssi1"`
+	Mac2                string    `json:"mac2"`
+	Rssi2               int8      `json:"rssi2"`
+	Mac3                string    `json:"mac3"`
+	Rssi3               int8      `json:"rssi3"`
+	Mac4                string    `json:"mac4"`
+	Rssi4               int8      `json:"rssi4"`
+	Mac5                string    `json:"mac5"`
+	Rssi5               int8      `json:"rssi5"`
+	Mac6                string    `json:"mac6"`
+	Rssi6               int8      `json:"rssi6"`
 }
 
 var _ decoder.UplinkFeatureBase = &Port7Payload{}
 var _ decoder.UplinkFeatureWiFi = &Port7Payload{}
 var _ decoder.UplinkFeatureMoving = &Port7Payload{}
 var _ decoder.UplinkFeatureDutyCycle = &Port7Payload{}
+var _ decoder.UplinkFeatureConfigChange = &Port7Payload{}
 
 func (p Port7Payload) GetTimestamp() *time.Time {
 	return &p.Timestamp
@@ -106,4 +113,12 @@ func (p Port7Payload) IsMoving() bool {
 
 func (p Port7Payload) IsDutyCycle() bool {
 	return p.DutyCycle
+}
+
+func (p Port7Payload) GetId() *uint8 {
+	return &p.ConfigChangeId
+}
+
+func (p Port7Payload) GetSuccess() bool {
+	return p.ConfigChangeSuccess
 }

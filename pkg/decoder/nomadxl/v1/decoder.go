@@ -69,7 +69,7 @@ func (t NomadXLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 				}},
 			},
 			TargetType: reflect.TypeOf(Port101Payload{}),
-			Features:   []decoder.Feature{decoder.FeatureBattery, decoder.FeatureTemperature, decoder.FeatureBuffered},
+			Features:   []decoder.Feature{decoder.FeatureBuffered, decoder.FeatureBattery, decoder.FeatureTemperature, decoder.FeaturePressure},
 		}, nil
 	case 103:
 		return common.PayloadConfig{
@@ -114,5 +114,5 @@ func (t NomadXLv1Decoder) Decode(data string, port uint8, devEui string) (*decod
 	}
 
 	decodedData, err := common.Parse(data, &config)
-	return decoder.NewDecodedUplink(config.Features, decodedData, nil), err
+	return decoder.NewDecodedUplink(config.Features, decodedData), err
 }

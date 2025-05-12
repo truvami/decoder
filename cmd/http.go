@@ -164,7 +164,6 @@ func getHandler(decoder decoder.Decoder) func(http.ResponseWriter, *http.Request
 		logger.Logger.Info("payload decoded successfully", zap.String("devEui", req.DevEUI), zap.Uint8("port", req.Port))
 		setBody(w, http.StatusOK, map[string]any{
 			"data":     data.Data,
-			"metadata": data.Metadata,
 			"warnings": warnings,
 		})
 	}
