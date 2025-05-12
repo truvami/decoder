@@ -77,18 +77,30 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:        "00",
-			port:           2,
-			autoPadding:    false,
-			skipValidation: true,
-			expected:       Port2Payload{},
+			payload:  "00",
+			port:     2,
+			expected: Port2Payload{},
 		},
 		{
-			payload:        "01",
-			port:           2,
-			autoPadding:    false,
-			skipValidation: true,
-			expected:       Port2Payload{},
+			payload:  "00",
+			port:     2,
+			expected: Port2Payload{},
+		},
+		{
+			payload: "01",
+			port:    2,
+			expected: Port2Payload{
+				Moving:    true,
+				DutyCycle: false,
+			},
+		},
+		{
+			payload: "80",
+			port:    2,
+			expected: Port2Payload{
+				Moving:    false,
+				DutyCycle: true,
+			},
 		},
 		{
 			payload:     "822f0101f052fab920feafd0e4158b38b9afe05994cb2f5cb2",

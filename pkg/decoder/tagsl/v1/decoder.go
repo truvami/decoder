@@ -69,7 +69,10 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 		}, nil
 	case 2:
 		return common.PayloadConfig{
-			Fields:          []common.FieldConfig{},
+			Fields: []common.FieldConfig{
+				{Name: "Moving", Start: 0, Length: 1, Transform: moving},
+				{Name: "DutyCycle", Start: 0, Length: 1, Transform: dutyCycle},
+			},
 			TargetType:      reflect.TypeOf(Port2Payload{}),
 			StatusByteIndex: common.ToIntPointer(0),
 		}, nil

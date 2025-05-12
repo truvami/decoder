@@ -13,6 +13,8 @@ import (
 // +------+------+-------------------------------------------+--------+
 
 type Port2Payload struct {
+	Moving    bool `json:"moving"`
+	DutyCycle bool `json:"dutyCycle"`
 }
 
 var _ decoder.UplinkFeatureBase = &Port2Payload{}
