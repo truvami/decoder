@@ -95,6 +95,8 @@ type UplinkFeatureBuffered interface {
 type UplinkFeatureBattery interface {
 	// GetBatteryVoltage returns the battery voltage of the device.
 	GetBatteryVoltage() float64
+	// GetLowBattery returns the low battery flag of the device.
+	GetLowBattery() *bool
 }
 
 type UplinkFeaturePhotovoltaic interface {

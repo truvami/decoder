@@ -33,6 +33,10 @@ func (p Port15Payload) GetBatteryVoltage() float64 {
 	return p.Battery
 }
 
+func (p Port15Payload) GetLowBattery() *bool {
+	return &p.LowBattery
+}
+
 func (p Port15Payload) IsDutyCycle() bool {
 	return p.DutyCycle
 }

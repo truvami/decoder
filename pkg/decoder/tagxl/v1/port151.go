@@ -56,6 +56,10 @@ func (p Port151Payload) GetBatteryVoltage() float64 {
 	return float64(p.BatteryVoltage)
 }
 
+func (p Port151Payload) GetLowBattery() *bool {
+	return nil
+}
+
 func (p Port151Payload) GetBle() *bool {
 	return &p.Ble
 }

@@ -492,6 +492,8 @@ func TestFeatures(t *testing.T) {
 				if batteryVoltage.GetBatteryVoltage() == 0 {
 					t.Fatalf("expected non zero battery voltage")
 				}
+				// call function to check if it panics
+				batteryVoltage.GetLowBattery()
 			}
 			if decodedPayload.Is(decoder.FeatureWiFi) {
 				wifi, ok := decodedPayload.Data.(decoder.UplinkFeatureWiFi)

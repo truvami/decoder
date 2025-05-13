@@ -73,6 +73,10 @@ func (p Port101Payload) GetBatteryVoltage() float64 {
 	return p.Battery
 }
 
+func (p Port101Payload) GetLowBattery() *bool {
+	return nil
+}
+
 func (p Port101Payload) GetTemperature() float32 {
 	return p.Temperature
 }
