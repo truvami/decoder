@@ -121,7 +121,7 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload string) (common.PayloadCon
 						return uint8((v.(int) >> 4))
 					}},
 					{Name: "NewRotationState", Start: 2, Length: 1, Transform: func(v any) any {
-						return uint8(v.(int) & 0x0F)
+						return uint8(v.(int) & 0x0f)
 					}},
 					{Name: "Timestamp", Start: 3, Length: 4},
 					{Name: "NumberOfRotations", Start: 7, Length: 2, Transform: func(v any) any {
@@ -141,7 +141,7 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload string) (common.PayloadCon
 						return uint8((v.(int) >> 4))
 					}},
 					{Name: "NewRotationState", Start: 3, Length: 1, Transform: func(v any) any {
-						return uint8(v.(int) & 0x0F)
+						return uint8(v.(int) & 0x0f)
 					}},
 					{Name: "Timestamp", Start: 4, Length: 4},
 					{Name: "NumberOfRotations", Start: 8, Length: 2, Transform: func(v any) any {
