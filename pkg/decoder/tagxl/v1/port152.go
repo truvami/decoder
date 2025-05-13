@@ -6,6 +6,31 @@ import (
 	"github.com/truvami/decoder/pkg/decoder"
 )
 
+// Version: 1
+// +------+------+-----------------------------------------------+------------+
+// | Byte | Size | Description                                   | Format     |
+// +------+------+-----------------------------------------------+------------+
+// | 0    | 1    | version                                       | uint8      |
+// | 2    | 1    | new rotation state                            | uint8      |
+// | 2    | 1    | old rotation state                            | uint8      |
+// | 3    | 4    | timestamp in seconds since epoch              | time.Time  |
+// | 7    | 2    | number of rotations since last rotation       | float64    |
+// | 9    | 4    | elapsed seconds since last rotation           | uint32     |
+// +------+------+-----------------------------------------------+------------+
+//
+// Version: 2
+// +------+------+-----------------------------------------------+------------+
+// | Byte | Size | Description                                   | Format     |
+// +------+------+-----------------------------------------------+------------+
+// | 0    | 1    | version                                       | uint8      |
+// | 2    | 1    | sequence number                               | uint8      |
+// | 3    | 1    | new rotation state                            | uint8      |
+// | 3    | 1    | old rotation state                            | uint8      |
+// | 4    | 4    | timestamp in seconds since epoch              | time.Time  |
+// | 8    | 2    | number of rotations since last rotation       | float64    |
+// | 10   | 4    | elapsed seconds since last rotation           | uint32     |
+// +------+------+-----------------------------------------------+------------+
+
 type Port152Payload struct {
 	Version           uint8     `json:"version"`
 	SequenceNumber    uint8     `json:"sequenceNumber"`
@@ -40,6 +65,6 @@ func (p Port152Payload) GetRotationState() decoder.RotationState {
 }
 
 // GetSequenceNumber implements decoder.UplinkFeatureSequenceNumber.
-func (p Port152Payload) GetSequenceNumber() int {
-	return int(p.SequenceNumber)
+func (p Port152Payload) GetSequenceNumber() uint {
+	return uint(p.SequenceNumber)
 }

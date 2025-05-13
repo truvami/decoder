@@ -185,5 +185,5 @@ type UplinkFeatureRotationState interface {
 }
 
 type UplinkFeatureSequenceNumber interface {
-	GetSequenceNumber() int
+	GetSequenceNumber() uint
 }

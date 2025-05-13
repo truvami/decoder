@@ -118,7 +118,7 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload string) (common.PayloadCon
 				Fields: []common.FieldConfig{
 					{Name: "Version", Start: 0, Length: 1},
 					{Name: "OldRotationState", Start: 2, Length: 1, Transform: func(v any) any {
-						return uint8((v.(int) >> 4) >> 0)
+						return uint8((v.(int) >> 4))
 					}},
 					{Name: "NewRotationState", Start: 2, Length: 1, Transform: func(v any) any {
 						return uint8(v.(int) & 0x0F)
