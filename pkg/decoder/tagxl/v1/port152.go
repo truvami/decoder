@@ -11,6 +11,7 @@ import (
 // | Byte | Size | Description                                   | Format     |
 // +------+------+-----------------------------------------------+------------+
 // | 0    | 1    | version                                       | uint8      |
+// | 1    | 1    | reserved                                      | uint8      |
 // | 2    | 1    | new rotation state                            | uint4      |
 // | 2    | 1    | old rotation state                            | uint4      |
 // | 3    | 4    | timestamp in seconds since epoch              | uint32     |
@@ -23,6 +24,7 @@ import (
 // | Byte | Size | Description                                   | Format     |
 // +------+------+-----------------------------------------------+------------+
 // | 0    | 1    | version                                       | uint8      |
+// | 1    | 1    | reserved                                      | uint8      |
 // | 2    | 1    | sequence number                               | uint8      |
 // | 3    | 1    | new rotation state                            | uint4      |
 // | 3    | 1    | old rotation state                            | uint4      |
