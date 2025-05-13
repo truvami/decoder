@@ -104,6 +104,10 @@ func (p Port10Payload) GetBatteryVoltage() float64 {
 	return p.Battery
 }
 
+func (p Port10Payload) GetLowBattery() *bool {
+	return nil
+}
+
 func (p Port10Payload) IsMoving() bool {
 	return p.Moving
 }

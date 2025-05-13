@@ -109,6 +109,10 @@ func (p Port50Payload) GetBatteryVoltage() float64 {
 	return p.Battery
 }
 
+func (p Port50Payload) GetLowBattery() *bool {
+	return nil
+}
+
 func (p Port50Payload) GetAccessPoints() []decoder.AccessPoint {
 	accessPoints := []decoder.AccessPoint{}
 

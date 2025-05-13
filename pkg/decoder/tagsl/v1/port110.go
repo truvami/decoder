@@ -107,6 +107,10 @@ func (p Port110Payload) GetBatteryVoltage() float64 {
 	return p.Battery
 }
 
+func (p Port110Payload) GetLowBattery() *bool {
+	return nil
+}
+
 func (p Port110Payload) GetBufferLevel() uint16 {
 	return p.BufferLevel
 }

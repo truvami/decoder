@@ -116,6 +116,10 @@ func (p Port151Payload) GetBatteryVoltage() float64 {
 	return p.Battery
 }
 
+func (p Port151Payload) GetLowBattery() *bool {
+	return nil
+}
+
 func (p Port151Payload) GetAccessPoints() []decoder.AccessPoint {
 	accessPoints := []decoder.AccessPoint{}
 

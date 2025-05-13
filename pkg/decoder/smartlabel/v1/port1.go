@@ -30,6 +30,10 @@ func (p Port1Payload) GetBatteryVoltage() float64 {
 	return float64(p.BatteryVoltage)
 }
 
+func (p Port1Payload) GetLowBattery() *bool {
+	return nil
+}
+
 func (p Port1Payload) GetPhotovoltaicVoltage() float32 {
 	return p.PhotovoltaicVoltage
 }
