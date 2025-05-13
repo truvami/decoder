@@ -1,6 +1,7 @@
 package tagxl
 
 import (
+	"encoding/hex"
 	"fmt"
 	"reflect"
 	"time"
@@ -52,7 +53,7 @@ func WithFCount(fCount uint32) Option {
 }
 
 // https://docs.truvami.com/docs/payloads/tag-xl
-func (t TagXLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
+func (t TagXLv1Decoder) getConfig(port uint8, payload string) (common.PayloadConfig, error) {
 	switch port {
 	case 150:
 		return common.PayloadConfig{
@@ -103,24 +104,55 @@ func (t TagXLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 			Features:   []decoder.Feature{decoder.FeatureBattery, decoder.FeatureConfig},
 		}, nil
 	case 152:
-		return common.PayloadConfig{
-			Fields: []common.FieldConfig{
-				{Name: "OldRotationState", Start: 2, Length: 1, Transform: func(v any) any {
-					// get bit 0-3 and return
-					return uint8((v.(int) >> 4) & 0xF)
-				}},
-				{Name: "NewRotationState", Start: 2, Length: 1, Transform: func(v any) any {
-					// get bit 4-7 and return
-					return uint8(v.(int) & 0xF)
-				}},
-				{Name: "Timestamp", Start: 3, Length: 4},
-				{Name: "NumberOfRotations", Start: 7, Length: 2, Transform: func(v any) any {
-					return float64(v.(int)) / 10
-				}},
-				{Name: "ElapsedSeconds", Start: 9, Length: 4},
-			},
-			TargetType: reflect.TypeOf(Port152Payload{}),
-		}, nil
+		p, err := hex.DecodeString(payload)
+		if err != nil {
+			return common.PayloadConfig{}, fmt.Errorf("%w: %v", common.ErrValidationFailed, err)
+		}
+
+		var version uint8 = p[0]
+		switch version {
+		default:
+			return common.PayloadConfig{}, fmt.Errorf("%w: version %v for port 152 not supported", common.ErrPortNotSupported, version)
+		case 0x01:
+			return common.PayloadConfig{
+				Fields: []common.FieldConfig{
+					{Name: "Version", Start: 0, Length: 1},
+					{Name: "OldRotationState", Start: 2, Length: 1, Transform: func(v any) any {
+						return uint8((v.(int) >> 4) >> 0)
+					}},
+					{Name: "NewRotationState", Start: 2, Length: 1, Transform: func(v any) any {
+						return uint8(v.(int) & 0x0F >> 0)
+					}},
+					{Name: "Timestamp", Start: 3, Length: 4},
+					{Name: "NumberOfRotations", Start: 7, Length: 2, Transform: func(v any) any {
+						return float64(v.(int)) / 10
+					}},
+					{Name: "ElapsedSeconds", Start: 9, Length: 4},
+				},
+				TargetType: reflect.TypeOf(Port152Payload{}),
+				Features:   []decoder.Feature{decoder.FeatureRotationState},
+			}, nil
+		case 0x02:
+			return common.PayloadConfig{
+				Fields: []common.FieldConfig{
+					{Name: "Version", Start: 0, Length: 1},
+					{Name: "SequenceNumber", Start: 2, Length: 1},
+					{Name: "OldRotationState", Start: 3, Length: 1, Transform: func(v any) any {
+						return uint8((v.(int) >> 4) >> 0)
+					}},
+					{Name: "NewRotationState", Start: 3, Length: 1, Transform: func(v any) any {
+						return uint8(v.(int) & 0x0F >> 0)
+					}},
+					{Name: "Timestamp", Start: 4, Length: 4},
+					{Name: "NumberOfRotations", Start: 8, Length: 2, Transform: func(v any) any {
+						return float64(v.(int)) / 10
+					}},
+					{Name: "ElapsedSeconds", Start: 10, Length: 4},
+				},
+				TargetType: reflect.TypeOf(Port152Payload{}),
+				Features:   []decoder.Feature{decoder.FeatureRotationState, decoder.FeatureSequenceNumber},
+			}, nil
+		}
 	case 197:
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
@@ -162,7 +194,7 @@ func (t TagXLv1Decoder) Decode(data string, port uint8, devEui string) (*decoder
 		})
 		return decoder.NewDecodedUplink([]decoder.Feature{}, decodedData), err
 	default:
-		config, err := t.getConfig(port)
+		config, err := t.getConfig(port, data)
 		if err != nil {
 			return nil, err
 		}

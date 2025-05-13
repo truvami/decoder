@@ -28,6 +28,8 @@ const (
 	FeatureDutyCycle       Feature = "dutyCycle"
 	FeatureFirmwareVersion Feature = "firmwareVersion"
 	FeatureHardwareVersion Feature = "hardwareVersion"
+	FeatureRotationState   Feature = "rotationState"
+	FeatureSequenceNumber  Feature = "sequenceNumber"
 )
 
 type DecodedUplink struct {
@@ -176,4 +178,12 @@ type UplinkFeatureButton interface {
 
 type UplinkFeatureResetReason interface {
 	GetResetReason() ResetReason
+}
+
+type UplinkFeatureRotationState interface {
+	GetRotationState() RotationState
+}
+
+type UplinkFeatureSequenceNumber interface {
+	GetSequenceNumber() int
 }
