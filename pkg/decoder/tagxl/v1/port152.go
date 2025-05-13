@@ -32,12 +32,12 @@ import (
 // +------+------+-----------------------------------------------+------------+
 
 type Port152Payload struct {
-	Version           uint8     `json:"version"`
-	SequenceNumber    uint8     `json:"sequenceNumber"`
-	NewRotationState  uint8     `json:"newRotationState"`
-	OldRotationState  uint8     `json:"oldRotationState"`
+	Version           uint8     `json:"version" validate:"gte=1,lte=2"`
+	SequenceNumber    uint8     `json:"sequenceNumber" validate:"lte=255"`
+	NewRotationState  uint8     `json:"newRotationState" validate:"lte=3"`
+	OldRotationState  uint8     `json:"oldRotationState" validate:"lte=3"`
 	Timestamp         time.Time `json:"timestamp"`
-	NumberOfRotations float64   `json:"numberOfRotations"`
+	NumberOfRotations float64   `json:"numberOfRotations" validate:"gte=0"`
 	ElapsedSeconds    uint32    `json:"elapsedSeconds"`
 }
 
