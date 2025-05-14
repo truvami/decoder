@@ -69,11 +69,9 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 		if payloadType != 0x4c {
 			return common.PayloadConfig{}, fmt.Errorf("%w: port %d tag %x", common.ErrPortNotSupported, port, payloadType)
 		}
-		var features = []decoder.Feature{}
 		return common.PayloadConfig{
 			Tags: []common.TagConfig{
-				{Name: "Battery", Optional: true, Tag: 0x45, Transform: func(v any) any {
-					features = append(features, decoder.FeatureBattery)
+				{Name: "Battery", Optional: true, Tag: 0x45, Feature: []decoder.Feature{decoder.FeatureBattery}, Transform: func(v any) any {
 					battery := float32(v.(int)) / 1000
 					return battery
 				}},
@@ -85,7 +83,6 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 				}},
 			},
 			TargetType: reflect.TypeOf(Port151Payload{}),
-			Features:   features,
 		}, nil
 	case 152:
 		var version uint8 = payload[0]

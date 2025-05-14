@@ -145,6 +145,8 @@ func Parse(payloadHex string, config *PayloadConfig) (any, error) {
 							continue
 						}
 
+						config.Features = append(config.Features, tagConfig.Feature...)
+
 						// transform value from pointer to value
 						if fieldValue.Kind() == reflect.Pointer {
 							fieldValue.Set(reflect.New(fieldValue.Type().Elem()))
