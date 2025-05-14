@@ -51,13 +51,13 @@ type Port151Payload struct {
 	PDOP                float64       `json:"pdop"`
 	Satellites          uint8         `json:"satellites" validate:"gte=3,lte=27"`
 	Mac1                string        `json:"mac1"`
-	Rssi1               int8          `json:"rssi1"`
+	Rssi1               int8          `json:"rssi1" validate:"gte=-120,lte=-20"`
 	Mac2                string        `json:"mac2"`
-	Rssi2               int8          `json:"rssi2"`
+	Rssi2               int8          `json:"rssi2" validate:"gte=-120,lte=-20"`
 	Mac3                string        `json:"mac3"`
-	Rssi3               int8          `json:"rssi3"`
+	Rssi3               int8          `json:"rssi3" validate:"gte=-120,lte=-20"`
 	Mac4                string        `json:"mac4"`
-	Rssi4               int8          `json:"rssi4"`
+	Rssi4               int8          `json:"rssi4" validate:"gte=-120,lte=-20"`
 }
 
 func (p Port151Payload) MarshalJSON() ([]byte, error) {

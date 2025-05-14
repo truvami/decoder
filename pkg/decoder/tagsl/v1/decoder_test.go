@@ -323,18 +323,18 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "001f3fd57cecb4f0b0140c96bbb2e0286d8a9478b8",
+			payload:     "001f3fd57cecb4c9b0140c96bbb2bd286d8a9478b8ad",
 			port:        5,
 			autoPadding: false,
 			expected: Port5Payload{
 				Moving:    false,
 				DutyCycle: false,
 				Mac1:      "1f3fd57cecb4",
-				Rssi1:     -16,
+				Rssi1:     -55,
 				Mac2:      "b0140c96bbb2",
-				Rssi2:     -32,
+				Rssi2:     -67,
 				Mac3:      "286d8a9478b8",
-				Rssi3:     0,
+				Rssi3:     -83,
 			},
 		},
 		{
