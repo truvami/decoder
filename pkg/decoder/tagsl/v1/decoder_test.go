@@ -1951,6 +1951,10 @@ func TestFeatures(t *testing.T) {
 			// check if it panics
 			base.GetTimestamp()
 
+			if len(decodedPayload.GetFeatures()) == 0 {
+				t.Error("expected features, got none")
+			}
+
 			if decodedPayload.Is(decoder.FeatureGNSS) {
 				gnss, ok := decodedPayload.Data.(decoder.UplinkFeatureGNSS)
 				if !ok {

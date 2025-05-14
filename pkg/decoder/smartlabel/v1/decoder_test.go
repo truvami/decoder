@@ -493,23 +493,27 @@ func TestFeatures(t *testing.T) {
 				middleware,
 				WithFCount(42),
 			)
-			data, err := d.Decode(test.payload, test.port, "927da4b72110927d")
+			decodedPayload, err := d.Decode(test.payload, test.port, "927da4b72110927d")
 			if err != nil {
 				t.Fatalf("error %s", err)
 			}
 
 			// should be able to decode base feature
-			base, ok := data.Data.(decoder.UplinkFeatureBase)
+			base, ok := decodedPayload.Data.(decoder.UplinkFeatureBase)
 			if !ok {
-				t.Fatalf("expected UplinkFeatureBase, got %T", data)
+				t.Fatalf("expected UplinkFeatureBase, got %T", decodedPayload)
 			}
 			// check if it panics
 			base.GetTimestamp()
 
-			if data.Is(decoder.FeatureGNSS) {
-				gnss, ok := data.Data.(decoder.UplinkFeatureGNSS)
+			if len(decodedPayload.GetFeatures()) == 0 {
+				t.Error("expected features, got none")
+			}
+
+			if decodedPayload.Is(decoder.FeatureGNSS) {
+				gnss, ok := decodedPayload.Data.(decoder.UplinkFeatureGNSS)
 				if !ok {
-					t.Fatalf("expected UplinkFeatureGNSS, got %T", data)
+					t.Fatalf("expected UplinkFeatureGNSS, got %T", decodedPayload)
 				}
 				if gnss.GetLatitude() == 0 {
 					t.Fatalf("expected non zero latitude")
@@ -527,10 +531,10 @@ func TestFeatures(t *testing.T) {
 				gnss.GetTTF()
 				gnss.GetAccuracy()
 			}
-			if data.Is(decoder.FeatureBattery) {
-				batteryVoltage, ok := data.Data.(decoder.UplinkFeatureBattery)
+			if decodedPayload.Is(decoder.FeatureBattery) {
+				batteryVoltage, ok := decodedPayload.Data.(decoder.UplinkFeatureBattery)
 				if !ok {
-					t.Fatalf("expected UplinkFeatureBattery, got %T", data)
+					t.Fatalf("expected UplinkFeatureBattery, got %T", decodedPayload)
 				}
 				if batteryVoltage.GetBatteryVoltage() == 0 {
 					t.Fatalf("expected non zero battery voltage")
@@ -538,46 +542,46 @@ func TestFeatures(t *testing.T) {
 				// call function to check if it panics
 				batteryVoltage.GetLowBattery()
 			}
-			if data.Is(decoder.FeatureWiFi) {
-				wifi, ok := data.Data.(decoder.UplinkFeatureWiFi)
+			if decodedPayload.Is(decoder.FeatureWiFi) {
+				wifi, ok := decodedPayload.Data.(decoder.UplinkFeatureWiFi)
 				if !ok {
-					t.Fatalf("expected UplinkFeatureWiFi, got %T", data)
+					t.Fatalf("expected UplinkFeatureWiFi, got %T", decodedPayload)
 				}
 				if wifi.GetAccessPoints() == nil {
 					t.Fatalf("expected non nil access points")
 				}
 			}
-			if data.Is(decoder.FeaturePhotovoltaic) {
-				photovoltaicVoltage, ok := data.Data.(decoder.UplinkFeaturePhotovoltaic)
+			if decodedPayload.Is(decoder.FeaturePhotovoltaic) {
+				photovoltaicVoltage, ok := decodedPayload.Data.(decoder.UplinkFeaturePhotovoltaic)
 				if !ok {
-					t.Fatalf("expected UplinkFeaturePhotovoltaic, got %T", data)
+					t.Fatalf("expected UplinkFeaturePhotovoltaic, got %T", decodedPayload)
 				}
 				if photovoltaicVoltage.GetPhotovoltaicVoltage() == 0 {
 					t.Fatalf("expected non zero photovoltaic voltage")
 				}
 			}
-			if data.Is(decoder.FeatureTemperature) {
-				temperature, ok := data.Data.(decoder.UplinkFeatureTemperature)
+			if decodedPayload.Is(decoder.FeatureTemperature) {
+				temperature, ok := decodedPayload.Data.(decoder.UplinkFeatureTemperature)
 				if !ok {
-					t.Fatalf("expected UplinkFeatureTemperature, got %T", data)
+					t.Fatalf("expected UplinkFeatureTemperature, got %T", decodedPayload)
 				}
 				if temperature.GetTemperature() == 0 {
 					t.Fatalf("expected non zero temperature")
 				}
 			}
-			if data.Is(decoder.FeatureHumidity) {
-				humidity, ok := data.Data.(decoder.UplinkFeatureHumidity)
+			if decodedPayload.Is(decoder.FeatureHumidity) {
+				humidity, ok := decodedPayload.Data.(decoder.UplinkFeatureHumidity)
 				if !ok {
-					t.Fatalf("expected UplinkFeatureHumidity, got %T", data)
+					t.Fatalf("expected UplinkFeatureHumidity, got %T", decodedPayload)
 				}
 				if humidity.GetHumidity() == 0 {
 					t.Fatalf("expected non zero humidity")
 				}
 			}
-			if data.Is(decoder.FeatureConfig) {
-				config, ok := data.Data.(decoder.UplinkFeatureConfig)
+			if decodedPayload.Is(decoder.FeatureConfig) {
+				config, ok := decodedPayload.Data.(decoder.UplinkFeatureConfig)
 				if !ok {
-					t.Fatalf("expected UplinkFeatureConfig, got %T", data)
+					t.Fatalf("expected UplinkFeatureConfig, got %T", decodedPayload)
 				}
 				// call functions to check if it panics
 				config.GetBle()
@@ -600,10 +604,10 @@ func TestFeatures(t *testing.T) {
 				config.GetBatchSize()
 				config.GetBufferSize()
 			}
-			if data.Is(decoder.FeatureFirmwareVersion) {
-				firmwareVersion, ok := data.Data.(decoder.UplinkFeatureFirmwareVersion)
+			if decodedPayload.Is(decoder.FeatureFirmwareVersion) {
+				firmwareVersion, ok := decodedPayload.Data.(decoder.UplinkFeatureFirmwareVersion)
 				if !ok {
-					t.Fatalf("expected UplinkFeatureFirmwareVersion, got %T", data)
+					t.Fatalf("expected UplinkFeatureFirmwareVersion, got %T", decodedPayload)
 				}
 				if firmwareVersion.GetFirmwareVersion() == "" {
 					t.Fatalf("expected non empty firmware version")
