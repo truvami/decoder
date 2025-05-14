@@ -6,6 +6,12 @@ import (
 	"github.com/truvami/decoder/pkg/decoder"
 )
 
+type TagConfig struct {
+	Name      string
+	Tag       uint8
+	Transform func(any) any
+}
+
 type FieldConfig struct {
 	Name      string
 	Start     int
@@ -17,6 +23,7 @@ type FieldConfig struct {
 
 // PayloadConfig defines the overall structure of the payload, including the target struct type
 type PayloadConfig struct {
+	Tags       []TagConfig
 	Fields     []FieldConfig
 	TargetType reflect.Type
 	Features   []decoder.Feature
