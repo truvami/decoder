@@ -77,6 +77,12 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 					battery := float32(v.(int)) / 1000
 					return battery
 				}},
+				{Name: "GnssScans", Optional: true, Tag: 0x4b, Transform: func(v any) any {
+					return uint16((v.(int) >> 16) & 0xffff)
+				}},
+				{Name: "WifiScans", Optional: true, Tag: 0x4b, Transform: func(v any) any {
+					return uint16(v.(int) & 0xffff)
+				}},
 			},
 			TargetType: reflect.TypeOf(Port151Payload{}),
 			Features:   features,

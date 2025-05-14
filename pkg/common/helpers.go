@@ -122,41 +122,43 @@ func Parse(payloadHex string, config *PayloadConfig) (any, error) {
 
 	if len(config.Tags) != 0 {
 		var index uint8 = 3
-		for index+2 < uint8(len(payloadBytes)) {
+		var payloadLength uint8 = uint8(len(payloadBytes))
+		for index+2 < payloadLength {
 			var found bool = false
-			for _, tag := range config.Tags {
-				if tag.Tag == payloadBytes[index] {
-					found = true
-					optional := tag.Optional
+			var tag uint8 = payloadBytes[index]
+			index++
+			var length uint8 = payloadBytes[index]
+			index++
 
-					index++
-					var length uint8 = payloadBytes[index]
-					index++
+			for _, tagConfig := range config.Tags {
+				if tagConfig.Tag == tag {
+					found = true
 
 					value, err := extractFieldValue(payloadBytes, int(index), int(length), false, false)
 					if err != nil {
 						return nil, err
 					}
-					index += length
 
-					fieldValue := targetValue.FieldByName(tag.Name)
-					if fieldValue.IsValid() && fieldValue.CanSet() && tag.Transform != nil {
-						if value == nil && optional {
+					fieldValue := targetValue.FieldByName(tagConfig.Name)
+					if fieldValue.IsValid() && fieldValue.CanSet() && tagConfig.Transform != nil {
+						if value == nil && tagConfig.Optional {
 							continue
 						}
 
 						// transform value from pointer to value
-						if fieldValue.Kind() == reflect.Ptr {
+						if fieldValue.Kind() == reflect.Pointer {
 							fieldValue.Set(reflect.New(fieldValue.Type().Elem()))
-							fieldValue.Elem().Set(reflect.ValueOf(tag.Transform(value)))
+							fieldValue.Elem().Set(reflect.ValueOf(tagConfig.Transform(value)))
 							continue
 						}
-						fieldValue.Set(reflect.ValueOf(tag.Transform(value)))
+						fieldValue.Set(reflect.ValueOf(tagConfig.Transform(value)))
 					}
 				}
 			}
-			if !found {
-				return nil, fmt.Errorf("unknown tag %x", payloadBytes[index])
+			if found {
+				index += length
+			} else {
+				return nil, fmt.Errorf("unknown tag %x", tag)
 			}
 		}
 
@@ -342,6 +344,10 @@ func uintToBytes(value uint64, length int) []byte {
 		value >>= 8
 	}
 	return buf
+}
+
+func Uint16Ptr(value uint16) *uint16 {
+	return &value
 }
 
 func Float32Ptr(value float32) *float32 {

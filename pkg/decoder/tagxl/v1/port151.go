@@ -7,7 +7,9 @@ import (
 )
 
 type Port151Payload struct {
-	Battery *float32 `json:"battery" validate:"gte=1,lte=5"`
+	Battery   *float32 `json:"battery" validate:"gte=1,lte=5"`
+	GnssScans *uint16  `json:"gnssScans"`
+	WifiScans *uint16  `json:"wifiScans"`
 }
 
 var _ decoder.UplinkFeatureBase = &Port151Payload{}

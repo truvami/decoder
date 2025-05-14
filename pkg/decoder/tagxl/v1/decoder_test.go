@@ -125,6 +125,42 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
+			port:    151,
+			payload: "4c0b0245020d914b0403de0000",
+			expected: Port151Payload{
+				Battery:   helpers.Float32Ptr(3.473),
+				GnssScans: helpers.Uint16Ptr(990),
+				WifiScans: helpers.Uint16Ptr(0),
+			},
+		},
+		{
+			port:    151,
+			payload: "4c0b0245020d7b4b0404fc0000",
+			expected: Port151Payload{
+				Battery:   helpers.Float32Ptr(3.451),
+				GnssScans: helpers.Uint16Ptr(1276),
+				WifiScans: helpers.Uint16Ptr(0),
+			},
+		},
+		{
+			port:    151,
+			payload: "4c0b0245020db94b0400420000",
+			expected: Port151Payload{
+				Battery:   helpers.Float32Ptr(3.513),
+				GnssScans: helpers.Uint16Ptr(66),
+				WifiScans: helpers.Uint16Ptr(0),
+			},
+		},
+		{
+			port:    151,
+			payload: "4c0b0245020d8f4b0401970000",
+			expected: Port151Payload{
+				Battery:   helpers.Float32Ptr(3.471),
+				GnssScans: helpers.Uint16Ptr(407),
+				WifiScans: helpers.Uint16Ptr(0),
+			},
+		},
+		{
 			port:    152,
 			payload: "020c62206822f120000d00000024",
 			expected: Port152Payload{
