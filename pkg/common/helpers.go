@@ -107,7 +107,7 @@ func UnwrapError(err error) []error {
 	return errs
 }
 
-// DecodeLoRaWANPayload decodes the payload based on the provided configuration and populates the target struct
+// Parse decodes the payload based on the provided configuration and populates the target struct
 func Parse(payloadHex string, config *PayloadConfig) (any, error) {
 	// Convert hex payload to bytes
 	payloadBytes, err := HexStringToBytes(payloadHex)
@@ -119,6 +119,53 @@ func Parse(payloadHex string, config *PayloadConfig) (any, error) {
 	targetValue := reflect.New(config.TargetType).Elem()
 
 	errs := []error{}
+
+	if len(config.Tags) != 0 {
+		var index uint8 = 3
+		var payloadLength uint8 = uint8(len(payloadBytes))
+		for index+2 < payloadLength {
+			var found bool = false
+			var tag uint8 = payloadBytes[index]
+			index++
+			var length uint8 = payloadBytes[index]
+			index++
+
+			for _, tagConfig := range config.Tags {
+				if tagConfig.Tag == tag {
+					found = true
+
+					value, err := extractFieldValue(payloadBytes, int(index), int(length), false, false)
+					if err != nil {
+						return nil, err
+					}
+
+					fieldValue := targetValue.FieldByName(tagConfig.Name)
+					if fieldValue.IsValid() && fieldValue.CanSet() && tagConfig.Transform != nil {
+						if value == nil && tagConfig.Optional {
+							continue
+						}
+
+						config.Features = append(config.Features, tagConfig.Feature...)
+
+						// transform value from pointer to value
+						if fieldValue.Kind() == reflect.Pointer {
+							fieldValue.Set(reflect.New(fieldValue.Type().Elem()))
+							fieldValue.Elem().Set(reflect.ValueOf(tagConfig.Transform(value)))
+							continue
+						}
+						fieldValue.Set(reflect.ValueOf(tagConfig.Transform(value)))
+					}
+				}
+			}
+			if found {
+				index += length
+			} else {
+				return nil, fmt.Errorf("unknown tag %x", tag)
+			}
+		}
+
+		return targetValue.Interface(), errors.Join(errs...)
+	}
 
 	// Iterate over the fields in the config and extract their values
 	for _, field := range config.Fields {
@@ -196,6 +243,15 @@ func HexNullPad(payload *string, config *PayloadConfig) string {
 
 func ValidateLength(payload *string, config *PayloadConfig) error {
 	var payloadLength = len(*payload) / 2
+
+	if len(config.Tags) != 0 {
+		var minLength = 3
+		if payloadLength < minLength {
+			return WrapErrorWithMessage(ErrInvalidPayloadLength, ErrPayloadTooShort, fmt.Sprintf("payload length %d is less than minimum required length %d", payloadLength, minLength))
+		} else {
+			return nil
+		}
+	}
 
 	var minLength = 0
 	for _, field := range config.Fields {
@@ -290,6 +346,14 @@ func uintToBytes(value uint64, length int) []byte {
 		value >>= 8
 	}
 	return buf
+}
+
+func Uint16Ptr(value uint16) *uint16 {
+	return &value
+}
+
+func Float32Ptr(value float32) *float32 {
+	return &value
 }
 
 func TimePointer(timestamp float64) *time.Time {

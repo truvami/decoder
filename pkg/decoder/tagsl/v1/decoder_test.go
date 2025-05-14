@@ -1857,8 +1857,9 @@ func TestPayloadTooLong(t *testing.T) {
 
 func TestFeatures(t *testing.T) {
 	tests := []struct {
-		payload string
-		port    uint8
+		payload         string
+		port            uint8
+		allowNoFeatures bool
 	}{
 		{
 			payload: "8002cdcd1300744f5e166018040b14341a",
@@ -1889,8 +1890,9 @@ func TestFeatures(t *testing.T) {
 			port:    7,
 		},
 		{
-			payload: "012c141e9c455738304543434343460078012c01a8c0",
-			port:    8,
+			payload:         "012c141e9c455738304543434343460078012c01a8c0",
+			port:            8,
+			allowNoFeatures: true,
 		},
 		{
 			payload: "0002d308b50082457f16eb66c4a5cd0ed3",
@@ -1950,6 +1952,10 @@ func TestFeatures(t *testing.T) {
 			}
 			// check if it panics
 			base.GetTimestamp()
+
+			if len(decodedPayload.GetFeatures()) == 0 && !test.allowNoFeatures {
+				t.Error("expected features, got none")
+			}
 
 			if decodedPayload.Is(decoder.FeatureGNSS) {
 				gnss, ok := decodedPayload.Data.(decoder.UplinkFeatureGNSS)

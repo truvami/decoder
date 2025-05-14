@@ -73,138 +73,102 @@ func TestDecode(t *testing.T) {
 		expected    any
 		expectedErr string
 	}{
+
 		{
-			payload:     "87821f50490200b520fbe977844d222a3a14a89293956245cc75a9ca1bbc25ddf658542909",
-			port:        192,
-			devEui:      "10CE45FFFE00C7EC",
-			autoPadding: false,
-			expected:    &exampleResponse,
-		},
-		{
-			payload:     "87821f50490200b520fbe977844d222a3a14a89293956245cc75a9ca1bbc25ddf658542909",
-			port:        192,
-			devEui:      "10CE45FFFE00C7ED",
-			autoPadding: false,
-			expected:    nil,
-			expectedErr: "invalid character 'j' looking for beginning of value",
-		},
-		{
-			payload:     "00",
 			port:        0,
+			payload:     "00",
 			devEui:      "",
 			autoPadding: false,
 			expected:    nil,
 			expectedErr: "port 0 not supported",
 		},
 		{
-			payload: "4c07014c04681a4727",
 			port:    150,
+			payload: "4c07014c04681a4727",
 			expected: Port150Payload{
 				Timestamp: time.Date(2025, 5, 6, 17, 30, 15, 0, time.UTC),
 			},
 		},
 		{
-			payload: "4c07014c04681a5127",
 			port:    150,
+			payload: "4c07014c04681a5127",
 			expected: Port150Payload{
 				Timestamp: time.Date(2025, 5, 6, 18, 12, 55, 0, time.UTC),
 			},
 		},
 		{
-			payload: "0f0078012c000a03e80f1e0e9e7393fffe0002dead10cc0953046e",
+			port:        151,
+			payload:     "4c0501ff020000",
+			expected:    Port151Payload{},
+			expectedErr: "unknown tag ff",
+		},
+		{
 			port:    151,
+			payload: "4c050145020a92",
 			expected: Port151Payload{
-				Ble:                      false,
-				Gnss:                     false,
-				Wifi:                     false,
-				Acceleration:             false,
-				Rfu:                      15,
-				MovingInterval:           120,
-				SteadyInterval:           300,
-				AccelerationThreshold:    10,
-				AccelerationDelay:        1000,
-				HeartbeatInterval:        15,
-				FwuAdvertisementInterval: 30,
-				BatteryVoltage:           3.742,
-				FirmwareHash:             "7393fffe",
-				ResetCount:               2,
-				ResetCause:               3735883980,
-				GnssScans:                2387,
-				WifiScans:                1134,
+				Battery: helpers.Float32Ptr(2.706),
 			},
 		},
 		{
-			payload: "57012c0258006403e81e3c0dbfd6ce814d0003c0debabe0acd04b9",
 			port:    151,
+			payload: "4c050145020a93",
 			expected: Port151Payload{
-				Ble:                      false,
-				Gnss:                     true,
-				Wifi:                     false,
-				Acceleration:             true,
-				Rfu:                      7,
-				MovingInterval:           300,
-				SteadyInterval:           600,
-				AccelerationThreshold:    100,
-				AccelerationDelay:        1000,
-				HeartbeatInterval:        30,
-				FwuAdvertisementInterval: 60,
-				BatteryVoltage:           3.519,
-				FirmwareHash:             "d6ce814d",
-				ResetCount:               3,
-				ResetCause:               3235822270,
-				GnssScans:                2765,
-				WifiScans:                1209,
+				Battery: helpers.Float32Ptr(2.707),
 			},
 		},
 		{
-			payload: "a3025804b0012c05dc3c780d70ca6a55150005feedface0cae09b0",
 			port:    151,
+			payload: "4c050145020a96",
 			expected: Port151Payload{
-				Ble:                      true,
-				Gnss:                     false,
-				Wifi:                     true,
-				Acceleration:             false,
-				Rfu:                      3,
-				MovingInterval:           600,
-				SteadyInterval:           1200,
-				AccelerationThreshold:    300,
-				AccelerationDelay:        1500,
-				HeartbeatInterval:        60,
-				FwuAdvertisementInterval: 120,
-				BatteryVoltage:           3.440,
-				FirmwareHash:             "ca6a5515",
-				ResetCount:               5,
-				ResetCause:               4277009102,
-				GnssScans:                3246,
-				WifiScans:                2480,
+				Battery: helpers.Float32Ptr(2.710),
 			},
 		},
 		{
-			payload: "f007080e1001c207d078f00c893113870f00088badf00d10000c00",
 			port:    151,
+			payload: "4c050145020b10",
 			expected: Port151Payload{
-				Ble:                      true,
-				Gnss:                     true,
-				Wifi:                     true,
-				Acceleration:             true,
-				Rfu:                      0,
-				MovingInterval:           1800,
-				SteadyInterval:           3600,
-				AccelerationThreshold:    450,
-				AccelerationDelay:        2000,
-				HeartbeatInterval:        120,
-				FwuAdvertisementInterval: 240,
-				BatteryVoltage:           3.209,
-				FirmwareHash:             "3113870f",
-				ResetCount:               8,
-				ResetCause:               2343432205,
-				GnssScans:                4096,
-				WifiScans:                3072,
+				Battery: helpers.Float32Ptr(2.832),
 			},
 		},
 		{
-			payload: "020c62206822f120000d00000024",
+			port:    151,
+			payload: "4c0b0245020d914b0403de0000",
+			expected: Port151Payload{
+				Battery:   helpers.Float32Ptr(3.473),
+				GnssScans: helpers.Uint16Ptr(990),
+				WifiScans: helpers.Uint16Ptr(0),
+			},
+		},
+		{
+			port:    151,
+			payload: "4c0b0245020d7b4b0404fc0000",
+			expected: Port151Payload{
+				Battery:   helpers.Float32Ptr(3.451),
+				GnssScans: helpers.Uint16Ptr(1276),
+				WifiScans: helpers.Uint16Ptr(0),
+			},
+		},
+		{
+			port:    151,
+			payload: "4c0b0245020db94b0400420000",
+			expected: Port151Payload{
+				Battery:   helpers.Float32Ptr(3.513),
+				GnssScans: helpers.Uint16Ptr(66),
+				WifiScans: helpers.Uint16Ptr(0),
+			},
+		},
+		{
+			port:    151,
+			payload: "4c0b0245020d8f4b0401970000",
+			expected: Port151Payload{
+				Battery:   helpers.Float32Ptr(3.471),
+				GnssScans: helpers.Uint16Ptr(407),
+				WifiScans: helpers.Uint16Ptr(0),
+			},
+		},
+		{
 			port:    152,
+			payload: "020c62206822f120000d00000024",
 			expected: Port152Payload{
 				Version:           2,
 				SequenceNumber:    98,
@@ -216,8 +180,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload: "020c09016823166a000000000109",
 			port:    152,
+			payload: "020c09016823166a000000000109",
 			expected: Port152Payload{
 				Version:           2,
 				SequenceNumber:    9,
@@ -229,8 +193,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload: "020cea0268230e60000000000015",
 			port:    152,
+			payload: "020cea0268230e60000000000015",
 			expected: Port152Payload{
 				Version:           2,
 				SequenceNumber:    234,
@@ -242,8 +206,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload: "010b0266acbcf0000000000756",
 			port:    152,
+			payload: "010b0266acbcf0000000000756",
 			expected: Port152Payload{
 				Version:           1,
 				NewRotationState:  2,
@@ -254,8 +218,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload: "010b1066acbe0c00a200000087",
 			port:    152,
+			payload: "010b1066acbe0c00a200000087",
 			expected: Port152Payload{
 				Version:           1,
 				NewRotationState:  0,
@@ -266,8 +230,23 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload: "00d63385f8ee30c2d0a0382c2601db",
+			port:        192,
+			payload:     "87821f50490200b520fbe977844d222a3a14a89293956245cc75a9ca1bbc25ddf658542909",
+			devEui:      "10CE45FFFE00C7EC",
+			autoPadding: false,
+			expected:    &exampleResponse,
+		},
+		{
+			port:        192,
+			payload:     "87821f50490200b520fbe977844d222a3a14a89293956245cc75a9ca1bbc25ddf658542909",
+			devEui:      "10CE45FFFE00C7ED",
+			autoPadding: false,
+			expected:    &exampleResponse,
+			expectedErr: "",
+		},
+		{
 			port:    197,
+			payload: "00d63385f8ee30c2d0a0382c2601db",
 			expected: Port197Payload{
 				Tag:   byte(0x00),
 				Rssi1: -42,
@@ -277,8 +256,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload: "64c8b5eded55a313c0a0b8b5e86e31b894a765f3ad40",
 			port:    197,
+			payload: "64c8b5eded55a313c0a0b8b5e86e31b894a765f3ad40",
 			expected: Port197Payload{
 				Tag:   byte(0x64),
 				Rssi1: -56,
@@ -290,8 +269,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload: "aebd6fbcfdd76434bb7e7cbff22fc5b900dc0af60588b7010161302d9c",
 			port:    197,
+			payload: "aebd6fbcfdd76434bb7e7cbff22fc5b900dc0af60588b7010161302d9c",
 			expected: Port197Payload{
 				Tag:   byte(0xae),
 				Rssi1: -67,
@@ -305,8 +284,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload: "fdb7218f6c166fadb359ea3bdec77daff72faac81784ab263386a455d3a73592a063900b",
 			port:    197,
+			payload: "fdb7218f6c166fadb359ea3bdec77daff72faac81784ab263386a455d3a73592a063900b",
 			expected: Port197Payload{
 				Tag:   byte(0xfd),
 				Rssi1: -73,
@@ -327,6 +306,11 @@ func TestDecode(t *testing.T) {
 		t.Run(fmt.Sprintf("TestPort%vWith%v", test.port, test.payload), func(t *testing.T) {
 			decoder := NewTagXLv1Decoder(middleware, WithAutoPadding(test.autoPadding), WithFCount(1))
 			got, err := decoder.Decode(test.payload, test.port, test.devEui)
+
+			if err == nil && len(test.expectedErr) != 0 {
+				t.Fatalf("expected error: %v, got %v", test.expectedErr, nil)
+			}
+
 			if err != nil && len(test.expectedErr) == 0 {
 				t.Fatalf("unexpected error: %v", err)
 			}
@@ -398,17 +382,18 @@ func TestPayloadTooLong(t *testing.T) {
 
 func TestFeatures(t *testing.T) {
 	tests := []struct {
-		payload        string
-		port           uint8
-		skipValidation bool
+		payload         string
+		port            uint8
+		allowNoFeatures bool
 	}{
 		{
-			payload: "4c07014c04681a5127",
-			port:    150,
+			payload:         "4c07014c04681a5127",
+			port:            150,
+			allowNoFeatures: true,
 		},
 		{
-			payload: "57012c0258006403e81e3c0dbfd6ce814d0003c0debabe0acd04b9",
 			port:    151,
+			payload: "4c050145020b10",
 		},
 		{
 			payload: "010b0266acbcf0000000000756",
@@ -431,8 +416,9 @@ func TestFeatures(t *testing.T) {
 			port:    197,
 		},
 		{
-			payload: "86b5277140484a89b8f63ccf67affbfeb519b854f9d447808a50785bdfe86a77",
-			port:    199,
+			payload:         "86b5277140484a89b8f63ccf67affbfeb519b854f9d447808a50785bdfe86a77",
+			port:            199,
+			allowNoFeatures: true,
 		},
 	}
 
@@ -461,11 +447,7 @@ func TestFeatures(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestFeaturesWithPort%vAndPayload%v", test.port, test.payload), func(t *testing.T) {
-			d := NewTagXLv1Decoder(
-				middleware,
-				WithSkipValidation(test.skipValidation),
-				WithFCount(42),
-			)
+			d := NewTagXLv1Decoder(middleware, WithFCount(42))
 			decodedPayload, err := d.Decode(test.payload, test.port, "927da4b72110927d")
 			if err != nil {
 				t.Fatalf("error %s", err)
@@ -478,6 +460,10 @@ func TestFeatures(t *testing.T) {
 			}
 			// check if it panics
 			base.GetTimestamp()
+
+			if len(decodedPayload.GetFeatures()) == 0 && !test.allowNoFeatures {
+				t.Error("expected features, got none")
+			}
 
 			if decodedPayload.Is(decoder.FeatureGNSS) {
 				gnss, ok := decodedPayload.Data.(decoder.UplinkFeatureGNSS)
