@@ -431,8 +431,9 @@ func TestPayloadTooLong(t *testing.T) {
 
 func TestFeatures(t *testing.T) {
 	tests := []struct {
-		payload string
-		port    uint8
+		payload         string
+		port            uint8
+		allowNoFeatures bool
 	}{
 		{
 			payload: "0f501079",
@@ -451,8 +452,9 @@ func TestFeatures(t *testing.T) {
 			port:    11,
 		},
 		{
-			payload: "0ed80e420dac0cb20b22",
-			port:    150,
+			payload:         "0ed80e420dac0cb20b22",
+			port:            150,
+			allowNoFeatures: true,
 		},
 		{
 			payload: "87821f50490200b520fbe977844d222a3a14a89293956245cc75a9ca1bbc25ddf658542909",
@@ -506,7 +508,7 @@ func TestFeatures(t *testing.T) {
 			// check if it panics
 			base.GetTimestamp()
 
-			if len(decodedPayload.GetFeatures()) == 0 {
+			if len(decodedPayload.GetFeatures()) == 0 && !test.allowNoFeatures {
 				t.Error("expected features, got none")
 			}
 

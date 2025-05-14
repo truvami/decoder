@@ -126,9 +126,8 @@ func TestPayloadTooLong(t *testing.T) {
 
 func TestFeatures(t *testing.T) {
 	tests := []struct {
-		payload        string
-		port           uint8
-		skipValidation bool
+		payload string
+		port    uint8
 	}{
 		{
 			payload: "00000001fdd5c693000079300001b45d000000000000000000d71ce60000000000000b3fd724",
@@ -142,9 +141,7 @@ func TestFeatures(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestFeaturesWithPort%vAndPayload%v", test.port, test.payload), func(t *testing.T) {
-			d := NewNomadXLv1Decoder(
-				WithSkipValidation(test.skipValidation),
-			)
+			d := NewNomadXLv1Decoder()
 			decodedPayload, _ := d.Decode(test.payload, test.port, "")
 
 			// should be able to decode base feature

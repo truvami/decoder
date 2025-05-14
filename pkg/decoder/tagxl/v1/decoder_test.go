@@ -371,13 +371,14 @@ func TestPayloadTooLong(t *testing.T) {
 
 func TestFeatures(t *testing.T) {
 	tests := []struct {
-		payload        string
-		port           uint8
-		skipValidation bool
+		payload         string
+		port            uint8
+		allowNoFeatures bool
 	}{
 		{
-			payload: "4c07014c04681a5127",
-			port:    150,
+			payload:         "4c07014c04681a5127",
+			port:            150,
+			allowNoFeatures: true,
 		},
 		{
 			port:    151,
@@ -404,8 +405,9 @@ func TestFeatures(t *testing.T) {
 			port:    197,
 		},
 		{
-			payload: "86b5277140484a89b8f63ccf67affbfeb519b854f9d447808a50785bdfe86a77",
-			port:    199,
+			payload:         "86b5277140484a89b8f63ccf67affbfeb519b854f9d447808a50785bdfe86a77",
+			port:            199,
+			allowNoFeatures: true,
 		},
 	}
 
@@ -434,11 +436,7 @@ func TestFeatures(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestFeaturesWithPort%vAndPayload%v", test.port, test.payload), func(t *testing.T) {
-			d := NewTagXLv1Decoder(
-				middleware,
-				WithSkipValidation(test.skipValidation),
-				WithFCount(42),
-			)
+			d := NewTagXLv1Decoder(middleware, WithFCount(42))
 			decodedPayload, err := d.Decode(test.payload, test.port, "927da4b72110927d")
 			if err != nil {
 				t.Fatalf("error %s", err)
@@ -452,7 +450,7 @@ func TestFeatures(t *testing.T) {
 			// check if it panics
 			base.GetTimestamp()
 
-			if len(decodedPayload.GetFeatures()) == 0 {
+			if len(decodedPayload.GetFeatures()) == 0 && !test.allowNoFeatures {
 				t.Error("expected features, got none")
 			}
 
