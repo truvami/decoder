@@ -510,8 +510,8 @@ func TestFeatures(t *testing.T) {
 					t.Fatalf("expected UplinkFeatureConfigChange, got %T", decodedPayload)
 				}
 				// call functions to check if it panics
-				configChange.GetId()
-				configChange.GetSuccess()
+				configChange.GetConfigId()
+				configChange.GetConfigChange()
 			}
 			if decodedPayload.Is(decoder.FeatureFirmwareVersion) {
 				firmwareVersion, ok := decodedPayload.Data.(decoder.UplinkFeatureFirmwareVersion)
