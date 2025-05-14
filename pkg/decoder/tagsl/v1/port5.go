@@ -36,19 +36,19 @@ type Port5Payload struct {
 	ConfigChangeSuccess bool   `json:"configChangeSuccess"`
 	Moving              bool   `json:"moving"`
 	Mac1                string `json:"mac1"`
-	Rssi1               int8   `json:"rssi1"`
+	Rssi1               int8   `json:"rssi1" validate:"gte=-120,lte=-20"`
 	Mac2                string `json:"mac2"`
-	Rssi2               int8   `json:"rssi2"`
+	Rssi2               int8   `json:"rssi2" validate:"gte=-120,lte=-20"`
 	Mac3                string `json:"mac3"`
-	Rssi3               int8   `json:"rssi3"`
+	Rssi3               int8   `json:"rssi3" validate:"gte=-120,lte=-20"`
 	Mac4                string `json:"mac4"`
-	Rssi4               int8   `json:"rssi4"`
+	Rssi4               int8   `json:"rssi4" validate:"gte=-120,lte=-20"`
 	Mac5                string `json:"mac5"`
-	Rssi5               int8   `json:"rssi5"`
+	Rssi5               int8   `json:"rssi5" validate:"gte=-120,lte=-20"`
 	Mac6                string `json:"mac6"`
-	Rssi6               int8   `json:"rssi6"`
+	Rssi6               int8   `json:"rssi6" validate:"gte=-120,lte=-20"`
 	Mac7                string `json:"mac7"`
-	Rssi7               int8   `json:"rssi7"`
+	Rssi7               int8   `json:"rssi7" validate:"gte=-120,lte=-20"`
 }
 
 var _ decoder.UplinkFeatureBase = &Port5Payload{}
