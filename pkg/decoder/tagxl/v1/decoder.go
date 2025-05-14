@@ -72,10 +72,10 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 		var features = []decoder.Feature{}
 		return common.PayloadConfig{
 			Tags: []common.TagConfig{
-				{Name: "Battery", Tag: 0x45, Transform: func(v any) any {
+				{Name: "Battery", Optional: true, Tag: 0x45, Transform: func(v any) any {
 					features = append(features, decoder.FeatureBattery)
 					battery := float32(v.(int)) / 1000
-					return &battery
+					return battery
 				}},
 			},
 			TargetType: reflect.TypeOf(Port151Payload{}),

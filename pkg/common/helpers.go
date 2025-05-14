@@ -127,6 +127,7 @@ func Parse(payloadHex string, config *PayloadConfig) (any, error) {
 			for _, tag := range config.Tags {
 				if tag.Tag == payloadBytes[index] {
 					found = true
+					optional := tag.Optional
 
 					index++
 					var length uint8 = payloadBytes[index]
@@ -140,6 +141,16 @@ func Parse(payloadHex string, config *PayloadConfig) (any, error) {
 
 					fieldValue := targetValue.FieldByName(tag.Name)
 					if fieldValue.IsValid() && fieldValue.CanSet() && tag.Transform != nil {
+						if value == nil && optional {
+							continue
+						}
+
+						// transform value from pointer to value
+						if fieldValue.Kind() == reflect.Ptr {
+							fieldValue.Set(reflect.New(fieldValue.Type().Elem()))
+							fieldValue.Elem().Set(reflect.ValueOf(tag.Transform(value)))
+							continue
+						}
 						fieldValue.Set(reflect.ValueOf(tag.Transform(value)))
 					}
 				}

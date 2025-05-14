@@ -9,6 +9,7 @@ import (
 type TagConfig struct {
 	Name      string
 	Tag       uint8
+	Optional  bool
 	Transform func(any) any
 }
 
