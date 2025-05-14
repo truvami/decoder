@@ -97,6 +97,12 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
+			port:        151,
+			payload:     "4c0501ff020000",
+			expected:    Port151Payload{},
+			expectedErr: "unknown tag ff",
+		},
+		{
 			port:    151,
 			payload: "4c050145020a92",
 			expected: Port151Payload{
@@ -235,8 +241,8 @@ func TestDecode(t *testing.T) {
 			payload:     "87821f50490200b520fbe977844d222a3a14a89293956245cc75a9ca1bbc25ddf658542909",
 			devEui:      "10CE45FFFE00C7ED",
 			autoPadding: false,
-			expected:    nil,
-			expectedErr: "invalid character 'j' looking for beginning of value",
+			expected:    &exampleResponse,
+			expectedErr: "",
 		},
 		{
 			port:    197,
@@ -300,6 +306,11 @@ func TestDecode(t *testing.T) {
 		t.Run(fmt.Sprintf("TestPort%vWith%v", test.port, test.payload), func(t *testing.T) {
 			decoder := NewTagXLv1Decoder(middleware, WithAutoPadding(test.autoPadding), WithFCount(1))
 			got, err := decoder.Decode(test.payload, test.port, test.devEui)
+
+			if err == nil && len(test.expectedErr) != 0 {
+				t.Fatalf("expected error: %v, got %v", test.expectedErr, nil)
+			}
+
 			if err != nil && len(test.expectedErr) == 0 {
 				t.Fatalf("unexpected error: %v", err)
 			}
