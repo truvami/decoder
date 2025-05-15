@@ -151,7 +151,7 @@ func Parse(payloadHex string, config *PayloadConfig) (any, error) {
 						if fieldValue.Kind() == reflect.Pointer {
 							// if fieldValue is nil set the value to nil
 							if value == nil {
-								fieldValue.Set(reflect.New(nil))
+								fieldValue.Set(reflect.Zero(fieldValue.Type()))
 								continue
 							}
 
