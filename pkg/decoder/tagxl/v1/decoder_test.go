@@ -98,6 +98,12 @@ func TestDecode(t *testing.T) {
 		},
 		{
 			port:        151,
+			payload:     "ff",
+			expected:    Port151Payload{},
+			expectedErr: "port not supported: port 151 tag ff",
+		},
+		{
+			port:        151,
 			payload:     "4c0501ff020000",
 			expected:    Port151Payload{},
 			expectedErr: "unknown tag ff",
@@ -165,6 +171,12 @@ func TestDecode(t *testing.T) {
 				GnssScans: helpers.Uint16Ptr(407),
 				WifiScans: helpers.Uint16Ptr(0),
 			},
+		},
+		{
+			port:        152,
+			payload:     "ff",
+			expected:    Port152Payload{},
+			expectedErr: "port not supported: version 255 for port 152 not supported",
 		},
 		{
 			port:    152,
@@ -245,6 +257,12 @@ func TestDecode(t *testing.T) {
 			expectedErr: "",
 		},
 		{
+			port:        197,
+			payload:     "ff",
+			expected:    Port197Payload{},
+			expectedErr: "port not supported: version 255 for port 197 not supported",
+		},
+		{
 			port:    197,
 			payload: "003385f8ee30c2a0382c2601db",
 			expected: Port197Payload{
@@ -259,6 +277,27 @@ func TestDecode(t *testing.T) {
 				Mac1: "b5eded55a313",
 				Mac2: "a0b8b5e86e31",
 				Mac3: "94a765f3ad40",
+			},
+		},
+		{
+			port:    197,
+			payload: "006fbcfdd764347e7cbff22fc500dc0af60588010161302d9c",
+			expected: Port197Payload{
+				Mac1: "6fbcfdd76434",
+				Mac2: "7e7cbff22fc5",
+				Mac3: "00dc0af60588",
+				Mac4: "010161302d9c",
+			},
+		},
+		{
+			port:    197,
+			payload: "00218f6c166fad59ea3bdec77df72faac81784263386a455d33592a063900b",
+			expected: Port197Payload{
+				Mac1: "218f6c166fad",
+				Mac2: "59ea3bdec77d",
+				Mac3: "f72faac81784",
+				Mac4: "263386a455d3",
+				Mac5: "3592a063900b",
 			},
 		},
 		{

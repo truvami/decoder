@@ -127,7 +127,7 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 				Features:   []decoder.Feature{decoder.FeatureRotationState, decoder.FeatureSequenceNumber},
 			}, nil
 		default:
-			return common.PayloadConfig{}, fmt.Errorf("%w: version %v for port 152 not supported", common.ErrPortNotSupported, version)
+			return common.PayloadConfig{}, fmt.Errorf("%w: version %v for port %d not supported", common.ErrPortNotSupported, version, port)
 		}
 	case 197:
 		var version uint8 = payload[0]
@@ -162,7 +162,7 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 				Features:   []decoder.Feature{decoder.FeatureWiFi},
 			}, nil
 		default:
-			return common.PayloadConfig{}, fmt.Errorf("%w: version %v for port 152 not supported", common.ErrPortNotSupported, version)
+			return common.PayloadConfig{}, fmt.Errorf("%w: version %v for port %d not supported", common.ErrPortNotSupported, version, port)
 		}
 	}
 	return common.PayloadConfig{}, fmt.Errorf("%w: port %v not supported", common.ErrPortNotSupported, port)
