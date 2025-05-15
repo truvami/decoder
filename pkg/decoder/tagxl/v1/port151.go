@@ -44,36 +44,36 @@ func (p Port151Payload) GetBle() *bool { // coverage-ignore
 	return nil
 }
 
-func (p Port151Payload) GetGnss() *bool { // coverage-ignore
+func (p Port151Payload) GetGnss() *bool {
 	return p.GnssEnabled
 }
 
-func (p Port151Payload) GetWifi() *bool { // coverage-ignore
+func (p Port151Payload) GetWifi() *bool {
 	return p.WiFiEnabled
 }
 
-func (p Port151Payload) GetAcceleration() *bool { // coverage-ignore
+func (p Port151Payload) GetAcceleration() *bool {
 	return p.AccelerometerEnabled
 }
 
-func (p Port151Payload) GetMovingInterval() *uint32 { // coverage-ignore
-	if p.LocalizationIntervalWhileMoving == nil {
+func (p Port151Payload) GetMovingInterval() *uint32 {
+	if p.LocalizationIntervalWhileMoving == nil { // coverage-ignore
 		return nil
 	}
 	movingInterval := uint32(*p.LocalizationIntervalWhileMoving)
 	return &movingInterval
 }
 
-func (p Port151Payload) GetSteadyInterval() *uint32 { // coverage-ignore
-	if p.LocalizationIntervalWhileSteady == nil {
+func (p Port151Payload) GetSteadyInterval() *uint32 {
+	if p.LocalizationIntervalWhileSteady == nil { // coverage-ignore
 		return nil
 	}
 	steadyInterval := uint32(*p.LocalizationIntervalWhileSteady)
 	return &steadyInterval
 }
 
-func (p Port151Payload) GetConfigInterval() *uint32 { // coverage-ignore
-	if p.HeartbeatInterval == nil {
+func (p Port151Payload) GetConfigInterval() *uint32 {
+	if p.HeartbeatInterval == nil { // coverage-ignore
 		return nil
 	}
 	interval := uint32(*p.HeartbeatInterval)
