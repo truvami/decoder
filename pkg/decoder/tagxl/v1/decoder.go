@@ -115,6 +115,7 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 				{Name: "ResetCount", Optional: true, Tag: 0x49},
 				{Name: "ResetCause", Optional: true, Tag: 0x4a},
 			},
+			Features:   []decoder.Feature{decoder.FeatureConfig},
 			TargetType: reflect.TypeOf(Port151Payload{}),
 		}, nil
 	case 152:
