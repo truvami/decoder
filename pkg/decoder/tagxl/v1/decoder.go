@@ -87,8 +87,6 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 	case 152:
 		var version uint8 = payload[0]
 		switch version {
-		default:
-			return common.PayloadConfig{}, fmt.Errorf("%w: version %v for port 152 not supported", common.ErrPortNotSupported, version)
 		case 0x01:
 			return common.PayloadConfig{
 				Fields: []common.FieldConfig{
@@ -128,25 +126,44 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 				TargetType: reflect.TypeOf(Port152Payload{}),
 				Features:   []decoder.Feature{decoder.FeatureRotationState, decoder.FeatureSequenceNumber},
 			}, nil
+		default:
+			return common.PayloadConfig{}, fmt.Errorf("%w: version %v for port 152 not supported", common.ErrPortNotSupported, version)
 		}
 	case 197:
-		return common.PayloadConfig{
-			Fields: []common.FieldConfig{
-				{Name: "Tag", Start: 0, Length: 1},
-				{Name: "Rssi1", Start: 1, Length: 1},
-				{Name: "Mac1", Start: 2, Length: 6, Hex: true},
-				{Name: "Rssi2", Start: 8, Length: 1, Optional: true},
-				{Name: "Mac2", Start: 9, Length: 6, Optional: true, Hex: true},
-				{Name: "Rssi3", Start: 15, Length: 1, Optional: true},
-				{Name: "Mac3", Start: 16, Length: 6, Optional: true, Hex: true},
-				{Name: "Rssi4", Start: 22, Length: 1, Optional: true},
-				{Name: "Mac4", Start: 23, Length: 6, Optional: true, Hex: true},
-				{Name: "Rssi5", Start: 29, Length: 1, Optional: true},
-				{Name: "Mac5", Start: 30, Length: 6, Optional: true, Hex: true},
-			},
-			TargetType: reflect.TypeOf(Port197Payload{}),
-			Features:   []decoder.Feature{decoder.FeatureWiFi},
-		}, nil
+		var version uint8 = payload[0]
+		switch version {
+		case 0x00:
+			return common.PayloadConfig{
+				Fields: []common.FieldConfig{
+					{Name: "Mac1", Start: 1, Length: 6, Hex: true},
+					{Name: "Mac2", Start: 7, Length: 6, Optional: true, Hex: true},
+					{Name: "Mac3", Start: 13, Length: 6, Optional: true, Hex: true},
+					{Name: "Mac4", Start: 19, Length: 6, Optional: true, Hex: true},
+					{Name: "Mac5", Start: 25, Length: 6, Optional: true, Hex: true},
+				},
+				TargetType: reflect.TypeOf(Port197Payload{}),
+				Features:   []decoder.Feature{decoder.FeatureWiFi},
+			}, nil
+		case 0x01:
+			return common.PayloadConfig{
+				Fields: []common.FieldConfig{
+					{Name: "Rssi1", Start: 1, Length: 1},
+					{Name: "Mac1", Start: 2, Length: 6, Hex: true},
+					{Name: "Rssi2", Start: 8, Length: 1, Optional: true},
+					{Name: "Mac2", Start: 9, Length: 6, Optional: true, Hex: true},
+					{Name: "Rssi3", Start: 15, Length: 1, Optional: true},
+					{Name: "Mac3", Start: 16, Length: 6, Optional: true, Hex: true},
+					{Name: "Rssi4", Start: 22, Length: 1, Optional: true},
+					{Name: "Mac4", Start: 23, Length: 6, Optional: true, Hex: true},
+					{Name: "Rssi5", Start: 29, Length: 1, Optional: true},
+					{Name: "Mac5", Start: 30, Length: 6, Optional: true, Hex: true},
+				},
+				TargetType: reflect.TypeOf(Port197Payload{}),
+				Features:   []decoder.Feature{decoder.FeatureWiFi},
+			}, nil
+		default:
+			return common.PayloadConfig{}, fmt.Errorf("%w: version %v for port 152 not supported", common.ErrPortNotSupported, version)
+		}
 	}
 	return common.PayloadConfig{}, fmt.Errorf("%w: port %v not supported", common.ErrPortNotSupported, port)
 }

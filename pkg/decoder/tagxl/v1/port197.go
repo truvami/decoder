@@ -9,7 +9,7 @@ import (
 // +------+------+-----------------------------------------------+------------+
 // | Byte | Size | Description                                   | Format     |
 // +------+------+-----------------------------------------------+------------+
-// | 0    | 1    | unknown tag probably bit field                | byte       |
+// | 0    | 1    | version                                       | byte       |
 // | 1    | 1    | rssi signal 1                                 | int8       |
 // | 2    | 6    | mac address signal 1                          | byte[6]    |
 // | 8    | 1    | rssi signal 2                                 | int8       |
@@ -23,7 +23,6 @@ import (
 // +------+------+-----------------------------------------------+------------+
 
 type Port197Payload struct {
-	Tag   byte   `json:"tag"`
 	Rssi1 int8   `json:"rssi1" validate:"gte=-120,lte=-20"`
 	Mac1  string `json:"mac1"`
 	Rssi2 int8   `json:"rssi2" validate:"gte=-120,lte=-20"`
@@ -46,35 +45,35 @@ func (p Port197Payload) GetTimestamp() *time.Time {
 func (p Port197Payload) GetAccessPoints() []decoder.AccessPoint {
 	accessPoints := []decoder.AccessPoint{}
 
-	if p.Rssi1 != 0 && p.Mac1 != "" {
+	if p.Mac1 != "" {
 		accessPoints = append(accessPoints, decoder.AccessPoint{
 			MAC:  p.Mac1,
 			RSSI: p.Rssi1,
 		})
 	}
 
-	if p.Rssi2 != 0 && p.Mac2 != "" {
+	if p.Mac2 != "" {
 		accessPoints = append(accessPoints, decoder.AccessPoint{
 			MAC:  p.Mac2,
 			RSSI: p.Rssi2,
 		})
 	}
 
-	if p.Rssi3 != 0 && p.Mac3 != "" {
+	if p.Mac3 != "" {
 		accessPoints = append(accessPoints, decoder.AccessPoint{
 			MAC:  p.Mac3,
 			RSSI: p.Rssi3,
 		})
 	}
 
-	if p.Rssi4 != 0 && p.Mac4 != "" {
+	if p.Mac4 != "" {
 		accessPoints = append(accessPoints, decoder.AccessPoint{
 			MAC:  p.Mac4,
 			RSSI: p.Rssi4,
 		})
 	}
 
-	if p.Rssi5 != 0 && p.Mac5 != "" {
+	if p.Mac5 != "" {
 		accessPoints = append(accessPoints, decoder.AccessPoint{
 			MAC:  p.Mac5,
 			RSSI: p.Rssi5,
