@@ -98,6 +98,12 @@ func TestDecode(t *testing.T) {
 		},
 		{
 			port:        151,
+			payload:     "ff",
+			expected:    Port151Payload{},
+			expectedErr: "port not supported: port 151 tag ff",
+		},
+		{
+			port:        151,
 			payload:     "4c0501ff020000",
 			expected:    Port151Payload{},
 			expectedErr: "unknown tag ff",
@@ -165,6 +171,30 @@ func TestDecode(t *testing.T) {
 				GnssScans: helpers.Uint16Ptr(407),
 				WifiScans: helpers.Uint16Ptr(0),
 			},
+		},
+		{
+			port:    151,
+			payload: "4c2a0940010f4104012c1c204204012c05dc43010644011e45020d4e4604f6c7d8104902000a4a0400000002",
+			expected: Port151Payload{
+				GnssEnabled:                          helpers.BoolPtr(true),
+				WiFiEnabled:                          helpers.BoolPtr(true),
+				AccelerometerEnabled:                 helpers.BoolPtr(true),
+				Battery:                              helpers.Float32Ptr(3.406),
+				LocalizationIntervalWhileMoving:      helpers.Uint16Ptr(300),
+				LocalizationIntervalWhileSteady:      helpers.Uint16Ptr(7200),
+				AccelerometerWakeupThreshold:         helpers.Uint16Ptr(300),
+				AccelerometerDelay:                   helpers.Uint16Ptr(1500),
+				HeartbeatInterval:                    helpers.Uint8Ptr(6),
+				AdvertisementFirmwareUpgradeInterval: helpers.Uint8Ptr(30),
+				FirmwareHash:                         helpers.StringPtr("f6c7d810"),
+				ResetCount:                           helpers.Uint16Ptr(10),
+				ResetCause:                           helpers.Uint32Ptr(2),
+			}},
+		{
+			port:        152,
+			payload:     "ff",
+			expected:    Port152Payload{},
+			expectedErr: "port not supported: version 255 for port 152 not supported",
 		},
 		{
 			port:    152,
@@ -245,10 +275,53 @@ func TestDecode(t *testing.T) {
 			expectedErr: "",
 		},
 		{
+			port:        197,
+			payload:     "ff",
+			expected:    Port197Payload{},
+			expectedErr: "port not supported: version 255 for port 197 not supported",
+		},
+		{
 			port:    197,
-			payload: "00d63385f8ee30c2d0a0382c2601db",
+			payload: "003385f8ee30c2a0382c2601db",
 			expected: Port197Payload{
-				Tag:   byte(0x00),
+				Mac1: "3385f8ee30c2",
+				Mac2: "a0382c2601db",
+			},
+		},
+		{
+			port:    197,
+			payload: "00b5eded55a313a0b8b5e86e3194a765f3ad40",
+			expected: Port197Payload{
+				Mac1: "b5eded55a313",
+				Mac2: "a0b8b5e86e31",
+				Mac3: "94a765f3ad40",
+			},
+		},
+		{
+			port:    197,
+			payload: "006fbcfdd764347e7cbff22fc500dc0af60588010161302d9c",
+			expected: Port197Payload{
+				Mac1: "6fbcfdd76434",
+				Mac2: "7e7cbff22fc5",
+				Mac3: "00dc0af60588",
+				Mac4: "010161302d9c",
+			},
+		},
+		{
+			port:    197,
+			payload: "00218f6c166fad59ea3bdec77df72faac81784263386a455d33592a063900b",
+			expected: Port197Payload{
+				Mac1: "218f6c166fad",
+				Mac2: "59ea3bdec77d",
+				Mac3: "f72faac81784",
+				Mac4: "263386a455d3",
+				Mac5: "3592a063900b",
+			},
+		},
+		{
+			port:    197,
+			payload: "01d63385f8ee30c2d0a0382c2601db",
+			expected: Port197Payload{
 				Rssi1: -42,
 				Mac1:  "3385f8ee30c2",
 				Rssi2: -48,
@@ -257,9 +330,8 @@ func TestDecode(t *testing.T) {
 		},
 		{
 			port:    197,
-			payload: "64c8b5eded55a313c0a0b8b5e86e31b894a765f3ad40",
+			payload: "01c8b5eded55a313c0a0b8b5e86e31b894a765f3ad40",
 			expected: Port197Payload{
-				Tag:   byte(0x64),
 				Rssi1: -56,
 				Mac1:  "b5eded55a313",
 				Rssi2: -64,
@@ -270,9 +342,8 @@ func TestDecode(t *testing.T) {
 		},
 		{
 			port:    197,
-			payload: "aebd6fbcfdd76434bb7e7cbff22fc5b900dc0af60588b7010161302d9c",
+			payload: "01bd6fbcfdd76434bb7e7cbff22fc5b900dc0af60588b7010161302d9c",
 			expected: Port197Payload{
-				Tag:   byte(0xae),
 				Rssi1: -67,
 				Mac1:  "6fbcfdd76434",
 				Rssi2: -69,
@@ -285,9 +356,8 @@ func TestDecode(t *testing.T) {
 		},
 		{
 			port:    197,
-			payload: "fdb7218f6c166fadb359ea3bdec77daff72faac81784ab263386a455d3a73592a063900b",
+			payload: "01b7218f6c166fadb359ea3bdec77daff72faac81784ab263386a455d3a73592a063900b",
 			expected: Port197Payload{
-				Tag:   byte(0xfd),
 				Rssi1: -73,
 				Mac1:  "218f6c166fad",
 				Rssi2: -77,
@@ -318,7 +388,16 @@ func TestDecode(t *testing.T) {
 			t.Logf("got %v", got)
 
 			if got != nil && !reflect.DeepEqual(got.Data, test.expected) && len(test.expectedErr) == 0 {
-				t.Errorf("expected: %v, got: %v", test.expected, got)
+				// marshal the expected and got values to compare
+				expectedJSON, err := json.Marshal(test.expected)
+				if err != nil {
+					t.Fatalf("failed to marshal expected value: %v", err)
+				}
+				gotJSON, err := json.Marshal(got.Data)
+				if err != nil {
+					t.Fatalf("failed to marshal got value: %v", err)
+				}
+				t.Errorf("expected: %s, got: %s", expectedJSON, gotJSON)
 			}
 
 			if len(test.expectedErr) > 0 && err != nil && !strings.Contains(err.Error(), test.expectedErr) {
@@ -412,7 +491,7 @@ func TestFeatures(t *testing.T) {
 			port:    192,
 		},
 		{
-			payload: "fdb7218f6c166fadb359ea3bdec77daff72faac81784ab263386a455d3a73592a063900b",
+			payload: "01b7218f6c166fadb359ea3bdec77daff72faac81784ab263386a455d3a73592a063900b",
 			port:    197,
 		},
 		{
@@ -563,6 +642,33 @@ func TestFeatures(t *testing.T) {
 				}
 				// call function to check if it panics
 				sequenceNumber.GetSequenceNumber()
+			}
+			if decodedPayload.Is(decoder.FeatureConfig) {
+				config, ok := decodedPayload.Data.(decoder.UplinkFeatureConfig)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureConfig, got %T", decodedPayload)
+				}
+				// call functions to check if it panics
+				config.GetBle()
+				config.GetGnss()
+				config.GetWifi()
+				config.GetAcceleration()
+				config.GetMovingInterval()
+				config.GetSteadyInterval()
+				config.GetConfigInterval()
+				config.GetGnssTimeout()
+				config.GetAccelerometerThreshold()
+				config.GetAccelerometerDelay()
+				config.GetBatteryInterval()
+				config.GetRejoinInterval()
+				config.GetLowLightThreshold()
+				config.GetHighLightThreshold()
+				config.GetLowTemperatureThreshold()
+				config.GetHighTemperatureThreshold()
+				config.GetAccessPointsThreshold()
+				config.GetBatchSize()
+				config.GetBufferSize()
+				config.GetDataRate()
 			}
 		})
 	}
