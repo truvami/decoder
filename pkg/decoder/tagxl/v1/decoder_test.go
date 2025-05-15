@@ -167,6 +167,25 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
+			port:    151,
+			payload: "4c2a0940010f4104012c1c204204012c05dc43010644011e45020d4e4604f6c7d8104902000a4a0400000002",
+			expected: Port151Payload{
+				GnssEnabled:                          helpers.BoolPtr(true),
+				WiFiEnabled:                          helpers.BoolPtr(true),
+				AccelerometerEnabled:                 helpers.BoolPtr(true),
+				Battery:                              helpers.Float32Ptr(3.406),
+				LocalizationIntervalWhileMoving:      helpers.Uint16Ptr(300),
+				LocalizationIntervalWhileSteady:      helpers.Uint16Ptr(7200),
+				AccelerometerWakeupThreshold:         helpers.Uint16Ptr(300),
+				AccelerometerDelay:                   helpers.Uint16Ptr(1500),
+				HeartbeatInterval:                    helpers.Uint8Ptr(6),
+				AdvertisementFirmwareUpgradeInterval: helpers.Uint8Ptr(30),
+				FirmwareHash:                         helpers.StringPtr("f6c7d810"),
+				ResetCount:                           helpers.Uint16Ptr(10),
+				ResetCause:                           helpers.Uint32Ptr(2),
+			},
+		},
+		{
 			port:    152,
 			payload: "020c62206822f120000d00000024",
 			expected: Port152Payload{
@@ -318,7 +337,16 @@ func TestDecode(t *testing.T) {
 			t.Logf("got %v", got)
 
 			if got != nil && !reflect.DeepEqual(got.Data, test.expected) && len(test.expectedErr) == 0 {
-				t.Errorf("expected: %v, got: %v", test.expected, got)
+				// marshal the expected and got values to compare
+				expectedJSON, err := json.Marshal(test.expected)
+				if err != nil {
+					t.Fatalf("failed to marshal expected value: %v", err)
+				}
+				gotJSON, err := json.Marshal(got.Data)
+				if err != nil {
+					t.Fatalf("failed to marshal got value: %v", err)
+				}
+				t.Errorf("expected: %s, got: %s", expectedJSON, gotJSON)
 			}
 
 			if len(test.expectedErr) > 0 && err != nil && !strings.Contains(err.Error(), test.expectedErr) {

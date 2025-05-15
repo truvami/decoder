@@ -12,6 +12,7 @@ type TagConfig struct {
 	Optional  bool
 	Feature   []decoder.Feature
 	Transform func(any) any
+	Hex       bool
 }
 
 type FieldConfig struct {

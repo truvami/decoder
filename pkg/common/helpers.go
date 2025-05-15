@@ -134,7 +134,7 @@ func Parse(payloadHex string, config *PayloadConfig) (any, error) {
 				if tagConfig.Tag == tag {
 					found = true
 
-					value, err := extractFieldValue(payloadBytes, int(index), int(length), false, false)
+					value, err := extractFieldValue(payloadBytes, int(index), int(length), false, tagConfig.Hex)
 					if err != nil {
 						return nil, err
 					}
@@ -149,12 +149,56 @@ func Parse(payloadHex string, config *PayloadConfig) (any, error) {
 
 						// transform value from pointer to value
 						if fieldValue.Kind() == reflect.Pointer {
-							fieldValue.Set(reflect.New(fieldValue.Type().Elem()))
-							fieldValue.Elem().Set(reflect.ValueOf(tagConfig.Transform(value)))
+							// if fieldValue is nil set the value to nil
+							if value == nil {
+								fieldValue.Set(reflect.New(nil))
+								continue
+							}
+
+							transformed := tagConfig.Transform(value)
+
+							// value is a pointer and not nil, convert to value
+							// transform value from pointer to value
+							// Create a new pointer of the right type
+							ptr := reflect.New(fieldValue.Type().Elem())
+
+							// Set the dereferenced value
+							ptr.Elem().Set(reflect.ValueOf(transformed))
+
+							// Set the pointer to the field
+							fieldValue.Set(ptr)
 							continue
 						}
 						fieldValue.Set(reflect.ValueOf(tagConfig.Transform(value)))
+						continue
 					}
+
+					// if fieldValue is nil set the value to nil
+					if value == nil && tagConfig.Optional {
+						continue
+					}
+
+					if !fieldValue.IsValid() || !fieldValue.CanSet() {
+						return nil, fmt.Errorf("field %s not found in target struct", tagConfig.Name)
+					}
+
+					// pointer field type e.g *uint8 -> t = uint8
+					targetTypeNonPointer := fieldValue.Type().Elem()
+
+					// transform value from pointer to value with the right type
+					if fieldValue.Kind() == reflect.Pointer {
+						// Create a new pointer of the right type
+						ptr := reflect.New(targetTypeNonPointer)
+
+						// Set the dereferenced value
+						ptr.Elem().Set(reflect.ValueOf(convertFieldToType(value, targetTypeNonPointer)))
+
+						// Set the pointer to the field
+						fieldValue.Set(ptr)
+						continue
+					}
+
+					fieldValue.Set(reflect.ValueOf(convertFieldToType(value, targetTypeNonPointer)))
 				}
 			}
 			if found {
@@ -352,7 +396,23 @@ func Uint16Ptr(value uint16) *uint16 {
 	return &value
 }
 
+func Uint32Ptr(value uint32) *uint32 {
+	return &value
+}
+
+func StringPtr(value string) *string {
+	return &value
+}
+
+func Uint8Ptr(value uint8) *uint8 {
+	return &value
+}
+
 func Float32Ptr(value float32) *float32 {
+	return &value
+}
+
+func BoolPtr(value bool) *bool {
 	return &value
 }
 
@@ -371,4 +431,12 @@ func TimePointerCompare(alpha *time.Time, bravo *time.Time) bool {
 		return false
 	}
 	return alpha.Equal(*bravo)
+}
+
+func TransformPointerToValue(ptr interface{}) interface{} {
+	val := reflect.ValueOf(ptr)
+	if val.Kind() == reflect.Ptr && !val.IsNil() {
+		return val.Elem().Interface()
+	}
+	panic(fmt.Sprintf("expected a pointer with not nil value, got %T", ptr))
 }
