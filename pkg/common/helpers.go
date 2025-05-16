@@ -4,6 +4,8 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"math"
+	"unsafe"
 
 	"reflect"
 	"strings"
@@ -328,16 +330,16 @@ func Encode(data any, config PayloadConfig) (string, error) {
 		return "", fmt.Errorf("data must be a struct")
 	}
 
-	// Determine total payload length
-	var length int
+	var maxLength int
 	for _, field := range config.Fields {
-		if field.Start+field.Length > length {
-			length = field.Start + field.Length
+		if field.Start+field.Length > maxLength {
+			maxLength = field.Start + field.Length
 		}
 	}
-	payload := make([]byte, length)
+	payload := make([]byte, maxLength)
 
 	// Encode fields into the payload
+	var actualLength int
 	for _, field := range config.Fields {
 		fieldValue := v.FieldByName(field.Name)
 
@@ -346,15 +348,38 @@ func Encode(data any, config PayloadConfig) (string, error) {
 			return "", fmt.Errorf("field %s not found in data", field.Name)
 		}
 
-		// Convert the value to bytes
+		var unset bool = false
 		var fieldBytes []byte
-		switch fieldValue.Kind() {
-		case reflect.Slice:
-			fieldBytes = fieldValue.Bytes()
-		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-			fieldBytes = uintToBytes(fieldValue.Uint(), field.Length)
-		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-			fieldBytes = intToBytes(fieldValue.Int(), field.Length)
+		switch fieldValue.Type() {
+		case reflect.TypeOf(bool(false)):
+			fieldBytes = BoolToBytes(fieldValue.Bool(), 0)
+		case reflect.TypeOf([]byte{}):
+			value := fieldValue.Bytes()
+			unset = len(value) == 0
+			fieldBytes = value
+		case reflect.TypeOf(string("")):
+			value, err := HexStringToBytes(fieldValue.String())
+			if err != nil {
+				panic(err)
+			}
+			unset = len(value) == 0
+			fieldBytes = value
+		case reflect.TypeOf(uint(0)), reflect.TypeOf(uint8(0)), reflect.TypeOf(uint16(0)), reflect.TypeOf(uint32(0)), reflect.TypeOf(uint64(0)):
+			value := fieldValue.Uint()
+			unset = value == 0
+			fieldBytes = UintToBytes(value, field.Length)
+		case reflect.TypeOf(int(0)), reflect.TypeOf(int8(0)), reflect.TypeOf(int16(0)), reflect.TypeOf(int32(0)), reflect.TypeOf(int64(0)):
+			value := fieldValue.Int()
+			unset = value == 0
+			fieldBytes = IntToBytes(value, field.Length)
+		case reflect.TypeOf(float32(0)), reflect.TypeOf(float64(0)):
+			fieldBytes = FloatToBytes(fieldValue.Float(), int(fieldValue.Type().Size()))
+		case reflect.TypeOf(time.Duration(0)):
+			duration := fieldValue.Interface().(time.Duration).Nanoseconds()
+			fieldBytes = IntToBytes(duration, int(unsafe.Sizeof(duration)))
+		case reflect.TypeOf(time.Time{}):
+			timestamp := fieldValue.Interface().(time.Time).Unix()
+			fieldBytes = IntToBytes(timestamp, int(unsafe.Sizeof(timestamp)))
 		default:
 			return "", fmt.Errorf("unsupported field type: %s", fieldValue.Kind())
 		}
@@ -364,32 +389,84 @@ func Encode(data any, config PayloadConfig) (string, error) {
 			fieldBytes = field.Transform(fieldBytes).([]byte)
 		}
 
-		// Copy the bytes into the payload at the correct position
-		copy(payload[field.Start:field.Start+field.Length], fieldBytes)
+		if !unset || !field.Optional {
+			copy(payload[field.Start:field.Start+field.Length], fieldBytes)
+			actualLength += field.Length
+		}
 	}
 
 	// Convert the payload to a hexadecimal string
-	return hex.EncodeToString(payload), nil
+	return hex.EncodeToString(payload[0:actualLength]), nil
 }
 
-// intToBytes converts an integer value to a byte slice
-func intToBytes(value int64, length int) []byte {
+func BoolToBytes(value bool, bit uint8) []byte {
+	if bit > 7 {
+		panic("bit must be in range 0 to 7")
+	}
+	var b byte
+	if value {
+		b = 1 << bit
+	}
+	return []byte{b}
+}
+
+func BytesToBool(bytes []byte) bool {
+	return bytes[0] == 0x01
+}
+
+func UintToBytes(value uint64, length int) []byte {
 	buf := make([]byte, length)
 	for i := length - 1; i >= 0; i-- {
-		buf[i] = byte(value & 0xFF)
+		buf[i] = byte(value & 0xff)
 		value >>= 8
 	}
 	return buf
 }
 
-// uintToBytes converts an unsigned integer value to a byte slice
-func uintToBytes(value uint64, length int) []byte {
+func IntToBytes(value int64, length int) []byte {
 	buf := make([]byte, length)
 	for i := length - 1; i >= 0; i-- {
-		buf[i] = byte(value & 0xFF)
+		buf[i] = byte(value & 0xff)
 		value >>= 8
 	}
 	return buf
+}
+
+func BytesToInt64(bytes []byte) int64 {
+	var value int64 = 0
+	for i := range bytes {
+		value <<= 8
+		value |= int64(bytes[i])
+	}
+	return value
+}
+
+func FloatToBytes(value float64, length int) []byte {
+	bits := math.Float64bits(value)
+	buf := make([]byte, length)
+	for i := length - 1; i >= 0; i-- {
+		buf[i] = byte(bits & 0xff)
+		bits >>= 8
+	}
+	return buf
+}
+
+func BytesToFloat32(bytes []byte) float32 {
+	var bits uint32
+	for i := range bytes {
+		bits <<= 8
+		bits |= uint32(bytes[i])
+	}
+	return math.Float32frombits(bits)
+}
+
+func BytesToFloat64(bytes []byte) float64 {
+	var bits uint64
+	for i := range bytes {
+		bits <<= 8
+		bits |= uint64(bytes[i])
+	}
+	return math.Float64frombits(bits)
 }
 
 func Uint16Ptr(value uint16) *uint16 {
