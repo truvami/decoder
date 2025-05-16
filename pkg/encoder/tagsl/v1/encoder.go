@@ -42,6 +42,27 @@ func (t TagSLv1Encoder) Encode(data any, port uint8, extra string) (any, any, er
 // https://docs.truvami.com/docs/payloads/tag-L
 func (t TagSLv1Encoder) getConfig(port uint8) (common.PayloadConfig, error) {
 	switch port {
+	case 5:
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
+				{Name: "Moving", Start: 0, Length: 1, Transform: moving},
+				{Name: "Mac1", Start: 1, Length: 6, Hex: true},
+				{Name: "Rssi1", Start: 7, Length: 1},
+				{Name: "Mac2", Start: 8, Length: 6, Hex: true, Optional: true},
+				{Name: "Rssi2", Start: 14, Length: 1, Optional: true},
+				{Name: "Mac3", Start: 15, Length: 6, Hex: true, Optional: true},
+				{Name: "Rssi3", Start: 21, Length: 1, Optional: true},
+				{Name: "Mac4", Start: 22, Length: 6, Hex: true, Optional: true},
+				{Name: "Rssi4", Start: 28, Length: 1, Optional: true},
+				{Name: "Mac5", Start: 29, Length: 6, Hex: true, Optional: true},
+				{Name: "Rssi5", Start: 35, Length: 1, Optional: true},
+				{Name: "Mac6", Start: 36, Length: 6, Hex: true, Optional: true},
+				{Name: "Rssi6", Start: 42, Length: 1, Optional: true},
+				{Name: "Mac7", Start: 43, Length: 6, Hex: true, Optional: true},
+				{Name: "Rssi7", Start: 49, Length: 1, Optional: true},
+			},
+			TargetType: reflect.TypeOf(tagsl.Port5Payload{}),
+		}, nil
 	case 6:
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
@@ -52,12 +73,8 @@ func (t TagSLv1Encoder) getConfig(port uint8) (common.PayloadConfig, error) {
 	case 7:
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
-				{Name: "Timestamp", Start: 0, Length: 4, Transform: func(v any) any {
-					return common.IntToBytes(common.BytesToInt64(v.([]byte)), 4)
-				}},
-				{Name: "Moving", Start: 4, Length: 1, Transform: func(v any) any {
-					return common.BoolToBytes(common.BytesToBool(v.([]byte)), 0)
-				}},
+				{Name: "Timestamp", Start: 0, Length: 4, Transform: timestamp},
+				{Name: "Moving", Start: 4, Length: 1, Transform: moving},
 				{Name: "Mac1", Start: 5, Length: 6, Hex: true},
 				{Name: "Rssi1", Start: 11, Length: 1},
 				{Name: "Mac2", Start: 12, Length: 6, Hex: true, Optional: true},
@@ -76,9 +93,7 @@ func (t TagSLv1Encoder) getConfig(port uint8) (common.PayloadConfig, error) {
 	case 10:
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
-				{Name: "Moving", Start: 0, Length: 1, Transform: func(v any) any {
-					return common.BoolToBytes(common.BytesToBool(v.([]byte)), 0)
-				}},
+				{Name: "Moving", Start: 0, Length: 1, Transform: moving},
 				{Name: "Latitude", Start: 1, Length: 4, Transform: func(v any) any {
 					return common.IntToBytes(int64(common.BytesToFloat64(v.([]byte))*1000000), 4)
 				}},
@@ -88,9 +103,7 @@ func (t TagSLv1Encoder) getConfig(port uint8) (common.PayloadConfig, error) {
 				{Name: "Altitude", Start: 9, Length: 2, Transform: func(v any) any {
 					return common.UintToBytes(uint64(common.BytesToFloat64(v.([]byte))*10), 2)
 				}},
-				{Name: "Timestamp", Start: 11, Length: 4, Transform: func(v any) any {
-					return common.IntToBytes(common.BytesToInt64(v.([]byte)), 4)
-				}},
+				{Name: "Timestamp", Start: 11, Length: 4, Transform: timestamp},
 				{Name: "Battery", Start: 15, Length: 2, Transform: func(v any) any {
 					return common.UintToBytes(uint64(common.BytesToFloat64(v.([]byte))*1000), 2)
 				}},
@@ -171,4 +184,12 @@ func (t TagSLv1Encoder) getConfig(port uint8) (common.PayloadConfig, error) {
 	}
 
 	return common.PayloadConfig{}, fmt.Errorf("%w: port %v not supported", common.ErrPortNotSupported, port)
+}
+
+func moving(v any) any {
+	return common.BoolToBytes(common.BytesToBool(v.([]byte)), 0)
+}
+
+func timestamp(v any) any {
+	return common.IntToBytes(common.BytesToInt64(v.([]byte)), 4)
 }
