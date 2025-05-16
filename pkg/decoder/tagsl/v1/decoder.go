@@ -378,8 +378,10 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
 				{Name: "BufferLevel", Start: 0, Length: 2},
-				{Name: "Moving", Start: 2, Length: 1, Transform: moving},
 				{Name: "DutyCycle", Start: 2, Length: 1, Transform: dutyCycle},
+				{Name: "ConfigChangeId", Start: 2, Length: 1, Transform: configChangeId},
+				{Name: "ConfigChangeSuccess", Start: 2, Length: 1, Transform: configChangeSuccess},
+				{Name: "Moving", Start: 2, Length: 1, Transform: moving},
 				{Name: "Latitude", Start: 3, Length: 4, Transform: latitude},
 				{Name: "Longitude", Start: 7, Length: 4, Transform: longitude},
 				{Name: "Altitude", Start: 11, Length: 2, Transform: altitude},
