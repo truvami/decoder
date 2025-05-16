@@ -49,15 +49,9 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 				{Name: "ConfigChangeId", Start: 0, Length: 1, Transform: configChangeId},
 				{Name: "ConfigChangeSuccess", Start: 0, Length: 1, Transform: configChangeSuccess},
 				{Name: "Moving", Start: 0, Length: 1, Transform: moving},
-				{Name: "Latitude", Start: 1, Length: 4, Transform: func(v any) any {
-					return float64(v.(int)) / 1000000
-				}},
-				{Name: "Longitude", Start: 5, Length: 4, Transform: func(v any) any {
-					return float64(v.(int)) / 1000000
-				}},
-				{Name: "Altitude", Start: 9, Length: 2, Transform: func(v any) any {
-					return float64(v.(int)) / 10
-				}},
+				{Name: "Latitude", Start: 1, Length: 4, Transform: latitude},
+				{Name: "Longitude", Start: 5, Length: 4, Transform: longitude},
+				{Name: "Altitude", Start: 9, Length: 2, Transform: altitude},
 				{Name: "Year", Start: 11, Length: 1},
 				{Name: "Month", Start: 12, Length: 1},
 				{Name: "Day", Start: 13, Length: 1},
@@ -203,15 +197,9 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 				{Name: "ConfigChangeId", Start: 0, Length: 1, Transform: configChangeId},
 				{Name: "ConfigChangeSuccess", Start: 0, Length: 1, Transform: configChangeSuccess},
 				{Name: "Moving", Start: 0, Length: 1, Transform: moving},
-				{Name: "Latitude", Start: 1, Length: 4, Transform: func(v any) any {
-					return float64(v.(int)) / 1000000
-				}},
-				{Name: "Longitude", Start: 5, Length: 4, Transform: func(v any) any {
-					return float64(v.(int)) / 1000000
-				}},
-				{Name: "Altitude", Start: 9, Length: 2, Transform: func(v any) any {
-					return float64(v.(int)) / 10
-				}},
+				{Name: "Latitude", Start: 1, Length: 4, Transform: latitude},
+				{Name: "Longitude", Start: 5, Length: 4, Transform: longitude},
+				{Name: "Altitude", Start: 9, Length: 2, Transform: altitude},
 				{Name: "Timestamp", Start: 11, Length: 4},
 				{Name: "Battery", Start: 15, Length: 2, Transform: func(v any) any {
 					return float64(v.(int)) / 1000
@@ -246,15 +234,9 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 				{Name: "ConfigChangeId", Start: 0, Length: 1, Transform: configChangeId},
 				{Name: "ConfigChangeSuccess", Start: 0, Length: 1, Transform: configChangeSuccess},
 				{Name: "Moving", Start: 0, Length: 1, Transform: moving},
-				{Name: "Latitude", Start: 1, Length: 4, Transform: func(v any) any {
-					return float64(v.(int)) / 1000000
-				}},
-				{Name: "Longitude", Start: 5, Length: 4, Transform: func(v any) any {
-					return float64(v.(int)) / 1000000
-				}},
-				{Name: "Altitude", Start: 9, Length: 2, Transform: func(v any) any {
-					return float64(v.(int)) / 10
-				}},
+				{Name: "Latitude", Start: 1, Length: 4, Transform: latitude},
+				{Name: "Longitude", Start: 5, Length: 4, Transform: longitude},
+				{Name: "Altitude", Start: 9, Length: 2, Transform: altitude},
 				{Name: "Timestamp", Start: 11, Length: 4},
 				{Name: "Battery", Start: 15, Length: 2, Transform: func(v any) any {
 					return float64(v.(int)) / 1000
@@ -281,15 +263,9 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 				{Name: "ConfigChangeId", Start: 0, Length: 1, Transform: configChangeId},
 				{Name: "ConfigChangeSuccess", Start: 0, Length: 1, Transform: configChangeSuccess},
 				{Name: "Moving", Start: 0, Length: 1, Transform: moving},
-				{Name: "Latitude", Start: 1, Length: 4, Transform: func(v any) any {
-					return float64(v.(int)) / 1000000
-				}},
-				{Name: "Longitude", Start: 5, Length: 4, Transform: func(v any) any {
-					return float64(v.(int)) / 1000000
-				}},
-				{Name: "Altitude", Start: 9, Length: 2, Transform: func(v any) any {
-					return float64(v.(int)) / 10
-				}},
+				{Name: "Latitude", Start: 1, Length: 4, Transform: latitude},
+				{Name: "Longitude", Start: 5, Length: 4, Transform: longitude},
+				{Name: "Altitude", Start: 9, Length: 2, Transform: altitude},
 				{Name: "Timestamp", Start: 11, Length: 4},
 				{Name: "Battery", Start: 15, Length: 2, Transform: func(v any) any {
 					return float64(v.(int)) / 1000
@@ -346,15 +322,9 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 				{Name: "ConfigChangeId", Start: 2, Length: 1, Transform: configChangeId},
 				{Name: "ConfigChangeSuccess", Start: 2, Length: 1, Transform: configChangeSuccess},
 				{Name: "Moving", Start: 2, Length: 1, Transform: moving},
-				{Name: "Latitude", Start: 3, Length: 4, Transform: func(v any) any {
-					return float64(v.(int)) / 1000000
-				}},
-				{Name: "Longitude", Start: 7, Length: 4, Transform: func(v any) any {
-					return float64(v.(int)) / 1000000
-				}},
-				{Name: "Altitude", Start: 11, Length: 2, Transform: func(v any) any {
-					return float64(v.(int)) / 10
-				}},
+				{Name: "Latitude", Start: 3, Length: 4, Transform: latitude},
+				{Name: "Longitude", Start: 7, Length: 4, Transform: longitude},
+				{Name: "Altitude", Start: 11, Length: 2, Transform: altitude},
 				{Name: "Timestamp", Start: 13, Length: 4},
 				{Name: "Battery", Start: 17, Length: 2, Transform: func(v any) any {
 					return float64(v.(int)) / 1000
@@ -378,15 +348,9 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 				{Name: "ConfigChangeId", Start: 2, Length: 1, Transform: configChangeId},
 				{Name: "ConfigChangeSuccess", Start: 2, Length: 1, Transform: configChangeSuccess},
 				{Name: "Moving", Start: 2, Length: 1, Transform: moving},
-				{Name: "Latitude", Start: 3, Length: 4, Transform: func(v any) any {
-					return float64(v.(int)) / 1000000
-				}},
-				{Name: "Longitude", Start: 7, Length: 4, Transform: func(v any) any {
-					return float64(v.(int)) / 1000000
-				}},
-				{Name: "Altitude", Start: 11, Length: 2, Transform: func(v any) any {
-					return float64(v.(int)) / 10
-				}},
+				{Name: "Latitude", Start: 3, Length: 4, Transform: latitude},
+				{Name: "Longitude", Start: 7, Length: 4, Transform: longitude},
+				{Name: "Altitude", Start: 11, Length: 2, Transform: altitude},
 				{Name: "Timestamp", Start: 13, Length: 4},
 				{Name: "Battery", Start: 17, Length: 2, Transform: func(v any) any {
 					return float64(v.(int)) / 1000
@@ -414,17 +378,13 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
 				{Name: "BufferLevel", Start: 0, Length: 2},
-				{Name: "Moving", Start: 2, Length: 1, Transform: moving},
 				{Name: "DutyCycle", Start: 2, Length: 1, Transform: dutyCycle},
-				{Name: "Latitude", Start: 3, Length: 4, Transform: func(v any) any {
-					return float64(v.(int)) / 1000000
-				}},
-				{Name: "Longitude", Start: 7, Length: 4, Transform: func(v any) any {
-					return float64(v.(int)) / 1000000
-				}},
-				{Name: "Altitude", Start: 11, Length: 2, Transform: func(v any) any {
-					return float64(v.(int)) / 10
-				}},
+				{Name: "ConfigChangeId", Start: 2, Length: 1, Transform: configChangeId},
+				{Name: "ConfigChangeSuccess", Start: 2, Length: 1, Transform: configChangeSuccess},
+				{Name: "Moving", Start: 2, Length: 1, Transform: moving},
+				{Name: "Latitude", Start: 3, Length: 4, Transform: latitude},
+				{Name: "Longitude", Start: 7, Length: 4, Transform: longitude},
+				{Name: "Altitude", Start: 11, Length: 2, Transform: altitude},
 				{Name: "Timestamp", Start: 13, Length: 4},
 				{Name: "Battery", Start: 17, Length: 2, Transform: func(v any) any {
 					return float64(v.(int)) / 1000
@@ -520,4 +480,16 @@ func lowBattery(v any) any {
 		return nil
 	}
 	return byte(i)&0x01 == 1
+}
+
+func latitude(v any) any {
+	return float64(int32(v.(int))) / 1000000
+}
+
+func longitude(v any) any {
+	return float64(int32(v.(int))) / 1000000
+}
+
+func altitude(v any) any {
+	return float64(v.(int)) / 10
 }
