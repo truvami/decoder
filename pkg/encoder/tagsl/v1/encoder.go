@@ -58,6 +58,27 @@ func (t TagSLv1Encoder) getConfig(port uint8) (common.PayloadConfig, error) {
 			},
 			TargetType: reflect.TypeOf(tagsl.Port1Payload{}),
 		}, nil
+	case 4:
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
+				{Name: "LocalizationIntervalWhileMoving", Start: 0, Length: 4},
+				{Name: "LocalizationIntervalWhileSteady", Start: 4, Length: 4},
+				{Name: "HeartbeatInterval", Start: 8, Length: 4},
+				{Name: "GPSTimeoutWhileWaitingForFix", Start: 12, Length: 2},
+				{Name: "AccelerometerWakeupThreshold", Start: 14, Length: 2},
+				{Name: "AccelerometerDelay", Start: 16, Length: 2},
+				{Name: "DeviceState", Start: 18, Length: 1},
+				{Name: "FirmwareVersionMajor", Start: 19, Length: 1},
+				{Name: "FirmwareVersionMinor", Start: 20, Length: 1},
+				{Name: "FirmwareVersionPatch", Start: 21, Length: 1},
+				{Name: "HardwareVersionType", Start: 22, Length: 1},
+				{Name: "HardwareVersionRevision", Start: 23, Length: 1},
+				{Name: "BatteryKeepAliveMessageInterval", Start: 24, Length: 4},
+				{Name: "BatchSize", Start: 28, Length: 2, Optional: true},
+				{Name: "BufferSize", Start: 30, Length: 2, Optional: true},
+			},
+			TargetType: reflect.TypeOf(tagsl.Port5Payload{}),
+		}, nil
 	case 5:
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
