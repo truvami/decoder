@@ -17,6 +17,38 @@ func TestEncode(t *testing.T) {
 		expected string
 	}{
 		{
+			data: tagsl.Port1Payload{
+				Moving:    false,
+				Latitude:  46.63858,
+				Longitude: 10.39973,
+				Altitude:  2909,
+				Year:      16,
+				Month:     8,
+				Day:       32,
+				Hour:      12,
+				Minute:    56,
+				Second:    34,
+			},
+			port:     1,
+			expected: "0002c7a5f4009eaff271a21008200c3822",
+		},
+		{
+			data: tagsl.Port1Payload{
+				Moving:    true,
+				Latitude:  46.60000,
+				Longitude: 10.41667,
+				Altitude:  3033,
+				Year:      20,
+				Month:     4,
+				Day:       45,
+				Hour:      46,
+				Minute:    32,
+				Second:    9,
+			},
+			port:     1,
+			expected: "0102c70f40009ef21e767a14042d2e2009",
+		},
+		{
 			data: tagsl.Port5Payload{
 				Moving: false,
 				Mac1:   "e1c384f2ab5d",

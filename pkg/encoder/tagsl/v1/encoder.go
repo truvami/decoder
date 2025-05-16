@@ -42,6 +42,22 @@ func (t TagSLv1Encoder) Encode(data any, port uint8, extra string) (any, any, er
 // https://docs.truvami.com/docs/payloads/tag-L
 func (t TagSLv1Encoder) getConfig(port uint8) (common.PayloadConfig, error) {
 	switch port {
+	case 1:
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
+				{Name: "Moving", Start: 0, Length: 1, Transform: moving},
+				{Name: "Latitude", Start: 1, Length: 4, Transform: latitude},
+				{Name: "Longitude", Start: 5, Length: 4, Transform: longitude},
+				{Name: "Altitude", Start: 9, Length: 2, Transform: altitude},
+				{Name: "Year", Start: 11, Length: 1},
+				{Name: "Month", Start: 12, Length: 1},
+				{Name: "Day", Start: 13, Length: 1},
+				{Name: "Hour", Start: 14, Length: 1},
+				{Name: "Minute", Start: 15, Length: 1},
+				{Name: "Second", Start: 16, Length: 1},
+			},
+			TargetType: reflect.TypeOf(tagsl.Port1Payload{}),
+		}, nil
 	case 5:
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
@@ -94,15 +110,9 @@ func (t TagSLv1Encoder) getConfig(port uint8) (common.PayloadConfig, error) {
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
 				{Name: "Moving", Start: 0, Length: 1, Transform: moving},
-				{Name: "Latitude", Start: 1, Length: 4, Transform: func(v any) any {
-					return common.IntToBytes(int64(common.BytesToFloat64(v.([]byte))*1000000), 4)
-				}},
-				{Name: "Longitude", Start: 5, Length: 4, Transform: func(v any) any {
-					return common.IntToBytes(int64(common.BytesToFloat64(v.([]byte))*1000000), 4)
-				}},
-				{Name: "Altitude", Start: 9, Length: 2, Transform: func(v any) any {
-					return common.UintToBytes(uint64(common.BytesToFloat64(v.([]byte))*10), 2)
-				}},
+				{Name: "Latitude", Start: 1, Length: 4, Transform: latitude},
+				{Name: "Longitude", Start: 5, Length: 4, Transform: longitude},
+				{Name: "Altitude", Start: 9, Length: 2, Transform: altitude},
 				{Name: "Timestamp", Start: 11, Length: 4, Transform: timestamp},
 				{Name: "Battery", Start: 15, Length: 2, Transform: func(v any) any {
 					return common.UintToBytes(uint64(common.BytesToFloat64(v.([]byte))*1000), 2)
@@ -192,4 +202,16 @@ func moving(v any) any {
 
 func timestamp(v any) any {
 	return common.IntToBytes(common.BytesToInt64(v.([]byte)), 4)
+}
+
+func latitude(v any) any {
+	return common.IntToBytes(int64(common.BytesToFloat64(v.([]byte))*1000000), 4)
+}
+
+func longitude(v any) any {
+	return common.IntToBytes(int64(common.BytesToFloat64(v.([]byte))*1000000), 4)
+}
+
+func altitude(v any) any {
+	return common.UintToBytes(uint64(common.BytesToFloat64(v.([]byte))*10), 2)
 }
