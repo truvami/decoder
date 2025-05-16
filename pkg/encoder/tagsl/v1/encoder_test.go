@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"testing"
+	"time"
 
 	helpers "github.com/truvami/decoder/pkg/common"
 	"github.com/truvami/decoder/pkg/decoder/tagsl/v1"
@@ -15,6 +16,66 @@ func TestEncode(t *testing.T) {
 		port     uint8
 		expected string
 	}{
+		{
+			data: tagsl.Port10Payload{
+				Moving:     false,
+				Latitude:   46.5372,
+				Longitude:  8.1286,
+				Altitude:   4274,
+				Timestamp:  time.Date(2002, 5, 10, 0, 0, 0, 0, time.UTC),
+				Battery:    3.780,
+				TTF:        time.Duration(24) * time.Second,
+				PDOP:       1.0,
+				Satellites: 8,
+			},
+			port:     10,
+			expected: "0002c619f0007c0858a6f43cdb0d800ec4180208",
+		},
+		{
+			data: tagsl.Port10Payload{
+				Moving:     true,
+				Latitude:   45.9763,
+				Longitude:  7.6586,
+				Altitude:   4478,
+				Timestamp:  time.Date(2015, 7, 14, 0, 0, 0, 0, time.UTC),
+				Battery:    3.835,
+				TTF:        time.Duration(37) * time.Second,
+				PDOP:       2.5,
+				Satellites: 9,
+			},
+			port:     10,
+			expected: "0102bd8aec0074dc68aeec55a451000efb250509",
+		},
+		{
+			data: tagsl.Port10Payload{
+				Moving:     false,
+				Latitude:   -3.0674,
+				Longitude:  37.3556,
+				Altitude:   5895,
+				Timestamp:  time.Date(1995, 10, 1, 0, 0, 0, 0, time.UTC),
+				Battery:    3.895,
+				TTF:        time.Duration(73) * time.Second,
+				PDOP:       6.5,
+				Satellites: 10,
+			},
+			port:     10,
+			expected: "00ffd131f8023a0050e646306dda000f37490d0a",
+		},
+		{
+			data: tagsl.Port10Payload{
+				Moving:     true,
+				Latitude:   -15.5656,
+				Longitude:  -72.6467,
+				Altitude:   6425,
+				Timestamp:  time.Date(1990, 12, 1, 0, 0, 0, 0, time.UTC),
+				Battery:    3.960,
+				TTF:        time.Duration(192) * time.Second,
+				PDOP:       21.0,
+				Satellites: 12,
+			},
+			port:     10,
+			expected: "01ff127ce0fbab7fd4fafa2756f2800f78c02a0c",
+		},
 		{
 			data: tagsl.Port15Payload{
 				LowBattery: false,

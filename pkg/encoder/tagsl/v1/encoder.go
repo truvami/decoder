@@ -42,6 +42,37 @@ func (t TagSLv1Encoder) Encode(data any, port uint8, extra string) (any, any, er
 // https://docs.truvami.com/docs/payloads/tag-L
 func (t TagSLv1Encoder) getConfig(port uint8) (common.PayloadConfig, error) {
 	switch port {
+	case 10:
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
+				{Name: "Moving", Start: 0, Length: 1, Transform: func(v any) any {
+					return common.BoolToBytes(common.BytesToBool(v.([]byte)), 0)
+				}},
+				{Name: "Latitude", Start: 1, Length: 4, Transform: func(v any) any {
+					return common.IntToBytes(int64(common.BytesToFloat64(v.([]byte))*1000000), 4)
+				}},
+				{Name: "Longitude", Start: 5, Length: 4, Transform: func(v any) any {
+					return common.IntToBytes(int64(common.BytesToFloat64(v.([]byte))*1000000), 4)
+				}},
+				{Name: "Altitude", Start: 9, Length: 2, Transform: func(v any) any {
+					return common.UintToBytes(uint64(common.BytesToFloat64(v.([]byte))*10), 2)
+				}},
+				{Name: "Timestamp", Start: 11, Length: 4, Transform: func(v any) any {
+					return common.IntToBytes(common.BytesToInt64(v.([]byte)), 4)
+				}},
+				{Name: "Battery", Start: 15, Length: 2, Transform: func(v any) any {
+					return common.UintToBytes(uint64(common.BytesToFloat64(v.([]byte))*1000), 2)
+				}},
+				{Name: "TTF", Start: 17, Length: 1, Transform: func(v any) any {
+					return common.UintToBytes(uint64(common.BytesToInt64(v.([]byte))/1000000000), 1)
+				}},
+				{Name: "PDOP", Start: 18, Length: 1, Transform: func(v any) any {
+					return common.UintToBytes(uint64(common.BytesToFloat64(v.([]byte))*2), 1)
+				}},
+				{Name: "Satellites", Start: 19, Length: 1},
+			},
+			TargetType: reflect.TypeOf(tagsl.Port10Payload{}),
+		}, nil
 	case 15:
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"unsafe"
 
 	"reflect"
 	"strings"
@@ -349,17 +350,23 @@ func Encode(data any, config PayloadConfig) (string, error) {
 
 		// Convert the value to bytes
 		var fieldBytes []byte
-		switch fieldValue.Kind() {
-		case reflect.Bool:
+		switch fieldValue.Type() {
+		case reflect.TypeOf(bool(false)):
 			fieldBytes = BoolToBytes(fieldValue.Bool(), 0)
-		case reflect.Slice:
+		case reflect.TypeOf([]byte{}):
 			fieldBytes = fieldValue.Bytes()
-		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		case reflect.TypeOf(uint(0)), reflect.TypeOf(uint8(0)), reflect.TypeOf(uint16(0)), reflect.TypeOf(uint32(0)), reflect.TypeOf(uint64(0)):
 			fieldBytes = UintToBytes(fieldValue.Uint(), field.Length)
-		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		case reflect.TypeOf(int(0)), reflect.TypeOf(int8(0)), reflect.TypeOf(int16(0)), reflect.TypeOf(int32(0)), reflect.TypeOf(int64(0)):
 			fieldBytes = IntToBytes(fieldValue.Int(), field.Length)
-		case reflect.Float32, reflect.Float64:
+		case reflect.TypeOf(float32(0)), reflect.TypeOf(float64(0)):
 			fieldBytes = FloatToBytes(fieldValue.Float(), int(fieldValue.Type().Size()))
+		case reflect.TypeOf(time.Duration(0)):
+			duration := fieldValue.Interface().(time.Duration).Nanoseconds()
+			fieldBytes = IntToBytes(duration, int(unsafe.Sizeof(duration)))
+		case reflect.TypeOf(time.Time{}):
+			timestamp := fieldValue.Interface().(time.Time).Unix()
+			fieldBytes = IntToBytes(timestamp, int(unsafe.Sizeof(timestamp)))
 		default:
 			return "", fmt.Errorf("unsupported field type: %s", fieldValue.Kind())
 		}
@@ -408,6 +415,15 @@ func IntToBytes(value int64, length int) []byte {
 		value >>= 8
 	}
 	return buf
+}
+
+func BytesToInt64(bytes []byte) int64 {
+	var value int64 = 0
+	for i := range bytes {
+		value <<= 8
+		value |= int64(bytes[i])
+	}
+	return value
 }
 
 func FloatToBytes(value float64, length int) []byte {
