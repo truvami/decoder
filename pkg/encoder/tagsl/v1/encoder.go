@@ -49,6 +49,30 @@ func (t TagSLv1Encoder) getConfig(port uint8) (common.PayloadConfig, error) {
 			},
 			TargetType: reflect.TypeOf(tagsl.Port6Payload{}),
 		}, nil
+	case 7:
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
+				{Name: "Timestamp", Start: 0, Length: 4, Transform: func(v any) any {
+					return common.IntToBytes(common.BytesToInt64(v.([]byte)), 4)
+				}},
+				{Name: "Moving", Start: 4, Length: 1, Transform: func(v any) any {
+					return common.BoolToBytes(common.BytesToBool(v.([]byte)), 0)
+				}},
+				{Name: "Mac1", Start: 5, Length: 6, Hex: true},
+				{Name: "Rssi1", Start: 11, Length: 1},
+				{Name: "Mac2", Start: 12, Length: 6, Hex: true, Optional: true},
+				{Name: "Rssi2", Start: 18, Length: 1, Optional: true},
+				{Name: "Mac3", Start: 19, Length: 6, Hex: true, Optional: true},
+				{Name: "Rssi3", Start: 25, Length: 1, Optional: true},
+				{Name: "Mac4", Start: 26, Length: 6, Hex: true, Optional: true},
+				{Name: "Rssi4", Start: 32, Length: 1, Optional: true},
+				{Name: "Mac5", Start: 33, Length: 6, Hex: true, Optional: true},
+				{Name: "Rssi5", Start: 39, Length: 1, Optional: true},
+				{Name: "Mac6", Start: 40, Length: 6, Hex: true, Optional: true},
+				{Name: "Rssi6", Start: 46, Length: 1, Optional: true},
+			},
+			TargetType: reflect.TypeOf(tagsl.Port7Payload{}),
+		}, nil
 	case 10:
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{

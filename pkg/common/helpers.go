@@ -330,16 +330,16 @@ func Encode(data any, config PayloadConfig) (string, error) {
 		return "", fmt.Errorf("data must be a struct")
 	}
 
-	// Determine total payload length
-	var length int
+	var maxLength int
 	for _, field := range config.Fields {
-		if field.Start+field.Length > length {
-			length = field.Start + field.Length
+		if field.Start+field.Length > maxLength {
+			maxLength = field.Start + field.Length
 		}
 	}
-	payload := make([]byte, length)
+	payload := make([]byte, maxLength)
 
 	// Encode fields into the payload
+	var actualLength int
 	for _, field := range config.Fields {
 		fieldValue := v.FieldByName(field.Name)
 
@@ -348,17 +348,30 @@ func Encode(data any, config PayloadConfig) (string, error) {
 			return "", fmt.Errorf("field %s not found in data", field.Name)
 		}
 
-		// Convert the value to bytes
+		var unset bool = false
 		var fieldBytes []byte
 		switch fieldValue.Type() {
 		case reflect.TypeOf(bool(false)):
 			fieldBytes = BoolToBytes(fieldValue.Bool(), 0)
 		case reflect.TypeOf([]byte{}):
-			fieldBytes = fieldValue.Bytes()
+			value := fieldValue.Bytes()
+			unset = len(value) == 0
+			fieldBytes = value
+		case reflect.TypeOf(string("")):
+			value, err := HexStringToBytes(fieldValue.String())
+			if err != nil {
+				panic(err)
+			}
+			unset = len(value) == 0
+			fieldBytes = value
 		case reflect.TypeOf(uint(0)), reflect.TypeOf(uint8(0)), reflect.TypeOf(uint16(0)), reflect.TypeOf(uint32(0)), reflect.TypeOf(uint64(0)):
-			fieldBytes = UintToBytes(fieldValue.Uint(), field.Length)
+			value := fieldValue.Uint()
+			unset = value == 0
+			fieldBytes = UintToBytes(value, field.Length)
 		case reflect.TypeOf(int(0)), reflect.TypeOf(int8(0)), reflect.TypeOf(int16(0)), reflect.TypeOf(int32(0)), reflect.TypeOf(int64(0)):
-			fieldBytes = IntToBytes(fieldValue.Int(), field.Length)
+			value := fieldValue.Int()
+			unset = value == 0
+			fieldBytes = IntToBytes(value, field.Length)
 		case reflect.TypeOf(float32(0)), reflect.TypeOf(float64(0)):
 			fieldBytes = FloatToBytes(fieldValue.Float(), int(fieldValue.Type().Size()))
 		case reflect.TypeOf(time.Duration(0)):
@@ -376,12 +389,14 @@ func Encode(data any, config PayloadConfig) (string, error) {
 			fieldBytes = field.Transform(fieldBytes).([]byte)
 		}
 
-		// Copy the bytes into the payload at the correct position
-		copy(payload[field.Start:field.Start+field.Length], fieldBytes)
+		if !unset || !field.Optional {
+			copy(payload[field.Start:field.Start+field.Length], fieldBytes)
+			actualLength += field.Length
+		}
 	}
 
 	// Convert the payload to a hexadecimal string
-	return hex.EncodeToString(payload), nil
+	return hex.EncodeToString(payload[0:actualLength]), nil
 }
 
 func BoolToBytes(value bool, bit uint8) []byte {
