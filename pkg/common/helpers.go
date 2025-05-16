@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"math"
 
 	"reflect"
 	"strings"
@@ -349,12 +350,16 @@ func Encode(data any, config PayloadConfig) (string, error) {
 		// Convert the value to bytes
 		var fieldBytes []byte
 		switch fieldValue.Kind() {
+		case reflect.Bool:
+			fieldBytes = BoolToBytes(fieldValue.Bool(), 0)
 		case reflect.Slice:
 			fieldBytes = fieldValue.Bytes()
 		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-			fieldBytes = uintToBytes(fieldValue.Uint(), field.Length)
+			fieldBytes = UintToBytes(fieldValue.Uint(), field.Length)
 		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-			fieldBytes = intToBytes(fieldValue.Int(), field.Length)
+			fieldBytes = IntToBytes(fieldValue.Int(), field.Length)
+		case reflect.Float32, reflect.Float64:
+			fieldBytes = FloatToBytes(fieldValue.Float(), int(fieldValue.Type().Size()))
 		default:
 			return "", fmt.Errorf("unsupported field type: %s", fieldValue.Kind())
 		}
@@ -372,24 +377,65 @@ func Encode(data any, config PayloadConfig) (string, error) {
 	return hex.EncodeToString(payload), nil
 }
 
-// intToBytes converts an integer value to a byte slice
-func intToBytes(value int64, length int) []byte {
+func BoolToBytes(value bool, bit uint8) []byte {
+	if bit > 7 {
+		panic("bit must be in range 0 to 7")
+	}
+	var b byte
+	if value {
+		b = 1 << bit
+	}
+	return []byte{b}
+}
+
+func BytesToBool(bytes []byte) bool {
+	return bytes[0] == 0x01
+}
+
+func UintToBytes(value uint64, length int) []byte {
 	buf := make([]byte, length)
 	for i := length - 1; i >= 0; i-- {
-		buf[i] = byte(value & 0xFF)
+		buf[i] = byte(value & 0xff)
 		value >>= 8
 	}
 	return buf
 }
 
-// uintToBytes converts an unsigned integer value to a byte slice
-func uintToBytes(value uint64, length int) []byte {
+func IntToBytes(value int64, length int) []byte {
 	buf := make([]byte, length)
 	for i := length - 1; i >= 0; i-- {
-		buf[i] = byte(value & 0xFF)
+		buf[i] = byte(value & 0xff)
 		value >>= 8
 	}
 	return buf
+}
+
+func FloatToBytes(value float64, length int) []byte {
+	bits := math.Float64bits(value)
+	buf := make([]byte, length)
+	for i := length - 1; i >= 0; i-- {
+		buf[i] = byte(bits & 0xff)
+		bits >>= 8
+	}
+	return buf
+}
+
+func BytesToFloat32(bytes []byte) float32 {
+	var bits uint32
+	for i := range bytes {
+		bits <<= 8
+		bits |= uint32(bytes[i])
+	}
+	return math.Float32frombits(bits)
+}
+
+func BytesToFloat64(bytes []byte) float64 {
+	var bits uint64
+	for i := range bytes {
+		bits <<= 8
+		bits |= uint64(bytes[i])
+	}
+	return math.Float64frombits(bits)
 }
 
 func Uint16Ptr(value uint16) *uint16 {

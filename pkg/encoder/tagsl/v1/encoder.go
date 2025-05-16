@@ -5,6 +5,7 @@ import (
 	"reflect"
 
 	"github.com/truvami/decoder/pkg/common"
+	"github.com/truvami/decoder/pkg/decoder/tagsl/v1"
 	"github.com/truvami/decoder/pkg/encoder"
 )
 
@@ -41,6 +42,18 @@ func (t TagSLv1Encoder) Encode(data any, port uint8, extra string) (any, any, er
 // https://docs.truvami.com/docs/payloads/tag-L
 func (t TagSLv1Encoder) getConfig(port uint8) (common.PayloadConfig, error) {
 	switch port {
+	case 15:
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
+				{Name: "LowBattery", Start: 0, Length: 1, Transform: func(v any) any {
+					return common.BoolToBytes(common.BytesToBool(v.([]byte)), 0)
+				}},
+				{Name: "Battery", Start: 1, Length: 2, Transform: func(v any) any {
+					return common.UintToBytes(uint64(common.BytesToFloat64(v.([]byte))*1000), 2)
+				}},
+			},
+			TargetType: reflect.TypeOf(tagsl.Port15Payload{}),
+		}, nil
 	case 128:
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{

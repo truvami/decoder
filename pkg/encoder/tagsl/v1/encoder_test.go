@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	helpers "github.com/truvami/decoder/pkg/common"
+	"github.com/truvami/decoder/pkg/decoder/tagsl/v1"
 )
 
 func TestEncode(t *testing.T) {
@@ -14,6 +15,22 @@ func TestEncode(t *testing.T) {
 		port     uint8
 		expected string
 	}{
+		{
+			data: tagsl.Port15Payload{
+				LowBattery: false,
+				Battery:    3.895,
+			},
+			port:     15,
+			expected: "000f37",
+		},
+		{
+			data: tagsl.Port15Payload{
+				LowBattery: true,
+				Battery:    3.920,
+			},
+			port:     15,
+			expected: "010f50",
+		},
 		{
 			data: Port128Payload{
 				BLE:                             1,
