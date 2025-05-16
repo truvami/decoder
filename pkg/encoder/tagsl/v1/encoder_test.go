@@ -17,6 +17,20 @@ func TestEncode(t *testing.T) {
 		expected string
 	}{
 		{
+			data: tagsl.Port6Payload{
+				ButtonPressed: false,
+			},
+			port:     6,
+			expected: "00",
+		},
+		{
+			data: tagsl.Port6Payload{
+				ButtonPressed: true,
+			},
+			port:     6,
+			expected: "01",
+		},
+		{
 			data: tagsl.Port10Payload{
 				Moving:     false,
 				Latitude:   46.5372,

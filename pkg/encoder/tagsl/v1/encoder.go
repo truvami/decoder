@@ -42,6 +42,13 @@ func (t TagSLv1Encoder) Encode(data any, port uint8, extra string) (any, any, er
 // https://docs.truvami.com/docs/payloads/tag-L
 func (t TagSLv1Encoder) getConfig(port uint8) (common.PayloadConfig, error) {
 	switch port {
+	case 6:
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
+				{Name: "ButtonPressed", Start: 0, Length: 1},
+			},
+			TargetType: reflect.TypeOf(tagsl.Port6Payload{}),
+		}, nil
 	case 10:
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
