@@ -2135,7 +2135,7 @@ func TestMarshal(t *testing.T) {
 		{
 			payload:  "800ee5",
 			port:     15,
-			expected: []string{"\"lowBattery\": false", "\"battery\": 3.813"},
+			expected: []string{"\"lowBattery\": false", "\"battery\": \"3.813v\""},
 		},
 		{
 			payload:  "0002d30c9300824c87117966c45dcd0f8118e0286d8aabfca9f0b0140c96bbc8726c9a74b58da8e0286d8a9478bf",
