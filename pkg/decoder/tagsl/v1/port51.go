@@ -79,7 +79,7 @@ func (p Port51Payload) MarshalJSON() ([]byte, error) {
 	}{
 		Alias:      (*Alias)(&p),
 		Altitude:   fmt.Sprintf("%.1fm", p.Altitude),
-		Timestamp:  p.Timestamp.Format("2006-01-02 15:04:05"),
+		Timestamp:  p.Timestamp.Format(time.RFC3339),
 		Battery:    fmt.Sprintf("%.3fv", p.Battery),
 		TTF:        p.TTF.String(),
 		PDOP:       fmt.Sprintf("%.1fm", p.PDOP),

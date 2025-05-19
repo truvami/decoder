@@ -1,7 +1,6 @@
 package tagsl
 
 import (
-	"encoding/json"
 	"time"
 
 	"github.com/truvami/decoder/pkg/decoder"
@@ -48,17 +47,6 @@ type Port7Payload struct {
 	Rssi5               *int8     `json:"rssi5" validate:"gte=-120,lte=-20"`
 	Mac6                *string   `json:"mac6"`
 	Rssi6               *int8     `json:"rssi6" validate:"gte=-120,lte=-20"`
-}
-
-func (p Port7Payload) MarshalJSON() ([]byte, error) {
-	type Alias Port7Payload
-	return json.Marshal(&struct {
-		Timestamp string `json:"timestamp"`
-		*Alias
-	}{
-		Timestamp: p.Timestamp.Format("2006-01-02 15:04:05"),
-		Alias:     (*Alias)(&p),
-	})
 }
 
 var _ decoder.UplinkFeatureBase = &Port7Payload{}

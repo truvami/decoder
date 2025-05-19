@@ -6,11 +6,13 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/truvami/decoder/internal/logger"
+	"github.com/truvami/decoder/pkg/common"
 	tagsl "github.com/truvami/decoder/pkg/decoder/tagsl/v1"
 )
 
@@ -193,25 +195,27 @@ func TestHTTPCmd(t *testing.T) {
 
 	// check the response body
 	expectedData := tagsl.Port105Payload{
-		Moving:      true,
-		DutyCycle:   false,
-		BufferLevel: 40,
-		Timestamp:   time.Date(2024, 11, 2, 16, 50, 24, 0, time.UTC),
-		Mac1:        "72a741b1e238",
-		Rssi1:       -75,
-		Mac2:        "72a741b1e08b",
-		Rssi2:       -80,
-		Mac3:        "3498b5c583e2",
-		Rssi3:       -79,
-		Mac4:        "72a741b1e0cd",
-		Rssi4:       -89,
-		Mac5:        "72a741beed4c",
-		Rssi5:       -60,
-		Mac6:        "72a741beef53",
-		Rssi6:       -73,
+		BufferLevel:         40,
+		Timestamp:           time.Date(2024, 11, 2, 16, 50, 24, 0, time.UTC),
+		DutyCycle:           false,
+		ConfigChangeId:      0,
+		ConfigChangeSuccess: false,
+		Moving:              true,
+		Mac1:                "72a741b1e238",
+		Rssi1:               -75,
+		Mac2:                common.StringPtr("72a741b1e08b"),
+		Rssi2:               common.Int8Ptr(-80),
+		Mac3:                common.StringPtr("3498b5c583e2"),
+		Rssi3:               common.Int8Ptr(-79),
+		Mac4:                common.StringPtr("72a741b1e0cd"),
+		Rssi4:               common.Int8Ptr(-89),
+		Mac5:                common.StringPtr("72a741beed4c"),
+		Rssi5:               common.Int8Ptr(-60),
+		Mac6:                common.StringPtr("72a741beef53"),
+		Rssi6:               common.Int8Ptr(-73),
 	}
 
-	if response.Data != expectedData {
+	if !reflect.DeepEqual(response.Data, expectedData) {
 		t.Errorf("expected response data to be %v, got %v", expectedData, response.Data)
 	}
 }
