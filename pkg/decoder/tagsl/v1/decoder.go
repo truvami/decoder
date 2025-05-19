@@ -360,10 +360,10 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 					return float64(v.(int)) / 1000
 				}},
 				{Name: "TTF", Start: 19, Length: 1, Optional: true, Transform: func(v any) any {
-					return time.Duration(v.(int)) * time.Second
+					return common.DurationPtr(time.Duration(v.(int)) * time.Second)
 				}},
 				{Name: "PDOP", Start: 20, Length: 1, Optional: true, Transform: func(v any) any {
-					return float64(v.(int)) / 2
+					return common.Float64Ptr(float64(v.(int)) / 2)
 				}},
 				{Name: "Satellites", Start: 21, Length: 1, Optional: true},
 			},

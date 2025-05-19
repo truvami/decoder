@@ -1076,9 +1076,9 @@ func TestDecode(t *testing.T) {
 				Altitude:    440.9,
 				Timestamp:   time.Date(2024, 8, 20, 9, 9, 56, 0, time.UTC),
 				Battery:     3.966,
-				TTF:         time.Duration(231) * time.Second,
-				PDOP:        16,
-				Satellites:  4,
+				TTF:         helpers.DurationPtr(time.Duration(231) * time.Second),
+				PDOP:        helpers.Float64Ptr(16),
+				Satellites:  helpers.Uint8Ptr(4),
 			},
 		},
 		{
@@ -1094,9 +1094,9 @@ func TestDecode(t *testing.T) {
 				Altitude:    438.6,
 				Timestamp:   time.Date(2024, 8, 20, 9, 5, 8, 0, time.UTC),
 				Battery:     3.971,
-				TTF:         time.Duration(42) * time.Second,
-				PDOP:        4,
-				Satellites:  7,
+				TTF:         helpers.DurationPtr(time.Duration(42) * time.Second),
+				PDOP:        helpers.Float64Ptr(4),
+				Satellites:  helpers.Uint8Ptr(7),
 			},
 		},
 		{
@@ -2175,7 +2175,7 @@ func TestMarshal(t *testing.T) {
 		{
 			payload:  "00020002d309ae008247c5113966c45d640f7e",
 			port:     110,
-			expected: []string{"\"timestamp\": \"2024-08-20T09:09:56Z\"", "\"battery\": 3.966"},
+			expected: []string{"\"timestamp\": \"2024-08-20T09:09:56Z\"", "\"battery\": \"3.966v\""},
 		},
 		{
 			payload:  "00020002d30c9300824c87117966c45dcd0f8118e0286d8aabfca9f0b0140c96bbc8726c9a74b58da8e0286d8a9478bf",
