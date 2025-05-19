@@ -10,17 +10,17 @@ import (
 // | Byte | Size | Description                               | Format |
 // +------+------+-------------------------------------------+--------+
 // | 0    | 1    | Duty cycle flag                           | uint1  |
-// | 0    | 1    | Config change id                          | uint4  |
-// | 0    | 1    | Config change success flag                | uint1  |
+// | 0    | 1    | Config id                                 | uint4  |
+// | 0    | 1    | Config change flag                        | uint1  |
 // | 0    | 1    | Reserved                                  | uint1  |
 // | 0    | 1    | Moving flag                               | uint1  |
 // +------+------+-------------------------------------------+--------+
 
 type Port2Payload struct {
-	DutyCycle           bool  `json:"dutyCycle"`
-	ConfigChangeId      uint8 `json:"configChangeId" validate:"gte=0,lte=15"`
-	ConfigChangeSuccess bool  `json:"configChangeSuccess"`
-	Moving              bool  `json:"moving"`
+	DutyCycle    bool  `json:"dutyCycle"`
+	ConfigId     uint8 `json:"configId" validate:"gte=0,lte=15"`
+	ConfigChange bool  `json:"configChange"`
+	Moving       bool  `json:"moving"`
 }
 
 var _ decoder.UplinkFeatureBase = &Port2Payload{}
@@ -41,9 +41,9 @@ func (p Port2Payload) IsDutyCycle() bool {
 }
 
 func (p Port2Payload) GetConfigId() *uint8 {
-	return &p.ConfigChangeId
+	return &p.ConfigId
 }
 
 func (p Port2Payload) GetConfigChange() bool {
-	return p.ConfigChangeSuccess
+	return p.ConfigChange
 }

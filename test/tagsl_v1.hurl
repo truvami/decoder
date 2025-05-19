@@ -11,8 +11,8 @@ Content-Type: application/json
 [Asserts]
 bytes count == 239
 jsonpath "$.data.dutyCycle" == true
-jsonpath "$.data.configChangeId" == 0
-jsonpath "$.data.configChangeSuccess" == false
+jsonpath "$.data.configId" == 0
+jsonpath "$.data.configChange" == false
 jsonpath "$.data.moving" == false
 jsonpath "$.data.latitude" == 47.041811
 jsonpath "$.data.longitude" == 7.622494

@@ -13,8 +13,8 @@ import (
 // +------+------+-------------------------------------------+------------------------+
 // | 0    | 2    | Buffer level                              | uint16                 |
 // | 2    | 1    | Duty cycle flag                           | uint1                  |
-// | 2    | 1    | Config change id                          | uint4                  |
-// | 2    | 1    | Config change success flag                | uint1                  |
+// | 2    | 1    | Config id                                 | uint4                  |
+// | 2    | 1    | Config change flag                        | uint1                  |
 // | 2    | 1    | Reserved                                  | uint1                  |
 // | 2    | 1    | Moving flag                               | uint1                  |
 // | 3    | 4    | Latitude                                  | int32, 1/1’000’000 deg |
@@ -35,25 +35,25 @@ import (
 
 // Timestamp for the Wi-Fi scanning is TSGNSS – TTF + 10 seconds.
 type Port150Payload struct {
-	BufferLevel         uint16        `json:"bufferLevel"`
-	DutyCycle           bool          `json:"dutyCycle"`
-	ConfigChangeId      uint8         `json:"configChangeId" validate:"gte=0,lte=15"`
-	ConfigChangeSuccess bool          `json:"configChangeSuccess"`
-	Moving              bool          `json:"moving"`
-	Latitude            float64       `json:"latitude" validate:"gte=-90,lte=90"`
-	Longitude           float64       `json:"longitude" validate:"gte=-180,lte=180"`
-	Altitude            float64       `json:"altitude"`
-	Timestamp           time.Time     `json:"timestamp"`
-	Battery             float64       `json:"battery" validate:"gte=1,lte=5"`
-	TTF                 time.Duration `json:"ttf"`
-	Mac1                string        `json:"mac1"`
-	Rssi1               int8          `json:"rssi1" validate:"gte=-120,lte=-20"`
-	Mac2                *string       `json:"mac2"`
-	Rssi2               *int8         `json:"rssi2" validate:"gte=-120,lte=-20"`
-	Mac3                *string       `json:"mac3"`
-	Rssi3               *int8         `json:"rssi3" validate:"gte=-120,lte=-20"`
-	Mac4                *string       `json:"mac4"`
-	Rssi4               *int8         `json:"rssi4" validate:"gte=-120,lte=-20"`
+	BufferLevel  uint16        `json:"bufferLevel"`
+	DutyCycle    bool          `json:"dutyCycle"`
+	ConfigId     uint8         `json:"configId" validate:"gte=0,lte=15"`
+	ConfigChange bool          `json:"configChange"`
+	Moving       bool          `json:"moving"`
+	Latitude     float64       `json:"latitude" validate:"gte=-90,lte=90"`
+	Longitude    float64       `json:"longitude" validate:"gte=-180,lte=180"`
+	Altitude     float64       `json:"altitude"`
+	Timestamp    time.Time     `json:"timestamp"`
+	Battery      float64       `json:"battery" validate:"gte=1,lte=5"`
+	TTF          time.Duration `json:"ttf"`
+	Mac1         string        `json:"mac1"`
+	Rssi1        int8          `json:"rssi1" validate:"gte=-120,lte=-20"`
+	Mac2         *string       `json:"mac2"`
+	Rssi2        *int8         `json:"rssi2" validate:"gte=-120,lte=-20"`
+	Mac3         *string       `json:"mac3"`
+	Rssi3        *int8         `json:"rssi3" validate:"gte=-120,lte=-20"`
+	Mac4         *string       `json:"mac4"`
+	Rssi4        *int8         `json:"rssi4" validate:"gte=-120,lte=-20"`
 }
 
 func (p Port150Payload) MarshalJSON() ([]byte, error) {
@@ -185,9 +185,9 @@ func (p Port150Payload) IsDutyCycle() bool {
 }
 
 func (p Port150Payload) GetConfigId() *uint8 {
-	return &p.ConfigChangeId
+	return &p.ConfigId
 }
 
 func (p Port150Payload) GetConfigChange() bool {
-	return p.ConfigChangeSuccess
+	return p.ConfigChange
 }

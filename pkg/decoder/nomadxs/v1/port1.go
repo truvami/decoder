@@ -12,8 +12,8 @@ import (
 // | Byte  | Size | Description                               | Format                 |
 // +-------+------+-------------------------------------------+------------------------+
 // | 0     | 1    | Duty cycle flag                           | uint1                  |
-// | 0     | 1    | Config change id                          | uint4                  |
-// | 0     | 1    | Config change success flag                | uint1                  |
+// | 0     | 1    | Config id                                 | uint4                  |
+// | 0     | 1    | Config change flag                        | uint1                  |
 // | 0     | 1    | Reserved                                  | uint1                  |
 // | 0     | 1    | Moving flag                               | uint1                  |
 // | 1-4   | 4    | Latitude                                  | int32, 1/1’000’000 deg |
@@ -41,32 +41,32 @@ import (
 // +-------+------+-------------------------------------------+------------------------+
 
 type Port1Payload struct {
-	DutyCycle           bool          `json:"dutyCycle"`
-	ConfigChangeId      uint8         `json:"configChangeId" validate:"gte=0,lte=15"`
-	ConfigChangeSuccess bool          `json:"configChangeSuccess"`
-	Moving              bool          `json:"moving"`
-	Latitude            float64       `json:"latitude" validate:"gte=-90,lte=90"`
-	Longitude           float64       `json:"longitude" validate:"gte=-180,lte=180"`
-	Altitude            float64       `json:"altitude"`
-	Year                uint8         `json:"year" validate:"gte=0,lte=255"`
-	Month               uint8         `json:"month" validate:"gte=1,lte=12"`
-	Day                 uint8         `json:"day" validate:"gte=1,lte=31"`
-	Hour                uint8         `json:"hour" validate:"gte=0,lte=23"`
-	Minute              uint8         `json:"minute" validate:"gte=0,lte=59"`
-	Second              uint8         `json:"second" validate:"gte=0,lte=59"`
-	TimeToFix           time.Duration `json:"timeToFix"`
-	AmbientLight        uint16        `json:"ambientLight"`
-	AccelerometerXAxis  int16         `json:"accelerometerXAxis"`
-	AccelerometerYAxis  int16         `json:"accelerometerYAxis"`
-	AccelerometerZAxis  int16         `json:"accelerometerZAxis"`
-	Temperature         float32       `json:"temperature" validate:"gte=-20,lte=60"`
-	Pressure            float32       `json:"pressure" validate:"gte=0,lte=1100"`
-	GyroscopeXAxis      float32       `json:"gyroscopeXAxis"`
-	GyroscopeYAxis      float32       `json:"gyroscopeYAxis"`
-	GyroscopeZAxis      float32       `json:"gyroscopeZAxis"`
-	MagnetometerXAxis   float32       `json:"magnetometerXAxis"`
-	MagnetometerYAxis   float32       `json:"magnetometerYAxis"`
-	MagnetometerZAxis   float32       `json:"magnetometerZAxis"`
+	DutyCycle          bool          `json:"dutyCycle"`
+	ConfigId           uint8         `json:"configId" validate:"gte=0,lte=15"`
+	ConfigChange       bool          `json:"configChange"`
+	Moving             bool          `json:"moving"`
+	Latitude           float64       `json:"latitude" validate:"gte=-90,lte=90"`
+	Longitude          float64       `json:"longitude" validate:"gte=-180,lte=180"`
+	Altitude           float64       `json:"altitude"`
+	Year               uint8         `json:"year" validate:"gte=0,lte=255"`
+	Month              uint8         `json:"month" validate:"gte=1,lte=12"`
+	Day                uint8         `json:"day" validate:"gte=1,lte=31"`
+	Hour               uint8         `json:"hour" validate:"gte=0,lte=23"`
+	Minute             uint8         `json:"minute" validate:"gte=0,lte=59"`
+	Second             uint8         `json:"second" validate:"gte=0,lte=59"`
+	TimeToFix          time.Duration `json:"timeToFix"`
+	AmbientLight       uint16        `json:"ambientLight"`
+	AccelerometerXAxis int16         `json:"accelerometerXAxis"`
+	AccelerometerYAxis int16         `json:"accelerometerYAxis"`
+	AccelerometerZAxis int16         `json:"accelerometerZAxis"`
+	Temperature        float32       `json:"temperature" validate:"gte=-20,lte=60"`
+	Pressure           float32       `json:"pressure" validate:"gte=0,lte=1100"`
+	GyroscopeXAxis     float32       `json:"gyroscopeXAxis"`
+	GyroscopeYAxis     float32       `json:"gyroscopeYAxis"`
+	GyroscopeZAxis     float32       `json:"gyroscopeZAxis"`
+	MagnetometerXAxis  float32       `json:"magnetometerXAxis"`
+	MagnetometerYAxis  float32       `json:"magnetometerYAxis"`
+	MagnetometerZAxis  float32       `json:"magnetometerZAxis"`
 }
 
 func (p Port1Payload) MarshalJSON() ([]byte, error) {
@@ -147,9 +147,9 @@ func (p Port1Payload) IsDutyCycle() bool {
 }
 
 func (p Port1Payload) GetConfigId() *uint8 {
-	return &p.ConfigChangeId
+	return &p.ConfigId
 }
 
 func (p Port1Payload) GetConfigChange() bool {
-	return p.ConfigChangeSuccess
+	return p.ConfigChange
 }

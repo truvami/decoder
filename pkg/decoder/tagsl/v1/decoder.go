@@ -46,8 +46,8 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
 				{Name: "DutyCycle", Start: 0, Length: 1, Transform: dutyCycle},
-				{Name: "ConfigChangeId", Start: 0, Length: 1, Transform: configChangeId},
-				{Name: "ConfigChangeSuccess", Start: 0, Length: 1, Transform: configChangeSuccess},
+				{Name: "ConfigId", Start: 0, Length: 1, Transform: configId},
+				{Name: "ConfigChange", Start: 0, Length: 1, Transform: configSuccess},
 				{Name: "Moving", Start: 0, Length: 1, Transform: moving},
 				{Name: "Latitude", Start: 1, Length: 4, Transform: func(v any) any {
 					return float64(v.(int)) / 1000000
@@ -72,8 +72,8 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
 				{Name: "DutyCycle", Start: 0, Length: 1, Transform: dutyCycle},
-				{Name: "ConfigChangeId", Start: 0, Length: 1, Transform: configChangeId},
-				{Name: "ConfigChangeSuccess", Start: 0, Length: 1, Transform: configChangeSuccess},
+				{Name: "ConfigId", Start: 0, Length: 1, Transform: configId},
+				{Name: "ConfigChange", Start: 0, Length: 1, Transform: configSuccess},
 				{Name: "Moving", Start: 0, Length: 1, Transform: moving},
 			},
 			TargetType: reflect.TypeOf(Port2Payload{}),
@@ -127,8 +127,8 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
 				{Name: "DutyCycle", Start: 0, Length: 1, Transform: dutyCycle},
-				{Name: "ConfigChangeId", Start: 0, Length: 1, Transform: configChangeId},
-				{Name: "ConfigChangeSuccess", Start: 0, Length: 1, Transform: configChangeSuccess},
+				{Name: "ConfigId", Start: 0, Length: 1, Transform: configId},
+				{Name: "ConfigChange", Start: 0, Length: 1, Transform: configSuccess},
 				{Name: "Moving", Start: 0, Length: 1, Transform: moving},
 				{Name: "Mac1", Start: 1, Length: 6, Hex: true},
 				{Name: "Rssi1", Start: 7, Length: 1},
@@ -161,8 +161,8 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 			Fields: []common.FieldConfig{
 				{Name: "Timestamp", Start: 0, Length: 4},
 				{Name: "DutyCycle", Start: 4, Length: 1, Transform: dutyCycle},
-				{Name: "ConfigChangeId", Start: 4, Length: 1, Transform: configChangeId},
-				{Name: "ConfigChangeSuccess", Start: 4, Length: 1, Transform: configChangeSuccess},
+				{Name: "ConfigId", Start: 4, Length: 1, Transform: configId},
+				{Name: "ConfigChange", Start: 4, Length: 1, Transform: configSuccess},
 				{Name: "Moving", Start: 4, Length: 1, Transform: moving},
 				{Name: "Mac1", Start: 5, Length: 6, Hex: true},
 				{Name: "Rssi1", Start: 11, Length: 1},
@@ -200,8 +200,8 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
 				{Name: "DutyCycle", Start: 0, Length: 1, Transform: dutyCycle},
-				{Name: "ConfigChangeId", Start: 0, Length: 1, Transform: configChangeId},
-				{Name: "ConfigChangeSuccess", Start: 0, Length: 1, Transform: configChangeSuccess},
+				{Name: "ConfigId", Start: 0, Length: 1, Transform: configId},
+				{Name: "ConfigChange", Start: 0, Length: 1, Transform: configSuccess},
 				{Name: "Moving", Start: 0, Length: 1, Transform: moving},
 				{Name: "Latitude", Start: 1, Length: 4, Transform: func(v any) any {
 					return float64(v.(int)) / 1000000
@@ -243,8 +243,8 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
 				{Name: "DutyCycle", Start: 0, Length: 1, Transform: dutyCycle},
-				{Name: "ConfigChangeId", Start: 0, Length: 1, Transform: configChangeId},
-				{Name: "ConfigChangeSuccess", Start: 0, Length: 1, Transform: configChangeSuccess},
+				{Name: "ConfigId", Start: 0, Length: 1, Transform: configId},
+				{Name: "ConfigChange", Start: 0, Length: 1, Transform: configSuccess},
 				{Name: "Moving", Start: 0, Length: 1, Transform: moving},
 				{Name: "Latitude", Start: 1, Length: 4, Transform: func(v any) any {
 					return float64(v.(int)) / 1000000
@@ -278,8 +278,8 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
 				{Name: "DutyCycle", Start: 0, Length: 1, Transform: dutyCycle},
-				{Name: "ConfigChangeId", Start: 0, Length: 1, Transform: configChangeId},
-				{Name: "ConfigChangeSuccess", Start: 0, Length: 1, Transform: configChangeSuccess},
+				{Name: "ConfigId", Start: 0, Length: 1, Transform: configId},
+				{Name: "ConfigChange", Start: 0, Length: 1, Transform: configSuccess},
 				{Name: "Moving", Start: 0, Length: 1, Transform: moving},
 				{Name: "Latitude", Start: 1, Length: 4, Transform: func(v any) any {
 					return float64(v.(int)) / 1000000
@@ -319,8 +319,8 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 				{Name: "BufferLevel", Start: 0, Length: 2},
 				{Name: "Timestamp", Start: 2, Length: 4},
 				{Name: "DutyCycle", Start: 6, Length: 1, Transform: dutyCycle},
-				{Name: "ConfigChangeId", Start: 6, Length: 1, Transform: configChangeId},
-				{Name: "ConfigChangeSuccess", Start: 6, Length: 1, Transform: configChangeSuccess},
+				{Name: "ConfigId", Start: 6, Length: 1, Transform: configId},
+				{Name: "ConfigChange", Start: 6, Length: 1, Transform: configSuccess},
 				{Name: "Moving", Start: 6, Length: 1, Transform: moving},
 				{Name: "Mac1", Start: 7, Length: 6, Hex: true},
 				{Name: "Rssi1", Start: 13, Length: 1},
@@ -343,8 +343,8 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 			Fields: []common.FieldConfig{
 				{Name: "BufferLevel", Start: 0, Length: 2},
 				{Name: "DutyCycle", Start: 2, Length: 1, Transform: dutyCycle},
-				{Name: "ConfigChangeId", Start: 2, Length: 1, Transform: configChangeId},
-				{Name: "ConfigChangeSuccess", Start: 2, Length: 1, Transform: configChangeSuccess},
+				{Name: "ConfigId", Start: 2, Length: 1, Transform: configId},
+				{Name: "ConfigChange", Start: 2, Length: 1, Transform: configSuccess},
 				{Name: "Moving", Start: 2, Length: 1, Transform: moving},
 				{Name: "Latitude", Start: 3, Length: 4, Transform: func(v any) any {
 					return float64(v.(int)) / 1000000
@@ -375,8 +375,8 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 			Fields: []common.FieldConfig{
 				{Name: "BufferLevel", Start: 0, Length: 2},
 				{Name: "DutyCycle", Start: 2, Length: 1, Transform: dutyCycle},
-				{Name: "ConfigChangeId", Start: 2, Length: 1, Transform: configChangeId},
-				{Name: "ConfigChangeSuccess", Start: 2, Length: 1, Transform: configChangeSuccess},
+				{Name: "ConfigId", Start: 2, Length: 1, Transform: configId},
+				{Name: "ConfigChange", Start: 2, Length: 1, Transform: configSuccess},
 				{Name: "Moving", Start: 2, Length: 1, Transform: moving},
 				{Name: "Latitude", Start: 3, Length: 4, Transform: func(v any) any {
 					return float64(v.(int)) / 1000000
@@ -490,7 +490,7 @@ func dutyCycle(v any) any {
 	return (byte(i)>>7)&0x01 == 1
 }
 
-func configChangeId(v any) any {
+func configId(v any) any {
 	i, ok := v.(int)
 	if !ok {
 		return nil
@@ -498,7 +498,7 @@ func configChangeId(v any) any {
 	return (byte(i) >> 3) & 0x0f
 }
 
-func configChangeSuccess(v any) any {
+func configSuccess(v any) any {
 	i, ok := v.(int)
 	if !ok {
 		return nil

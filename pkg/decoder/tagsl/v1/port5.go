@@ -10,8 +10,8 @@ import (
 // | Byte | Size | Description                               | Format    |
 // +------+------+-------------------------------------------+-----------+
 // | 0    | 1    | Duty cycle flag                           | uint1     |
-// | 0    | 1    | Config change id                          | uint4     |
-// | 0    | 1    | Config change success flag                | uint1     |
+// | 0    | 1    | Config id                                 | uint4     |
+// | 0    | 1    | Config change flag                        | uint1     |
 // | 0    | 1    | Reserved                                  | uint1     |
 // | 0    | 1    | Moving flag                               | uint1     |
 // | 1    | 6    | Mac 1                                     | uint8[6]  |
@@ -31,24 +31,24 @@ import (
 // +------+------+-------------------------------------------+-----------+
 
 type Port5Payload struct {
-	DutyCycle           bool    `json:"dutyCycle"`
-	ConfigChangeId      uint8   `json:"configChangeId" validate:"gte=0,lte=15"`
-	ConfigChangeSuccess bool    `json:"configChangeSuccess"`
-	Moving              bool    `json:"moving"`
-	Mac1                string  `json:"mac1"`
-	Rssi1               int8    `json:"rssi1" validate:"gte=-120,lte=-20"`
-	Mac2                *string `json:"mac2"`
-	Rssi2               *int8   `json:"rssi2" validate:"gte=-120,lte=-20"`
-	Mac3                *string `json:"mac3"`
-	Rssi3               *int8   `json:"rssi3" validate:"gte=-120,lte=-20"`
-	Mac4                *string `json:"mac4"`
-	Rssi4               *int8   `json:"rssi4" validate:"gte=-120,lte=-20"`
-	Mac5                *string `json:"mac5"`
-	Rssi5               *int8   `json:"rssi5" validate:"gte=-120,lte=-20"`
-	Mac6                *string `json:"mac6"`
-	Rssi6               *int8   `json:"rssi6" validate:"gte=-120,lte=-20"`
-	Mac7                *string `json:"mac7"`
-	Rssi7               *int8   `json:"rssi7" validate:"gte=-120,lte=-20"`
+	DutyCycle    bool    `json:"dutyCycle"`
+	ConfigId     uint8   `json:"configId" validate:"gte=0,lte=15"`
+	ConfigChange bool    `json:"configChange"`
+	Moving       bool    `json:"moving"`
+	Mac1         string  `json:"mac1"`
+	Rssi1        int8    `json:"rssi1" validate:"gte=-120,lte=-20"`
+	Mac2         *string `json:"mac2"`
+	Rssi2        *int8   `json:"rssi2" validate:"gte=-120,lte=-20"`
+	Mac3         *string `json:"mac3"`
+	Rssi3        *int8   `json:"rssi3" validate:"gte=-120,lte=-20"`
+	Mac4         *string `json:"mac4"`
+	Rssi4        *int8   `json:"rssi4" validate:"gte=-120,lte=-20"`
+	Mac5         *string `json:"mac5"`
+	Rssi5        *int8   `json:"rssi5" validate:"gte=-120,lte=-20"`
+	Mac6         *string `json:"mac6"`
+	Rssi6        *int8   `json:"rssi6" validate:"gte=-120,lte=-20"`
+	Mac7         *string `json:"mac7"`
+	Rssi7        *int8   `json:"rssi7" validate:"gte=-120,lte=-20"`
 }
 
 var _ decoder.UplinkFeatureBase = &Port5Payload{}
@@ -125,9 +125,9 @@ func (p Port5Payload) IsDutyCycle() bool {
 }
 
 func (p Port5Payload) GetConfigId() *uint8 {
-	return &p.ConfigChangeId
+	return &p.ConfigId
 }
 
 func (p Port5Payload) GetConfigChange() bool {
-	return p.ConfigChangeSuccess
+	return p.ConfigChange
 }
