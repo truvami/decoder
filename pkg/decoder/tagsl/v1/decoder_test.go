@@ -2177,9 +2177,9 @@ func TestMarshal(t *testing.T) {
 			expected: []string{"\"moving\": false", "\"mac1\": \"e0286d8aabfc\"", "\"rssi1\": -79"},
 		},
 		{
-			payload:  "00020002d309ae008247c5113966c45d640f7e",
+			payload:  "00020002d309ae008247c5113966c45d640f7e2e0707",
 			port:     110,
-			expected: []string{"\"timestamp\": \"2024-08-20T09:09:56Z\"", "\"battery\": \"3.966v\""},
+			expected: []string{"\"timestamp\": \"2024-08-20T09:09:56Z\"", "\"battery\": \"3.966v\"", "\"ttf\": \"46s\"", "\"pdop\": \"3.5m\""},
 		},
 		{
 			payload:  "00020002d30c9300824c87117966c45dcd0f8118e0286d8aabfca9f0b0140c96bbc8726c9a74b58da8e0286d8a9478bf",
