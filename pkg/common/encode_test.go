@@ -5,13 +5,13 @@ import (
 )
 
 type TestStruct struct {
-	Uint8Field  uint8
-	Uint16Field uint16
-	Uint32Field uint32
-	Int8Field   int8
-	Int16Field  int16
-	Int32Field  int32
-	ByteSlice   []byte
+	Uint8Field   uint8
+	Uint16Field  uint16
+	Uint32Field  uint32
+	Int8Field    int8
+	Int16Field   int16
+	Int32Field   int32
+	ByteSlice    []byte
 	MissingField string // This field won't be in the config
 }
 
@@ -246,7 +246,7 @@ func TestEncodePayload(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			output, err := EncodePayload(tt.data, tt.config)
-			
+
 			if tt.expectError {
 				if err == nil {
 					t.Errorf("Expected error but got none")
@@ -267,18 +267,18 @@ func TestEncodePayloadWithNilTransform(t *testing.T) {
 	data := TestStruct{
 		Uint8Field: 0x12,
 	}
-	
+
 	config := PayloadConfig{
 		Fields: []FieldConfig{
 			{Name: "Uint8Field", Start: 0, Length: 1, Transform: nil},
 		},
 	}
-	
+
 	output, err := EncodePayload(data, config)
 	if err != nil {
 		t.Errorf("Unexpected error: %v", err)
 	}
-	
+
 	if output != "12" {
 		t.Errorf("Expected output 12, got %s", output)
 	}
@@ -289,13 +289,13 @@ func TestEncodePayloadWithEmptyConfig(t *testing.T) {
 	config := PayloadConfig{
 		Fields: []FieldConfig{},
 	}
-	
+
 	output, err := EncodePayload(data, config)
 	if err != nil {
 		t.Errorf("Unexpected error: %v", err)
 	}
-	
+
 	if output != "" {
 		t.Errorf("Expected empty output, got %s", output)
 	}
-} 
+}

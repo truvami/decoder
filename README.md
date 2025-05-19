@@ -182,9 +182,9 @@ POST /{device_type}/v1
 
 ```json
 {
-  "port": 1,
-  "payload": "hex_encoded_payload",
-  "devEui": ""
+	"port": 1,
+	"payload": "hex_encoded_payload",
+	"devEui": ""
 }
 ```
 
@@ -192,16 +192,16 @@ POST /{device_type}/v1
 
 ```json
 {
-  "data": {
-    // Decoded payload fields
-  },
-  "metadata": {
-    // Metadata about the decoded payload
-  },
-  "warnings": [
-    // Any warnings that occurred during decoding
-  ],
-  "traceId": "unique_trace_id"
+	"data": {
+		// Decoded payload fields
+	},
+	"metadata": {
+		// Metadata about the decoded payload
+	},
+	"warnings": [
+		// Any warnings that occurred during decoding
+	],
+	"traceId": "unique_trace_id"
 }
 ```
 
@@ -215,11 +215,11 @@ POST /encode/{device_type}/v1
 
 ```json
 {
-  "port": 128,
-  "payload": {
-    // Object with fields to encode based on device type and port
-  },
-  "devEui": ""
+	"port": 128,
+	"payload": {
+		// Object with fields to encode based on device type and port
+	},
+	"devEui": ""
 }
 ```
 
@@ -227,14 +227,14 @@ POST /encode/{device_type}/v1
 
 ```json
 {
-  "encoded": "hex_encoded_payload",
-  "metadata": {
-    // Any additional metadata
-  },
-  "warnings": [
-    // Any warnings that occurred during encoding
-  ],
-  "traceId": "unique_trace_id"
+	"encoded": "hex_encoded_payload",
+	"metadata": {
+		// Any additional metadata
+	},
+	"warnings": [
+		// Any warnings that occurred during encoding
+	],
+	"traceId": "unique_trace_id"
 }
 ```
 

@@ -91,4 +91,4 @@ func EncodePayload(data interface{}, config PayloadConfig) (string, error) {
 
 	// Convert the payload to a hexadecimal string
 	return hex.EncodeToString(payload), nil
-} 
+}

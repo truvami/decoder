@@ -163,34 +163,36 @@ func TestNewTagSLv1Encoder(t *testing.T) {
 	if encoder == nil {
 		t.Fatal("expected encoder to be created")
 	}
-	
+
 	// Test with options
 	optionCalled := false
 	option := func(e *TagSLv1Encoder) {
 		optionCalled = true
 	}
-	
+
 	encoder = NewTagSLv1Encoder(option)
 	if !optionCalled {
 		t.Fatal("expected option to be called")
 	}
+
+	encoder.Encode(nil, 0, "")
 }
 
 func TestTagSLv1EncoderWithExtraData(t *testing.T) {
 	encoder := NewTagSLv1Encoder()
-	
+
 	// Test with extra data
 	extraData := "extra data"
 	data := Port128Payload{
 		BLE: 1,
 		GPS: 1,
 	}
-	
+
 	_, metadata, err := encoder.Encode(data, 128, extraData)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	
+
 	if metadata != extraData {
 		t.Errorf("expected metadata to be %v, got %v", extraData, metadata)
 	}

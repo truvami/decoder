@@ -93,7 +93,7 @@ func Execute() {
 	// Initialize logger first to ensure it's available for all commands
 	logger.NewLogger()
 	defer logger.Sync()
-	
+
 	err := rootCmd.Execute()
 	if err != nil {
 		os.Exit(1)
