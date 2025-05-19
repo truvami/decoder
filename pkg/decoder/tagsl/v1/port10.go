@@ -54,6 +54,7 @@ func (p Port10Payload) MarshalJSON() ([]byte, error) {
 	}
 	return json.Marshal(&struct {
 		*Alias
+		Altitude   string  `json:"altitude"`
 		Timestamp  string  `json:"timestamp"`
 		Battery    string  `json:"battery"`
 		TTF        *string `json:"ttf"`
@@ -61,6 +62,7 @@ func (p Port10Payload) MarshalJSON() ([]byte, error) {
 		Satellites *uint8  `json:"satellites"`
 	}{
 		Alias:      (*Alias)(&p),
+		Altitude:   fmt.Sprintf("%.1fm", p.Altitude),
 		Timestamp:  p.Timestamp.Format("2006-01-02 15:04:05"),
 		Battery:    fmt.Sprintf("%.3fv", p.Battery),
 		TTF:        ttf,

@@ -46,22 +46,44 @@ type Port50Payload struct {
 	TTF                 time.Duration `json:"ttf"`
 	Mac1                string        `json:"mac1"`
 	Rssi1               int8          `json:"rssi1" validate:"gte=-120,lte=-20"`
-	Mac2                string        `json:"mac2"`
-	Rssi2               int8          `json:"rssi2" validate:"gte=-120,lte=-20"`
-	Mac3                string        `json:"mac3"`
-	Rssi3               int8          `json:"rssi3" validate:"gte=-120,lte=-20"`
-	Mac4                string        `json:"mac4"`
-	Rssi4               int8          `json:"rssi4" validate:"gte=-120,lte=-20"`
+	Mac2                *string       `json:"mac2"`
+	Rssi2               *int8         `json:"rssi2" validate:"gte=-120,lte=-20"`
+	Mac3                *string       `json:"mac3"`
+	Rssi3               *int8         `json:"rssi3" validate:"gte=-120,lte=-20"`
+	Mac4                *string       `json:"mac4"`
+	Rssi4               *int8         `json:"rssi4" validate:"gte=-120,lte=-20"`
 }
 
 func (p Port50Payload) MarshalJSON() ([]byte, error) {
 	type Alias Port50Payload
 	return json.Marshal(&struct {
 		*Alias
-		TTF string `json:"ttf"`
+		Altitude  string  `json:"altitude"`
+		Timestamp string  `json:"timestamp"`
+		Battery   string  `json:"battery"`
+		TTF       string  `json:"ttf"`
+		Mac1      string  `json:"mac1"`
+		Rssi1     int8    `json:"rssi1"`
+		Mac2      *string `json:"mac2"`
+		Rssi2     *int8   `json:"rssi2"`
+		Mac3      *string `json:"mac3"`
+		Rssi3     *int8   `json:"rssi3"`
+		Mac4      *string `json:"mac4"`
+		Rssi4     *int8   `json:"rssi4"`
 	}{
-		Alias: (*Alias)(&p),
-		TTF:   fmt.Sprintf("%.0fs", p.TTF.Seconds()),
+		Alias:     (*Alias)(&p),
+		Altitude:  fmt.Sprintf("%.1fm", p.Altitude),
+		Timestamp: p.Timestamp.Format("2006-01-02 15:04:05"),
+		Battery:   fmt.Sprintf("%.3fv", p.Battery),
+		TTF:       p.TTF.String(),
+		Mac1:      p.Mac1,
+		Rssi1:     p.Rssi1,
+		Mac2:      p.Mac2,
+		Rssi2:     p.Rssi2,
+		Mac3:      p.Mac3,
+		Rssi3:     p.Rssi3,
+		Mac4:      p.Mac4,
+		Rssi4:     p.Rssi4,
 	})
 }
 
@@ -123,24 +145,24 @@ func (p Port50Payload) GetAccessPoints() []decoder.AccessPoint {
 		})
 	}
 
-	if p.Mac2 != "" {
+	if p.Mac2 != nil && p.Rssi2 != nil {
 		accessPoints = append(accessPoints, decoder.AccessPoint{
-			MAC:  p.Mac2,
-			RSSI: p.Rssi2,
+			MAC:  *p.Mac2,
+			RSSI: *p.Rssi2,
 		})
 	}
 
-	if p.Mac3 != "" {
+	if p.Mac3 != nil && p.Rssi3 != nil {
 		accessPoints = append(accessPoints, decoder.AccessPoint{
-			MAC:  p.Mac3,
-			RSSI: p.Rssi3,
+			MAC:  *p.Mac3,
+			RSSI: *p.Rssi3,
 		})
 	}
 
-	if p.Mac4 != "" {
+	if p.Mac4 != nil && p.Rssi4 != nil {
 		accessPoints = append(accessPoints, decoder.AccessPoint{
-			MAC:  p.Mac4,
-			RSSI: p.Rssi4,
+			MAC:  *p.Mac4,
+			RSSI: *p.Rssi4,
 		})
 	}
 
