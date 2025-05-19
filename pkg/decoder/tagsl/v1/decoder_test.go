@@ -488,7 +488,7 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "66ec04bb81",
+			payload:     "66ec04bb81e0286d8aabfcbb",
 			port:        7,
 			autoPadding: false,
 			expected: Port7Payload{
@@ -497,10 +497,12 @@ func TestDecode(t *testing.T) {
 				ConfigChangeId:      0,
 				ConfigChangeSuccess: false,
 				Moving:              true,
+				Mac1:                "e0286d8aabfc",
+				Rssi1:               -69,
 			},
 		},
 		{
-			payload:     "66ec04bb3c",
+			payload:     "66ec04bb3ce0286d8aabfcbb",
 			port:        7,
 			autoPadding: true,
 			expected: Port7Payload{
@@ -509,6 +511,8 @@ func TestDecode(t *testing.T) {
 				ConfigChangeId:      7,
 				ConfigChangeSuccess: true,
 				Moving:              false,
+				Mac1:                "e0286d8aabfc",
+				Rssi1:               -69,
 			},
 		},
 		{
