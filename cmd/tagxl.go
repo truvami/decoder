@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/truvami/decoder/internal/logger"
 	helpers "github.com/truvami/decoder/pkg/common"
-	"github.com/truvami/decoder/pkg/decoder/tagxl/v1"
+	tagxl "github.com/truvami/decoder/pkg/decoder/tagxl/v1"
 	"github.com/truvami/decoder/pkg/loracloud"
 	"go.uber.org/zap"
 )
@@ -44,8 +44,12 @@ var tagxlCmd = &cobra.Command{
 			return
 		}
 		logger.Logger.Debug("port parsed successfully", zap.Int("port", port))
+		if port < 0 || port > 255 {
+			logger.Logger.Error("port must be between 0 and 255", zap.Int("port", port))
+			return
+		}
 
-		data, metadata, err := d.Decode(args[1], int16(port), args[2])
+		data, err := d.Decode(args[1], uint8(port), args[2])
 		if err != nil {
 			if errors.Is(err, helpers.ErrValidationFailed) {
 				for _, err := range helpers.UnwrapError(err) {
@@ -58,6 +62,6 @@ var tagxlCmd = &cobra.Command{
 			}
 		}
 
-		printJSON(data, metadata)
+		printJSON(data.Data)
 	},
 }

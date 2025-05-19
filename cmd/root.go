@@ -100,18 +100,17 @@ func Execute() {
 	}
 }
 
-func printJSON(data interface{}, metadata interface{}) {
+func printJSON(data any) {
 	if Json {
-		logger.Logger.Info("successfully decoded payload", zap.Any("data", data), zap.Any("metadata", metadata))
+		logger.Logger.Info("successfully decoded payload", zap.Any("data", data))
 		return
 	}
 
 	logger.Logger.Info("successfully decoded payload")
 
-	// print data and metadata beautifully and formatted
-	marshaled, err := json.MarshalIndent(map[string]interface{}{
-		"data":     data,
-		"metadata": metadata,
+	// print data beautifully and formatted
+	marshaled, err := json.MarshalIndent(map[string]any{
+		"data": data,
 	}, "", "   ")
 
 	// handle marshaling error

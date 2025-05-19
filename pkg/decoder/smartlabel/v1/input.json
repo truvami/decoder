@@ -1,9 +1,9 @@
 {
-    "deveui": "10-CE-45-FF-FE-00-C7-EC",
-    "uplink": {
-        "msgtype": "updf",
-        "fcnt": 40437,
-        "port": 192,
-        "payload": "87821F50490200B520FBE977844D222A3A14A89293956245CC75A9CA1BBC25DDF658542909"
-    }
+	"deveui": "10-CE-45-FF-FE-00-C7-EC",
+	"uplink": {
+		"msgtype": "updf",
+		"fcnt": 40437,
+		"port": 192,
+		"payload": "87821f50490200b520fbe977844d222a3a14a89293956245cc75a9ca1bbc25ddf658542909"
+	}
 }

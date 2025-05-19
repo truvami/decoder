@@ -1,34 +1,133 @@
 package tagxl
 
-// The
-// [TLV](https://lora-developers.semtech.com/documentation/tech-papers-and-guides/lora-edge-tracker-reference-design-user-guide-v1/lora-edge-tracker-reference-design-firmware/#payload-format-specification)
-// payload format shall be used. It is defined as:
-//
-// | Tag  | Length                    | Number of Commands           | Data                   |
-// |------|---------------------------|------------------------------|------------------------|
-// | 0x4C | Variable number (uint8_t) | Variable number (uint8_t)    | Commands in TLV format |
-//
-// The settings uplink contains one or more settings in its data section. These settings are again in TLV format and are either device or runner settings:
-//
-// | # | Device Setting                   | Tag  | Size | Data                                                                                                                     | Format      |
-// |---|----------------------------------|------|------|--------------------------------------------------------------------------------------------------------------------------|-------------|
-// | 1 | Device Flags                     | 0x40 | 0x01 | bit 0: BLE_FWU_ENABLED<br/>bit 1: GNSS_ENABLE<br/>bit 2: WIFI_ENABLE<br/>bit 3: Set ACCELERATION_ENABLE<br/>bit 4-7: RFU | bit field   |
-// | 2 | Asset Tracking Intervals         | 0x41 | 0x04 | data 0: MOVING_INTERVAL<br/>data 1: STEADY_INTERVAL                                                                      | uint16_t[2] |
-// | 3 | Acceleration Sensor Settings     | 0x42 | 0x04 | data 0: ACCELERATION_SENSITIVITY<br/>data 1: ACCELERATION_DELAY                                                          | uint16_t[2] |
-// | 4 | HEARTBEAT_INTERVAL               | 0x43 | 0x01 | Heartbeat interval in hours                                                                                              | uint8_t     |
-// | 5 | ADVERTISEMENT_FWU_INTERVAL       | 0x44 | 0x01 | Value in seconds                                                                                                         | uint8_t     |
-// | 6 | Battery Voltage                  | 0x45 | 0x02 | Battery voltage in mV                                                                                                    | uint16_t    |
-// | 7 | Firmware Hash                    | 0x46 | 0x04 | First 4 bytes of SHA-1 hash of git commit                                                                                | uint8_t[4]  |
-//
-// | # | Runner Setting                   | Tag  | Size | Data                                                                                                                            | Format     |
-// |---|----------------------------------|------|------|---------------------------------------------------------------------------------------------------------------------------------|------------|
-// | 1 | Run Alarm                        | 0x80 | 0x02 | data 0: Duration of started alarm in minutes (min: 0, max: 255)<br/>data 1: Period of alarm beeps in seconds (min: 0, max: 255) | uint8_t[2] |
+import (
+	"time"
+
+	"github.com/truvami/decoder/pkg/decoder"
+)
+
 type Port151Payload struct {
-	DeviceFlags              uint8    `json:"deviceFlags"`
-	AssetTrackingIntervals   []uint16 `json:"assetTrackingIntervals"`
-	AccelerationSensor       []uint16 `json:"accelerationSensor"`
-	HeartbeatInterval        uint8    `json:"heartbeatInterval"`
-	AdvertisementFwuInterval uint8    `json:"advertisementFwuInterval"`
-	Battery                  float64  `json:"battery" validate:"gte=1,lte=5"`
-	FirmwareHash             []uint8  `json:"firmwareHash"`
+	Battery                              *float32 `json:"battery" validate:"gte=1,lte=5"`
+	GnssScans                            *uint16  `json:"gnssScans"`
+	WifiScans                            *uint16  `json:"wifiScans"`
+	LocalizationIntervalWhileMoving      *uint16  `json:"movingInterval" validate:"gte=60,lte=86400"`
+	LocalizationIntervalWhileSteady      *uint16  `json:"steadyInterval" validate:"gte=120,lte=86400"`
+	AccelerometerWakeupThreshold         *uint16  `json:"accelerometerWakeupThreshold" validate:"gte=10,lte=8000"`
+	AccelerometerDelay                   *uint16  `json:"accelerometerDelay" validate:"gte=1000,lte=10000"`
+	HeartbeatInterval                    *uint8   `json:"heartbeatInterval" validate:"gte=300,lte=604800"`
+	GnssEnabled                          *bool    `json:"gnssEnabled"`
+	WiFiEnabled                          *bool    `json:"wifiEnabled"`
+	AccelerometerEnabled                 *bool    `json:"accelerometerEnabled"`
+	AdvertisementFirmwareUpgradeInterval *uint8   `json:"advertisementFirmwareUpgradeInterval" validate:"gte=1,lte=86400"`
+	FirmwareHash                         *string  `json:"firmwareHash"`
+	ResetCount                           *uint16  `json:"resetCount"`
+	ResetCause                           *uint32  `json:"resetCause"`
+}
+
+var _ decoder.UplinkFeatureBase = &Port151Payload{}
+var _ decoder.UplinkFeatureBattery = &Port151Payload{}
+var _ decoder.UplinkFeatureConfig = &Port151Payload{}
+
+func (p Port151Payload) GetTimestamp() *time.Time { // coverage-ignore
+	return nil
+}
+
+func (p Port151Payload) GetBatteryVoltage() float64 {
+	return float64(*p.Battery)
+}
+
+func (p Port151Payload) GetLowBattery() *bool { // coverage-ignore
+	return nil
+}
+
+func (p Port151Payload) GetBle() *bool { // coverage-ignore
+	return nil
+}
+
+func (p Port151Payload) GetGnss() *bool {
+	return p.GnssEnabled
+}
+
+func (p Port151Payload) GetWifi() *bool {
+	return p.WiFiEnabled
+}
+
+func (p Port151Payload) GetAcceleration() *bool {
+	return p.AccelerometerEnabled
+}
+
+func (p Port151Payload) GetMovingInterval() *uint32 { // coverage-ignore
+	if p.LocalizationIntervalWhileMoving == nil {
+		return nil
+	}
+	movingInterval := uint32(*p.LocalizationIntervalWhileMoving)
+	return &movingInterval
+}
+
+func (p Port151Payload) GetSteadyInterval() *uint32 { // coverage-ignore
+	if p.LocalizationIntervalWhileSteady == nil {
+		return nil
+	}
+	steadyInterval := uint32(*p.LocalizationIntervalWhileSteady)
+	return &steadyInterval
+}
+
+func (p Port151Payload) GetConfigInterval() *uint32 { // coverage-ignore
+	if p.HeartbeatInterval == nil {
+		return nil
+	}
+	interval := uint32(*p.HeartbeatInterval)
+	return &interval
+}
+
+func (p Port151Payload) GetGnssTimeout() *uint16 { // coverage-ignore
+	return nil
+}
+
+func (p Port151Payload) GetAccelerometerThreshold() *uint16 {
+	return p.AccelerometerWakeupThreshold
+}
+
+func (p Port151Payload) GetAccelerometerDelay() *uint16 {
+	return p.AccelerometerDelay
+}
+
+func (p Port151Payload) GetBatteryInterval() *uint32 { // coverage-ignore
+	return nil
+}
+
+func (p Port151Payload) GetRejoinInterval() *uint32 { // coverage-ignore
+	return nil
+}
+
+func (p Port151Payload) GetLowLightThreshold() *uint16 { // coverage-ignore
+	return nil
+}
+
+func (p Port151Payload) GetHighLightThreshold() *uint16 { // coverage-ignore
+	return nil
+}
+
+func (p Port151Payload) GetLowTemperatureThreshold() *int8 { // coverage-ignore
+	return nil
+}
+
+func (p Port151Payload) GetHighTemperatureThreshold() *int8 { // coverage-ignore
+	return nil
+}
+
+func (p Port151Payload) GetAccessPointsThreshold() *uint8 { // coverage-ignore
+	return nil
+}
+
+func (p Port151Payload) GetBatchSize() *uint16 { // coverage-ignore
+	return nil
+}
+
+func (p Port151Payload) GetBufferSize() *uint16 { // coverage-ignore
+	return nil
+}
+
+func (p Port151Payload) GetDataRate() *decoder.DataRate { // coverage-ignore
+	return nil
 }

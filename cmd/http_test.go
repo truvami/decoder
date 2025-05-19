@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/truvami/decoder/internal/logger"
-	"github.com/truvami/decoder/pkg/decoder/tagsl/v1"
+	tagslDecoder "github.com/truvami/decoder/pkg/decoder/tagsl/v1"
 	tagslEncoder "github.com/truvami/decoder/pkg/encoder/tagsl/v1"
 )
 
@@ -22,7 +22,7 @@ func TestAddDecoder(t *testing.T) {
 
 	router := http.NewServeMux()
 	path := "test/path"
-	decoder := tagsl.NewTagSLv1Decoder()
+	decoder := tagslDecoder.NewTagSLv1Decoder()
 
 	addDecoder(router, path, decoder)
 
@@ -36,7 +36,10 @@ func TestAddDecoder(t *testing.T) {
 }
 
 func TestGetHandler(t *testing.T) {
-	decoder := tagsl.NewTagSLv1Decoder()
+	logger.NewLogger()
+	defer logger.Sync()
+
+	decoder := tagslDecoder.NewTagSLv1Decoder()
 	handler := getHandler(decoder)
 
 	reqBody := `{"port": 1, "payload": "8002cdcd1300744f5e166018040b14341a", "devEui": ""}`
@@ -59,6 +62,18 @@ func TestGetHandler(t *testing.T) {
 	actualContentType := resp.Header.Get("Content-Type")
 	if actualContentType != expectedContentType {
 		t.Errorf("expected Content-Type header to be %q, got %q", expectedContentType, actualContentType)
+	}
+
+	responseBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("failed to read response body: %v", err)
+	}
+
+	expectedBody := `47.041811`
+	actualBody := string(responseBody)
+
+	if strings.Contains(expectedBody, actualBody) {
+		t.Errorf("expected response body to contain %q, got %q", expectedBody, actualBody)
 	}
 
 	// test with invalid JSON
@@ -128,14 +143,24 @@ func TestSetHeaders(t *testing.T) {
 }
 
 func TestHTTPCmd(t *testing.T) {
+	logger.NewLogger()
+	defer logger.Sync()
+
+	if httpCmd.Flags().Set("port", "38888") != nil {
+		t.Fatalf("failed to set port flag")
+	}
+	if httpCmd.Flags().Set("host", "127.0.0.1") != nil {
+		t.Fatalf("failed to set host flag")
+	}
+
 	go func() {
 		// call the command handler function
-		httpCmd.Run(nil, []string{"--host", "::1"})
+		httpCmd.Run(nil, []string{})
 	}()
 
 	// create a new HTTP request to simulate the command execution
 	reqBody := `{"port": 105, "payload": "0028672658500172a741b1e238b572a741b1e08bb03498b5c583e2b172a741b1e0cda772a741beed4cc472a741beef53b7"}`
-	req, err := http.NewRequest("POST", "http://localhost:8080/tagsl/v1", strings.NewReader(reqBody))
+	req, err := http.NewRequest("POST", "http://localhost:38888/tagsl/v1", strings.NewReader(reqBody))
 	if err != nil {
 		t.Fatalf("failed to create request: %v", err)
 	}
@@ -160,8 +185,7 @@ func TestHTTPCmd(t *testing.T) {
 
 	// parse the response body
 	type Response struct {
-		Data     tagsl.Port105Payload `json:"data"`
-		Metadata tagsl.Status         `json:"metadata"`
+		Data tagslDecoder.Port105Payload `json:"data"`
 	}
 
 	var response Response
@@ -171,8 +195,11 @@ func TestHTTPCmd(t *testing.T) {
 	}
 
 	// check the response body
-	expectedData := tagsl.Port105Payload{
+	expectedData := tagslDecoder.Port105Payload{
+		Moving:      true,
+		DutyCycle:   false,
 		BufferLevel: 40,
+		Timestamp:   time.Date(2024, 11, 2, 16, 50, 24, 0, time.UTC),
 		Mac1:        "72a741b1e238",
 		Rssi1:       -75,
 		Mac2:        "72a741b1e08b",
@@ -185,21 +212,10 @@ func TestHTTPCmd(t *testing.T) {
 		Rssi5:       -60,
 		Mac6:        "72a741beef53",
 		Rssi6:       -73,
-		Timestamp:   time.Date(2024, 11, 2, 16, 50, 24, 0, time.UTC),
 	}
 
 	if response.Data != expectedData {
 		t.Errorf("expected response data to be %v, got %v", expectedData, response.Data)
-	}
-
-	expectedMetadata := tagsl.Status{
-		DutyCycle:           false,
-		ConfigChangeId:      0,
-		ConfigChangeSuccess: false,
-		Moving:              true,
-	}
-	if response.Metadata != expectedMetadata {
-		t.Errorf("expected response metadata to be %v, got %v", expectedMetadata, response.Metadata)
 	}
 }
 

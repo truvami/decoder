@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/truvami/decoder/internal/logger"
 	helpers "github.com/truvami/decoder/pkg/common"
-	"github.com/truvami/decoder/pkg/decoder/tagsl/v1"
+	tagsl "github.com/truvami/decoder/pkg/decoder/tagsl/v1"
 	"go.uber.org/zap"
 )
 
@@ -32,8 +32,12 @@ var tagslCmd = &cobra.Command{
 			return
 		}
 		logger.Logger.Debug("port parsed successfully", zap.Int("port", port))
+		if port < 0 || port > 255 {
+			logger.Logger.Error("port must be between 0 and 255", zap.Int("port", port))
+			return
+		}
 
-		data, metadata, err := d.Decode(args[1], int16(port), "")
+		data, err := d.Decode(args[1], uint8(port), "")
 		if err != nil {
 			if errors.Is(err, helpers.ErrValidationFailed) {
 				for _, err := range helpers.UnwrapError(err) {
@@ -46,6 +50,6 @@ var tagslCmd = &cobra.Command{
 			}
 		}
 
-		printJSON(data, metadata)
+		printJSON(data.Data)
 	},
 }

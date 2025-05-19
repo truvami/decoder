@@ -2,6 +2,7 @@ package tagxl
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -12,11 +13,13 @@ import (
 	"testing"
 	"time"
 
+	helpers "github.com/truvami/decoder/pkg/common"
+	"github.com/truvami/decoder/pkg/decoder"
 	"github.com/truvami/decoder/pkg/loracloud"
 )
 
-func startMockServer() *httptest.Server {
-	server := httptest.NewServer(nil)
+func startMockServer(handler http.Handler) *httptest.Server {
+	server := httptest.NewServer(handler)
 	return server
 }
 
@@ -49,7 +52,7 @@ func TestDecode(t *testing.T) {
 		_, _ = w.Write(data)
 	})
 
-	server := startMockServer()
+	server := startMockServer(nil)
 	middleware := loracloud.NewLoracloudMiddleware("access_token")
 	middleware.BaseUrl = server.URL
 	defer server.Close()
@@ -64,104 +67,337 @@ func TestDecode(t *testing.T) {
 
 	tests := []struct {
 		payload     string
-		port        int16
+		port        uint8
 		devEui      string
 		autoPadding bool
-		expected    interface{}
+		expected    any
 		expectedErr string
 	}{
+
 		{
-			payload:     "87821F50490200B520FBE977844D222A3A14A89293956245CC75A9CA1BBC25DDF658542909",
-			port:        192,
-			devEui:      "10CE45FFFE00C7EC",
-			autoPadding: false,
-			expected:    &exampleResponse,
-		},
-		{
-			payload:     "87821F50490200B520FBE977844D222A3A14A89293956245CC75A9CA1BBC25DDF658542909",
-			port:        192,
-			devEui:      "10CE45FFFE00C7ED",
-			autoPadding: false,
-			expected:    nil,
-			expectedErr: "invalid character 'j' looking for beginning of value",
-		},
-		{
-			payload:     "00",
 			port:        0,
+			payload:     "00",
 			devEui:      "",
 			autoPadding: false,
 			expected:    nil,
 			expectedErr: "port 0 not supported",
 		},
 		{
-			payload:     "010b0266acbcf0000000000756",
+			port:    150,
+			payload: "4c07014c04681a4727",
+			expected: Port150Payload{
+				Timestamp: time.Date(2025, 5, 6, 17, 30, 15, 0, time.UTC),
+			},
+		},
+		{
+			port:    150,
+			payload: "4c07014c04681a5127",
+			expected: Port150Payload{
+				Timestamp: time.Date(2025, 5, 6, 18, 12, 55, 0, time.UTC),
+			},
+		},
+		{
+			port:        151,
+			payload:     "ff",
+			expected:    Port151Payload{},
+			expectedErr: "port not supported: port 151 tag ff",
+		},
+		{
+			port:        151,
+			payload:     "4c0501ff020000",
+			expected:    Port151Payload{},
+			expectedErr: "unknown tag ff",
+		},
+		{
+			port:    151,
+			payload: "4c050145020a92",
+			expected: Port151Payload{
+				Battery: helpers.Float32Ptr(2.706),
+			},
+		},
+		{
+			port:    151,
+			payload: "4c050145020a93",
+			expected: Port151Payload{
+				Battery: helpers.Float32Ptr(2.707),
+			},
+		},
+		{
+			port:    151,
+			payload: "4c050145020a96",
+			expected: Port151Payload{
+				Battery: helpers.Float32Ptr(2.710),
+			},
+		},
+		{
+			port:    151,
+			payload: "4c050145020b10",
+			expected: Port151Payload{
+				Battery: helpers.Float32Ptr(2.832),
+			},
+		},
+		{
+			port:    151,
+			payload: "4c0b0245020d914b0403de0000",
+			expected: Port151Payload{
+				Battery:   helpers.Float32Ptr(3.473),
+				GnssScans: helpers.Uint16Ptr(990),
+				WifiScans: helpers.Uint16Ptr(0),
+			},
+		},
+		{
+			port:    151,
+			payload: "4c0b0245020d7b4b0404fc0000",
+			expected: Port151Payload{
+				Battery:   helpers.Float32Ptr(3.451),
+				GnssScans: helpers.Uint16Ptr(1276),
+				WifiScans: helpers.Uint16Ptr(0),
+			},
+		},
+		{
+			port:    151,
+			payload: "4c0b0245020db94b0400420000",
+			expected: Port151Payload{
+				Battery:   helpers.Float32Ptr(3.513),
+				GnssScans: helpers.Uint16Ptr(66),
+				WifiScans: helpers.Uint16Ptr(0),
+			},
+		},
+		{
+			port:    151,
+			payload: "4c0b0245020d8f4b0401970000",
+			expected: Port151Payload{
+				Battery:   helpers.Float32Ptr(3.471),
+				GnssScans: helpers.Uint16Ptr(407),
+				WifiScans: helpers.Uint16Ptr(0),
+			},
+		},
+		{
+			port:    151,
+			payload: "4c2a0940010f4104012c1c204204012c05dc43010644011e45020d4e4604f6c7d8104902000a4a0400000002",
+			expected: Port151Payload{
+				GnssEnabled:                          helpers.BoolPtr(true),
+				WiFiEnabled:                          helpers.BoolPtr(true),
+				AccelerometerEnabled:                 helpers.BoolPtr(true),
+				Battery:                              helpers.Float32Ptr(3.406),
+				LocalizationIntervalWhileMoving:      helpers.Uint16Ptr(300),
+				LocalizationIntervalWhileSteady:      helpers.Uint16Ptr(7200),
+				AccelerometerWakeupThreshold:         helpers.Uint16Ptr(300),
+				AccelerometerDelay:                   helpers.Uint16Ptr(1500),
+				HeartbeatInterval:                    helpers.Uint8Ptr(6),
+				AdvertisementFirmwareUpgradeInterval: helpers.Uint8Ptr(30),
+				FirmwareHash:                         helpers.StringPtr("f6c7d810"),
+				ResetCount:                           helpers.Uint16Ptr(10),
+				ResetCause:                           helpers.Uint32Ptr(2),
+			}},
+		{
 			port:        152,
-			autoPadding: false,
+			payload:     "ff",
+			expected:    Port152Payload{},
+			expectedErr: "port not supported: version 255 for port 152 not supported",
+		},
+		{
+			port:    152,
+			payload: "020c62206822f120000d00000024",
 			expected: Port152Payload{
+				Version:           2,
+				SequenceNumber:    98,
+				NewRotationState:  0,
+				OldRotationState:  2,
+				Timestamp:         time.Date(2025, 5, 13, 7, 13, 36, 0, time.UTC),
+				NumberOfRotations: 1.3,
+				ElapsedSeconds:    36,
+			},
+		},
+		{
+			port:    152,
+			payload: "020c09016823166a000000000109",
+			expected: Port152Payload{
+				Version:           2,
+				SequenceNumber:    9,
+				NewRotationState:  1,
+				OldRotationState:  0,
+				Timestamp:         time.Date(2025, 5, 13, 9, 52, 42, 0, time.UTC),
+				NumberOfRotations: 0.0,
+				ElapsedSeconds:    265,
+			},
+		},
+		{
+			port:    152,
+			payload: "020cea0268230e60000000000015",
+			expected: Port152Payload{
+				Version:           2,
+				SequenceNumber:    234,
 				NewRotationState:  2,
 				OldRotationState:  0,
-				Timestamp:         uint32(time.Date(2024, 8, 2, 11, 3, 12, 0, time.UTC).Unix()),
+				Timestamp:         time.Date(2025, 5, 13, 9, 18, 24, 0, time.UTC),
+				NumberOfRotations: 0.0,
+				ElapsedSeconds:    21,
+			},
+		},
+		{
+			port:    152,
+			payload: "010b0266acbcf0000000000756",
+			expected: Port152Payload{
+				Version:           1,
+				NewRotationState:  2,
+				OldRotationState:  0,
+				Timestamp:         time.Date(2024, 8, 2, 11, 3, 12, 0, time.UTC),
 				NumberOfRotations: 0,
 				ElapsedSeconds:    1878,
 			},
 		},
 		{
-			payload:     "10b0266acbcf0000000000756",
-			port:        152,
-			autoPadding: true,
+			port:    152,
+			payload: "010b1066acbe0c00a200000087",
 			expected: Port152Payload{
-				NewRotationState:  2,
-				OldRotationState:  0,
-				Timestamp:         uint32(time.Date(2024, 8, 2, 11, 3, 12, 0, time.UTC).Unix()),
-				NumberOfRotations: 0,
-				ElapsedSeconds:    1878,
+				Version:           1,
+				NewRotationState:  0,
+				OldRotationState:  1,
+				Timestamp:         time.Date(2024, 8, 2, 11, 7, 56, 0, time.UTC),
+				NumberOfRotations: 16.2,
+				ElapsedSeconds:    135,
 			},
 		},
 		{
-			payload:     "010b1066acbe0c00a200000087",
-			port:        152,
+			port:        192,
+			payload:     "87821f50490200b520fbe977844d222a3a14a89293956245cc75a9ca1bbc25ddf658542909",
+			devEui:      "10CE45FFFE00C7EC",
 			autoPadding: false,
-			expected: Port152Payload{
-				NewRotationState:  0,
-				OldRotationState:  1,
-				Timestamp:         uint32(time.Date(2024, 8, 2, 11, 7, 56, 0, time.UTC).Unix()),
-				NumberOfRotations: 16.2,
-				ElapsedSeconds:    135,
+			expected:    &exampleResponse,
+		},
+		{
+			port:        192,
+			payload:     "87821f50490200b520fbe977844d222a3a14a89293956245cc75a9ca1bbc25ddf658542909",
+			devEui:      "10CE45FFFE00C7ED",
+			autoPadding: false,
+			expected:    &exampleResponse,
+			expectedErr: "",
+		},
+		{
+			port:        197,
+			payload:     "ff",
+			expected:    Port197Payload{},
+			expectedErr: "port not supported: version 255 for port 197 not supported",
+		},
+		{
+			port:    197,
+			payload: "003385f8ee30c2a0382c2601db",
+			expected: Port197Payload{
+				Mac1: "3385f8ee30c2",
+				Mac2: "a0382c2601db",
 			},
 		},
 		{
-			payload:     "10b1066acbe0c00a200000087",
-			port:        152,
-			autoPadding: true,
-			expected: Port152Payload{
-				NewRotationState:  0,
-				OldRotationState:  1,
-				Timestamp:         uint32(time.Date(2024, 8, 2, 11, 7, 56, 0, time.UTC).Unix()),
-				NumberOfRotations: 16.2,
-				ElapsedSeconds:    135,
+			port:    197,
+			payload: "00b5eded55a313a0b8b5e86e3194a765f3ad40",
+			expected: Port197Payload{
+				Mac1: "b5eded55a313",
+				Mac2: "a0b8b5e86e31",
+				Mac3: "94a765f3ad40",
 			},
 		},
-		// {
-		// 	payload: "4C050145020B8C",
-		// 	port:    151,
-		// 	expected: Port151Payload{
-		// 		Battery: 2.956,
-		// 	},
-		// },
+		{
+			port:    197,
+			payload: "006fbcfdd764347e7cbff22fc500dc0af60588010161302d9c",
+			expected: Port197Payload{
+				Mac1: "6fbcfdd76434",
+				Mac2: "7e7cbff22fc5",
+				Mac3: "00dc0af60588",
+				Mac4: "010161302d9c",
+			},
+		},
+		{
+			port:    197,
+			payload: "00218f6c166fad59ea3bdec77df72faac81784263386a455d33592a063900b",
+			expected: Port197Payload{
+				Mac1: "218f6c166fad",
+				Mac2: "59ea3bdec77d",
+				Mac3: "f72faac81784",
+				Mac4: "263386a455d3",
+				Mac5: "3592a063900b",
+			},
+		},
+		{
+			port:    197,
+			payload: "01d63385f8ee30c2d0a0382c2601db",
+			expected: Port197Payload{
+				Rssi1: -42,
+				Mac1:  "3385f8ee30c2",
+				Rssi2: -48,
+				Mac2:  "a0382c2601db",
+			},
+		},
+		{
+			port:    197,
+			payload: "01c8b5eded55a313c0a0b8b5e86e31b894a765f3ad40",
+			expected: Port197Payload{
+				Rssi1: -56,
+				Mac1:  "b5eded55a313",
+				Rssi2: -64,
+				Mac2:  "a0b8b5e86e31",
+				Rssi3: -72,
+				Mac3:  "94a765f3ad40",
+			},
+		},
+		{
+			port:    197,
+			payload: "01bd6fbcfdd76434bb7e7cbff22fc5b900dc0af60588b7010161302d9c",
+			expected: Port197Payload{
+				Rssi1: -67,
+				Mac1:  "6fbcfdd76434",
+				Rssi2: -69,
+				Mac2:  "7e7cbff22fc5",
+				Rssi3: -71,
+				Mac3:  "00dc0af60588",
+				Rssi4: -73,
+				Mac4:  "010161302d9c",
+			},
+		},
+		{
+			port:    197,
+			payload: "01b7218f6c166fadb359ea3bdec77daff72faac81784ab263386a455d3a73592a063900b",
+			expected: Port197Payload{
+				Rssi1: -73,
+				Mac1:  "218f6c166fad",
+				Rssi2: -77,
+				Mac2:  "59ea3bdec77d",
+				Rssi3: -81,
+				Mac3:  "f72faac81784",
+				Rssi4: -85,
+				Mac4:  "263386a455d3",
+				Rssi5: -89,
+				Mac5:  "3592a063900b",
+			},
+		},
 	}
 
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestPort%vWith%v", test.port, test.payload), func(t *testing.T) {
-			decoder := NewTagXLv1Decoder(middleware, WithAutoPadding(test.autoPadding))
-			got, _, err := decoder.Decode(test.payload, test.port, test.devEui)
+			decoder := NewTagXLv1Decoder(middleware, WithAutoPadding(test.autoPadding), WithFCount(1))
+			got, err := decoder.Decode(test.payload, test.port, test.devEui)
+
+			if err == nil && len(test.expectedErr) != 0 {
+				t.Fatalf("expected error: %v, got %v", test.expectedErr, nil)
+			}
+
 			if err != nil && len(test.expectedErr) == 0 {
 				t.Fatalf("unexpected error: %v", err)
 			}
 
 			t.Logf("got %v", got)
 
-			if !reflect.DeepEqual(got, test.expected) && len(test.expectedErr) == 0 {
-				t.Errorf("expected: %v, got: %v", test.expected, got)
+			if got != nil && !reflect.DeepEqual(got.Data, test.expected) && len(test.expectedErr) == 0 {
+				// marshal the expected and got values to compare
+				expectedJSON, err := json.Marshal(test.expected)
+				if err != nil {
+					t.Fatalf("failed to marshal expected value: %v", err)
+				}
+				gotJSON, err := json.Marshal(got.Data)
+				if err != nil {
+					t.Fatalf("failed to marshal got value: %v", err)
+				}
+				t.Errorf("expected: %s, got: %s", expectedJSON, gotJSON)
 			}
 
 			if len(test.expectedErr) > 0 && err != nil && !strings.Contains(err.Error(), test.expectedErr) {
@@ -174,14 +410,14 @@ func TestDecode(t *testing.T) {
 func TestValidationErrors(t *testing.T) {
 	tests := []struct {
 		payload  string
-		port     int16
+		port     uint8
 		expected error
 	}{}
 
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestPort%vValidationWith%v", test.port, test.payload), func(t *testing.T) {
-			decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("appEui"))
-			got, _, err := decoder.Decode(test.payload, test.port, "")
+			decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"))
+			got, err := decoder.Decode(test.payload, test.port, "")
 
 			if err == nil && test.expected == nil {
 				return
@@ -197,27 +433,292 @@ func TestValidationErrors(t *testing.T) {
 }
 
 func TestInvalidPort(t *testing.T) {
-	decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("appEui"))
-	_, _, err := decoder.Decode("00", 0, "")
-	if err == nil || err.Error() != "port 0 not supported" {
+	decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"))
+	_, err := decoder.Decode("00", 0, "")
+
+	if err == nil || !errors.Is(err, helpers.ErrPortNotSupported) {
 		t.Fatal("expected port not supported")
 	}
 }
 
 func TestPayloadTooShort(t *testing.T) {
-	decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("appEui"))
-	_, _, err := decoder.Decode("deadbeef", 152, "")
+	decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"))
+	_, err := decoder.Decode("01adbeef", 152, "")
 
-	if err == nil || err.Error() != "payload too short" {
-		t.Fatal("expected error payload too short")
+	if err == nil || !errors.Is(err, helpers.ErrPayloadTooShort) {
+		t.Fatalf("expected error payload too short but got %v", err)
 	}
 }
 
 func TestPayloadTooLong(t *testing.T) {
-	decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("appEui"))
-	_, _, err := decoder.Decode("deadbeef4242deadbeef4242deadbeef4242", 152, "")
+	decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"))
+	_, err := decoder.Decode("01adbeef4242deadbeef4242deadbeef4242", 152, "")
 
-	if err == nil || err.Error() != "payload too long" {
+	if err == nil || !errors.Is(err, helpers.ErrPayloadTooLong) {
 		t.Fatal("expected error payload too long")
+	}
+}
+
+func TestFeatures(t *testing.T) {
+	tests := []struct {
+		payload         string
+		port            uint8
+		allowNoFeatures bool
+	}{
+		{
+			payload:         "4c07014c04681a5127",
+			port:            150,
+			allowNoFeatures: true,
+		},
+		{
+			port:    151,
+			payload: "4c050145020b10",
+		},
+		{
+			payload: "010b0266acbcf0000000000756",
+			port:    152,
+		},
+		{
+			payload: "020c62206822f120000d00000024",
+			port:    152,
+		},
+		{
+			payload: "020c09016823166a000000000109",
+			port:    152,
+		},
+		{
+			payload: "87821f50490200b520fbe977844d222a3a14a89293956245cc75a9ca1bbc25ddf658542909",
+			port:    192,
+		},
+		{
+			payload: "01b7218f6c166fadb359ea3bdec77daff72faac81784ab263386a455d3a73592a063900b",
+			port:    197,
+		},
+		{
+			payload:         "86b5277140484a89b8f63ccf67affbfeb519b854f9d447808a50785bdfe86a77",
+			port:            199,
+			allowNoFeatures: true,
+		},
+	}
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/v1/device/send", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{
+				"result": {
+					"deveui": "927da4b72110927d",
+					"position_solution": {
+							"llh": [51.49278, 0.0212, 83.93],
+							"accuracy": 20.7,
+							"gdop": 2.48,
+							"capture_time_utc": 1722433373.18046
+					},
+					"operation": "gnss"
+				}
+			}`))
+	})
+
+	server := startMockServer(mux)
+	middleware := loracloud.NewLoracloudMiddleware("access_token")
+	middleware.BaseUrl = server.URL
+	defer server.Close()
+
+	for _, test := range tests {
+		t.Run(fmt.Sprintf("TestFeaturesWithPort%vAndPayload%v", test.port, test.payload), func(t *testing.T) {
+			d := NewTagXLv1Decoder(middleware, WithFCount(42))
+			decodedPayload, err := d.Decode(test.payload, test.port, "927da4b72110927d")
+			if err != nil {
+				t.Fatalf("error %s", err)
+			}
+
+			// should be able to decode base feature
+			base, ok := decodedPayload.Data.(decoder.UplinkFeatureBase)
+			if !ok {
+				t.Fatalf("expected UplinkFeatureBase, got %T", decodedPayload)
+			}
+			// check if it panics
+			base.GetTimestamp()
+
+			if len(decodedPayload.GetFeatures()) == 0 && !test.allowNoFeatures {
+				t.Error("expected features, got none")
+			}
+
+			if decodedPayload.Is(decoder.FeatureGNSS) {
+				gnss, ok := decodedPayload.Data.(decoder.UplinkFeatureGNSS)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureGNSS, got %T", decodedPayload)
+				}
+				if gnss.GetLatitude() == 0 {
+					t.Fatalf("expected non zero latitude")
+				}
+				if gnss.GetLongitude() == 0 {
+					t.Fatalf("expected non zero longitude")
+				}
+				if gnss.GetAltitude() == 0 {
+					t.Fatalf("expected non zero altitude")
+				}
+				// call function to check if it panics
+				gnss.GetAltitude()
+				gnss.GetPDOP()
+				gnss.GetSatellites()
+				gnss.GetTTF()
+			}
+			if decodedPayload.Is(decoder.FeatureBuffered) {
+				buffered, ok := decodedPayload.Data.(decoder.UplinkFeatureBuffered)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureBuffered, got %T", decodedPayload)
+				}
+				// call function to check if it panics
+				buffered.GetBufferLevel()
+			}
+			if decodedPayload.Is(decoder.FeatureBattery) {
+				batteryVoltage, ok := decodedPayload.Data.(decoder.UplinkFeatureBattery)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureBattery, got %T", decodedPayload)
+				}
+				if batteryVoltage.GetBatteryVoltage() == 0 {
+					t.Fatalf("expected non zero battery voltage")
+				}
+				// call function to check if it panics
+				batteryVoltage.GetLowBattery()
+			}
+			if decodedPayload.Is(decoder.FeatureWiFi) {
+				wifi, ok := decodedPayload.Data.(decoder.UplinkFeatureWiFi)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureWiFi, got %T", decodedPayload)
+				}
+				if wifi.GetAccessPoints() == nil {
+					t.Fatalf("expected non nil access points")
+				}
+			}
+			if decodedPayload.Is(decoder.FeatureMoving) {
+				moving, ok := decodedPayload.Data.(decoder.UplinkFeatureMoving)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureMoving, got %T", decodedPayload)
+				}
+				// call function to check if it panics
+				moving.IsMoving()
+			}
+			if decodedPayload.Is(decoder.FeatureConfig) {
+				config, ok := decodedPayload.Data.(decoder.UplinkFeatureConfig)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureConfig, got %T", decodedPayload)
+				}
+				// call functions to check if it panics
+				config.GetBle()
+				config.GetGnss()
+				config.GetWifi()
+				config.GetAcceleration()
+				config.GetMovingInterval()
+				config.GetSteadyInterval()
+				config.GetConfigInterval()
+				config.GetGnssTimeout()
+				config.GetAccelerometerThreshold()
+				config.GetAccelerometerDelay()
+				config.GetBatteryInterval()
+				config.GetRejoinInterval()
+				config.GetLowLightThreshold()
+				config.GetHighLightThreshold()
+				config.GetLowTemperatureThreshold()
+				config.GetHighTemperatureThreshold()
+				config.GetAccessPointsThreshold()
+				config.GetBatchSize()
+				config.GetBufferSize()
+				config.GetDataRate()
+			}
+			if decodedPayload.Is(decoder.FeatureRotationState) {
+				rotationState, ok := decodedPayload.Data.(decoder.UplinkFeatureRotationState)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureRotationState, got %T", decodedPayload)
+				}
+				// call function to check if it panics
+				rotationState.GetRotationState()
+			}
+			if decodedPayload.Is(decoder.FeatureSequenceNumber) {
+				sequenceNumber, ok := decodedPayload.Data.(decoder.UplinkFeatureSequenceNumber)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureSequenceNumber, got %T", decodedPayload)
+				}
+				// call function to check if it panics
+				sequenceNumber.GetSequenceNumber()
+			}
+			if decodedPayload.Is(decoder.FeatureConfig) {
+				config, ok := decodedPayload.Data.(decoder.UplinkFeatureConfig)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureConfig, got %T", decodedPayload)
+				}
+				// call functions to check if it panics
+				config.GetBle()
+				config.GetGnss()
+				config.GetWifi()
+				config.GetAcceleration()
+				config.GetMovingInterval()
+				config.GetSteadyInterval()
+				config.GetConfigInterval()
+				config.GetGnssTimeout()
+				config.GetAccelerometerThreshold()
+				config.GetAccelerometerDelay()
+				config.GetBatteryInterval()
+				config.GetRejoinInterval()
+				config.GetLowLightThreshold()
+				config.GetHighLightThreshold()
+				config.GetLowTemperatureThreshold()
+				config.GetHighTemperatureThreshold()
+				config.GetAccessPointsThreshold()
+				config.GetBatchSize()
+				config.GetBufferSize()
+				config.GetDataRate()
+			}
+		})
+	}
+}
+
+func TestMarshal(t *testing.T) {
+	tests := []struct {
+		payload  string
+		port     uint8
+		expected []string
+	}{
+		{
+			payload:  "010b0266acbcf0000000000756",
+			port:     152,
+			expected: []string{"\"timestamp\": \"2024-08-02T11:03:12Z\"", "\"elapsedSeconds\": 1878"},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(fmt.Sprintf("TestMarshalWithPort%vAndPayload%v", test.port, test.payload), func(t *testing.T) {
+			decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"))
+
+			data, _ := decoder.Decode(test.payload, test.port, "")
+
+			marshaled, err := json.MarshalIndent(map[string]any{
+				"data": data.Data,
+			}, "", "   ")
+
+			if err != nil {
+				t.Fatalf("marshalling json failed because %s", err)
+			}
+
+			t.Logf("%s\n", marshaled)
+
+			for _, value := range test.expected {
+				fmt.Printf("value:%s\n", value)
+				if !strings.Contains(string(marshaled), value) {
+					t.Fatalf("expected to find %s\n", value)
+				}
+			}
+		})
+	}
+}
+
+func TestWithFCount(t *testing.T) {
+	decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"), WithFCount(123))
+
+	// cast to TagXLv1Decoder to access fCount
+	tagXLv1Decoder := decoder.(*TagXLv1Decoder)
+	if tagXLv1Decoder.fCount != 123 {
+		t.Fatalf("expected fCount to be 123, got %v", tagXLv1Decoder.fCount)
 	}
 }

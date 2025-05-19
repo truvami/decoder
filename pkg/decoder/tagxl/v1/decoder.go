@@ -3,6 +3,7 @@ package tagxl
 import (
 	"fmt"
 	"reflect"
+	"time"
 
 	"github.com/truvami/decoder/pkg/common"
 	"github.com/truvami/decoder/pkg/decoder"
@@ -15,6 +16,7 @@ type TagXLv1Decoder struct {
 	loracloudMiddleware loracloud.LoracloudMiddleware
 	autoPadding         bool
 	skipValidation      bool
+	fCount              uint32
 }
 
 func NewTagXLv1Decoder(loracloudMiddleware loracloud.LoracloudMiddleware, options ...Option) decoder.Decoder {
@@ -41,63 +43,192 @@ func WithSkipValidation(skipValidation bool) Option {
 	}
 }
 
-// https://docs.truvami.com/docs/payloads/tag-xl
-func (t TagXLv1Decoder) getConfig(port int16) (common.PayloadConfig, error) {
-	switch port {
-	case 151:
-		// return decoder.PayloadConfig{
-		// 	Fields: []decoder.FieldConfig{
-		// 		{Name: "DeviceFlags", Start: 2, Length: 1},
-		// 		// {Name: "AssetTrackingIntervals", Start: 3, Length: 4, Transform: func(v interface{}) interface{} {
-		// 		// 	return []uint16{uint16(v.(int) >> 16), uint16(v.(int) & 0xFFFF)}
-		// 		// }},
-		// 		// {Name: "AccelerationSensor", Start: 7, Length: 4, Transform: func(v interface{}) interface{} {
-		// 		// 	return []uint16{uint16(v.(int) >> 16), uint16(v.(int) & 0xFFFF)}
-		// 		// }},
-		// 		{Name: "HeartbeatInterval", Start: 11, Length: 1, Optional: true},
-		// 		{Name: "AdvertisementFwuInterval", Start: 12, Length: 1},
-		// 		{Name: "Battery", Start: 13, Length: 2},
-		// 		{Name: "FirmwareHash", Start: 15, Length: 4},
-		// 	},
-		// 	TargetType: reflect.TypeOf(Port151Payload{}),
-		// }, nil
-	case 152:
-		return common.PayloadConfig{
-			Fields: []common.FieldConfig{
-				{Name: "OldRotationState", Start: 2, Length: 1, Transform: func(v interface{}) interface{} {
-					// get bit 0-3 and return
-					return uint8((v.(int) >> 4) & 0xF)
-				}},
-				{Name: "NewRotationState", Start: 2, Length: 1, Transform: func(v interface{}) interface{} {
-					// get bit 4-7 and return
-					return uint8(v.(int) & 0xF)
-				}},
-				{Name: "Timestamp", Start: 3, Length: 4},
-				{Name: "NumberOfRotations", Start: 7, Length: 2, Transform: func(v interface{}) interface{} {
-					return float64(v.(int)) / 10
-				}},
-				{Name: "ElapsedSeconds", Start: 9, Length: 4},
-			},
-			TargetType: reflect.TypeOf(Port152Payload{}),
-		}, nil
-
+// WithFCount sets the frame counter for the decoder.
+// This is required for the loracloud middleware.
+func WithFCount(fCount uint32) Option {
+	return func(t *TagXLv1Decoder) {
+		t.fCount = fCount
 	}
-	return common.PayloadConfig{}, fmt.Errorf("port %v not supported", port)
 }
 
-func (t TagXLv1Decoder) Decode(data string, port int16, devEui string) (interface{}, interface{}, error) {
+// https://docs.truvami.com/docs/payloads/tag-xl
+func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadConfig, error) {
 	switch port {
-	case 192, 197, 199:
+	case 150:
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
+				{Name: "Timestamp", Start: 5, Length: 4, Optional: false, Transform: func(v any) any {
+					return time.Unix(int64(v.(int)), 0).UTC()
+				}},
+			},
+			TargetType: reflect.TypeOf(Port150Payload{}),
+			Features:   []decoder.Feature{},
+		}, nil
+	case 151:
+		var payloadType byte = payload[0]
+		if payloadType != 0x4c {
+			return common.PayloadConfig{}, fmt.Errorf("%w: port %d tag %x", common.ErrPortNotSupported, port, payloadType)
+		}
+		return common.PayloadConfig{
+			Tags: []common.TagConfig{
+				{Name: "Battery", Optional: true, Tag: 0x45, Feature: []decoder.Feature{decoder.FeatureBattery}, Transform: func(v any) any {
+					battery := float32(v.(int)) / 1000
+					return battery
+				}},
+				{Name: "GnssScans", Optional: true, Tag: 0x4b, Transform: func(v any) any {
+					return uint16((v.(int) >> 16) & 0xffff)
+				}},
+				{Name: "WifiScans", Optional: true, Tag: 0x4b, Transform: func(v any) any {
+					return uint16(v.(int) & 0xffff)
+				}},
+				{Name: "GnssEnabled", Optional: true, Tag: 0x40, Transform: func(v any) any {
+					// bit 1: GNSS_ENABLE
+					return (v.(int) & 0x02) != 0
+				}},
+				{Name: "WiFiEnabled", Optional: true, Tag: 0x40, Transform: func(v any) any {
+					// bit 2: WIFI_ENABLE
+					return (v.(int) & 0x04) != 0
+				}},
+				{Name: "AccelerometerEnabled", Optional: true, Tag: 0x40, Transform: func(v any) any {
+					// bit 3: ACCELERATION_ENABLE
+					return (v.(int) & 0x08) != 0
+				}},
+				{Name: "LocalizationIntervalWhileMoving", Optional: true, Tag: 0x41, Transform: func(v any) any {
+					// data 0: MOVING_INTERVAL
+					return uint16((v.(int) >> 16) & 0xffff)
+				}},
+				{Name: "LocalizationIntervalWhileSteady", Optional: true, Tag: 0x41, Transform: func(v any) any {
+					// data 1: STEADY_INTERVAL
+					return uint16(v.(int) & 0xffff)
+				}},
+				{Name: "AccelerometerWakeupThreshold", Optional: true, Tag: 0x42, Transform: func(v any) any {
+					// data 0: WAKEUP_THRESHOLD
+					return uint16((v.(int) >> 16) & 0xffff)
+				}},
+				{Name: "AccelerometerDelay", Optional: true, Tag: 0x42, Transform: func(v any) any {
+					// data 1: WAKEUP_DELAY
+					return uint16(v.(int) & 0xffff)
+				}},
+				{Name: "HeartbeatInterval", Optional: true, Tag: 0x43},
+				{Name: "AdvertisementFirmwareUpgradeInterval", Optional: true, Tag: 0x44},
+				{Name: "FirmwareHash", Optional: true, Tag: 0x46, Hex: true},
+				{Name: "ResetCount", Optional: true, Tag: 0x49},
+				{Name: "ResetCause", Optional: true, Tag: 0x4a},
+			},
+			Features:   []decoder.Feature{decoder.FeatureConfig},
+			TargetType: reflect.TypeOf(Port151Payload{}),
+		}, nil
+	case 152:
+		var version uint8 = payload[0]
+		switch version {
+		case 0x01:
+			return common.PayloadConfig{
+				Fields: []common.FieldConfig{
+					{Name: "Version", Start: 0, Length: 1},
+					{Name: "OldRotationState", Start: 2, Length: 1, Transform: func(v any) any {
+						return uint8((v.(int) >> 4))
+					}},
+					{Name: "NewRotationState", Start: 2, Length: 1, Transform: func(v any) any {
+						return uint8(v.(int) & 0x0f)
+					}},
+					{Name: "Timestamp", Start: 3, Length: 4},
+					{Name: "NumberOfRotations", Start: 7, Length: 2, Transform: func(v any) any {
+						return float64(v.(int)) / 10
+					}},
+					{Name: "ElapsedSeconds", Start: 9, Length: 4},
+				},
+				TargetType: reflect.TypeOf(Port152Payload{}),
+				Features:   []decoder.Feature{decoder.FeatureRotationState},
+			}, nil
+		case 0x02:
+			return common.PayloadConfig{
+				Fields: []common.FieldConfig{
+					{Name: "Version", Start: 0, Length: 1},
+					{Name: "SequenceNumber", Start: 2, Length: 1},
+					{Name: "OldRotationState", Start: 3, Length: 1, Transform: func(v any) any {
+						return uint8((v.(int) >> 4))
+					}},
+					{Name: "NewRotationState", Start: 3, Length: 1, Transform: func(v any) any {
+						return uint8(v.(int) & 0x0f)
+					}},
+					{Name: "Timestamp", Start: 4, Length: 4},
+					{Name: "NumberOfRotations", Start: 8, Length: 2, Transform: func(v any) any {
+						return float64(v.(int)) / 10
+					}},
+					{Name: "ElapsedSeconds", Start: 10, Length: 4},
+				},
+				TargetType: reflect.TypeOf(Port152Payload{}),
+				Features:   []decoder.Feature{decoder.FeatureRotationState, decoder.FeatureSequenceNumber},
+			}, nil
+		default:
+			return common.PayloadConfig{}, fmt.Errorf("%w: version %v for port %d not supported", common.ErrPortNotSupported, version, port)
+		}
+	case 197:
+		var version uint8 = payload[0]
+		switch version {
+		case 0x00:
+			return common.PayloadConfig{
+				Fields: []common.FieldConfig{
+					{Name: "Mac1", Start: 1, Length: 6, Hex: true},
+					{Name: "Mac2", Start: 7, Length: 6, Optional: true, Hex: true},
+					{Name: "Mac3", Start: 13, Length: 6, Optional: true, Hex: true},
+					{Name: "Mac4", Start: 19, Length: 6, Optional: true, Hex: true},
+					{Name: "Mac5", Start: 25, Length: 6, Optional: true, Hex: true},
+				},
+				TargetType: reflect.TypeOf(Port197Payload{}),
+				Features:   []decoder.Feature{decoder.FeatureWiFi},
+			}, nil
+		case 0x01:
+			return common.PayloadConfig{
+				Fields: []common.FieldConfig{
+					{Name: "Rssi1", Start: 1, Length: 1},
+					{Name: "Mac1", Start: 2, Length: 6, Hex: true},
+					{Name: "Rssi2", Start: 8, Length: 1, Optional: true},
+					{Name: "Mac2", Start: 9, Length: 6, Optional: true, Hex: true},
+					{Name: "Rssi3", Start: 15, Length: 1, Optional: true},
+					{Name: "Mac3", Start: 16, Length: 6, Optional: true, Hex: true},
+					{Name: "Rssi4", Start: 22, Length: 1, Optional: true},
+					{Name: "Mac4", Start: 23, Length: 6, Optional: true, Hex: true},
+					{Name: "Rssi5", Start: 29, Length: 1, Optional: true},
+					{Name: "Mac5", Start: 30, Length: 6, Optional: true, Hex: true},
+				},
+				TargetType: reflect.TypeOf(Port197Payload{}),
+				Features:   []decoder.Feature{decoder.FeatureWiFi},
+			}, nil
+		default:
+			return common.PayloadConfig{}, fmt.Errorf("%w: version %v for port %d not supported", common.ErrPortNotSupported, version, port)
+		}
+	}
+	return common.PayloadConfig{}, fmt.Errorf("%w: port %v not supported", common.ErrPortNotSupported, port)
+}
+
+func (t TagXLv1Decoder) Decode(data string, port uint8, devEui string) (*decoder.DecodedUplink, error) {
+	switch port {
+	case 192:
 		decodedData, err := t.loracloudMiddleware.DeliverUplinkMessage(devEui, loracloud.UplinkMsg{
 			MsgType: "updf",
-			Port:    uint8(port),
+			Port:    port,
 			Payload: data,
+			FCount:  t.fCount,
 		})
-		return decodedData, nil, err
+		return decoder.NewDecodedUplink([]decoder.Feature{decoder.FeatureGNSS}, decodedData), err
+	case 199:
+		decodedData, err := t.loracloudMiddleware.DeliverUplinkMessage(devEui, loracloud.UplinkMsg{
+			MsgType: "updf",
+			Port:    port,
+			Payload: data,
+			FCount:  t.fCount,
+		})
+		return decoder.NewDecodedUplink([]decoder.Feature{}, decodedData), err
 	default:
-		config, err := t.getConfig(port)
+		bytes, err := common.HexStringToBytes(data)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
+		}
+
+		config, err := t.getConfig(port, bytes)
+		if err != nil {
+			return nil, err
 		}
 
 		if t.autoPadding {
@@ -107,11 +238,11 @@ func (t TagXLv1Decoder) Decode(data string, port int16, devEui string) (interfac
 		if !t.skipValidation {
 			err := common.ValidateLength(&data, &config)
 			if err != nil {
-				return nil, nil, err
+				return nil, err
 			}
 		}
 
 		decodedData, err := common.Parse(data, &config)
-		return decodedData, nil, err
+		return decoder.NewDecodedUplink(config.Features, decodedData), err
 	}
 }

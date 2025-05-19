@@ -21,47 +21,46 @@ func HexStringToBytes(hexString string) ([]byte, error) {
 	return bytes, nil
 }
 
-func convertFieldToType(value interface{}, fieldType reflect.Kind) interface{} {
+func convertFieldToType(value any, fieldType reflect.Type) any {
 	switch fieldType {
-	case reflect.Int:
+	case reflect.TypeOf(int(0)):
 		return int(value.(int))
-	case reflect.Int8:
+	case reflect.TypeOf(int8(0)):
 		return int8(value.(int))
-	case reflect.Int16:
+	case reflect.TypeOf(int16(0)):
 		return int16(value.(int))
-	case reflect.Int32:
+	case reflect.TypeOf(int32(0)):
 		return int32(value.(int))
-	case reflect.Int64:
+	case reflect.TypeOf(int64(0)):
 		return int64(value.(int))
-	case reflect.Uint:
+	case reflect.TypeOf(uint(0)):
 		return uint(value.(int))
-	case reflect.Uint8:
+	case reflect.TypeOf(uint8(0)):
 		return uint8(value.(int))
-	case reflect.Uint16:
+	case reflect.TypeOf(uint16(0)):
 		return uint16(value.(int))
-	case reflect.Uint32:
+	case reflect.TypeOf(uint32(0)):
 		return uint32(value.(int))
-	case reflect.Uint64:
+	case reflect.TypeOf(uint64(0)):
 		return uint64(value.(int))
-	case reflect.Float32:
+	case reflect.TypeOf(float32(0)):
 		return float32(value.(int))
-	case reflect.Float64:
+	case reflect.TypeOf(float64(0)):
 		return float64(value.(int))
-	case reflect.String:
+	case reflect.TypeOf(string("")):
 		return fmt.Sprintf("%v", value)
-	case reflect.Bool:
+	case reflect.TypeOf(bool(false)):
 		return value.(int)&0x01 == 1
-	case reflect.Struct:
-		if fieldType == reflect.TypeOf(time.Time{}).Kind() {
-			return ParseTimestamp(value.(int))
-		}
-		fallthrough
+	case reflect.TypeOf(time.Duration(0)):
+		return time.Duration(value.(int))
+	case reflect.TypeOf(time.Time{}):
+		return ParseTimestamp(value.(int))
 	default:
 		panic(fmt.Sprintf("unsupported field type: %v", fieldType))
 	}
 }
 
-func extractFieldValue(payloadBytes []byte, start int, length int, optional bool, hexadecimal bool) (interface{}, error) {
+func extractFieldValue(payloadBytes []byte, start int, length int, optional bool, hexadecimal bool) (any, error) {
 	if length == -1 {
 		if start >= len(payloadBytes) {
 			return nil, fmt.Errorf("field start out of bounds")
@@ -76,7 +75,7 @@ func extractFieldValue(payloadBytes []byte, start int, length int, optional bool
 	}
 
 	// Extract the field value based on its length
-	var value interface{}
+	var value any
 	if hexadecimal {
 		value = hex.EncodeToString(payloadBytes[start : start+length])
 	} else {
@@ -108,8 +107,8 @@ func UnwrapError(err error) []error {
 	return errs
 }
 
-// DecodeLoRaWANPayload decodes the payload based on the provided configuration and populates the target struct
-func Parse(payloadHex string, config *PayloadConfig) (interface{}, error) {
+// Parse decodes the payload based on the provided configuration and populates the target struct
+func Parse(payloadHex string, config *PayloadConfig) (any, error) {
 	// Convert hex payload to bytes
 	payloadBytes, err := HexStringToBytes(payloadHex)
 	if err != nil {
@@ -120,6 +119,97 @@ func Parse(payloadHex string, config *PayloadConfig) (interface{}, error) {
 	targetValue := reflect.New(config.TargetType).Elem()
 
 	errs := []error{}
+
+	if len(config.Tags) != 0 {
+		var index uint8 = 3
+		var payloadLength uint8 = uint8(len(payloadBytes))
+		for index+2 < payloadLength {
+			var found bool = false
+			var tag uint8 = payloadBytes[index]
+			index++
+			var length uint8 = payloadBytes[index]
+			index++
+
+			for _, tagConfig := range config.Tags {
+				if tagConfig.Tag == tag {
+					found = true
+
+					value, err := extractFieldValue(payloadBytes, int(index), int(length), false, tagConfig.Hex)
+					if err != nil {
+						return nil, err
+					}
+
+					fieldValue := targetValue.FieldByName(tagConfig.Name)
+					if fieldValue.IsValid() && fieldValue.CanSet() && tagConfig.Transform != nil {
+						if value == nil && tagConfig.Optional {
+							continue
+						}
+
+						config.Features = append(config.Features, tagConfig.Feature...)
+
+						// transform value from pointer to value
+						if fieldValue.Kind() == reflect.Pointer {
+							// if fieldValue is nil set the value to nil
+							if value == nil {
+								fieldValue.Set(reflect.Zero(fieldValue.Type()))
+								continue
+							}
+
+							transformed := tagConfig.Transform(value)
+
+							// value is a pointer and not nil, convert to value
+							// transform value from pointer to value
+							// Create a new pointer of the right type
+							ptr := reflect.New(fieldValue.Type().Elem())
+
+							// Set the dereferenced value
+							ptr.Elem().Set(reflect.ValueOf(transformed))
+
+							// Set the pointer to the field
+							fieldValue.Set(ptr)
+							continue
+						}
+						fieldValue.Set(reflect.ValueOf(tagConfig.Transform(value)))
+						continue
+					}
+
+					// if fieldValue is nil set the value to nil
+					if value == nil && tagConfig.Optional {
+						continue
+					}
+
+					if !fieldValue.IsValid() || !fieldValue.CanSet() {
+						return nil, fmt.Errorf("field %s not found in target struct", tagConfig.Name)
+					}
+
+					// pointer field type e.g *uint8 -> t = uint8
+					targetTypeNonPointer := fieldValue.Type().Elem()
+
+					// transform value from pointer to value with the right type
+					if fieldValue.Kind() == reflect.Pointer {
+						// Create a new pointer of the right type
+						ptr := reflect.New(targetTypeNonPointer)
+
+						// Set the dereferenced value
+						ptr.Elem().Set(reflect.ValueOf(convertFieldToType(value, targetTypeNonPointer)))
+
+						// Set the pointer to the field
+						fieldValue.Set(ptr)
+						continue
+					}
+
+					fieldValue.Set(reflect.ValueOf(convertFieldToType(value, targetTypeNonPointer)))
+				}
+			}
+			if found {
+				index += length
+			} else {
+				return nil, fmt.Errorf("unknown tag %x", tag)
+			}
+		}
+
+		return targetValue.Interface(), errors.Join(errs...)
+	}
 
 	// Iterate over the fields in the config and extract their values
 	for _, field := range config.Fields {
@@ -141,12 +231,7 @@ func Parse(payloadHex string, config *PayloadConfig) (interface{}, error) {
 				continue
 			}
 
-			// log.Printf("field: %v", field.Name)
-			// log.Printf("value: %v", value)
-			// log.Printf("got: %T", value)
-			// log.Printf("expect: %v", fieldValue.Type().Kind())
-
-			fieldType := convertFieldToType(value, fieldValue.Type().Kind())
+			fieldType := convertFieldToType(value, fieldValue.Type())
 			fieldValue.Set(reflect.ValueOf(fieldType))
 		}
 
@@ -184,10 +269,6 @@ func UintToBinaryArray(value uint64, length int) []byte {
 	return binaryArray
 }
 
-func ToIntPointer(value int) *int {
-	return &value
-}
-
 func HexNullPad(payload *string, config *PayloadConfig) string {
 	var requiredBits = 0
 	for _, field := range config.Fields {
@@ -207,6 +288,15 @@ func HexNullPad(payload *string, config *PayloadConfig) string {
 func ValidateLength(payload *string, config *PayloadConfig) error {
 	var payloadLength = len(*payload) / 2
 
+	if len(config.Tags) != 0 {
+		var minLength = 3
+		if payloadLength < minLength {
+			return WrapErrorWithMessage(ErrInvalidPayloadLength, ErrPayloadTooShort, fmt.Sprintf("payload length %d is less than minimum required length %d", payloadLength, minLength))
+		} else {
+			return nil
+		}
+	}
+
 	var minLength = 0
 	for _, field := range config.Fields {
 		if !field.Optional {
@@ -220,17 +310,17 @@ func ValidateLength(payload *string, config *PayloadConfig) error {
 	}
 
 	if payloadLength < minLength {
-		return fmt.Errorf("payload too short")
+		return WrapErrorWithMessage(ErrInvalidPayloadLength, ErrPayloadTooShort, fmt.Sprintf("payload length %d is less than minimum required length %d", payloadLength, minLength))
 	}
 
 	if payloadLength > maxLength {
-		return fmt.Errorf("payload too long")
+		return WrapErrorWithMessage(ErrInvalidPayloadLength, ErrPayloadTooLong, fmt.Sprintf("payload length %d is greater than maximum allowed length %d", payloadLength, maxLength))
 	}
 
 	return nil
 }
 
-func Encode(data interface{}, config PayloadConfig) (string, error) {
+func Encode(data any, config PayloadConfig) (string, error) {
 	v := reflect.ValueOf(data)
 
 	// Validate input data is a struct
@@ -300,4 +390,53 @@ func uintToBytes(value uint64, length int) []byte {
 		value >>= 8
 	}
 	return buf
+}
+
+func Uint16Ptr(value uint16) *uint16 {
+	return &value
+}
+
+func Uint32Ptr(value uint32) *uint32 {
+	return &value
+}
+
+func StringPtr(value string) *string {
+	return &value
+}
+
+func Uint8Ptr(value uint8) *uint8 {
+	return &value
+}
+
+func Float32Ptr(value float32) *float32 {
+	return &value
+}
+
+func BoolPtr(value bool) *bool {
+	return &value
+}
+
+func TimePointer(timestamp float64) *time.Time {
+	seconds := int64(timestamp)
+	nanoseconds := int64((timestamp - float64(seconds)) * 1e9)
+	time := time.Unix(seconds, nanoseconds)
+	return &time
+}
+
+func TimePointerCompare(alpha *time.Time, bravo *time.Time) bool {
+	if alpha == nil && bravo == nil {
+		return true
+	}
+	if alpha == nil || bravo == nil {
+		return false
+	}
+	return alpha.Equal(*bravo)
+}
+
+func TransformPointerToValue(ptr interface{}) interface{} {
+	val := reflect.ValueOf(ptr)
+	if val.Kind() == reflect.Ptr && !val.IsNil() {
+		return val.Elem().Interface()
+	}
+	panic(fmt.Sprintf("expected a pointer with not nil value, got %T", ptr))
 }

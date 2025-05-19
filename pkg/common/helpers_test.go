@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"testing"
+	"time"
 )
 
 func TestInvalidHexString(t *testing.T) {
@@ -38,10 +39,10 @@ func TestParse(t *testing.T) {
 	config := PayloadConfig{
 		Fields: []FieldConfig{
 			{Name: "Moving", Start: 0, Length: 1},
-			{Name: "Lat", Start: 1, Length: 4, Transform: func(v interface{}) interface{} {
+			{Name: "Lat", Start: 1, Length: 4, Transform: func(v any) any {
 				return float64(v.(int)) / 1000000
 			}},
-			{Name: "Lon", Start: 5, Length: 4, Transform: func(v interface{}) interface{} {
+			{Name: "Lon", Start: 5, Length: 4, Transform: func(v any) any {
 				return float64(v.(int)) / 1000000
 			}},
 			{Name: "Alt", Start: 9, Length: 2},
@@ -58,7 +59,7 @@ func TestParse(t *testing.T) {
 	tests := []struct {
 		payload  string
 		config   PayloadConfig
-		expected interface{}
+		expected any
 	}{
 		{
 			payload: "8002cdcd1300744f5e166018040b14341a",
@@ -97,74 +98,89 @@ func TestParse(t *testing.T) {
 }
 func TestConvertFieldToType(t *testing.T) {
 	tests := []struct {
-		value     interface{}
-		fieldType reflect.Kind
-		expected  interface{}
+		value     any
+		fieldType reflect.Type
+		expected  any
 	}{
 		{
 			value:     10,
-			fieldType: reflect.Int,
+			fieldType: reflect.TypeOf(int(0)),
 			expected:  10,
 		},
 		{
 			value:     10,
-			fieldType: reflect.Int8,
+			fieldType: reflect.TypeOf(int8(0)),
 			expected:  int8(10),
 		},
 		{
 			value:     10,
-			fieldType: reflect.Int16,
+			fieldType: reflect.TypeOf(int16(0)),
 			expected:  int16(10),
 		},
 		{
 			value:     10,
-			fieldType: reflect.Int32,
+			fieldType: reflect.TypeOf(int32(0)),
 			expected:  int32(10),
 		},
 		{
 			value:     10,
-			fieldType: reflect.Int64,
+			fieldType: reflect.TypeOf(int64(0)),
 			expected:  int64(10),
 		},
 		{
 			value:     10,
-			fieldType: reflect.Uint,
+			fieldType: reflect.TypeOf(uint(0)),
 			expected:  uint(10),
 		},
 		{
 			value:     10,
-			fieldType: reflect.Uint8,
+			fieldType: reflect.TypeOf(uint8(0)),
 			expected:  uint8(10),
 		},
 		{
 			value:     10,
-			fieldType: reflect.Uint16,
+			fieldType: reflect.TypeOf(uint16(0)),
 			expected:  uint16(10),
 		},
 		{
 			value:     10,
-			fieldType: reflect.Uint32,
+			fieldType: reflect.TypeOf(uint32(0)),
 			expected:  uint32(10),
 		},
 		{
 			value:     10,
-			fieldType: reflect.Uint64,
+			fieldType: reflect.TypeOf(uint64(0)),
 			expected:  uint64(10),
 		},
 		{
 			value:     10,
-			fieldType: reflect.Float64,
+			fieldType: reflect.TypeOf(float32(0)),
+			expected:  float32(10),
+		},
+		{
+			value:     10,
+			fieldType: reflect.TypeOf(float64(0)),
 			expected:  float64(10),
 		},
 		{
 			value:     "hello",
-			fieldType: reflect.String,
+			fieldType: reflect.TypeOf(string("")),
 			expected:  "hello",
 		},
 		{
 			value:     1,
-			fieldType: reflect.Bool,
+			fieldType: reflect.TypeOf(bool(false)),
 			expected:  true,
+		},
+		{
+			value:     200,
+			fieldType: reflect.TypeOf(time.Duration(0)),
+			expected:  time.Duration(200) * time.Nanosecond,
+		},
+		{
+			value:     42,
+			fieldType: reflect.TypeOf(time.Time{}),
+			expected:  time.Date(1970, 1, 1, 0, 0, 42, 0, time.UTC),
 		},
 	}
 
@@ -257,6 +273,70 @@ func TestUintToBinaryArray(t *testing.T) {
 				if v != test.expected[i] {
 					t.Fatalf("expected: %v got: %v", test.expected, result)
 				}
+			}
+		})
+	}
+}
+
+func TestTimePointerCompare(t *testing.T) {
+
+	tests := []struct {
+		alpha    *time.Time
+		bravo    *time.Time
+		expected bool
+	}{
+		{
+			alpha:    TimePointer(42),
+			bravo:    TimePointer(73),
+			expected: false,
+		},
+		{
+			alpha:    TimePointer(42.64),
+			bravo:    TimePointer(73.32),
+			expected: false,
+		},
+		{
+			alpha:    TimePointer(56.64),
+			bravo:    TimePointer(56.32),
+			expected: false,
+		},
+		{
+			alpha:    nil,
+			bravo:    TimePointer(56.32),
+			expected: false,
+		},
+		{
+			alpha:    TimePointer(56.64),
+			bravo:    nil,
+			expected: false,
+		},
+		{
+			alpha:    TimePointer(42),
+			bravo:    TimePointer(42),
+			expected: true,
+		},
+		{
+			alpha:    TimePointer(42.64),
+			bravo:    TimePointer(42.64),
+			expected: true,
+		},
+		{
+			alpha:    TimePointer(73.32),
+			bravo:    TimePointer(73.32),
+			expected: true,
+		},
+		{
+			alpha:    nil,
+			bravo:    nil,
+			expected: true,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(fmt.Sprintf("%s - %s", test.alpha, test.bravo), func(t *testing.T) {
+			result := TimePointerCompare(test.alpha, test.bravo)
+			if result != test.expected {
+				t.Fatalf("expected %v got %v", test.expected, result)
 			}
 		})
 	}

@@ -1,19 +1,33 @@
 package common
 
-import "reflect"
+import (
+	"reflect"
+
+	"github.com/truvami/decoder/pkg/decoder"
+)
+
+type TagConfig struct {
+	Name      string
+	Tag       uint8
+	Optional  bool
+	Feature   []decoder.Feature
+	Transform func(any) any
+	Hex       bool
+}
 
 type FieldConfig struct {
 	Name      string
 	Start     int
 	Length    int
-	Transform func(interface{}) interface{}
+	Transform func(any) any
 	Optional  bool
 	Hex       bool
 }
 
 // PayloadConfig defines the overall structure of the payload, including the target struct type
 type PayloadConfig struct {
-	Fields          []FieldConfig
-	TargetType      reflect.Type
-	StatusByteIndex *int // can be nil
+	Tags       []TagConfig
+	Fields     []FieldConfig
+	TargetType reflect.Type
+	Features   []decoder.Feature
 }
