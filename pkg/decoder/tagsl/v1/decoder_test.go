@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -276,8 +277,8 @@ func TestDecode(t *testing.T) {
 				HardwareVersionType:             1,
 				HardwareVersionRevision:         2,
 				BatteryKeepAliveMessageInterval: 21600,
-				BatchSize:                       10,
-				BufferSize:                      4096,
+				BatchSize:                       helpers.Uint16Ptr(10),
+				BufferSize:                      helpers.Uint16Ptr(4096),
 			},
 		},
 		{
@@ -1405,7 +1406,7 @@ func TestDecode(t *testing.T) {
 
 			t.Logf("got %v", got)
 
-			if got == nil || got.Data != test.expected {
+			if got == nil || !reflect.DeepEqual(&got.Data, &test.expected) {
 				t.Errorf("expected: %v\ngot: %v", test.expected, got)
 			}
 		})
@@ -2116,7 +2117,7 @@ func TestMarshal(t *testing.T) {
 		{
 			payload:  "0000012c00000e1000001c200078012c05dc02020100010200002328",
 			port:     4,
-			expected: []string{"\"batteryKeepAliveMessageInterval\": 9000"},
+			expected: []string{"\"movingInterval\": \"5m0s\"", "\"steadyInterval\": \"1h0m0s\"", "\"accelerometerThreshold\": \"300mg\"", "\"deviceState\": \"steady\""},
 		},
 		{
 			payload:  "00e0286d8aabfca8e0286d8a9478c2726c9a74b58dab726cdac8b89dacf0b0140c96bbc8deadbeef4242d6deadbeef4242d6",
