@@ -301,8 +301,8 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 					return float64(v.(int)) / 2
 				}},
 				{Name: "Satellites", Start: 19, Length: 1},
-				{Name: "Mac1", Start: 20, Length: 6, Optional: true, Hex: true},
-				{Name: "Rssi1", Start: 26, Length: 1, Optional: true},
+				{Name: "Mac1", Start: 20, Length: 6, Hex: true},
+				{Name: "Rssi1", Start: 26, Length: 1},
 				{Name: "Mac2", Start: 27, Length: 6, Optional: true, Hex: true},
 				{Name: "Rssi2", Start: 33, Length: 1, Optional: true},
 				{Name: "Mac3", Start: 34, Length: 6, Optional: true, Hex: true},
