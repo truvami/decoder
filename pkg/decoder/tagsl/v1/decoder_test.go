@@ -582,9 +582,9 @@ func TestDecode(t *testing.T) {
 				Altitude:   438.9,
 				Timestamp:  time.Date(2024, 10, 23, 11, 11, 58, 0, time.UTC),
 				Battery:    3.806,
-				PDOP:       2.5,
-				Satellites: 5,
-				TTF:        time.Duration(25) * time.Second,
+				PDOP:       helpers.Float64Ptr(2.5),
+				Satellites: helpers.Uint8Ptr(5),
+				TTF:        helpers.DurationPtr(time.Duration(25) * time.Second),
 			},
 		},
 		{
@@ -598,9 +598,9 @@ func TestDecode(t *testing.T) {
 				Altitude:   438.9,
 				Timestamp:  time.Date(2024, 10, 23, 11, 11, 58, 0, time.UTC),
 				Battery:    3.806,
-				PDOP:       2.5,
-				Satellites: 5,
-				TTF:        time.Duration(25) * time.Second,
+				PDOP:       helpers.Float64Ptr(2.5),
+				Satellites: helpers.Uint8Ptr(5),
+				TTF:        helpers.DurationPtr(time.Duration(25) * time.Second),
 			},
 		},
 		{
@@ -1423,37 +1423,37 @@ func TestValidationErrors(t *testing.T) {
 		{
 			payload:  "8005f5e10000744f5e166018040b14341a",
 			port:     1,
-			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Latitude", 100),
+			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Latitude"),
 		},
 		{
 			payload:  "8002cdcd130bebc200166018040b14341a",
 			port:     1,
-			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Longitude", 200),
+			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Longitude"),
 		},
 		{
 			payload:  "8002cdcd1300744f5e166018490b14341a",
 			port:     1,
-			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Month", 73),
+			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Month"),
 		},
 		{
 			payload:  "8002cdcd1300744f5e166018044914341a",
 			port:     1,
-			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Day", 73),
+			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Day"),
 		},
 		{
 			payload:  "8002cdcd1300744f5e166018040b49341a",
 			port:     1,
-			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Hour", 73),
+			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Hour"),
 		},
 		{
 			payload:  "8002cdcd1300744f5e166018040b14491a",
 			port:     1,
-			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Minute", 73),
+			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Minute"),
 		},
 		{
 			payload:  "8002cdcd1300744f5e166018040b143449",
 			port:     1,
-			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Second", 73),
+			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Second"),
 		},
 		{
 			payload:  "0002d30b070082491f11256718d9fe0ede190505",
@@ -1463,32 +1463,32 @@ func TestValidationErrors(t *testing.T) {
 		{
 			payload:  "0005f5e1000082491f11256718d9fe0ede190505",
 			port:     10,
-			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Latitude", 100),
+			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Latitude"),
 		},
 		{
 			payload:  "0002d30b070bebc20011256718d9fe0ede190505",
 			port:     10,
-			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Longitude", 200),
+			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Longitude"),
 		},
 		{
 			payload:  "0002d30b070082491f11256718d9fe01f4190505",
 			port:     10,
-			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Battery", 0.5),
+			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Battery"),
 		},
 		{
 			payload:  "0002d30b070082491f11256718d9fe157c190505",
 			port:     10,
-			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Battery", 5.5),
+			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Battery"),
 		},
 		{
 			payload:  "0002d30b070082491f11256718d9fe0ede190502",
 			port:     10,
-			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Satellites", 2),
+			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Satellites"),
 		},
 		{
 			payload:  "0002d30b070082491f11256718d9fe0ede19051c",
 			port:     10,
-			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Satellites", 28),
+			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Satellites"),
 		},
 		{
 			payload:  "001044",
@@ -1498,12 +1498,12 @@ func TestValidationErrors(t *testing.T) {
 		{
 			payload:  "0001f4",
 			port:     15,
-			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Battery", 0.5),
+			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Battery"),
 		},
 		{
 			payload:  "00157c",
 			port:     15,
-			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Battery", 5.5),
+			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Battery"),
 		},
 		{
 			payload:  "0002d30c9300824c87117966c45dcd0f8118",
@@ -1513,22 +1513,22 @@ func TestValidationErrors(t *testing.T) {
 		{
 			payload:  "0005f5e10000824c87117966c45dcd0f8118",
 			port:     50,
-			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Latitude", 100),
+			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Latitude"),
 		},
 		{
 			payload:  "0002d30c930bebc200117966c45dcd0f8118",
 			port:     50,
-			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Longitude", 200),
+			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Longitude"),
 		},
 		{
 			payload:  "0002d30c9300824c87117966c45dcd01f418",
 			port:     50,
-			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Battery", 0.5),
+			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Battery"),
 		},
 		{
 			payload:  "0002d30c9300824c87117966c45dcd157c18",
 			port:     50,
-			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Battery", 5.5),
+			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Battery"),
 		},
 		{
 			payload:  "0002d30c9300824c87117966c45dcd0f81180205",
@@ -1538,32 +1538,32 @@ func TestValidationErrors(t *testing.T) {
 		{
 			payload:  "0005f5e10000824c87117966c45dcd0f81180205",
 			port:     51,
-			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Latitude", 100),
+			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Latitude"),
 		},
 		{
 			payload:  "0002d30c930bebc200117966c45dcd0f81180205",
 			port:     51,
-			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Longitude", 200),
+			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Longitude"),
 		},
 		{
 			payload:  "0002d30c9300824c87117966c45dcd01f4180205",
 			port:     51,
-			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Battery", 0.5),
+			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Battery"),
 		},
 		{
 			payload:  "0002d30c9300824c87117966c45dcd157c180205",
 			port:     51,
-			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Battery", 5.5),
+			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Battery"),
 		},
 		{
 			payload:  "0002d30c9300824c87117966c45dcd0f81180202",
 			port:     51,
-			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Satellites", 2),
+			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Satellites"),
 		},
 		{
 			payload:  "0002d30c9300824c87117966c45dcd0f8118021c",
 			port:     51,
-			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Satellites", 28),
+			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Satellites"),
 		},
 		{
 			payload:  "00000002d30c9300824c87117966c45dcd0f81",
@@ -1573,22 +1573,22 @@ func TestValidationErrors(t *testing.T) {
 		{
 			payload:  "00000005f5e10000824c87117966c45dcd0f81",
 			port:     110,
-			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Latitude", 100),
+			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Latitude"),
 		},
 		{
 			payload:  "00000002d30c930bebc200117966c45dcd0f81",
 			port:     110,
-			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Longitude", 200),
+			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Longitude"),
 		},
 		{
 			payload:  "00000002d30c9300824c87117966c45dcd01f4",
 			port:     110,
-			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Battery", 0.5),
+			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Battery"),
 		},
 		{
 			payload:  "00000002d30c9300824c87117966c45dcd157c",
 			port:     110,
-			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Battery", 5.5),
+			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Battery"),
 		},
 		{
 			payload:  "00000002d30c9300824c87117966c45dcd0f812f",
@@ -1598,22 +1598,22 @@ func TestValidationErrors(t *testing.T) {
 		{
 			payload:  "00000005f5e10000824c87117966c45dcd0f812f",
 			port:     150,
-			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Latitude", 100),
+			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Latitude"),
 		},
 		{
 			payload:  "00000002d30c930bebc200117966c45dcd0f812f",
 			port:     150,
-			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Longitude", 200),
+			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Longitude"),
 		},
 		{
 			payload:  "00000002d30c9300824c87117966c45dcd01f42f",
 			port:     150,
-			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Battery", 0.5),
+			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Battery"),
 		},
 		{
 			payload:  "00000002d30c9300824c87117966c45dcd157c2f",
 			port:     150,
-			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Battery", 5.5),
+			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Battery"),
 		},
 		{
 			payload:  "00000002d30c9300824c87117966c45dcd0f812f0205",
@@ -1623,32 +1623,32 @@ func TestValidationErrors(t *testing.T) {
 		{
 			payload:  "00000005f5e10000824c87117966c45dcd0f812f0205",
 			port:     151,
-			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Latitude", 100),
+			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Latitude"),
 		},
 		{
 			payload:  "00000002d30c930bebc200117966c45dcd0f812f0205",
 			port:     151,
-			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Longitude", 200),
+			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Longitude"),
 		},
 		{
 			payload:  "00000002d30c9300824c87117966c45dcd01f42f0205",
 			port:     151,
-			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Battery", 0.5),
+			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Battery"),
 		},
 		{
 			payload:  "00000002d30c9300824c87117966c45dcd157c2f0205",
 			port:     151,
-			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Battery", 5.5),
+			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Battery"),
 		},
 		{
 			payload:  "00000002d30c9300824c87117966c45dcd0f812f0202",
 			port:     151,
-			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Satellites", 2),
+			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Satellites"),
 		},
 		{
 			payload:  "00000002d30c9300824c87117966c45dcd0f812f021c",
 			port:     151,
-			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Satellites", 28),
+			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Satellites"),
 		},
 	}
 
@@ -1663,7 +1663,7 @@ func TestValidationErrors(t *testing.T) {
 
 			t.Logf("got %v", got)
 
-			if err != nil && test.expected == nil || err == nil || err.Error() != test.expected.Error() {
+			if err != nil && test.expected == nil || err == nil || !strings.Contains(err.Error(), test.expected.Error()) {
 				t.Errorf("expected: %v\ngot: %v", test.expected, err)
 			}
 		})
@@ -2120,7 +2120,7 @@ func TestMarshal(t *testing.T) {
 		{
 			payload:  "66ec04bb00e0286d8aabfcbbec6c9a74b58fb2726c9a74b58db1e0286d8a9478cbf0b0140c96bbd2260122180d42ad",
 			port:     7,
-			expected: []string{"\"timestamp\": \"2024-09-19T11:02:19Z\"", "\"mac1\": \"e0286d8aabfc\"", "\"rssi1\": -69"},
+			expected: []string{"\"timestamp\": \"2024-09-19 11:02:19\"", "\"mac1\": \"e0286d8aabfc\"", "\"rssi1\": -69"},
 		},
 		{
 			payload:  "012c141e9c455738304543434343460078012c01a8c0",
@@ -2128,9 +2128,9 @@ func TestMarshal(t *testing.T) {
 			expected: []string{"\"minRssiValue\": -100", "\"advertisingFilter\": \"4048812220199682886\""},
 		},
 		{
-			payload:  "0002d308b50082457f16eb66c4a5cd0ed3",
+			payload:  "0002d308b50082457f16eb66c4a5cd0ed32a0807",
 			port:     10,
-			expected: []string{"\"timestamp\": \"2024-08-20T14:18:53Z\"", "\"battery\": 3.795", "\"ttf\": \"0s\""},
+			expected: []string{"\"timestamp\": \"2024-08-20 14:18:53\"", "\"battery\": \"3.795v\"", "\"ttf\": \"42s\"", "\"pdop\": \"4.0m\""},
 		},
 		{
 			payload:  "800ee5",

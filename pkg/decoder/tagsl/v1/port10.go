@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/truvami/decoder/pkg/common"
 	"github.com/truvami/decoder/pkg/decoder"
 )
 
@@ -27,28 +28,44 @@ import (
 // +------+------+-------------------------------------------+------------------------+
 
 type Port10Payload struct {
-	DutyCycle           bool          `json:"dutyCycle"`
-	ConfigChangeId      uint8         `json:"configChangeId" validate:"gte=0,lte=15"`
-	ConfigChangeSuccess bool          `json:"configChangeSuccess"`
-	Moving              bool          `json:"moving"`
-	Latitude            float64       `json:"latitude" validate:"gte=-90,lte=90"`
-	Longitude           float64       `json:"longitude" validate:"gte=-180,lte=180"`
-	Altitude            float64       `json:"altitude"`
-	Timestamp           time.Time     `json:"timestamp"`
-	Battery             float64       `json:"battery" validate:"gte=1,lte=5"`
-	TTF                 time.Duration `json:"ttf"`
-	PDOP                float64       `json:"pdop"`
-	Satellites          uint8         `json:"satellites" validate:"gte=3,lte=27"`
+	DutyCycle           bool           `json:"dutyCycle"`
+	ConfigChangeId      uint8          `json:"configChangeId" validate:"gte=0,lte=15"`
+	ConfigChangeSuccess bool           `json:"configChangeSuccess"`
+	Moving              bool           `json:"moving"`
+	Latitude            float64        `json:"latitude" validate:"gte=-90,lte=90"`
+	Longitude           float64        `json:"longitude" validate:"gte=-180,lte=180"`
+	Altitude            float64        `json:"altitude"`
+	Timestamp           time.Time      `json:"timestamp"`
+	Battery             float64        `json:"battery" validate:"gte=1,lte=5"`
+	TTF                 *time.Duration `json:"ttf"`
+	PDOP                *float64       `json:"pdop"`
+	Satellites          *uint8         `json:"satellites" validate:"gte=3,lte=27"`
 }
 
 func (p Port10Payload) MarshalJSON() ([]byte, error) {
 	type Alias Port10Payload
+	var ttf *string = nil
+	if p.TTF != nil {
+		ttf = common.StringPtr(p.TTF.String())
+	}
+	var pdop *string = nil
+	if p.PDOP != nil {
+		pdop = common.StringPtr(fmt.Sprintf("%.1fm", *p.PDOP))
+	}
 	return json.Marshal(&struct {
 		*Alias
-		TTF string `json:"ttf"`
+		Timestamp  string  `json:"timestamp"`
+		Battery    string  `json:"battery"`
+		TTF        *string `json:"ttf"`
+		PDOP       *string `json:"pdop"`
+		Satellites *uint8  `json:"satellites"`
 	}{
-		Alias: (*Alias)(&p),
-		TTF:   fmt.Sprintf("%.0fs", p.TTF.Seconds()),
+		Alias:      (*Alias)(&p),
+		Timestamp:  p.Timestamp.Format("2006-01-02 15:04:05"),
+		Battery:    fmt.Sprintf("%.3fv", p.Battery),
+		TTF:        ttf,
+		PDOP:       pdop,
+		Satellites: p.Satellites,
 	})
 }
 
@@ -80,24 +97,15 @@ func (p Port10Payload) GetAccuracy() *float64 {
 }
 
 func (p Port10Payload) GetTTF() *time.Duration {
-	if p.TTF.Nanoseconds() != 0 {
-		return &p.TTF
-	}
-	return nil
+	return p.TTF
 }
 
 func (p Port10Payload) GetPDOP() *float64 {
-	if p.PDOP != 0 {
-		return &p.PDOP
-	}
-	return nil
+	return p.PDOP
 }
 
 func (p Port10Payload) GetSatellites() *uint8 {
-	if p.Satellites != 0 {
-		return &p.Satellites
-	}
-	return nil
+	return p.Satellites
 }
 
 func (p Port10Payload) GetBatteryVoltage() float64 {

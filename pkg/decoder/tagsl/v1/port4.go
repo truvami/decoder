@@ -82,6 +82,7 @@ func (p Port4Payload) MarshalJSON() ([]byte, error) {
 }
 
 var _ decoder.UplinkFeatureBase = &Port4Payload{}
+var _ decoder.UplinkFeatureMoving = &Port4Payload{}
 var _ decoder.UplinkFeatureConfig = &Port4Payload{}
 var _ decoder.UplinkFeatureFirmwareVersion = &Port4Payload{}
 var _ decoder.UplinkFeatureHardwareVersion = &Port4Payload{}
@@ -178,4 +179,8 @@ func (p Port4Payload) GetHardwareVersion() string {
 // GetFirmwareVersion implements decoder.UplinkFeatureFirmwareVersion.
 func (p Port4Payload) GetFirmwareVersion() string {
 	return fmt.Sprintf("%d.%d.%d", p.FirmwareVersionMajor, p.FirmwareVersionMinor, p.FirmwareVersionPatch)
+}
+
+func (p Port4Payload) IsMoving() bool {
+	return p.DeviceState == 0x01
 }

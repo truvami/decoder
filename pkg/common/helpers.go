@@ -416,6 +416,10 @@ func Int8Ptr(value int8) *int8 {
 	return &value
 }
 
+func BoolPtr(value bool) *bool {
+	return &value
+}
+
 func StringPtr(value string) *string {
 	return &value
 }
@@ -424,8 +428,12 @@ func Float32Ptr(value float32) *float32 {
 	return &value
 }
 
-func BoolPtr(value bool) *bool {
+func Float64Ptr(value float64) *float64 {
 	return &value
+}
+
+func DurationPtr(duration time.Duration) *time.Duration {
+	return &duration
 }
 
 func TimePointer(timestamp float64) *time.Time {
