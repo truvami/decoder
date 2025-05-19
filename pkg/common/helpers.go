@@ -400,6 +400,10 @@ func uintToBytes(value uint64, length int) []byte {
 	return buf
 }
 
+func Uint8Ptr(value uint8) *uint8 {
+	return &value
+}
+
 func Uint16Ptr(value uint16) *uint16 {
 	return &value
 }
@@ -408,11 +412,11 @@ func Uint32Ptr(value uint32) *uint32 {
 	return &value
 }
 
-func StringPtr(value string) *string {
+func Int8Ptr(value int8) *int8 {
 	return &value
 }
 
-func Uint8Ptr(value uint8) *uint8 {
+func StringPtr(value string) *string {
 	return &value
 }
 
