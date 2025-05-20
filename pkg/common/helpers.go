@@ -358,40 +358,52 @@ func Encode(data any, config PayloadConfig) (string, error) {
 
 		var unset bool = false
 		var fieldBytes []byte
-		switch fieldValue.Type() {
-		case reflect.TypeOf(bool(false)):
-			fieldBytes = BoolToBytes(fieldValue.Bool(), 0)
-		case reflect.TypeOf([]byte{}):
-			value := fieldValue.Bytes()
-			unset = len(value) == 0
-			fieldBytes = value
-		case reflect.TypeOf(string("")):
-			value, err := HexStringToBytes(fieldValue.String())
-			if err != nil {
-				panic(err)
+
+		if fieldValue.Kind() == reflect.Ptr {
+			if fieldValue.IsNil() {
+				unset = true
+				fieldBytes = make([]byte, field.Length)
+			} else {
+				fieldValue = fieldValue.Elem()
 			}
-			unset = len(value) == 0
-			fieldBytes = value
-		case reflect.TypeOf(uint(0)), reflect.TypeOf(uint8(0)), reflect.TypeOf(uint16(0)), reflect.TypeOf(uint32(0)), reflect.TypeOf(uint64(0)):
-			value := fieldValue.Uint()
-			unset = value == 0
-			fieldBytes = UintToBytes(value, field.Length)
-		case reflect.TypeOf(int(0)), reflect.TypeOf(int8(0)), reflect.TypeOf(int16(0)), reflect.TypeOf(int32(0)), reflect.TypeOf(int64(0)):
-			value := fieldValue.Int()
-			unset = value == 0
-			fieldBytes = IntToBytes(value, field.Length)
-		case reflect.TypeOf(float32(0)):
-			fieldBytes = Float32ToBytes(float32(fieldValue.Float()))
-		case reflect.TypeOf(float64(0)):
-			fieldBytes = Float64ToBytes(fieldValue.Float())
-		case reflect.TypeOf(time.Duration(0)):
-			duration := fieldValue.Interface().(time.Duration).Nanoseconds()
-			fieldBytes = IntToBytes(duration, int(unsafe.Sizeof(duration)))
-		case reflect.TypeOf(time.Time{}):
-			timestamp := fieldValue.Interface().(time.Time).Unix()
-			fieldBytes = IntToBytes(timestamp, int(unsafe.Sizeof(timestamp)))
-		default:
-			return "", fmt.Errorf("unsupported field type: %s", fieldValue.Kind())
+		}
+
+		if !unset {
+			switch fieldValue.Type() {
+			case reflect.TypeOf(bool(false)):
+				fieldBytes = BoolToBytes(fieldValue.Bool(), 0)
+			case reflect.TypeOf([]byte{}):
+				value := fieldValue.Bytes()
+				unset = len(value) == 0
+				fieldBytes = value
+			case reflect.TypeOf(string("")):
+				value, err := HexStringToBytes(fieldValue.String())
+				if err != nil {
+					panic(err)
+				}
+				unset = len(value) == 0
+				fieldBytes = value
+			case reflect.TypeOf(uint(0)), reflect.TypeOf(uint8(0)), reflect.TypeOf(uint16(0)), reflect.TypeOf(uint32(0)), reflect.TypeOf(uint64(0)):
+				value := fieldValue.Uint()
+				unset = value == 0
+				fieldBytes = UintToBytes(value, field.Length)
+			case reflect.TypeOf(int(0)), reflect.TypeOf(int8(0)), reflect.TypeOf(int16(0)), reflect.TypeOf(int32(0)), reflect.TypeOf(int64(0)):
+				value := fieldValue.Int()
+				unset = value == 0
+				fieldBytes = IntToBytes(value, field.Length)
+			case reflect.TypeOf(float32(0)):
+				fieldBytes = Float32ToBytes(float32(fieldValue.Float()))
+			case reflect.TypeOf(float64(0)):
+				fieldBytes = Float64ToBytes(fieldValue.Float())
+			case reflect.TypeOf(time.Duration(0)):
+				duration := fieldValue.Interface().(time.Duration).Nanoseconds()
+				fieldBytes = IntToBytes(duration, int(unsafe.Sizeof(duration)))
+			case reflect.TypeOf(time.Time{}):
+				timestamp := fieldValue.Interface().(time.Time).Unix()
+				fieldBytes = IntToBytes(timestamp, int(unsafe.Sizeof(timestamp)))
+			default:
+				return "", fmt.Errorf("unsupported field type: %s", fieldValue.Kind())
+			}
 		}
 
 		// Apply the transform function if provided
