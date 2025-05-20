@@ -45,8 +45,8 @@ func (t NomadXSv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
 				{Name: "DutyCycle", Start: 0, Length: 1, Transform: dutyCycle},
-				{Name: "ConfigChangeId", Start: 0, Length: 1, Transform: configChangeId},
-				{Name: "ConfigChangeSuccess", Start: 0, Length: 1, Transform: configChangeSuccess},
+				{Name: "ConfigId", Start: 0, Length: 1, Transform: configId},
+				{Name: "ConfigChange", Start: 0, Length: 1, Transform: configSuccess},
 				{Name: "Moving", Start: 0, Length: 1, Transform: moving},
 				{Name: "Latitude", Start: 1, Length: 4, Transform: func(v any) any {
 					return float64(v.(int)) / 1000000
@@ -167,7 +167,7 @@ func dutyCycle(v any) any {
 	return (byte(i)>>7)&0x01 == 1
 }
 
-func configChangeId(v any) any {
+func configId(v any) any {
 	i, ok := v.(int)
 	if !ok {
 		return nil
@@ -175,7 +175,7 @@ func configChangeId(v any) any {
 	return (byte(i) >> 3) & 0x0f
 }
 
-func configChangeSuccess(v any) any {
+func configSuccess(v any) any {
 	i, ok := v.(int)
 	if !ok {
 		return nil

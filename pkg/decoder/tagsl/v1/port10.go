@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/truvami/decoder/pkg/common"
 	"github.com/truvami/decoder/pkg/decoder"
 )
 
@@ -12,8 +13,8 @@ import (
 // | Byte | Size | Description                               | Format                 |
 // +------+------+-------------------------------------------+------------------------+
 // | 0    | 1    | Duty cycle flag                           | uint1                  |
-// | 0    | 1    | Config change id                          | uint4                  |
-// | 0    | 1    | Config change success flag                | uint1                  |
+// | 0    | 1    | Config id                                 | uint4                  |
+// | 0    | 1    | Config change flag                        | uint1                  |
 // | 0    | 1    | Reserved                                  | uint1                  |
 // | 0    | 1    | Moving flag                               | uint1                  |
 // | 1    | 4    | Latitude                                  | int32, 1/1’000’000 deg |
@@ -27,28 +28,46 @@ import (
 // +------+------+-------------------------------------------+------------------------+
 
 type Port10Payload struct {
-	DutyCycle           bool          `json:"dutyCycle"`
-	ConfigChangeId      uint8         `json:"configChangeId" validate:"gte=0,lte=15"`
-	ConfigChangeSuccess bool          `json:"configChangeSuccess"`
-	Moving              bool          `json:"moving"`
-	Latitude            float64       `json:"latitude" validate:"gte=-90,lte=90"`
-	Longitude           float64       `json:"longitude" validate:"gte=-180,lte=180"`
-	Altitude            float64       `json:"altitude"`
-	Timestamp           time.Time     `json:"timestamp"`
-	Battery             float64       `json:"battery" validate:"gte=1,lte=5"`
-	TTF                 time.Duration `json:"ttf"`
-	PDOP                float64       `json:"pdop"`
-	Satellites          uint8         `json:"satellites" validate:"gte=3,lte=27"`
+	DutyCycle    bool           `json:"dutyCycle"`
+	ConfigId     uint8          `json:"configId" validate:"gte=0,lte=15"`
+	ConfigChange bool           `json:"configChange"`
+	Moving       bool           `json:"moving"`
+	Latitude     float64        `json:"latitude" validate:"gte=-90,lte=90"`
+	Longitude    float64        `json:"longitude" validate:"gte=-180,lte=180"`
+	Altitude     float64        `json:"altitude"`
+	Timestamp    time.Time      `json:"timestamp"`
+	Battery      float64        `json:"battery" validate:"gte=1,lte=5"`
+	TTF          *time.Duration `json:"ttf"`
+	PDOP         *float64       `json:"pdop"`
+	Satellites   *uint8         `json:"satellites" validate:"gte=3,lte=27"`
 }
 
 func (p Port10Payload) MarshalJSON() ([]byte, error) {
 	type Alias Port10Payload
+	var ttf *string = nil
+	if p.TTF != nil {
+		ttf = common.StringPtr(p.TTF.String())
+	}
+	var pdop *string = nil
+	if p.PDOP != nil {
+		pdop = common.StringPtr(fmt.Sprintf("%.1fm", *p.PDOP))
+	}
 	return json.Marshal(&struct {
 		*Alias
-		TTF string `json:"ttf"`
+		Altitude   string  `json:"altitude"`
+		Timestamp  string  `json:"timestamp"`
+		Battery    string  `json:"battery"`
+		TTF        *string `json:"ttf"`
+		PDOP       *string `json:"pdop"`
+		Satellites *uint8  `json:"satellites"`
 	}{
-		Alias: (*Alias)(&p),
-		TTF:   fmt.Sprintf("%.0fs", p.TTF.Seconds()),
+		Alias:      (*Alias)(&p),
+		Altitude:   fmt.Sprintf("%.1fm", p.Altitude),
+		Timestamp:  p.Timestamp.Format(time.RFC3339),
+		Battery:    fmt.Sprintf("%.3fv", p.Battery),
+		TTF:        ttf,
+		PDOP:       pdop,
+		Satellites: p.Satellites,
 	})
 }
 
@@ -80,24 +99,15 @@ func (p Port10Payload) GetAccuracy() *float64 {
 }
 
 func (p Port10Payload) GetTTF() *time.Duration {
-	if p.TTF.Nanoseconds() != 0 {
-		return &p.TTF
-	}
-	return nil
+	return p.TTF
 }
 
 func (p Port10Payload) GetPDOP() *float64 {
-	if p.PDOP != 0 {
-		return &p.PDOP
-	}
-	return nil
+	return p.PDOP
 }
 
 func (p Port10Payload) GetSatellites() *uint8 {
-	if p.Satellites != 0 {
-		return &p.Satellites
-	}
-	return nil
+	return p.Satellites
 }
 
 func (p Port10Payload) GetBatteryVoltage() float64 {
@@ -117,9 +127,9 @@ func (p Port10Payload) IsDutyCycle() bool {
 }
 
 func (p Port10Payload) GetConfigId() *uint8 {
-	return &p.ConfigChangeId
+	return &p.ConfigId
 }
 
 func (p Port10Payload) GetConfigChange() bool {
-	return p.ConfigChangeSuccess
+	return p.ConfigChange
 }

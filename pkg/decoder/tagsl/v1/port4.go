@@ -1,6 +1,7 @@
 package tagsl
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -23,24 +24,65 @@ import (
 // +-------+------+-------------------------------------------+------------+
 
 type Port4Payload struct {
-	LocalizationIntervalWhileMoving uint32 `json:"localizationIntervalWhileMoving" validate:"gte=60,lte=86400"`
-	LocalizationIntervalWhileSteady uint32 `json:"localizationIntervalWhileSteady" validate:"gte=120,lte=86400"`
-	HeartbeatInterval               uint32 `json:"heartbeatInterval" validate:"gte=300,lte=604800"`
-	GPSTimeoutWhileWaitingForFix    uint16 `json:"gpsTimeoutWhileWaitingForFix" validate:"gte=60,lte=86400"`
-	AccelerometerWakeupThreshold    uint16 `json:"accelerometerWakeupThreshold" validate:"gte=10,lte=8000"`
-	AccelerometerDelay              uint16 `json:"accelerometerDelay" validate:"gte=1000,lte=10000"`
-	DeviceState                     uint8  `json:"deviceState"`
-	FirmwareVersionMajor            uint8  `json:"firmwareVersionMajor"`
-	FirmwareVersionMinor            uint8  `json:"firmwareVersionMinor"`
-	FirmwareVersionPatch            uint8  `json:"firmwareVersionPatch"`
-	HardwareVersionType             uint8  `json:"hardwareVersionType"`
-	HardwareVersionRevision         uint8  `json:"hardwareVersionRevision"`
-	BatteryKeepAliveMessageInterval uint32 `json:"batteryKeepAliveMessageInterval" validate:"gte=300,lte=604800"`
-	BatchSize                       uint16 `json:"batchSize" validate:"lte=50"`
-	BufferSize                      uint16 `json:"bufferSize" validate:"gte=128,lte=8128"`
+	LocalizationIntervalWhileMoving uint32  `json:"localizationIntervalWhileMoving" validate:"gte=60,lte=86400"`
+	LocalizationIntervalWhileSteady uint32  `json:"localizationIntervalWhileSteady" validate:"gte=120,lte=86400"`
+	HeartbeatInterval               uint32  `json:"heartbeatInterval" validate:"gte=300,lte=604800"`
+	GPSTimeoutWhileWaitingForFix    uint16  `json:"gpsTimeoutWhileWaitingForFix" validate:"gte=60,lte=86400"`
+	AccelerometerWakeupThreshold    uint16  `json:"accelerometerWakeupThreshold" validate:"gte=10,lte=8000"`
+	AccelerometerDelay              uint16  `json:"accelerometerDelay" validate:"gte=1000,lte=10000"`
+	DeviceState                     uint8   `json:"deviceState"`
+	FirmwareVersionMajor            uint8   `json:"firmwareVersionMajor"`
+	FirmwareVersionMinor            uint8   `json:"firmwareVersionMinor"`
+	FirmwareVersionPatch            uint8   `json:"firmwareVersionPatch"`
+	HardwareVersionType             uint8   `json:"hardwareVersionType"`
+	HardwareVersionRevision         uint8   `json:"hardwareVersionRevision"`
+	BatteryKeepAliveMessageInterval uint32  `json:"batteryKeepAliveMessageInterval" validate:"gte=300,lte=604800"`
+	BatchSize                       *uint16 `json:"batchSize" validate:"lte=50"`
+	BufferSize                      *uint16 `json:"bufferSize" validate:"gte=128,lte=8128"`
+}
+
+func (p Port4Payload) MarshalJSON() ([]byte, error) {
+	deviceState := func() string {
+		switch p.DeviceState {
+		case 1:
+			return "moving"
+		case 2:
+			return "steady"
+		default:
+			return "unknown"
+		}
+	}()
+	return json.Marshal(&struct {
+		MovingInterval         string  `json:"movingInterval"`
+		SteadyInterval         string  `json:"steadyInterval"`
+		ConfigInterval         string  `json:"configInterval"`
+		BatteryInterval        string  `json:"batteryInterval"`
+		GnssTimeout            string  `json:"gnssTimeout"`
+		AccelerometerThreshold string  `json:"accelerometerThreshold"`
+		AccelerometerDelay     string  `json:"accelerometerDelay"`
+		DeviceState            string  `json:"deviceState"`
+		FirmwareVersion        string  `json:"firmwareVersion"`
+		HardwareVersion        string  `json:"hardwareVersion"`
+		BatchSize              *uint16 `json:"batchSize"`
+		BufferSize             *uint16 `json:"bufferSize"`
+	}{
+		MovingInterval:         (time.Duration(p.LocalizationIntervalWhileMoving) * time.Second).String(),
+		SteadyInterval:         (time.Duration(p.LocalizationIntervalWhileSteady) * time.Second).String(),
+		ConfigInterval:         (time.Duration(p.HeartbeatInterval) * time.Second).String(),
+		BatteryInterval:        (time.Duration(p.BatteryKeepAliveMessageInterval) * time.Second).String(),
+		GnssTimeout:            (time.Duration(p.GPSTimeoutWhileWaitingForFix) * time.Second).String(),
+		AccelerometerThreshold: fmt.Sprintf("%dmg", p.AccelerometerWakeupThreshold),
+		AccelerometerDelay:     (time.Duration(p.AccelerometerDelay) * time.Millisecond).String(),
+		DeviceState:            deviceState,
+		FirmwareVersion:        fmt.Sprintf("%d.%d.%d", p.FirmwareVersionMajor, p.FirmwareVersionMinor, p.FirmwareVersionPatch),
+		HardwareVersion:        fmt.Sprintf("%d.%d", p.HardwareVersionType, p.HardwareVersionRevision),
+		BatchSize:              p.BatchSize,
+		BufferSize:             p.BufferSize,
+	})
 }
 
 var _ decoder.UplinkFeatureBase = &Port4Payload{}
+var _ decoder.UplinkFeatureMoving = &Port4Payload{}
 var _ decoder.UplinkFeatureConfig = &Port4Payload{}
 var _ decoder.UplinkFeatureFirmwareVersion = &Port4Payload{}
 var _ decoder.UplinkFeatureHardwareVersion = &Port4Payload{}
@@ -118,11 +160,11 @@ func (p Port4Payload) GetAccessPointsThreshold() *uint8 {
 }
 
 func (p Port4Payload) GetBatchSize() *uint16 {
-	return &p.BatchSize
+	return p.BatchSize
 }
 
 func (p Port4Payload) GetBufferSize() *uint16 {
-	return &p.BufferSize
+	return p.BufferSize
 }
 
 func (p Port4Payload) GetDataRate() *decoder.DataRate {
@@ -137,4 +179,8 @@ func (p Port4Payload) GetHardwareVersion() string {
 // GetFirmwareVersion implements decoder.UplinkFeatureFirmwareVersion.
 func (p Port4Payload) GetFirmwareVersion() string {
 	return fmt.Sprintf("%d.%d.%d", p.FirmwareVersionMajor, p.FirmwareVersionMinor, p.FirmwareVersionPatch)
+}
+
+func (p Port4Payload) IsMoving() bool {
+	return p.DeviceState == 0x01
 }

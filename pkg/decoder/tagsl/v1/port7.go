@@ -11,8 +11,8 @@ import (
 // +------+------+-------------------------------------------+-----------+
 // | 0    | 4    | Timestamp                                 | uint32    |
 // | 4    | 1    | Duty cycle flag                           | uint1     |
-// | 4    | 1    | Config change id                          | uint4     |
-// | 4    | 1    | Config change success flag                | uint1     |
+// | 4    | 1    | Config id                                 | uint4     |
+// | 4    | 1    | Config change flag                        | uint1     |
 // | 4    | 1    | Reserved                                  | uint1     |
 // | 4    | 1    | Moving flag                               | uint1     |
 // | 5    | 6    | Mac 1                                     | uint8[6]  |
@@ -30,23 +30,23 @@ import (
 // +------+------+-------------------------------------------+-----------+
 
 type Port7Payload struct {
-	Timestamp           time.Time `json:"timestamp"`
-	DutyCycle           bool      `json:"dutyCycle"`
-	ConfigChangeId      uint8     `json:"configChangeId" validate:"gte=0,lte=15"`
-	ConfigChangeSuccess bool      `json:"configChangeSuccess"`
-	Moving              bool      `json:"moving"`
-	Mac1                string    `json:"mac1"`
-	Rssi1               int8      `json:"rssi1" validate:"gte=-120,lte=-20"`
-	Mac2                string    `json:"mac2"`
-	Rssi2               int8      `json:"rssi2" validate:"gte=-120,lte=-20"`
-	Mac3                string    `json:"mac3"`
-	Rssi3               int8      `json:"rssi3" validate:"gte=-120,lte=-20"`
-	Mac4                string    `json:"mac4"`
-	Rssi4               int8      `json:"rssi4" validate:"gte=-120,lte=-20"`
-	Mac5                string    `json:"mac5"`
-	Rssi5               int8      `json:"rssi5" validate:"gte=-120,lte=-20"`
-	Mac6                string    `json:"mac6"`
-	Rssi6               int8      `json:"rssi6" validate:"gte=-120,lte=-20"`
+	Timestamp    time.Time `json:"timestamp"`
+	DutyCycle    bool      `json:"dutyCycle"`
+	ConfigId     uint8     `json:"configId" validate:"gte=0,lte=15"`
+	ConfigChange bool      `json:"configChange"`
+	Moving       bool      `json:"moving"`
+	Mac1         string    `json:"mac1"`
+	Rssi1        int8      `json:"rssi1" validate:"gte=-120,lte=-20"`
+	Mac2         *string   `json:"mac2"`
+	Rssi2        *int8     `json:"rssi2" validate:"gte=-120,lte=-20"`
+	Mac3         *string   `json:"mac3"`
+	Rssi3        *int8     `json:"rssi3" validate:"gte=-120,lte=-20"`
+	Mac4         *string   `json:"mac4"`
+	Rssi4        *int8     `json:"rssi4" validate:"gte=-120,lte=-20"`
+	Mac5         *string   `json:"mac5"`
+	Rssi5        *int8     `json:"rssi5" validate:"gte=-120,lte=-20"`
+	Mac6         *string   `json:"mac6"`
+	Rssi6        *int8     `json:"rssi6" validate:"gte=-120,lte=-20"`
 }
 
 var _ decoder.UplinkFeatureBase = &Port7Payload{}
@@ -62,45 +62,45 @@ func (p Port7Payload) GetTimestamp() *time.Time {
 func (p Port7Payload) GetAccessPoints() []decoder.AccessPoint {
 	accessPoints := []decoder.AccessPoint{}
 
-	if p.Mac1 != "" {
+	if p.Mac1 != "" && p.Rssi1 != 0 {
 		accessPoints = append(accessPoints, decoder.AccessPoint{
 			MAC:  p.Mac1,
 			RSSI: p.Rssi1,
 		})
 	}
 
-	if p.Mac2 != "" {
+	if p.Mac2 != nil && p.Rssi2 != nil {
 		accessPoints = append(accessPoints, decoder.AccessPoint{
-			MAC:  p.Mac2,
-			RSSI: p.Rssi2,
+			MAC:  *p.Mac2,
+			RSSI: *p.Rssi2,
 		})
 	}
 
-	if p.Mac3 != "" {
+	if p.Mac3 != nil && p.Rssi3 != nil {
 		accessPoints = append(accessPoints, decoder.AccessPoint{
-			MAC:  p.Mac3,
-			RSSI: p.Rssi3,
+			MAC:  *p.Mac3,
+			RSSI: *p.Rssi3,
 		})
 	}
 
-	if p.Mac4 != "" {
+	if p.Mac4 != nil && p.Rssi4 != nil {
 		accessPoints = append(accessPoints, decoder.AccessPoint{
-			MAC:  p.Mac4,
-			RSSI: p.Rssi4,
+			MAC:  *p.Mac4,
+			RSSI: *p.Rssi4,
 		})
 	}
 
-	if p.Mac5 != "" {
+	if p.Mac5 != nil && p.Rssi5 != nil {
 		accessPoints = append(accessPoints, decoder.AccessPoint{
-			MAC:  p.Mac5,
-			RSSI: p.Rssi5,
+			MAC:  *p.Mac5,
+			RSSI: *p.Rssi5,
 		})
 	}
 
-	if p.Mac6 != "" {
+	if p.Mac6 != nil && p.Rssi6 != nil {
 		accessPoints = append(accessPoints, decoder.AccessPoint{
-			MAC:  p.Mac6,
-			RSSI: p.Rssi6,
+			MAC:  *p.Mac6,
+			RSSI: *p.Rssi6,
 		})
 	}
 
@@ -116,9 +116,9 @@ func (p Port7Payload) IsDutyCycle() bool {
 }
 
 func (p Port7Payload) GetConfigId() *uint8 {
-	return &p.ConfigChangeId
+	return &p.ConfigId
 }
 
 func (p Port7Payload) GetConfigChange() bool {
-	return p.ConfigChangeSuccess
+	return p.ConfigChange
 }

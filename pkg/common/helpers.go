@@ -233,8 +233,16 @@ func Parse(payloadHex string, config *PayloadConfig) (any, error) {
 				continue
 			}
 
-			fieldType := convertFieldToType(value, fieldValue.Type())
-			fieldValue.Set(reflect.ValueOf(fieldType))
+			if fieldValue.Kind() == reflect.Pointer && field.Optional {
+				ptrValue := reflect.New(fieldValue.Type().Elem())
+				convertedValue := convertFieldToType(value, ptrValue.Elem().Type())
+
+				ptrValue.Elem().Set(reflect.ValueOf(convertedValue))
+				fieldValue.Set(ptrValue)
+			} else {
+				fieldType := convertFieldToType(value, fieldValue.Type())
+				fieldValue.Set(reflect.ValueOf(fieldType))
+			}
 		}
 
 		// Apply the transform function if provided
@@ -483,6 +491,10 @@ func BytesToFloat64(bytes []byte) float64 {
 	return math.Float64frombits(bits)
 }
 
+func Uint8Ptr(value uint8) *uint8 {
+	return &value
+}
+
 func Uint16Ptr(value uint16) *uint16 {
 	return &value
 }
@@ -491,11 +503,15 @@ func Uint32Ptr(value uint32) *uint32 {
 	return &value
 }
 
-func StringPtr(value string) *string {
+func Int8Ptr(value int8) *int8 {
 	return &value
 }
 
-func Uint8Ptr(value uint8) *uint8 {
+func BoolPtr(value bool) *bool {
+	return &value
+}
+
+func StringPtr(value string) *string {
 	return &value
 }
 
@@ -503,8 +519,12 @@ func Float32Ptr(value float32) *float32 {
 	return &value
 }
 
-func BoolPtr(value bool) *bool {
+func Float64Ptr(value float64) *float64 {
 	return &value
+}
+
+func DurationPtr(duration time.Duration) *time.Duration {
+	return &duration
 }
 
 func TimePointer(timestamp float64) *time.Time {
