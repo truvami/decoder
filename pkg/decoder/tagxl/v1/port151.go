@@ -6,22 +6,45 @@ import (
 	"github.com/truvami/decoder/pkg/decoder"
 )
 
+// +-----+------+------------------------------------------------+------------+
+// | Tag | Size | Description                                    | Format     |
+// +-----+------+------------------------------------------------+------------+
+// | 40  | 1    | device flags                                   | byte       |
+// |     |      | firmware upgrade flag                          | uint1      |
+// |     |      | gnss flag                                      | uint1      |
+// |     |      | wifi flag                                      | uint1      |
+// |     |      | accelerometer flag                             | uint1      |
+// |     |      | reserved                                       | uint4      |
+// | 41  | 4    | moving interval                                | uint16, s  |
+// |     |      | steady interval                                | uint16, s  |
+// | 42  | 4    | accelerometer threshold                        | uint16, mg |
+// |     |      | accelerometer delay                            | uint16, ms |
+// | 43  | 1    | heartbeat interval                             | uint8, h   |
+// | 44  | 1    | firmware upgrade advertisement                 | uint8, s   |
+// | 45  | 2    | battery voltage                                | uint16, mv |
+// | 46  | 4    | firmware hash                                  | byte[4]    |
+// | 49  | 2    | reset count since flash erase                  | uint16     |
+// | 4a  | 4    | reset cause register value                     | uint32     |
+// | 4b  | 4    | gnss scans since reset                         | uint16     |
+// |     |      | wifi scans since reset                         | uint16     |
+// +-----+------+------------------------------------------------+------------+
+
 type Port151Payload struct {
-	Battery                              *float32 `json:"battery" validate:"gte=1,lte=5"`
-	GnssScans                            *uint16  `json:"gnssScans"`
-	WifiScans                            *uint16  `json:"wifiScans"`
+	GnssEnabled                          *bool    `json:"gnssEnabled"`
+	WiFiEnabled                          *bool    `json:"wifiEnabled"`
+	AccelerometerEnabled                 *bool    `json:"accelerometerEnabled"`
 	LocalizationIntervalWhileMoving      *uint16  `json:"movingInterval" validate:"gte=60,lte=86400"`
 	LocalizationIntervalWhileSteady      *uint16  `json:"steadyInterval" validate:"gte=120,lte=86400"`
 	AccelerometerWakeupThreshold         *uint16  `json:"accelerometerWakeupThreshold" validate:"gte=10,lte=8000"`
 	AccelerometerDelay                   *uint16  `json:"accelerometerDelay" validate:"gte=1000,lte=10000"`
 	HeartbeatInterval                    *uint8   `json:"heartbeatInterval" validate:"gte=300,lte=604800"`
-	GnssEnabled                          *bool    `json:"gnssEnabled"`
-	WiFiEnabled                          *bool    `json:"wifiEnabled"`
-	AccelerometerEnabled                 *bool    `json:"accelerometerEnabled"`
 	AdvertisementFirmwareUpgradeInterval *uint8   `json:"advertisementFirmwareUpgradeInterval" validate:"gte=1,lte=86400"`
+	Battery                              *float32 `json:"battery" validate:"gte=1,lte=5"`
 	FirmwareHash                         *string  `json:"firmwareHash"`
 	ResetCount                           *uint16  `json:"resetCount"`
 	ResetCause                           *uint32  `json:"resetCause"`
+	GnssScans                            *uint16  `json:"gnssScans"`
+	WifiScans                            *uint16  `json:"wifiScans"`
 }
 
 var _ decoder.UplinkFeatureBase = &Port151Payload{}
