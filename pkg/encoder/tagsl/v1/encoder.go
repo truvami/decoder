@@ -135,12 +135,8 @@ func (t TagSLv1Encoder) getConfig(port uint8) (common.PayloadConfig, error) {
 				{Name: "Longitude", Start: 5, Length: 4, Transform: longitude},
 				{Name: "Altitude", Start: 9, Length: 2, Transform: altitude},
 				{Name: "Timestamp", Start: 11, Length: 4, Transform: timestamp},
-				{Name: "Battery", Start: 15, Length: 2, Transform: func(v any) any {
-					return common.UintToBytes(uint64(common.BytesToFloat64(v.([]byte))*1000), 2)
-				}},
-				{Name: "TTF", Start: 17, Length: 1, Transform: func(v any) any {
-					return common.UintToBytes(uint64(common.BytesToInt64(v.([]byte))/1000000000), 1)
-				}},
+				{Name: "Battery", Start: 15, Length: 2, Transform: battery},
+				{Name: "TTF", Start: 17, Length: 1, Transform: ttf},
 				{Name: "PDOP", Start: 18, Length: 1, Transform: func(v any) any {
 					return common.UintToBytes(uint64(common.BytesToFloat64(v.([]byte))*2), 1)
 				}},
@@ -154,11 +150,30 @@ func (t TagSLv1Encoder) getConfig(port uint8) (common.PayloadConfig, error) {
 				{Name: "LowBattery", Start: 0, Length: 1, Transform: func(v any) any {
 					return common.BoolToBytes(common.BytesToBool(v.([]byte)), 0)
 				}},
-				{Name: "Battery", Start: 1, Length: 2, Transform: func(v any) any {
-					return common.UintToBytes(uint64(common.BytesToFloat64(v.([]byte))*1000), 2)
-				}},
+				{Name: "Battery", Start: 1, Length: 2, Transform: battery},
 			},
 			TargetType: reflect.TypeOf(tagsl.Port15Payload{}),
+		}, nil
+	case 50:
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
+				{Name: "Moving", Start: 0, Length: 1, Transform: moving},
+				{Name: "Latitude", Start: 1, Length: 4, Transform: latitude},
+				{Name: "Longitude", Start: 5, Length: 4, Transform: longitude},
+				{Name: "Altitude", Start: 9, Length: 2, Transform: altitude},
+				{Name: "Timestamp", Start: 11, Length: 4, Transform: timestamp},
+				{Name: "Battery", Start: 15, Length: 2, Transform: battery},
+				{Name: "TTF", Start: 17, Length: 1, Transform: ttf},
+				{Name: "Mac1", Start: 18, Length: 6, Hex: true},
+				{Name: "Rssi1", Start: 24, Length: 1},
+				{Name: "Mac2", Start: 25, Length: 6, Hex: true, Optional: true},
+				{Name: "Rssi2", Start: 31, Length: 1, Optional: true},
+				{Name: "Mac3", Start: 32, Length: 6, Hex: true, Optional: true},
+				{Name: "Rssi3", Start: 38, Length: 1, Optional: true},
+				{Name: "Mac4", Start: 39, Length: 6, Hex: true, Optional: true},
+				{Name: "Rssi4", Start: 45, Length: 1, Optional: true},
+			},
+			TargetType: reflect.TypeOf(tagsl.Port50Payload{}),
 		}, nil
 	case 128:
 		return common.PayloadConfig{
@@ -257,4 +272,12 @@ func longitude(v any) any {
 
 func altitude(v any) any {
 	return common.UintToBytes(uint64(common.BytesToFloat64(v.([]byte))*10), 2)
+}
+
+func battery(v any) any {
+	return common.UintToBytes(uint64(common.BytesToFloat64(v.([]byte))*1000), 2)
+}
+
+func ttf(v any) any {
+	return common.UintToBytes(uint64(common.BytesToInt64(v.([]byte))/1000000000), 1)
 }
