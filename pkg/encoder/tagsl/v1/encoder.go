@@ -66,12 +66,34 @@ func (t TagSLv1Encoder) getConfig(port uint8) (common.PayloadConfig, error) {
 			},
 			TargetType: reflect.TypeOf(Port129Payload{}),
 		}, nil
+	case 130:
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
+				{Name: "EraseFlash", Start: 0, Length: 1, Transform: func(v any) any {
+					erase := common.BytesToBool(v.([]byte))
+					if erase {
+						return []byte{0xde}
+					}
+					return []byte{0x00}
+				}},
+			},
+			TargetType: reflect.TypeOf(Port130Payload{}),
+		}, nil
 	case 131:
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
 				{Name: "AccuracyEnhancement", Start: 0, Length: 1},
 			},
 			TargetType: reflect.TypeOf(Port131Payload{}),
+		}, nil
+	case 132:
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
+				{Name: "EraseFlash", Start: 0, Length: 1, Transform: func(v any) any {
+					return []byte{0x00}
+				}},
+			},
+			TargetType: reflect.TypeOf(Port132Payload{}),
 		}, nil
 	case 134:
 		return common.PayloadConfig{
@@ -86,8 +108,8 @@ func (t TagSLv1Encoder) getConfig(port uint8) (common.PayloadConfig, error) {
 					}
 					return v
 				}},
-				{Name: "AccelerometerTriggerHoldTimer", Start: 15, Length: 2},
-				{Name: "AcceleratorThreshold", Start: 17, Length: 2},
+				{Name: "AccelerometerDelay", Start: 15, Length: 2},
+				{Name: "AccelerometerThreshold", Start: 17, Length: 2},
 				{Name: "ScanMode", Start: 19, Length: 1},
 				{Name: "BleConfigUplinkInterval", Start: 20, Length: 2},
 			},
