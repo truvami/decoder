@@ -76,7 +76,7 @@ func (p Port151Payload) GetConfigInterval() *uint32 { // coverage-ignore
 	if p.HeartbeatInterval == nil {
 		return nil
 	}
-	interval := uint32(*p.HeartbeatInterval)
+	interval := uint32(*p.HeartbeatInterval) * 60 * 60 // convert to seconds
 	return &interval
 }
 
