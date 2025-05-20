@@ -196,6 +196,43 @@ func (t TagSLv1Encoder) getConfig(port uint8) (common.PayloadConfig, error) {
 			},
 			TargetType: reflect.TypeOf(tagsl.Port51Payload{}),
 		}, nil
+	case 105:
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
+				{Name: "BufferLevel", Start: 0, Length: 2},
+				{Name: "Timestamp", Start: 2, Length: 4, Transform: timestamp},
+				{Name: "Moving", Start: 6, Length: 1, Transform: moving},
+				{Name: "Mac1", Start: 7, Length: 6, Hex: true},
+				{Name: "Rssi1", Start: 13, Length: 1},
+				{Name: "Mac2", Start: 14, Length: 6, Hex: true, Optional: true},
+				{Name: "Rssi2", Start: 20, Length: 1, Optional: true},
+				{Name: "Mac3", Start: 21, Length: 6, Hex: true, Optional: true},
+				{Name: "Rssi3", Start: 27, Length: 1, Optional: true},
+				{Name: "Mac4", Start: 28, Length: 6, Hex: true, Optional: true},
+				{Name: "Rssi4", Start: 34, Length: 1, Optional: true},
+				{Name: "Mac5", Start: 35, Length: 6, Hex: true, Optional: true},
+				{Name: "Rssi5", Start: 41, Length: 1, Optional: true},
+				{Name: "Mac6", Start: 42, Length: 6, Hex: true, Optional: true},
+				{Name: "Rssi6", Start: 48, Length: 1, Optional: true},
+			},
+			TargetType: reflect.TypeOf(tagsl.Port105Payload{}),
+		}, nil
+	case 110:
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
+				{Name: "BufferLevel", Start: 0, Length: 2},
+				{Name: "Moving", Start: 2, Length: 1, Transform: moving},
+				{Name: "Latitude", Start: 3, Length: 4, Transform: latitude},
+				{Name: "Longitude", Start: 7, Length: 4, Transform: longitude},
+				{Name: "Altitude", Start: 11, Length: 2, Transform: altitude},
+				{Name: "Timestamp", Start: 13, Length: 4, Transform: timestamp},
+				{Name: "Battery", Start: 17, Length: 2, Transform: battery},
+				{Name: "TTF", Start: 19, Length: 1, Transform: ttf},
+				{Name: "PDOP", Start: 20, Length: 1, Transform: pdop},
+				{Name: "Satellites", Start: 21, Length: 1},
+			},
+			TargetType: reflect.TypeOf(tagsl.Port110Payload{}),
+		}, nil
 	case 128:
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
