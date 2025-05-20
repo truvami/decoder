@@ -137,9 +137,7 @@ func (t TagSLv1Encoder) getConfig(port uint8) (common.PayloadConfig, error) {
 				{Name: "Timestamp", Start: 11, Length: 4, Transform: timestamp},
 				{Name: "Battery", Start: 15, Length: 2, Transform: battery},
 				{Name: "TTF", Start: 17, Length: 1, Transform: ttf},
-				{Name: "PDOP", Start: 18, Length: 1, Transform: func(v any) any {
-					return common.UintToBytes(uint64(common.BytesToFloat64(v.([]byte))*2), 1)
-				}},
+				{Name: "PDOP", Start: 18, Length: 1, Transform: pdop},
 				{Name: "Satellites", Start: 19, Length: 1},
 			},
 			TargetType: reflect.TypeOf(tagsl.Port10Payload{}),
@@ -174,6 +172,29 @@ func (t TagSLv1Encoder) getConfig(port uint8) (common.PayloadConfig, error) {
 				{Name: "Rssi4", Start: 45, Length: 1, Optional: true},
 			},
 			TargetType: reflect.TypeOf(tagsl.Port50Payload{}),
+		}, nil
+	case 51:
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
+				{Name: "Moving", Start: 0, Length: 1, Transform: moving},
+				{Name: "Latitude", Start: 1, Length: 4, Transform: latitude},
+				{Name: "Longitude", Start: 5, Length: 4, Transform: longitude},
+				{Name: "Altitude", Start: 9, Length: 2, Transform: altitude},
+				{Name: "Timestamp", Start: 11, Length: 4, Transform: timestamp},
+				{Name: "Battery", Start: 15, Length: 2, Transform: battery},
+				{Name: "TTF", Start: 17, Length: 1, Transform: ttf},
+				{Name: "PDOP", Start: 18, Length: 1, Transform: pdop},
+				{Name: "Satellites", Start: 19, Length: 1},
+				{Name: "Mac1", Start: 20, Length: 6, Hex: true},
+				{Name: "Rssi1", Start: 26, Length: 1},
+				{Name: "Mac2", Start: 27, Length: 6, Hex: true, Optional: true},
+				{Name: "Rssi2", Start: 33, Length: 1, Optional: true},
+				{Name: "Mac3", Start: 34, Length: 6, Hex: true, Optional: true},
+				{Name: "Rssi3", Start: 40, Length: 1, Optional: true},
+				{Name: "Mac4", Start: 41, Length: 6, Hex: true, Optional: true},
+				{Name: "Rssi4", Start: 47, Length: 1, Optional: true},
+			},
+			TargetType: reflect.TypeOf(tagsl.Port51Payload{}),
 		}, nil
 	case 128:
 		return common.PayloadConfig{
@@ -280,4 +301,8 @@ func battery(v any) any {
 
 func ttf(v any) any {
 	return common.UintToBytes(uint64(common.BytesToInt64(v.([]byte))/1000000000), 1)
+}
+
+func pdop(v any) any {
+	return common.UintToBytes(uint64(common.BytesToFloat64(v.([]byte))*2), 1)
 }
