@@ -203,5 +203,8 @@ func TestNewTagSLv1Encoder(t *testing.T) {
 		t.Fatal("expected option to be called")
 	}
 
-	encoder.Encode(nil, 0)
+	_, err := encoder.Encode(nil, 0)
+	if err == nil || !errors.Is(err, helpers.ErrPortNotSupported) {
+		t.Fatal("expected port not supported")
+	}
 }
