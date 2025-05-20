@@ -24,18 +24,18 @@ func NewTagSLv1Encoder(options ...Option) encoder.Encoder {
 }
 
 // Encode encodes the provided data into a payload string
-func (t TagSLv1Encoder) Encode(data any, port uint8, extra string) (any, any, error) {
+func (t TagSLv1Encoder) Encode(data any, port uint8) (any, error) {
 	config, err := t.getConfig(port)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	payload, err := common.Encode(data, config)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	return payload, extra, nil
+	return payload, nil
 }
 
 // https://docs.truvami.com/docs/payloads/tag-S
@@ -163,16 +163,16 @@ func (t TagSLv1Encoder) getConfig(port uint8) (common.PayloadConfig, error) {
 	case 128:
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
-				{Name: "BLE", Start: 0, Length: 1},
-				{Name: "GPS", Start: 1, Length: 1},
-				{Name: "WIFI", Start: 2, Length: 1},
-				{Name: "LocalizationIntervalWhileMoving", Start: 3, Length: 4},
-				{Name: "LocalizationIntervalWhileSteady", Start: 7, Length: 4},
-				{Name: "HeartbeatInterval", Start: 11, Length: 4},
-				{Name: "GPSTimeoutWhileWaitingForFix", Start: 15, Length: 2},
-				{Name: "AccelerometerWakeupThreshold", Start: 17, Length: 2},
+				{Name: "Ble", Start: 0, Length: 1},
+				{Name: "Gnss", Start: 1, Length: 1},
+				{Name: "Wifi", Start: 2, Length: 1},
+				{Name: "MovingInterval", Start: 3, Length: 4},
+				{Name: "SteadyInterval", Start: 7, Length: 4},
+				{Name: "ConfigInterval", Start: 11, Length: 4},
+				{Name: "GnssTimeout", Start: 15, Length: 2},
+				{Name: "AccelerometerThreshold", Start: 17, Length: 2},
 				{Name: "AccelerometerDelay", Start: 19, Length: 2},
-				{Name: "BatteryKeepAliveMessageInterval", Start: 21, Length: 4},
+				{Name: "BatteryInterval", Start: 21, Length: 4},
 				{Name: "BatchSize", Start: 25, Length: 2, Optional: true},
 				{Name: "BufferSize", Start: 27, Length: 2, Optional: true},
 			},
@@ -185,12 +185,34 @@ func (t TagSLv1Encoder) getConfig(port uint8) (common.PayloadConfig, error) {
 			},
 			TargetType: reflect.TypeOf(Port129Payload{}),
 		}, nil
+	case 130:
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
+				{Name: "EraseFlash", Start: 0, Length: 1, Transform: func(v any) any {
+					erase := common.BytesToBool(v.([]byte))
+					if erase {
+						return []byte{0xde}
+					}
+					return []byte{0x00}
+				}},
+			},
+			TargetType: reflect.TypeOf(Port130Payload{}),
+		}, nil
 	case 131:
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
 				{Name: "AccuracyEnhancement", Start: 0, Length: 1},
 			},
 			TargetType: reflect.TypeOf(Port131Payload{}),
+		}, nil
+	case 132:
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
+				{Name: "EraseFlash", Start: 0, Length: 1, Transform: func(v any) any {
+					return []byte{0x00}
+				}},
+			},
+			TargetType: reflect.TypeOf(Port132Payload{}),
 		}, nil
 	case 134:
 		return common.PayloadConfig{
@@ -205,8 +227,8 @@ func (t TagSLv1Encoder) getConfig(port uint8) (common.PayloadConfig, error) {
 					}
 					return v
 				}},
-				{Name: "AccelerometerTriggerHoldTimer", Start: 15, Length: 2},
-				{Name: "AcceleratorThreshold", Start: 17, Length: 2},
+				{Name: "AccelerometerDelay", Start: 15, Length: 2},
+				{Name: "AccelerometerThreshold", Start: 17, Length: 2},
 				{Name: "ScanMode", Start: 19, Length: 1},
 				{Name: "BleConfigUplinkInterval", Start: 20, Length: 2},
 			},

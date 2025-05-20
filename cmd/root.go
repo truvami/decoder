@@ -90,7 +90,12 @@ A CLI tool to help decode @truvami payloads.`,
 }
 
 func Execute() {
-	if err := rootCmd.Execute(); err != nil {
+	// Initialize logger first to ensure it's available for all commands
+	logger.NewLogger()
+	defer logger.Sync()
+
+	err := rootCmd.Execute()
+	if err != nil {
 		os.Exit(1)
 	}
 }
