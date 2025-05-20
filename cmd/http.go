@@ -20,6 +20,7 @@ import (
 	tagslDecoder "github.com/truvami/decoder/pkg/decoder/tagsl/v1"
 	tagxlDecoder "github.com/truvami/decoder/pkg/decoder/tagxl/v1"
 	"github.com/truvami/decoder/pkg/encoder"
+	encoderSmartlabel "github.com/truvami/decoder/pkg/encoder/smartlabel/v1"
 	encoderTagsl "github.com/truvami/decoder/pkg/encoder/tagsl/v1"
 	"github.com/truvami/decoder/pkg/loracloud"
 	"go.uber.org/zap"
@@ -109,7 +110,7 @@ var httpCmd = &cobra.Command{
 
 		var encoders []encoderEndpoint = []encoderEndpoint{
 			{"encode/tagsl/v1", encoderTagsl.NewTagSLv1Encoder()},
-			// Add other encoders as they become available
+			{"encode/smartlabel/v1", encoderSmartlabel.NewSmartlabelv1Encoder()},
 		}
 
 		// add the encoders
