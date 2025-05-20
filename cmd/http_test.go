@@ -278,24 +278,23 @@ func TestGetEncoderHandler(t *testing.T) {
 
 	// Test with Port128Payload
 	payload := tagslEncoder.Port128Payload{
-		BLE:                             1,
-		GPS:                             1,
-		WIFI:                            1,
-		LocalizationIntervalWhileMoving: 3600,
-		LocalizationIntervalWhileSteady: 7200,
-		HeartbeatInterval:               86400,
-		GPSTimeoutWhileWaitingForFix:    120,
-		AccelerometerWakeupThreshold:    300,
-		AccelerometerDelay:              1500,
-		BatteryKeepAliveMessageInterval: 21600,
-		BatchSize:                       10,
-		BufferSize:                      4096,
+		Ble:                    false,
+		Gnss:                   true,
+		Wifi:                   true,
+		MovingInterval:         3600,
+		SteadyInterval:         7200,
+		ConfigInterval:         86400,
+		GnssTimeout:            120,
+		AccelerometerThreshold: 300,
+		AccelerometerDelay:     1500,
+		BatteryInterval:        21600,
+		BatchSize:              10,
+		BufferSize:             4096,
 	}
 
-	reqBody, err := json.Marshal(map[string]interface{}{
+	reqBody, err := json.Marshal(map[string]any{
 		"port":    128,
 		"payload": payload,
-		"devEui":  "",
 	})
 	if err != nil {
 		t.Fatalf("failed to marshal request body: %v", err)
@@ -340,7 +339,7 @@ func TestGetEncoderHandler(t *testing.T) {
 	}
 
 	// Test with invalid port
-	reqBody, err = json.Marshal(map[string]interface{}{
+	reqBody, err = json.Marshal(map[string]any{
 		"port":    0, // Invalid port
 		"payload": payload,
 		"devEui":  "",

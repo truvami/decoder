@@ -217,7 +217,7 @@ func getEncoderHandler(encoder encoder.Encoder) func(http.ResponseWriter, *http.
 		if err != nil {
 			logger.Logger.Error("error while decoding request", zap.Error(err))
 
-			setBody(w, http.StatusBadRequest, map[string]interface{}{
+			setBody(w, http.StatusBadRequest, map[string]any{
 				"error": err.Error(),
 				"docs":  "https://docs.truvami.com",
 			})
@@ -226,7 +226,7 @@ func getEncoderHandler(encoder encoder.Encoder) func(http.ResponseWriter, *http.
 
 		if err := validator.New().Struct(rawReq); err != nil {
 			logger.Logger.Error("request validation failed", zap.Error(err))
-			setBody(w, http.StatusBadRequest, map[string]interface{}{
+			setBody(w, http.StatusBadRequest, map[string]any{
 				"error": "request validation failed",
 				"docs":  "https://docs.truvami.com",
 			})
@@ -235,7 +235,7 @@ func getEncoderHandler(encoder encoder.Encoder) func(http.ResponseWriter, *http.
 
 		// Now we have the raw payload and port, we can determine the correct struct type
 		// and unmarshal the payload into it
-		var structPayload interface{}
+		var structPayload any
 
 		// This is a simplified example - in a real implementation, you would have a more
 		// comprehensive mapping of device types and ports to struct types
@@ -246,7 +246,7 @@ func getEncoderHandler(encoder encoder.Encoder) func(http.ResponseWriter, *http.
 				var payload encoderTagsl.Port128Payload
 				if err := json.Unmarshal(rawReq.Payload, &payload); err != nil {
 					logger.Logger.Error("error unmarshaling payload", zap.Error(err))
-					setBody(w, http.StatusBadRequest, map[string]interface{}{
+					setBody(w, http.StatusBadRequest, map[string]any{
 						"error": fmt.Sprintf("Error unmarshaling payload: %v", err),
 						"docs":  "https://docs.truvami.com",
 					})
@@ -257,7 +257,7 @@ func getEncoderHandler(encoder encoder.Encoder) func(http.ResponseWriter, *http.
 				var payload encoderTagsl.Port129Payload
 				if err := json.Unmarshal(rawReq.Payload, &payload); err != nil {
 					logger.Logger.Error("error unmarshaling payload", zap.Error(err))
-					setBody(w, http.StatusBadRequest, map[string]interface{}{
+					setBody(w, http.StatusBadRequest, map[string]any{
 						"error": fmt.Sprintf("Error unmarshaling payload: %v", err),
 						"docs":  "https://docs.truvami.com",
 					})
@@ -268,7 +268,7 @@ func getEncoderHandler(encoder encoder.Encoder) func(http.ResponseWriter, *http.
 				var payload encoderTagsl.Port131Payload
 				if err := json.Unmarshal(rawReq.Payload, &payload); err != nil {
 					logger.Logger.Error("error unmarshaling payload", zap.Error(err))
-					setBody(w, http.StatusBadRequest, map[string]interface{}{
+					setBody(w, http.StatusBadRequest, map[string]any{
 						"error": fmt.Sprintf("Error unmarshaling payload: %v", err),
 						"docs":  "https://docs.truvami.com",
 					})
@@ -279,7 +279,7 @@ func getEncoderHandler(encoder encoder.Encoder) func(http.ResponseWriter, *http.
 				var payload encoderTagsl.Port134Payload
 				if err := json.Unmarshal(rawReq.Payload, &payload); err != nil {
 					logger.Logger.Error("error unmarshaling payload", zap.Error(err))
-					setBody(w, http.StatusBadRequest, map[string]interface{}{
+					setBody(w, http.StatusBadRequest, map[string]any{
 						"error": fmt.Sprintf("Error unmarshaling payload: %v", err),
 						"docs":  "https://docs.truvami.com",
 					})
@@ -288,7 +288,7 @@ func getEncoderHandler(encoder encoder.Encoder) func(http.ResponseWriter, *http.
 				structPayload = payload
 			default:
 				logger.Logger.Error("unsupported port", zap.Uint8("port", rawReq.Port))
-				setBody(w, http.StatusBadRequest, map[string]interface{}{
+				setBody(w, http.StatusBadRequest, map[string]any{
 					"error": fmt.Sprintf("Unsupported port: %d", rawReq.Port),
 					"docs":  "https://docs.truvami.com",
 				})
@@ -297,7 +297,7 @@ func getEncoderHandler(encoder encoder.Encoder) func(http.ResponseWriter, *http.
 		default:
 			// For other device types, you would add similar switch statements
 			logger.Logger.Error("unsupported device type", zap.String("path", r.URL.Path))
-			setBody(w, http.StatusBadRequest, map[string]interface{}{
+			setBody(w, http.StatusBadRequest, map[string]any{
 				"error": "Unsupported device type",
 				"docs":  "https://docs.truvami.com",
 			})
@@ -307,7 +307,7 @@ func getEncoderHandler(encoder encoder.Encoder) func(http.ResponseWriter, *http.
 		logger.Logger.Debug("encoding payload", zap.Any("payload", structPayload), zap.Uint8("port", rawReq.Port))
 
 		var warnings []string = nil
-		encoded, metadata, err := encoder.Encode(structPayload, rawReq.Port, rawReq.DevEUI)
+		encoded, err := encoder.Encode(structPayload, rawReq.Port)
 		if err != nil {
 			if errors.Is(err, helpers.ErrValidationFailed) {
 				warnings = []string{}
@@ -319,7 +319,7 @@ func getEncoderHandler(encoder encoder.Encoder) func(http.ResponseWriter, *http.
 			} else {
 				logger.Logger.Error("error while encoding payload", zap.Error(err))
 
-				setBody(w, http.StatusBadRequest, map[string]interface{}{
+				setBody(w, http.StatusBadRequest, map[string]any{
 					"error": err.Error(),
 					"docs":  "https://docs.truvami.com",
 				})
@@ -327,9 +327,8 @@ func getEncoderHandler(encoder encoder.Encoder) func(http.ResponseWriter, *http.
 			}
 		}
 
-		setBody(w, http.StatusOK, map[string]interface{}{
+		setBody(w, http.StatusOK, map[string]any{
 			"encoded":  encoded,
-			"metadata": metadata,
 			"warnings": warnings,
 		})
 	}
