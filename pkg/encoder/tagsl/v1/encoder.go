@@ -77,7 +77,7 @@ func (t TagSLv1Encoder) getConfig(port uint8) (common.PayloadConfig, error) {
 				{Name: "BatchSize", Start: 28, Length: 2, Optional: true},
 				{Name: "BufferSize", Start: 30, Length: 2, Optional: true},
 			},
-			TargetType: reflect.TypeOf(tagsl.Port5Payload{}),
+			TargetType: reflect.TypeOf(tagsl.Port4Payload{}),
 		}, nil
 	case 5:
 		return common.PayloadConfig{
