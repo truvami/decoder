@@ -1,9 +1,11 @@
 package smartlabel
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
+	"github.com/truvami/decoder/pkg/common"
 	"github.com/truvami/decoder/pkg/decoder/smartlabel/v1"
 )
 
@@ -132,5 +134,21 @@ func TestEncode(t *testing.T) {
 				t.Errorf("received: %v", got)
 			}
 		})
+	}
+}
+
+func TestInvalidData(t *testing.T) {
+	encoder := NewSmartlabelv1Encoder()
+	_, err := encoder.Encode(nil, 1)
+	if err == nil || err.Error() != "data must be a struct" {
+		t.Fatal("expected data must be a struct")
+	}
+}
+
+func TestInvalidPort(t *testing.T) {
+	encoder := NewSmartlabelv1Encoder()
+	_, err := encoder.Encode(nil, 0)
+	if err == nil || !errors.Is(err, common.ErrPortNotSupported) {
+		t.Fatal("expected port not supported")
 	}
 }
