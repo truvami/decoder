@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"bytes"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -11,7 +12,8 @@ import (
 	"time"
 
 	"github.com/truvami/decoder/internal/logger"
-	tagsl "github.com/truvami/decoder/pkg/decoder/tagsl/v1"
+	tagslDecoder "github.com/truvami/decoder/pkg/decoder/tagsl/v1"
+	tagslEncoder "github.com/truvami/decoder/pkg/encoder/tagsl/v1"
 )
 
 func TestAddDecoder(t *testing.T) {
@@ -20,7 +22,7 @@ func TestAddDecoder(t *testing.T) {
 
 	router := http.NewServeMux()
 	path := "test/path"
-	decoder := tagsl.NewTagSLv1Decoder()
+	decoder := tagslDecoder.NewTagSLv1Decoder()
 
 	addDecoder(router, path, decoder)
 
@@ -32,11 +34,12 @@ func TestAddDecoder(t *testing.T) {
 		t.Errorf("expected pattern to be 'POST /test/path', got '%s'", pattern)
 	}
 }
+
 func TestGetHandler(t *testing.T) {
 	logger.NewLogger()
 	defer logger.Sync()
 
-	decoder := tagsl.NewTagSLv1Decoder()
+	decoder := tagslDecoder.NewTagSLv1Decoder()
 	handler := getHandler(decoder)
 
 	reqBody := `{"port": 1, "payload": "8002cdcd1300744f5e166018040b14341a", "devEui": ""}`
@@ -182,7 +185,7 @@ func TestHTTPCmd(t *testing.T) {
 
 	// parse the response body
 	type Response struct {
-		Data tagsl.Port105Payload `json:"data"`
+		Data tagslDecoder.Port105Payload `json:"data"`
 	}
 
 	var response Response
@@ -192,7 +195,7 @@ func TestHTTPCmd(t *testing.T) {
 	}
 
 	// check the response body
-	expectedData := tagsl.Port105Payload{
+	expectedData := tagslDecoder.Port105Payload{
 		Moving:      true,
 		DutyCycle:   false,
 		BufferLevel: 40,
@@ -215,6 +218,7 @@ func TestHTTPCmd(t *testing.T) {
 		t.Errorf("expected response data to be %v, got %v", expectedData, response.Data)
 	}
 }
+
 func TestHealthHandler(t *testing.T) {
 	req, err := http.NewRequest("GET", "/health", nil)
 	if err != nil {
@@ -246,5 +250,116 @@ func TestHealthHandler(t *testing.T) {
 	actualBody := string(body)
 	if actualBody != expectedBody {
 		t.Errorf("expected response body to be %q, got %q", expectedBody, actualBody)
+	}
+}
+
+func TestAddEncoder(t *testing.T) {
+	logger.NewLogger()
+	defer logger.Sync()
+
+	router := http.NewServeMux()
+	path := "encode/test/path"
+	encoder := tagslEncoder.NewTagSLv1Encoder()
+
+	addEncoder(router, path, encoder)
+
+	handler, pattern := router.Handler(&http.Request{Method: "POST", URL: &url.URL{Path: "/encode/test/path"}})
+	if handler == nil {
+		t.Errorf("expected handler to be set")
+	}
+	if pattern != "POST /encode/test/path" {
+		t.Errorf("expected pattern to be 'POST /encode/test/path', got '%s'", pattern)
+	}
+}
+
+func TestGetEncoderHandler(t *testing.T) {
+	encoder := tagslEncoder.NewTagSLv1Encoder()
+	handler := getEncoderHandler(encoder)
+
+	// Test with Port128Payload
+	payload := tagslEncoder.Port128Payload{
+		Ble:                    false,
+		Gnss:                   true,
+		Wifi:                   true,
+		MovingInterval:         3600,
+		SteadyInterval:         7200,
+		ConfigInterval:         86400,
+		GnssTimeout:            120,
+		AccelerometerThreshold: 300,
+		AccelerometerDelay:     1500,
+		BatteryInterval:        21600,
+		BatchSize:              10,
+		BufferSize:             4096,
+	}
+
+	reqBody, err := json.Marshal(map[string]any{
+		"port":    128,
+		"payload": payload,
+	})
+	if err != nil {
+		t.Fatalf("failed to marshal request body: %v", err)
+	}
+
+	req, err := http.NewRequest("POST", "/encode/tagsl/v1", bytes.NewReader(reqBody))
+	if err != nil {
+		t.Fatalf("failed to create request: %v", err)
+	}
+
+	recorder := httptest.NewRecorder()
+	handler(recorder, req)
+
+	resp := recorder.Result()
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("expected status code %d, got %d", http.StatusOK, resp.StatusCode)
+	}
+
+	expectedContentType := "application/json"
+	actualContentType := resp.Header.Get("Content-Type")
+	if actualContentType != expectedContentType {
+		t.Errorf("expected Content-Type header to be %q, got %q", expectedContentType, actualContentType)
+	}
+
+	// Test with invalid JSON
+	reqBody = []byte(`{"port": 128, "payload": {`)
+	req, err = http.NewRequest("POST", "/encode/tagsl/v1", bytes.NewReader(reqBody))
+	if err != nil {
+		t.Fatalf("failed to create request: %v", err)
+	}
+
+	recorder = httptest.NewRecorder()
+	handler(recorder, req)
+
+	resp = recorder.Result()
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusBadRequest {
+		t.Errorf("expected status code %d, got %d", http.StatusBadRequest, resp.StatusCode)
+	}
+
+	// Test with invalid port
+	reqBody, err = json.Marshal(map[string]any{
+		"port":    0, // Invalid port
+		"payload": payload,
+		"devEui":  "",
+	})
+	if err != nil {
+		t.Fatalf("failed to marshal request body: %v", err)
+	}
+
+	req, err = http.NewRequest("POST", "/encode/tagsl/v1", bytes.NewReader(reqBody))
+	if err != nil {
+		t.Fatalf("failed to create request: %v", err)
+	}
+
+	recorder = httptest.NewRecorder()
+	handler(recorder, req)
+
+	resp = recorder.Result()
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusBadRequest {
+		t.Errorf("expected status code %d, got %d", http.StatusBadRequest, resp.StatusCode)
 	}
 }
