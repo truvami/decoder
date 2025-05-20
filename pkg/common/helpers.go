@@ -372,8 +372,10 @@ func Encode(data any, config PayloadConfig) (string, error) {
 			value := fieldValue.Int()
 			unset = value == 0
 			fieldBytes = IntToBytes(value, field.Length)
-		case reflect.TypeOf(float32(0)), reflect.TypeOf(float64(0)):
-			fieldBytes = FloatToBytes(fieldValue.Float(), int(fieldValue.Type().Size()))
+		case reflect.TypeOf(float32(0)):
+			fieldBytes = Float32ToBytes(float32(fieldValue.Float()))
+		case reflect.TypeOf(float64(0)):
+			fieldBytes = Float64ToBytes(fieldValue.Float())
 		case reflect.TypeOf(time.Duration(0)):
 			duration := fieldValue.Interface().(time.Duration).Nanoseconds()
 			fieldBytes = IntToBytes(duration, int(unsafe.Sizeof(duration)))
@@ -441,8 +443,20 @@ func BytesToInt64(bytes []byte) int64 {
 	return value
 }
 
-func FloatToBytes(value float64, length int) []byte {
+func Float32ToBytes(value float32) []byte {
+	bits := math.Float32bits(value)
+	length := int(reflect.TypeOf(float32(0)).Size())
+	buf := make([]byte, length)
+	for i := length - 1; i >= 0; i-- {
+		buf[i] = byte(bits & 0xff)
+		bits >>= 8
+	}
+	return buf
+}
+
+func Float64ToBytes(value float64) []byte {
 	bits := math.Float64bits(value)
+	length := int(reflect.TypeOf(float64(0)).Size())
 	buf := make([]byte, length)
 	for i := length - 1; i >= 0; i-- {
 		buf[i] = byte(bits & 0xff)
