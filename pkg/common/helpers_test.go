@@ -444,35 +444,29 @@ func TestBytesToInt64(t *testing.T) {
 	}
 }
 
-func TestFloatToBytes(t *testing.T) {
+func TestFloat64ToBytes(t *testing.T) {
 	tests := []struct {
 		value    float64
-		length   int
 		expected []byte
 	}{
 		{
 			value:    0.0,
-			length:   8,
 			expected: []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
 		},
 		{
 			value:    1.0,
-			length:   8,
 			expected: []byte{0x3f, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
 		},
 		{
 			value:    -1.0,
-			length:   8,
 			expected: []byte{0xbf, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
 		},
 		{
 			value:    123.456,
-			length:   8,
 			expected: []byte{0x40, 0x5e, 0xdd, 0x2f, 0x1a, 0x9f, 0xbe, 0x77},
 		},
 		{
-			value:  math.NaN(),
-			length: 8,
+			value: math.NaN(),
 			expected: func() []byte {
 				// NaN can have multiple bit representations, so just check math.IsNaN after conversion
 				return nil
@@ -480,24 +474,17 @@ func TestFloatToBytes(t *testing.T) {
 		},
 		{
 			value:    math.Inf(1),
-			length:   8,
 			expected: []byte{0x7f, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
 		},
 		{
 			value:    math.Inf(-1),
-			length:   8,
 			expected: []byte{0xff, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-		},
-		{
-			value:    1.0,
-			length:   4,
-			expected: []byte{0x00, 0x00, 0x00, 0x00}, // Only lowest 4 bytes of float64 bits
 		},
 	}
 
 	for _, test := range tests {
-		t.Run(fmt.Sprintf("value=%v_length=%d", test.value, test.length), func(t *testing.T) {
-			result := FloatToBytes(test.value, test.length)
+		t.Run(fmt.Sprintf("value=%v", test.value), func(t *testing.T) {
+			result := Float64ToBytes(test.value)
 			if test.expected == nil {
 				// For NaN, convert back and check math.IsNaN
 				bits := uint64(0)
@@ -506,6 +493,39 @@ func TestFloatToBytes(t *testing.T) {
 				}
 				f := math.Float64frombits(bits)
 				if !math.IsNaN(f) {
+					t.Fatalf("expected NaN, got %v", f)
+				}
+			} else {
+				if !reflect.DeepEqual(result, test.expected) {
+					t.Fatalf("expected %v, got %v", test.expected, result)
+				}
+			}
+		})
+	}
+}
+
+func TestFloat32ToBytes(t *testing.T) {
+	tests := []struct {
+		value    float32
+		expected []byte
+	}{
+		{
+			value:    1.0,
+			expected: []byte{0x3f, 0x80, 0x00, 0x00},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(fmt.Sprintf("value=%v", test.value), func(t *testing.T) {
+			result := Float32ToBytes(test.value)
+			if test.expected == nil {
+				// For NaN, convert back and check math.IsNaN
+				bits := uint32(0)
+				for _, b := range result {
+					bits = (bits << 8) | uint32(b)
+				}
+				f := math.Float32frombits(bits)
+				if !math.IsNaN(float64(f)) {
 					t.Fatalf("expected NaN, got %v", f)
 				}
 			} else {
