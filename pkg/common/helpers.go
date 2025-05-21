@@ -12,6 +12,8 @@ import (
 	"time"
 
 	"github.com/go-playground/validator"
+	"github.com/truvami/decoder/internal/logger"
+	"go.uber.org/zap"
 )
 
 func HexStringToBytes(hexString string) ([]byte, error) {
@@ -296,6 +298,8 @@ func HexNullPad(payload *string, config *PayloadConfig) string {
 }
 
 func ValidateLength(payload *string, config *PayloadConfig) error {
+	logger.Logger.Debug("payload config contains", zap.Int("tags", len(config.Tags)), zap.Int("fields", len(config.Fields)))
+
 	var payloadLength = len(*payload) / 2
 
 	if len(config.Tags) != 0 {
@@ -318,6 +322,8 @@ func ValidateLength(payload *string, config *PayloadConfig) error {
 	for _, field := range config.Fields {
 		maxLength = field.Start + field.Length
 	}
+
+	logger.Logger.Debug("validating length with", zap.Int("min", minLength), zap.Int("max", maxLength), zap.Int("is", payloadLength))
 
 	if payloadLength < minLength {
 		return WrapErrorWithMessage(ErrInvalidPayloadLength, ErrPayloadTooShort, fmt.Sprintf("payload length %d is less than minimum required length %d", payloadLength, minLength))
