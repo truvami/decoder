@@ -25,7 +25,7 @@ var tagxlCmd = &cobra.Command{
 	Short: "decode tag XL payloads",
 	Args:  cobra.ExactArgs(3),
 	Run: func(cmd *cobra.Command, args []string) {
-		err := viper.BindPFlag("token", rootCmd.Flags().Lookup("token"))
+		err := viper.BindPFlag("token", cmd.Flags().Lookup("token"))
 		if err != nil {
 			logger.Logger.Error("error while binding token flag", zap.Error(err))
 			return
