@@ -244,10 +244,6 @@ func Parse(payloadHex string, config *PayloadConfig) (any, error) {
 	return targetValue.Interface(), errors.Join(errs...)
 }
 
-func ParseTimestamp(timestamp int) time.Time {
-	return time.Unix(int64(timestamp), 0).UTC()
-}
-
 func HexNullPad(payload *string, config *PayloadConfig) string {
 	var requiredBits = 0
 	for _, field := range config.Fields {
