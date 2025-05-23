@@ -187,7 +187,7 @@ func TestConvertFieldToType(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("%v_%v", test.value, test.fieldType), func(t *testing.T) {
-			result := convertFieldToType(test.value, test.fieldType)
+			result := convertFieldToType(test.value, test.fieldType, nil)
 			if !reflect.DeepEqual(result, test.expected) {
 				t.Fatalf("converted value does not match expected value expected: %v got: %v", test.expected, result)
 			}
