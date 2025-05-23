@@ -47,26 +47,18 @@ func (t NomadXLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 				{Name: "SystemTime", Start: 0, Length: 8},
 				{Name: "UTCDate", Start: 8, Length: 4},
 				{Name: "UTCTime", Start: 12, Length: 4},
-				//{Name: "BufferLevelSTA", Start: 16, Length: 2},
-				{Name: "BufferLevel", Start: 18, Length: 2}, //GPS
-				//{Name: "BufferLevelACC", Start: 20, Length: 2},
-				//{Name: "BufferLevelLOG", Start: 22, Length: 2},
-				{Name: "Temperature", Start: 24, Length: 2, Transform: func(v any) any {
-					return float32(v.(int)) / 10
-				}},
-				{Name: "Pressure", Start: 26, Length: 2, Transform: func(v any) any {
-					return float32(v.(int)) / 10
-				}},
+				{Name: "BufferLevelSTA", Start: 16, Length: 2},
+				{Name: "BufferLevelGPS", Start: 18, Length: 2},
+				{Name: "BufferLevelACC", Start: 20, Length: 2},
+				{Name: "BufferLevelLOG", Start: 22, Length: 2},
+				{Name: "Temperature", Start: 24, Length: 2, Transform: temperature},
+				{Name: "Pressure", Start: 26, Length: 2, Transform: pressure},
 				{Name: "AccelerometerXAxis", Start: 28, Length: 2},
 				{Name: "AccelerometerYAxis", Start: 30, Length: 2},
 				{Name: "AccelerometerZAxis", Start: 32, Length: 2},
-				{Name: "Battery", Start: 34, Length: 2, Transform: func(v any) any {
-					return float64(v.(int)) / 1000
-				}},
+				{Name: "Battery", Start: 34, Length: 2, Transform: battery},
 				{Name: "BatteryLorawan", Start: 36, Length: 1},
-				{Name: "TimeToFix", Start: 37, Length: 1, Transform: func(v any) any {
-					return time.Duration(v.(int)) * time.Second
-				}},
+				{Name: "TimeToFix", Start: 37, Length: 1, Transform: ttf},
 			},
 			TargetType: reflect.TypeOf(Port101Payload{}),
 			Features:   []decoder.Feature{decoder.FeatureBuffered, decoder.FeatureBattery, decoder.FeatureTemperature, decoder.FeaturePressure},
@@ -74,19 +66,11 @@ func (t NomadXLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 	case 103:
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
-
 				{Name: "UTCDate", Start: 0, Length: 4},
 				{Name: "UTCTime", Start: 4, Length: 4},
-				{},
-				{Name: "Latitude", Start: 8, Length: 4, Transform: func(v any) any {
-					return float64(v.(int)) / 100000
-				}},
-				{Name: "Longitude", Start: 12, Length: 4, Transform: func(v any) any {
-					return float64(v.(int)) / 100000
-				}},
-				{Name: "Altitude", Start: 16, Length: 4, Transform: func(v any) any {
-					return float64(v.(int)) / 100
-				}},
+				{Name: "Latitude", Start: 8, Length: 4, Transform: latitude},
+				{Name: "Longitude", Start: 12, Length: 4, Transform: longitude},
+				{Name: "Altitude", Start: 16, Length: 4, Transform: altitude},
 			},
 			TargetType: reflect.TypeOf(Port103Payload{}),
 			Features:   []decoder.Feature{decoder.FeatureGNSS},
@@ -115,4 +99,32 @@ func (t NomadXLv1Decoder) Decode(data string, port uint8, devEui string) (*decod
 
 	decodedData, err := common.Parse(data, &config)
 	return decoder.NewDecodedUplink(config.Features, decodedData), err
+}
+
+func temperature(v any) any {
+	return float32(common.BytesToUint16(v.([]byte))) / 10
+}
+
+func pressure(v any) any {
+	return float32(common.BytesToUint16(v.([]byte))) / 10
+}
+
+func battery(v any) any {
+	return float64(common.BytesToUint16(v.([]byte))) / 1000
+}
+
+func ttf(v any) any {
+	return time.Duration(int64(common.BytesToUint8(v.([]byte)))) * time.Second
+}
+
+func latitude(v any) any {
+	return float64(common.BytesToInt32(v.([]byte))) / 100000
+}
+
+func longitude(v any) any {
+	return float64(common.BytesToInt32(v.([]byte))) / 100000
+}
+
+func altitude(v any) any {
+	return float64(common.BytesToUint16(v.([]byte))) / 100
 }

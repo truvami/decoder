@@ -56,12 +56,8 @@ func (t SmartLabelv1Decoder) getConfig(port uint8, data string) (common.PayloadC
 	case 1:
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
-				{Name: "BatteryVoltage", Start: 0, Length: 2, Transform: func(v any) any {
-					return float32(v.(int)) / 1000
-				}},
-				{Name: "PhotovoltaicVoltage", Start: 2, Length: 2, Transform: func(v any) any {
-					return float32(v.(int)) / 1000
-				}},
+				{Name: "BatteryVoltage", Start: 0, Length: 2, Transform: battery},
+				{Name: "PhotovoltaicVoltage", Start: 2, Length: 2, Transform: photovoltaic},
 			},
 			TargetType: reflect.TypeOf(Port1Payload{}),
 			Features:   []decoder.Feature{decoder.FeatureBattery, decoder.FeaturePhotovoltaic},
@@ -69,12 +65,8 @@ func (t SmartLabelv1Decoder) getConfig(port uint8, data string) (common.PayloadC
 	case 2:
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
-				{Name: "Temperature", Start: 0, Length: 2, Transform: func(v any) any {
-					return float32(v.(int)) / 100
-				}},
-				{Name: "Humidity", Start: 2, Length: 1, Transform: func(v any) any {
-					return float32(v.(int)) / 2
-				}},
+				{Name: "Temperature", Start: 0, Length: 2, Transform: temperature},
+				{Name: "Humidity", Start: 2, Length: 1, Transform: humidity},
 			},
 			TargetType: reflect.TypeOf(Port2Payload{}),
 			Features:   []decoder.Feature{decoder.FeatureTemperature, decoder.FeatureHumidity},
@@ -83,16 +75,16 @@ func (t SmartLabelv1Decoder) getConfig(port uint8, data string) (common.PayloadC
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
 				{Name: "DataRate", Start: 0, Length: 1, Transform: func(v any) any {
-					return uint8(v.(int) & 0x7)
+					return v.([]byte)[0] & 0x7
 				}},
 				{Name: "Acceleration", Start: 0, Length: 1, Transform: func(v any) any {
-					return ((v.(int) >> 3) & 0x1) != 0
+					return ((v.([]byte)[0] >> 3) & 0x1) != 0
 				}},
 				{Name: "Wifi", Start: 0, Length: 1, Transform: func(v any) any {
-					return ((v.(int) >> 4) & 0x1) != 0
+					return ((v.([]byte)[0] >> 4) & 0x1) != 0
 				}},
 				{Name: "Gnss", Start: 0, Length: 1, Transform: func(v any) any {
-					return ((v.(int) >> 5) & 0x1) != 0
+					return ((v.([]byte)[0] >> 5) & 0x1) != 0
 				}},
 				{Name: "SteadyInterval", Start: 1, Length: 2},
 				{Name: "MovingInterval", Start: 3, Length: 2},
@@ -114,18 +106,10 @@ func (t SmartLabelv1Decoder) getConfig(port uint8, data string) (common.PayloadC
 	case 11:
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
-				{Name: "BatteryVoltage", Start: 0, Length: 2, Transform: func(v any) any {
-					return float32(v.(int)) / 1000
-				}},
-				{Name: "PhotovoltaicVoltage", Start: 2, Length: 2, Transform: func(v any) any {
-					return float32(v.(int)) / 1000
-				}},
-				{Name: "Temperature", Start: 4, Length: 2, Transform: func(v any) any {
-					return float32(v.(int)) / 100
-				}},
-				{Name: "Humidity", Start: 6, Length: 1, Transform: func(v any) any {
-					return float32(v.(int)) / 2
-				}},
+				{Name: "BatteryVoltage", Start: 0, Length: 2, Transform: battery},
+				{Name: "PhotovoltaicVoltage", Start: 2, Length: 2, Transform: photovoltaic},
+				{Name: "Temperature", Start: 4, Length: 2, Transform: temperature},
+				{Name: "Humidity", Start: 6, Length: 1, Transform: humidity},
 			},
 			TargetType: reflect.TypeOf(Port11Payload{}),
 			Features:   []decoder.Feature{decoder.FeatureBattery, decoder.FeaturePhotovoltaic, decoder.FeatureTemperature, decoder.FeatureHumidity},
@@ -134,19 +118,19 @@ func (t SmartLabelv1Decoder) getConfig(port uint8, data string) (common.PayloadC
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
 				{Name: "Battery100Voltage", Start: 0, Length: 2, Transform: func(v any) any {
-					return float32(v.(int)) / 1000
+					return float32(common.BytesToUint16(v.([]byte))) / 1000
 				}},
 				{Name: "Battery80Voltage", Start: 2, Length: 2, Transform: func(v any) any {
-					return float32(v.(int)) / 1000
+					return float32(common.BytesToUint16(v.([]byte))) / 1000
 				}},
 				{Name: "Battery60Voltage", Start: 4, Length: 2, Transform: func(v any) any {
-					return float32(v.(int)) / 1000
+					return float32(common.BytesToUint16(v.([]byte))) / 1000
 				}},
 				{Name: "Battery40Voltage", Start: 6, Length: 2, Transform: func(v any) any {
-					return float32(v.(int)) / 1000
+					return float32(common.BytesToUint16(v.([]byte))) / 1000
 				}},
 				{Name: "Battery20Voltage", Start: 8, Length: 2, Transform: func(v any) any {
-					return float32(v.(int)) / 1000
+					return float32(common.BytesToUint16(v.([]byte))) / 1000
 				}},
 			},
 			TargetType: reflect.TypeOf(Port150Payload{}),
@@ -203,4 +187,20 @@ func (t SmartLabelv1Decoder) Decode(data string, port uint8, devEui string) (*de
 		decodedData, err := common.Parse(data, &config)
 		return decoder.NewDecodedUplink(config.Features, decodedData), err
 	}
+}
+
+func battery(v any) any {
+	return float32(common.BytesToUint16(v.([]byte))) / 1000
+}
+
+func photovoltaic(v any) any {
+	return float32(common.BytesToUint16(v.([]byte))) / 1000
+}
+
+func temperature(v any) any {
+	return float32(common.BytesToUint16(v.([]byte))) / 100
+}
+
+func humidity(v any) any {
+	return float32(common.BytesToUint8(v.([]byte))) / 2
 }

@@ -27,12 +27,12 @@ type Port1Payload struct {
 	Lat    float64 `json:"gpsLat" validate:"gte=-90,lte=90"`
 	Lon    float64 `json:"gpsLon" validate:"gte=-180,lte=180"`
 	Alt    float64 `json:"gpsAlt" validate:"gte=0,lte=20000"`
-	Year   int     `json:"year" validate:"gte=0,lte=255"`
-	Month  int     `json:"month" validate:"gte=0,lte=255"`
-	Day    int     `json:"day" validate:"gte=1,lte=31"`
-	Hour   int     `json:"hour" validate:"gte=0,lte=23"`
-	Minute int     `json:"minute" validate:"gte=0,lte=59"`
-	Second int     `json:"second" validate:"gte=0,lte=59"`
+	Year   uint8   `json:"year" validate:"gte=0,lte=255"`
+	Month  uint8   `json:"month" validate:"gte=0,lte=255"`
+	Day    uint8   `json:"day" validate:"gte=1,lte=31"`
+	Hour   uint8   `json:"hour" validate:"gte=0,lte=23"`
+	Minute uint8   `json:"minute" validate:"gte=0,lte=59"`
+	Second uint8   `json:"second" validate:"gte=0,lte=59"`
 	TS     int64   `json:"ts"`
 }
 
@@ -41,12 +41,14 @@ func TestParse(t *testing.T) {
 		Fields: []FieldConfig{
 			{Name: "Moving", Start: 0, Length: 1},
 			{Name: "Lat", Start: 1, Length: 4, Transform: func(v any) any {
-				return float64(v.(int)) / 1000000
+				return float64(BytesToInt32(v.([]byte))) / 1000000
 			}},
 			{Name: "Lon", Start: 5, Length: 4, Transform: func(v any) any {
-				return float64(v.(int)) / 1000000
+				return float64(BytesToInt32(v.([]byte))) / 1000000
 			}},
-			{Name: "Alt", Start: 9, Length: 2},
+			{Name: "Alt", Start: 9, Length: 2, Transform: func(v any) any {
+				return float64(BytesToUint16(v.([]byte))) / 10
+			}},
 			{Name: "Year", Start: 11, Length: 1},
 			{Name: "Month", Start: 12, Length: 1},
 			{Name: "Day", Start: 13, Length: 1},
@@ -69,7 +71,7 @@ func TestParse(t *testing.T) {
 				Moving: false,
 				Lat:    47.041811,
 				Lon:    7.622494,
-				Alt:    5728,
+				Alt:    572.8,
 				Year:   24,
 				Month:  4,
 				Day:    11,
@@ -104,90 +106,110 @@ func TestConvertFieldToType(t *testing.T) {
 		expected  any
 	}{
 		{
-			value:     10,
-			fieldType: reflect.TypeOf(int(0)),
-			expected:  10,
+			value:     []byte{0x00},
+			fieldType: reflect.TypeOf(bool(false)),
+			expected:  false,
 		},
 		{
-			value:     10,
-			fieldType: reflect.TypeOf(int8(0)),
-			expected:  int8(10),
-		},
-		{
-			value:     10,
-			fieldType: reflect.TypeOf(int16(0)),
-			expected:  int16(10),
-		},
-		{
-			value:     10,
-			fieldType: reflect.TypeOf(int32(0)),
-			expected:  int32(10),
-		},
-		{
-			value:     10,
-			fieldType: reflect.TypeOf(int64(0)),
-			expected:  int64(10),
-		},
-		{
-			value:     10,
-			fieldType: reflect.TypeOf(uint(0)),
-			expected:  uint(10),
-		},
-		{
-			value:     10,
-			fieldType: reflect.TypeOf(uint8(0)),
-			expected:  uint8(10),
-		},
-		{
-			value:     10,
-			fieldType: reflect.TypeOf(uint16(0)),
-			expected:  uint16(10),
-		},
-		{
-			value:     10,
-			fieldType: reflect.TypeOf(uint32(0)),
-			expected:  uint32(10),
-		},
-		{
-			value:     10,
-			fieldType: reflect.TypeOf(uint64(0)),
-			expected:  uint64(10),
-		},
-		{
-			value:     10,
-			fieldType: reflect.TypeOf(float32(0)),
-			expected:  float32(10),
-		},
-		{
-			value:     10,
-			fieldType: reflect.TypeOf(float64(0)),
-			expected:  float64(10),
-		},
-		{
-			value:     "hello",
-			fieldType: reflect.TypeOf(string("")),
-			expected:  "hello",
-		},
-		{
-			value:     1,
+			value:     []byte{0x01},
 			fieldType: reflect.TypeOf(bool(false)),
 			expected:  true,
 		},
 		{
-			value:     200,
-			fieldType: reflect.TypeOf(time.Duration(0)),
-			expected:  time.Duration(200) * time.Nanosecond,
+			value:     []byte{0x00},
+			fieldType: reflect.TypeOf(int8(0)),
+			expected:  int8(0),
 		},
 		{
-			value:     42,
-			fieldType: reflect.TypeOf(time.Time{}),
-			expected:  time.Date(1970, 1, 1, 0, 0, 42, 0, time.UTC),
+			value:     []byte{0xff},
+			fieldType: reflect.TypeOf(int8(0)),
+			expected:  ^int8(0),
+		},
+		{
+			value:     []byte{0x00, 0x00},
+			fieldType: reflect.TypeOf(int16(0)),
+			expected:  int16(0),
+		},
+		{
+			value:     []byte{0xff, 0xff},
+			fieldType: reflect.TypeOf(int16(0)),
+			expected:  ^int16(0),
+		},
+		{
+			value:     []byte{0x00, 0x00, 0x00, 0x00},
+			fieldType: reflect.TypeOf(int32(0)),
+			expected:  int32(0),
+		},
+		{
+			value:     []byte{0xff, 0xff, 0xff, 0xff},
+			fieldType: reflect.TypeOf(int32(0)),
+			expected:  ^int32(0),
+		},
+		{
+			value:     []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+			fieldType: reflect.TypeOf(int64(0)),
+			expected:  int64(0),
+		},
+		{
+			value:     []byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff},
+			fieldType: reflect.TypeOf(int64(0)),
+			expected:  ^int64(0),
+		},
+		{
+			value:     []byte{0x00},
+			fieldType: reflect.TypeOf(uint8(0)),
+			expected:  uint8(0),
+		},
+		{
+			value:     []byte{0xff},
+			fieldType: reflect.TypeOf(uint8(0)),
+			expected:  ^uint8(0),
+		},
+		{
+			value:     []byte{0x00, 0x00},
+			fieldType: reflect.TypeOf(uint16(0)),
+			expected:  uint16(0),
+		},
+		{
+			value:     []byte{0xff, 0xff},
+			fieldType: reflect.TypeOf(uint16(0)),
+			expected:  ^uint16(0),
+		},
+		{
+			value:     []byte{0x00, 0x00, 0x00, 0x00},
+			fieldType: reflect.TypeOf(uint32(0)),
+			expected:  uint32(0),
+		},
+		{
+			value:     []byte{0xff, 0xff, 0xff, 0xff},
+			fieldType: reflect.TypeOf(uint32(0)),
+			expected:  ^uint32(0),
+		},
+		{
+			value:     []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+			fieldType: reflect.TypeOf(uint64(0)),
+			expected:  uint64(0),
+		},
+		{
+			value:     []byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff},
+			fieldType: reflect.TypeOf(uint64(0)),
+			expected:  ^uint64(0),
+		},
+		{
+			value:     "hello world",
+			fieldType: reflect.TypeOf(string("")),
+			expected:  "hello world",
+		},
+		{
+			value:     "lorem ipsum dolor",
+			fieldType: reflect.TypeOf(string("")),
+			expected:  "lorem ipsum dolor",
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("%v_%v", test.value, test.fieldType), func(t *testing.T) {
-			result := convertFieldToType(test.value, test.fieldType)
+			result := convertFieldToType(test.value, test.fieldType, nil)
 			if !reflect.DeepEqual(result, test.expected) {
 				t.Fatalf("converted value does not match expected value expected: %v got: %v", test.expected, result)
 			}
@@ -224,58 +246,6 @@ func TestInvalidPayload(t *testing.T) {
 	})
 	if err == nil {
 		t.Fatal("expected field start out of bounds")
-	}
-}
-
-func TestUintToBinaryArray(t *testing.T) {
-	tests := []struct {
-		value    uint64
-		length   int
-		expected []uint8
-	}{
-		{
-			value:    0x01,
-			length:   1,
-			expected: []uint8{1},
-		},
-		{
-			value:    0x01,
-			length:   2,
-			expected: []uint8{0, 1},
-		},
-		{
-			value:    0x03,
-			length:   2,
-			expected: []uint8{1, 1},
-		},
-		{
-			value:    0x03,
-			length:   4,
-			expected: []uint8{0, 0, 1, 1},
-		},
-		{
-			value:    0x03,
-			length:   8,
-			expected: []uint8{0, 0, 0, 0, 0, 0, 1, 1},
-		},
-		{
-			value:  0x03,
-			length: 16,
-			expected: []uint8{
-				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1,
-			},
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(fmt.Sprintf("%v_%v", test.value, test.length), func(t *testing.T) {
-			result := UintToBinaryArray(test.value, test.length)
-			for i, v := range result {
-				if v != test.expected[i] {
-					t.Fatalf("expected: %v got: %v", test.expected, result)
-				}
-			}
-		})
 	}
 }
 
