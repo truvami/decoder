@@ -64,11 +64,14 @@ func convertFieldToType(value any, fieldType reflect.Type) any {
 
 func extractFieldValue(payloadBytes []byte, start int, length int, optional bool, hexadecimal bool) (any, error) {
 	if length == -1 {
-		if start >= len(payloadBytes) {
+		if start >= len(payloadBytes) && !optional {
 			return nil, fmt.Errorf("field start out of bounds")
 		}
 		// Dynamic length: read until the end of the payload
 		length = len(payloadBytes) - start
+		if length == 0 {
+			return nil, nil
+		}
 	} else if start+length > len(payloadBytes) {
 		if optional {
 			return nil, nil
@@ -316,7 +319,11 @@ func ValidateLength(payload *string, config *PayloadConfig) error {
 
 	var maxLength = 0
 	for _, field := range config.Fields {
-		maxLength = field.Start + field.Length
+		if field.Length == -1 {
+			maxLength = 50
+		} else {
+			maxLength = field.Start + field.Length
+		}
 	}
 
 	if payloadLength < minLength {

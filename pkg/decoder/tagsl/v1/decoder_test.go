@@ -1546,6 +1546,47 @@ func TestDecode(t *testing.T) {
 				Rssi1:        -88,
 			},
 		},
+		{
+			payload: "02",
+			port:    198,
+			expected: Port198Payload{
+				Reason: 2,
+			},
+		},
+		{
+			payload: "04",
+			port:    198,
+			expected: Port198Payload{
+				Reason: 4,
+			},
+		},
+		{
+			payload: "04313137",
+			port:    198,
+			expected: Port198Payload{
+				Reason: 4,
+				Line:   helpers.StringPtr("117"),
+			},
+		},
+		{
+			payload: "043131373a7372632f6770732e63",
+			port:    198,
+			expected: Port198Payload{
+				Reason: 4,
+				Line:   helpers.StringPtr("117"),
+				File:   helpers.StringPtr("src/gps.c"),
+			},
+		},
+		{
+			payload: "043131373a7372632f6770732e633a6770735f73746172745f6d756c7469706c65",
+			port:    198,
+			expected: Port198Payload{
+				Reason:   4,
+				Line:     helpers.StringPtr("117"),
+				File:     helpers.StringPtr("src/gps.c"),
+				Function: helpers.StringPtr("gps_start_multiple"),
+			},
+		},
 	}
 
 	for _, test := range tests {
