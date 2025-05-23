@@ -8,7 +8,10 @@ import (
 )
 
 type Port198Payload struct {
-	Reason uint8 `json:"reason"`
+	Reason   uint8   `json:"reason"`
+	Line     *string `json:"line"`
+	File     *string `json:"file"`
+	Function *string `json:"function"`
 }
 
 func (p Port198Payload) MarshalJSON() ([]byte, error) {

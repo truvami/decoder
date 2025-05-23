@@ -3,6 +3,7 @@ package tagsl
 import (
 	"fmt"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/truvami/decoder/pkg/common"
@@ -412,6 +413,15 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
 				{Name: "Reason", Start: 0, Length: 1},
+				{Name: "Line", Start: 1, Length: -1, Optional: true, Hex: true, Transform: func(v any) any {
+					return stacktrace(v.(string), 0)
+				}},
+				{Name: "File", Start: 1, Length: -1, Optional: true, Hex: true, Transform: func(v any) any {
+					return stacktrace(v.(string), 1)
+				}},
+				{Name: "Function", Start: 1, Length: -1, Optional: true, Hex: true, Transform: func(v any) any {
+					return stacktrace(v.(string), 2)
+				}},
 			},
 			TargetType: reflect.TypeOf(Port198Payload{}),
 			Features:   []decoder.Feature{decoder.FeatureResetReason},
@@ -492,4 +502,16 @@ func longitude(v any) any {
 
 func altitude(v any) any {
 	return float64(v.(int)) / 10
+}
+
+func stacktrace(v string, i int) *string {
+	bytes, err := common.HexStringToBytes(v)
+	if err != nil {
+		return nil
+	}
+	frags := strings.Split(string(bytes), ":")
+	if len(frags) > i {
+		return common.StringPtr(frags[i])
+	}
+	return nil
 }
