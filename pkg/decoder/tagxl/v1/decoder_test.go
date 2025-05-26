@@ -73,7 +73,6 @@ func TestDecode(t *testing.T) {
 		expected    any
 		expectedErr string
 	}{
-
 		{
 			port:        0,
 			payload:     "00",
@@ -81,6 +80,13 @@ func TestDecode(t *testing.T) {
 			autoPadding: false,
 			expected:    nil,
 			expectedErr: "port 0 not supported",
+		},
+		{
+			port:        150,
+			payload:     "xx",
+			devEui:      "",
+			expected:    nil,
+			expectedErr: "encoding/hex: invalid byte: U+0078 'x'",
 		},
 		{
 			port:    150,
@@ -282,6 +288,13 @@ func TestDecode(t *testing.T) {
 		},
 		{
 			port:    197,
+			payload: "003385f8ee30c2",
+			expected: Port197Payload{
+				Mac1: "3385f8ee30c2",
+			},
+		},
+		{
+			port:    197,
 			payload: "003385f8ee30c2a0382c2601db",
 			expected: Port197Payload{
 				Mac1: "3385f8ee30c2",
@@ -316,6 +329,14 @@ func TestDecode(t *testing.T) {
 				Mac3: "f72faac81784",
 				Mac4: "263386a455d3",
 				Mac5: "3592a063900b",
+			},
+		},
+		{
+			port:    197,
+			payload: "01d63385f8ee30c2",
+			expected: Port197Payload{
+				Rssi1: -42,
+				Mac1:  "3385f8ee30c2",
 			},
 		},
 		{
