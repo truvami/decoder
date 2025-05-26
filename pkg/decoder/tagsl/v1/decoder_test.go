@@ -1587,6 +1587,66 @@ func TestDecode(t *testing.T) {
 				Function: helpers.StringPtr("gps_start_multiple"),
 			},
 		},
+		{
+			payload: "078f64e7dcffff00000f3e00127802",
+			port:    199,
+			expected: Port199Payload{
+				Constant: "078f64e7dcffff",
+				Sequence: 3902,
+				Number:   4728,
+				Id:       2,
+			},
+		},
+		{
+			payload: "078f64e7dcffff00000f3f00127902",
+			port:    199,
+			expected: Port199Payload{
+				Constant: "078f64e7dcffff",
+				Sequence: 3903,
+				Number:   4729,
+				Id:       2,
+			},
+		},
+		{
+			payload: "078f64e7dcffff00000f4000127a02",
+			port:    199,
+			expected: Port199Payload{
+				Constant: "078f64e7dcffff",
+				Sequence: 3904,
+				Number:   4730,
+				Id:       2,
+			},
+		},
+		{
+			payload: "078f64e7dcffff00000f4100127b02",
+			port:    199,
+			expected: Port199Payload{
+				Constant: "078f64e7dcffff",
+				Sequence: 3905,
+				Number:   4731,
+				Id:       2,
+			},
+		},
+		{
+			payload: "078f64e7dcffff00000f4200127c02",
+			port:    199,
+			expected: Port199Payload{
+				Constant: "078f64e7dcffff",
+				Sequence: 3906,
+				Number:   4732,
+				Id:       2,
+			},
+		},
+		{
+			payload: "078f64e7dcffff00000f4300127d02",
+			port:    199,
+			expected: Port199Payload{
+				Constant: "078f64e7dcffff",
+				Sequence: 3907,
+				Number:   4733,
+				Id:       2,
+			},
+		},
 	}
 
 	for _, test := range tests {
