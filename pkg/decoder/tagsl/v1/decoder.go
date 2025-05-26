@@ -426,6 +426,17 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 			TargetType: reflect.TypeOf(Port198Payload{}),
 			Features:   []decoder.Feature{decoder.FeatureResetReason},
 		}, nil
+	case 199:
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
+				{Name: "Constant", Start: 0, Length: 7, Hex: true},
+				{Name: "Sequence", Start: 7, Length: 4},
+				{Name: "Number", Start: 11, Length: 3},
+				{Name: "Id", Start: 14, Length: 1},
+			},
+			TargetType: reflect.TypeOf(Port199Payload{}),
+			Features:   []decoder.Feature{},
+		}, nil
 	}
 
 	return common.PayloadConfig{}, fmt.Errorf("%w: port %v not supported", common.ErrPortNotSupported, port)
