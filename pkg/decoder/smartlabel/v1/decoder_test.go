@@ -710,3 +710,11 @@ func TestWithFCount(t *testing.T) {
 		t.Fatalf("expected fCount to be 123, got %v", tagXLv1Decoder.fCount)
 	}
 }
+
+func TestInvalidDataRate(t *testing.T) {
+	p := Port4Payload{DataRate: 8}
+	result := p.GetDataRate()
+	if result != nil {
+		t.Errorf("expected nil, got %s", *result)
+	}
+}
