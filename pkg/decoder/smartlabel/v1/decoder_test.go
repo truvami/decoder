@@ -711,10 +711,55 @@ func TestWithFCount(t *testing.T) {
 	}
 }
 
-func TestInvalidDataRate(t *testing.T) {
-	p := Port4Payload{DataRate: 8}
-	result := p.GetDataRate()
-	if result != nil {
-		t.Errorf("expected nil, got %s", *result)
+func TestDataRate(t *testing.T) {
+	tests := []struct {
+		data     Port4Payload
+		expected any
+	}{
+		{
+			data:     Port4Payload{DataRate: 0},
+			expected: decoder.DataRateBlazing,
+		},
+		{
+			data:     Port4Payload{DataRate: 1},
+			expected: decoder.DataRateFast,
+		},
+		{
+			data:     Port4Payload{DataRate: 2},
+			expected: decoder.DataRateQuick,
+		},
+		{
+			data:     Port4Payload{DataRate: 3},
+			expected: decoder.DataRateModerate,
+		},
+		{
+			data:     Port4Payload{DataRate: 4},
+			expected: decoder.DataRateSlow,
+		},
+		{
+			data:     Port4Payload{DataRate: 5},
+			expected: decoder.DataRateGlacial,
+		},
+		{
+			data:     Port4Payload{DataRate: 6},
+			expected: decoder.DataRateAutomaticNarrow,
+		},
+		{
+			data:     Port4Payload{DataRate: 7},
+			expected: decoder.DataRateAutomaticWide,
+		},
+		{
+			data:     Port4Payload{DataRate: 8},
+			expected: nil,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run("TestDataRate", func(t *testing.T) {
+			result := test.data.GetDataRate()
+			if test.expected != nil && (result == nil || test.expected != *result) || test.expected == nil && result != nil {
+				t.Errorf("expected %v, received %v", test.expected, result)
+			}
+		})
 	}
 }

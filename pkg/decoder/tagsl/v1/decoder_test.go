@@ -2408,3 +2408,40 @@ func TestMarshal(t *testing.T) {
 		})
 	}
 }
+
+func TestDeviceState(t *testing.T) {
+	tests := []struct {
+		data     Port4Payload
+		expected string
+	}{
+		{
+			data:     Port4Payload{DeviceState: 0},
+			expected: "\"deviceState\":\"unknown\"",
+		},
+		{
+			data:     Port4Payload{DeviceState: 1},
+			expected: "\"deviceState\":\"moving\"",
+		},
+		{
+			data:     Port4Payload{DeviceState: 2},
+			expected: "\"deviceState\":\"steady\"",
+		},
+		{
+			data:     Port4Payload{DeviceState: 3},
+			expected: "\"deviceState\":\"unknown\"",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run("TestDeviceState", func(t *testing.T) {
+			result, err := test.data.MarshalJSON()
+			if err != nil {
+				t.Fatalf("unexpected err %s", err)
+			}
+			t.Logf("%s", result)
+			if !strings.Contains(string(result), test.expected) {
+				t.Errorf("expected to find %s", test.expected)
+			}
+		})
+	}
+}
