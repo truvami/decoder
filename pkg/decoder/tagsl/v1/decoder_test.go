@@ -2189,8 +2189,13 @@ func TestFeatures(t *testing.T) {
 			port:    151,
 		},
 		{
-			payload: "01",
+			payload: "043131373a7372632f6770732e633a6770735f73746172745f6d756c7469706c65",
 			port:    198,
+		},
+		{
+			payload:         "078f64e7dcffff00000f4300127d02",
+			port:            199,
+			allowNoFeatures: true,
 		},
 	}
 
