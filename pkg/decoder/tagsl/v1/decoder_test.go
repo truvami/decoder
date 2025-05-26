@@ -2445,3 +2445,52 @@ func TestDeviceState(t *testing.T) {
 		})
 	}
 }
+
+func TestResetReason(t *testing.T) {
+	tests := []struct {
+		data     Port198Payload
+		expected decoder.ResetReason
+	}{
+		{
+			data:     Port198Payload{Reason: 0},
+			expected: decoder.ResetReasonUnknown,
+		},
+		{
+			data:     Port198Payload{Reason: 1},
+			expected: decoder.ResetReasonLrr1110FailCode,
+		},
+		{
+			data:     Port198Payload{Reason: 2},
+			expected: decoder.ResetReasonPowerReset,
+		},
+		{
+			data:     Port198Payload{Reason: 3},
+			expected: decoder.ResetReasonPinReset,
+		},
+		{
+			data:     Port198Payload{Reason: 4},
+			expected: decoder.ResetReasonWatchdog,
+		},
+		{
+			data:     Port198Payload{Reason: 5},
+			expected: decoder.ResetReasonSystemReset,
+		},
+		{
+			data:     Port198Payload{Reason: 6},
+			expected: decoder.ResetReasonOtherReset,
+		},
+		{
+			data:     Port198Payload{Reason: 7},
+			expected: decoder.ResetReasonUnknown,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run("TestResetReason", func(t *testing.T) {
+			result := test.data.GetResetReason()
+			if test.expected != result {
+				t.Errorf("expected %v, received %v", test.expected, result)
+			}
+		})
+	}
+}
