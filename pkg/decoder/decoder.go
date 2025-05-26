@@ -119,7 +119,7 @@ type UplinkFeaturePressure interface {
 
 type AccessPoint struct {
 	MAC  string `json:"mac"`
-	RSSI int8   `json:"rssi"`
+	RSSI *int8  `json:"rssi"`
 }
 
 type UplinkFeatureWiFi interface {
