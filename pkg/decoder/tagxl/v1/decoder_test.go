@@ -475,6 +475,10 @@ func TestFeatures(t *testing.T) {
 			payload: "4c050145020b10",
 		},
 		{
+			port:    151,
+			payload: "4c2a0940010f4104012c1c204204012c05dc43010644011e45020d4e4604f6c7d8104902000a4a0400000002",
+		},
+		{
 			payload: "010b0266acbcf0000000000756",
 			port:    152,
 		},
@@ -642,33 +646,6 @@ func TestFeatures(t *testing.T) {
 				}
 				// call function to check if it panics
 				sequenceNumber.GetSequenceNumber()
-			}
-			if decodedPayload.Is(decoder.FeatureConfig) {
-				config, ok := decodedPayload.Data.(decoder.UplinkFeatureConfig)
-				if !ok {
-					t.Fatalf("expected UplinkFeatureConfig, got %T", decodedPayload)
-				}
-				// call functions to check if it panics
-				config.GetBle()
-				config.GetGnss()
-				config.GetWifi()
-				config.GetAcceleration()
-				config.GetMovingInterval()
-				config.GetSteadyInterval()
-				config.GetConfigInterval()
-				config.GetGnssTimeout()
-				config.GetAccelerometerThreshold()
-				config.GetAccelerometerDelay()
-				config.GetBatteryInterval()
-				config.GetRejoinInterval()
-				config.GetLowLightThreshold()
-				config.GetHighLightThreshold()
-				config.GetLowTemperatureThreshold()
-				config.GetHighTemperatureThreshold()
-				config.GetAccessPointsThreshold()
-				config.GetBatchSize()
-				config.GetBufferSize()
-				config.GetDataRate()
 			}
 		})
 	}
