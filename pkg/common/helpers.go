@@ -23,6 +23,54 @@ func HexStringToBytes(hexString string) ([]byte, error) {
 	return bytes, nil
 }
 
+func convertFieldValue(rawValue any, fieldType reflect.Type, transform func(v any) any) (any, error) {
+	var ptr bool = false
+	var value any = nil
+	var err error = nil
+
+	if fieldType.Kind() == reflect.Ptr {
+		ptr = true
+		fieldType = fieldType.Elem()
+	}
+
+	if transform != nil {
+		value = transform(rawValue)
+	} else {
+		switch fieldType {
+		case reflect.TypeOf(bool(false)):
+			value = rawValue.([]byte)[0]&0x01 == 1
+		case reflect.TypeOf(int8(0)):
+			value = BytesToInt8(rawValue.([]byte))
+		case reflect.TypeOf(int16(0)):
+			value = BytesToInt16(rawValue.([]byte))
+		case reflect.TypeOf(int32(0)):
+			value = BytesToInt32(rawValue.([]byte))
+		case reflect.TypeOf(int64(0)):
+			value = BytesToInt64(rawValue.([]byte))
+		case reflect.TypeOf(uint8(0)):
+			value = BytesToUint8(rawValue.([]byte))
+		case reflect.TypeOf(uint16(0)):
+			value = BytesToUint16(rawValue.([]byte))
+		case reflect.TypeOf(uint32(0)):
+			value = BytesToUint32(rawValue.([]byte))
+		case reflect.TypeOf(uint64(0)):
+			value = BytesToUint64(rawValue.([]byte))
+		case reflect.TypeOf(string("")):
+			value = fmt.Sprintf("%s", rawValue)
+		default:
+			err = fmt.Errorf("unsupported field type: %v", fieldType)
+		}
+	}
+
+	if ptr && value != nil && err == nil {
+		fieldValue := reflect.New(reflect.TypeOf(value))
+		fieldValue.Elem().Set(reflect.ValueOf(value))
+		value = fieldValue.Interface()
+	}
+
+	return value, err
+}
+
 func convertFieldToType(value any, fieldType reflect.Type, transform func(v any) any) any {
 	if transform != nil {
 		return transform(value)
@@ -203,37 +251,25 @@ func Decode(payloadHex *string, config *PayloadConfig) (any, error) {
 		return targetValue.Interface(), errors.Join(errs...)
 	}
 
-	// Iterate over the fields in the config and extract their values
 	for _, field := range config.Fields {
-		start := field.Start
-		length := field.Length
-		optional := field.Optional
-		hex := field.Hex
-
-		// Extract the field value from the payload
-		value, err := extractFieldValue(payloadBytes, start, length, optional, hex)
+		value, err := extractFieldValue(payloadBytes, field.Start, field.Length, field.Optional, field.Hex)
 		if err != nil {
 			return nil, err
 		}
 
-		// Convert value to appropriate type and set it in the target struct
 		fieldValue := targetValue.FieldByName(field.Name)
 		if fieldValue.IsValid() && fieldValue.CanSet() {
-			if value == nil && optional {
+			if value == nil && field.Optional {
 				continue
 			}
 
-			if fieldValue.Kind() == reflect.Pointer && field.Optional {
-				ptrValue := reflect.New(fieldValue.Type().Elem())
-				convertedValue := convertFieldToType(value, ptrValue.Elem().Type(), field.Transform)
+			convertedValue, err := convertFieldValue(value, fieldValue.Type(), field.Transform)
+			if err != nil {
+				return nil, err
+			}
 
-				if convertedValue != nil {
-					ptrValue.Elem().Set(reflect.ValueOf(convertedValue))
-					fieldValue.Set(ptrValue)
-				}
-			} else {
-				fieldType := convertFieldToType(value, fieldValue.Type(), field.Transform)
-				fieldValue.Set(reflect.ValueOf(fieldType))
+			if convertedValue != nil {
+				fieldValue.Set(reflect.ValueOf(convertedValue))
 			}
 		}
 

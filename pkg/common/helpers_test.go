@@ -99,11 +99,12 @@ func TestParse(t *testing.T) {
 		})
 	}
 }
-func TestConvertFieldToType(t *testing.T) {
+func TestConvertFieldValue(t *testing.T) {
 	tests := []struct {
-		value     any
-		fieldType reflect.Type
-		expected  any
+		value       any
+		fieldType   reflect.Type
+		expected    any
+		expectedErr string
 	}{
 		{
 			value:     []byte{0x00},
@@ -205,13 +206,28 @@ func TestConvertFieldToType(t *testing.T) {
 			fieldType: reflect.TypeOf(string("")),
 			expected:  "lorem ipsum dolor",
 		},
+		{
+			value:       nil,
+			fieldType:   reflect.TypeOf(time.Time{}),
+			expected:    nil,
+			expectedErr: "unsupported field type: time.Time",
+		},
+		{
+			value:       nil,
+			fieldType:   reflect.TypeOf(time.Duration(0)),
+			expected:    nil,
+			expectedErr: "unsupported field type: time.Duration",
+		},
 	}
 
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("%v_%v", test.value, test.fieldType), func(t *testing.T) {
-			result := convertFieldToType(test.value, test.fieldType, nil)
+			result, err := convertFieldValue(test.value, test.fieldType, nil)
+			if err != nil && err.Error() != test.expectedErr {
+				t.Fatalf("expected: %s received: %s", test.expectedErr, err.Error())
+			}
 			if !reflect.DeepEqual(result, test.expected) {
-				t.Fatalf("converted value does not match expected value expected: %v got: %v", test.expected, result)
+				t.Fatalf("expected: %v received: %v", test.expected, result)
 			}
 		})
 	}
