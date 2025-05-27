@@ -379,14 +379,14 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
 				{Name: "Reason", Start: 0, Length: 1},
-				{Name: "Line", Start: 1, Length: -1, Optional: true, Hex: true, Transform: func(v any) any {
-					return stacktrace(v.(string), 0)
+				{Name: "Line", Start: 1, Length: -1, Optional: true, Transform: func(v any) any {
+					return stacktrace(v.([]byte), 0)
 				}},
-				{Name: "File", Start: 1, Length: -1, Optional: true, Hex: true, Transform: func(v any) any {
-					return stacktrace(v.(string), 1)
+				{Name: "File", Start: 1, Length: -1, Optional: true, Transform: func(v any) any {
+					return stacktrace(v.([]byte), 1)
 				}},
-				{Name: "Function", Start: 1, Length: -1, Optional: true, Hex: true, Transform: func(v any) any {
-					return stacktrace(v.(string), 2)
+				{Name: "Function", Start: 1, Length: -1, Optional: true, Transform: func(v any) any {
+					return stacktrace(v.([]byte), 2)
 				}},
 			},
 			TargetType: reflect.TypeOf(Port198Payload{}),
@@ -477,14 +477,10 @@ func pdop(v any) any {
 	return float64(common.BytesToUint8(v.([]byte))) / 2
 }
 
-func stacktrace(v string, i int) *string {
-	bytes, err := common.HexStringToBytes(v)
-	if err != nil {
-		return nil
-	}
-	frags := strings.Split(string(bytes), ":")
+func stacktrace(v []byte, i int) any {
+	frags := strings.Split(string(v), ":")
 	if len(frags) > i {
-		return common.StringPtr(frags[i])
+		return frags[i]
 	}
 	return nil
 }
