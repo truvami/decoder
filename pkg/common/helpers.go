@@ -227,8 +227,10 @@ func Parse(payloadHex string, config *PayloadConfig) (any, error) {
 				ptrValue := reflect.New(fieldValue.Type().Elem())
 				convertedValue := convertFieldToType(value, ptrValue.Elem().Type(), field.Transform)
 
-				ptrValue.Elem().Set(reflect.ValueOf(convertedValue))
-				fieldValue.Set(ptrValue)
+				if convertedValue != nil {
+					ptrValue.Elem().Set(reflect.ValueOf(convertedValue))
+					fieldValue.Set(ptrValue)
+				}
 			} else {
 				fieldType := convertFieldToType(value, fieldValue.Type(), field.Transform)
 				fieldValue.Set(reflect.ValueOf(fieldType))
