@@ -69,17 +69,17 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 		}
 		return common.PayloadConfig{
 			Tags: []common.TagConfig{
-				{Name: "FirmwareUpgrade", Tag: 0x40, Optional: true, Feature: []decoder.Feature{decoder.FeatureConfig}, Transform: func(v any) any {
-					return (v.([]byte)[0] & 0x01) != 0
+				{Name: "AccelerometerEnabled", Tag: 0x40, Optional: true, Feature: []decoder.Feature{decoder.FeatureConfig}, Transform: func(v any) any {
+					return ((v.([]byte)[0] >> 3) & 0x01) != 0
+				}},
+				{Name: "WifiEnabled", Tag: 0x40, Optional: true, Feature: []decoder.Feature{decoder.FeatureConfig}, Transform: func(v any) any {
+					return ((v.([]byte)[0] >> 2) & 0x01) != 0
 				}},
 				{Name: "GnssEnabled", Tag: 0x40, Optional: true, Feature: []decoder.Feature{decoder.FeatureConfig}, Transform: func(v any) any {
 					return ((v.([]byte)[0] >> 1) & 0x01) != 0
 				}},
-				{Name: "WiFiEnabled", Tag: 0x40, Optional: true, Feature: []decoder.Feature{decoder.FeatureConfig}, Transform: func(v any) any {
-					return ((v.([]byte)[0] >> 2) & 0x01) != 0
-				}},
-				{Name: "AccelerometerEnabled", Tag: 0x40, Optional: true, Feature: []decoder.Feature{decoder.FeatureConfig}, Transform: func(v any) any {
-					return ((v.([]byte)[0] >> 3) & 0x01) != 0
+				{Name: "FirmwareUpgrade", Tag: 0x40, Optional: true, Feature: []decoder.Feature{decoder.FeatureConfig}, Transform: func(v any) any {
+					return (v.([]byte)[0] & 0x01) != 0
 				}},
 				{Name: "LocalizationIntervalWhileMoving", Tag: 0x41, Optional: true, Feature: []decoder.Feature{decoder.FeatureConfig}, Transform: func(v any) any {
 					return uint16((common.BytesToUint32(v.([]byte)) >> 16) & 0xffff)

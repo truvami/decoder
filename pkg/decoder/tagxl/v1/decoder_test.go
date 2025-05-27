@@ -116,6 +116,36 @@ func TestDecode(t *testing.T) {
 		},
 		{
 			port:    151,
+			payload: "4c040140010a",
+			expected: Port151Payload{
+				AccelerometerEnabled: helpers.BoolPtr(true),
+				WifiEnabled:          helpers.BoolPtr(false),
+				GnssEnabled:          helpers.BoolPtr(true),
+				FirmwareUpgrade:      helpers.BoolPtr(false),
+			},
+		},
+		{
+			port:    151,
+			payload: "4c040140010e",
+			expected: Port151Payload{
+				AccelerometerEnabled: helpers.BoolPtr(true),
+				WifiEnabled:          helpers.BoolPtr(true),
+				GnssEnabled:          helpers.BoolPtr(true),
+				FirmwareUpgrade:      helpers.BoolPtr(false),
+			},
+		},
+		{
+			port:    151,
+			payload: "4c0401400103",
+			expected: Port151Payload{
+				AccelerometerEnabled: helpers.BoolPtr(false),
+				WifiEnabled:          helpers.BoolPtr(false),
+				GnssEnabled:          helpers.BoolPtr(true),
+				FirmwareUpgrade:      helpers.BoolPtr(true),
+			},
+		},
+		{
+			port:    151,
 			payload: "4c050145020a92",
 			expected: Port151Payload{
 				Battery: helpers.Float32Ptr(2.706),
@@ -182,9 +212,10 @@ func TestDecode(t *testing.T) {
 			port:    151,
 			payload: "4c2a0940010f4104012c1c204204012c05dc43010644011e45020d4e4604f6c7d8104902000a4a0400000002",
 			expected: Port151Payload{
-				GnssEnabled:                          helpers.BoolPtr(true),
-				WiFiEnabled:                          helpers.BoolPtr(true),
 				AccelerometerEnabled:                 helpers.BoolPtr(true),
+				WifiEnabled:                          helpers.BoolPtr(true),
+				GnssEnabled:                          helpers.BoolPtr(true),
+				FirmwareUpgrade:                      helpers.BoolPtr(true),
 				LocalizationIntervalWhileMoving:      helpers.Uint16Ptr(300),
 				LocalizationIntervalWhileSteady:      helpers.Uint16Ptr(7200),
 				AccelerometerWakeupThreshold:         helpers.Uint16Ptr(300),
@@ -201,9 +232,10 @@ func TestDecode(t *testing.T) {
 			port:    151,
 			payload: "4c2d0a40010b410402581c204204012c05dc43010644011e45020d6c4604a25b545547010249020003",
 			expected: Port151Payload{
-				GnssEnabled:                          helpers.BoolPtr(true),
-				WiFiEnabled:                          helpers.BoolPtr(false),
 				AccelerometerEnabled:                 helpers.BoolPtr(true),
+				WifiEnabled:                          helpers.BoolPtr(false),
+				GnssEnabled:                          helpers.BoolPtr(true),
+				FirmwareUpgrade:                      helpers.BoolPtr(true),
 				LocalizationIntervalWhileMoving:      helpers.Uint16Ptr(600),
 				LocalizationIntervalWhileSteady:      helpers.Uint16Ptr(7200),
 				AccelerometerWakeupThreshold:         helpers.Uint16Ptr(300),

@@ -10,11 +10,11 @@ import (
 // | Tag | Size | Description                                    | Format     |
 // +-----+------+------------------------------------------------+------------+
 // | 40  | 1    | device flags                                   | byte       |
-// |     |      | firmware upgrade flag                          | uint1      |
-// |     |      | gnss flag                                      | uint1      |
-// |     |      | wifi flag                                      | uint1      |
-// |     |      | accelerometer flag                             | uint1      |
 // |     |      | reserved                                       | uint4      |
+// |     |      | accelerometer flag                             | uint1      |
+// |     |      | wifi flag                                      | uint1      |
+// |     |      | gnss flag                                      | uint1      |
+// |     |      | firmware upgrade flag                          | uint1      |
 // | 41  | 4    | moving interval                                | uint16, s  |
 // |     |      | steady interval                                | uint16, s  |
 // | 42  | 4    | accelerometer threshold                        | uint16, mg |
@@ -34,9 +34,10 @@ import (
 // +-----+------+------------------------------------------------+------------+
 
 type Port151Payload struct {
-	GnssEnabled                          *bool    `json:"gnssEnabled"`
-	WiFiEnabled                          *bool    `json:"wifiEnabled"`
 	AccelerometerEnabled                 *bool    `json:"accelerometerEnabled"`
+	WifiEnabled                          *bool    `json:"wifiEnabled"`
+	GnssEnabled                          *bool    `json:"gnssEnabled"`
+	FirmwareUpgrade                      *bool    `json:"firmwareUpgrade"`
 	LocalizationIntervalWhileMoving      *uint16  `json:"movingInterval" validate:"gte=60,lte=86400"`
 	LocalizationIntervalWhileSteady      *uint16  `json:"steadyInterval" validate:"gte=120,lte=86400"`
 	AccelerometerWakeupThreshold         *uint16  `json:"accelerometerWakeupThreshold" validate:"gte=10,lte=8000"`
@@ -78,7 +79,7 @@ func (p Port151Payload) GetGnss() *bool {
 }
 
 func (p Port151Payload) GetWifi() *bool {
-	return p.WiFiEnabled
+	return p.WifiEnabled
 }
 
 func (p Port151Payload) GetAcceleration() *bool {
