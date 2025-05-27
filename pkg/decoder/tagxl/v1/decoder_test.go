@@ -73,7 +73,6 @@ func TestDecode(t *testing.T) {
 		expected    any
 		expectedErr string
 	}{
-
 		{
 			port:        0,
 			payload:     "00",
@@ -81,6 +80,13 @@ func TestDecode(t *testing.T) {
 			autoPadding: false,
 			expected:    nil,
 			expectedErr: "port 0 not supported",
+		},
+		{
+			port:        150,
+			payload:     "xx",
+			devEui:      "",
+			expected:    nil,
+			expectedErr: "encoding/hex: invalid byte: U+0078 'x'",
 		},
 		{
 			port:    150,
@@ -282,10 +288,17 @@ func TestDecode(t *testing.T) {
 		},
 		{
 			port:    197,
+			payload: "003385f8ee30c2",
+			expected: Port197Payload{
+				Mac1: "3385f8ee30c2",
+			},
+		},
+		{
+			port:    197,
 			payload: "003385f8ee30c2a0382c2601db",
 			expected: Port197Payload{
 				Mac1: "3385f8ee30c2",
-				Mac2: "a0382c2601db",
+				Mac2: helpers.StringPtr("a0382c2601db"),
 			},
 		},
 		{
@@ -293,8 +306,8 @@ func TestDecode(t *testing.T) {
 			payload: "00b5eded55a313a0b8b5e86e3194a765f3ad40",
 			expected: Port197Payload{
 				Mac1: "b5eded55a313",
-				Mac2: "a0b8b5e86e31",
-				Mac3: "94a765f3ad40",
+				Mac2: helpers.StringPtr("a0b8b5e86e31"),
+				Mac3: helpers.StringPtr("94a765f3ad40"),
 			},
 		},
 		{
@@ -302,9 +315,9 @@ func TestDecode(t *testing.T) {
 			payload: "006fbcfdd764347e7cbff22fc500dc0af60588010161302d9c",
 			expected: Port197Payload{
 				Mac1: "6fbcfdd76434",
-				Mac2: "7e7cbff22fc5",
-				Mac3: "00dc0af60588",
-				Mac4: "010161302d9c",
+				Mac2: helpers.StringPtr("7e7cbff22fc5"),
+				Mac3: helpers.StringPtr("00dc0af60588"),
+				Mac4: helpers.StringPtr("010161302d9c"),
 			},
 		},
 		{
@@ -312,10 +325,18 @@ func TestDecode(t *testing.T) {
 			payload: "00218f6c166fad59ea3bdec77df72faac81784263386a455d33592a063900b",
 			expected: Port197Payload{
 				Mac1: "218f6c166fad",
-				Mac2: "59ea3bdec77d",
-				Mac3: "f72faac81784",
-				Mac4: "263386a455d3",
-				Mac5: "3592a063900b",
+				Mac2: helpers.StringPtr("59ea3bdec77d"),
+				Mac3: helpers.StringPtr("f72faac81784"),
+				Mac4: helpers.StringPtr("263386a455d3"),
+				Mac5: helpers.StringPtr("3592a063900b"),
+			},
+		},
+		{
+			port:    197,
+			payload: "01d63385f8ee30c2",
+			expected: Port197Payload{
+				Rssi1: -42,
+				Mac1:  "3385f8ee30c2",
 			},
 		},
 		{
@@ -324,8 +345,8 @@ func TestDecode(t *testing.T) {
 			expected: Port197Payload{
 				Rssi1: -42,
 				Mac1:  "3385f8ee30c2",
-				Rssi2: -48,
-				Mac2:  "a0382c2601db",
+				Rssi2: helpers.Int8Ptr(-48),
+				Mac2:  helpers.StringPtr("a0382c2601db"),
 			},
 		},
 		{
@@ -334,10 +355,10 @@ func TestDecode(t *testing.T) {
 			expected: Port197Payload{
 				Rssi1: -56,
 				Mac1:  "b5eded55a313",
-				Rssi2: -64,
-				Mac2:  "a0b8b5e86e31",
-				Rssi3: -72,
-				Mac3:  "94a765f3ad40",
+				Rssi2: helpers.Int8Ptr(-64),
+				Mac2:  helpers.StringPtr("a0b8b5e86e31"),
+				Rssi3: helpers.Int8Ptr(-72),
+				Mac3:  helpers.StringPtr("94a765f3ad40"),
 			},
 		},
 		{
@@ -346,12 +367,12 @@ func TestDecode(t *testing.T) {
 			expected: Port197Payload{
 				Rssi1: -67,
 				Mac1:  "6fbcfdd76434",
-				Rssi2: -69,
-				Mac2:  "7e7cbff22fc5",
-				Rssi3: -71,
-				Mac3:  "00dc0af60588",
-				Rssi4: -73,
-				Mac4:  "010161302d9c",
+				Rssi2: helpers.Int8Ptr(-69),
+				Mac2:  helpers.StringPtr("7e7cbff22fc5"),
+				Rssi3: helpers.Int8Ptr(-71),
+				Mac3:  helpers.StringPtr("00dc0af60588"),
+				Rssi4: helpers.Int8Ptr(-73),
+				Mac4:  helpers.StringPtr("010161302d9c"),
 			},
 		},
 		{
@@ -360,14 +381,14 @@ func TestDecode(t *testing.T) {
 			expected: Port197Payload{
 				Rssi1: -73,
 				Mac1:  "218f6c166fad",
-				Rssi2: -77,
-				Mac2:  "59ea3bdec77d",
-				Rssi3: -81,
-				Mac3:  "f72faac81784",
-				Rssi4: -85,
-				Mac4:  "263386a455d3",
-				Rssi5: -89,
-				Mac5:  "3592a063900b",
+				Rssi2: helpers.Int8Ptr(-77),
+				Mac2:  helpers.StringPtr("59ea3bdec77d"),
+				Rssi3: helpers.Int8Ptr(-81),
+				Mac3:  helpers.StringPtr("f72faac81784"),
+				Rssi4: helpers.Int8Ptr(-85),
+				Mac4:  helpers.StringPtr("263386a455d3"),
+				Rssi5: helpers.Int8Ptr(-89),
+				Mac5:  helpers.StringPtr("3592a063900b"),
 			},
 		},
 	}
@@ -475,20 +496,32 @@ func TestFeatures(t *testing.T) {
 			payload: "4c050145020b10",
 		},
 		{
+			port:    151,
+			payload: "4c2a0940010f4104012c1c204204012c05dc43010644011e45020d4e4604f6c7d8104902000a4a0400000002",
+		},
+		{
+			payload: "010b0066acbcf0000000000756",
+			port:    152,
+		},
+		{
 			payload: "010b0266acbcf0000000000756",
 			port:    152,
 		},
 		{
-			payload: "020c62206822f120000d00000024",
+			payload: "020c62016822f120000d00000024",
 			port:    152,
 		},
 		{
-			payload: "020c09016823166a000000000109",
+			payload: "020c09036823166a000000000109",
 			port:    152,
 		},
 		{
 			payload: "87821f50490200b520fbe977844d222a3a14a89293956245cc75a9ca1bbc25ddf658542909",
 			port:    192,
+		},
+		{
+			payload: "00218f6c166fad59ea3bdec77df72faac81784263386a455d33592a063900b",
+			port:    197,
 		},
 		{
 			payload: "01b7218f6c166fadb359ea3bdec77daff72faac81784ab263386a455d3a73592a063900b",
@@ -642,33 +675,6 @@ func TestFeatures(t *testing.T) {
 				}
 				// call function to check if it panics
 				sequenceNumber.GetSequenceNumber()
-			}
-			if decodedPayload.Is(decoder.FeatureConfig) {
-				config, ok := decodedPayload.Data.(decoder.UplinkFeatureConfig)
-				if !ok {
-					t.Fatalf("expected UplinkFeatureConfig, got %T", decodedPayload)
-				}
-				// call functions to check if it panics
-				config.GetBle()
-				config.GetGnss()
-				config.GetWifi()
-				config.GetAcceleration()
-				config.GetMovingInterval()
-				config.GetSteadyInterval()
-				config.GetConfigInterval()
-				config.GetGnssTimeout()
-				config.GetAccelerometerThreshold()
-				config.GetAccelerometerDelay()
-				config.GetBatteryInterval()
-				config.GetRejoinInterval()
-				config.GetLowLightThreshold()
-				config.GetHighLightThreshold()
-				config.GetLowTemperatureThreshold()
-				config.GetHighTemperatureThreshold()
-				config.GetAccessPointsThreshold()
-				config.GetBatchSize()
-				config.GetBufferSize()
-				config.GetDataRate()
 			}
 		})
 	}

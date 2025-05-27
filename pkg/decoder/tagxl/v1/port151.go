@@ -37,7 +37,7 @@ type Port151Payload struct {
 	LocalizationIntervalWhileSteady      *uint16  `json:"steadyInterval" validate:"gte=120,lte=86400"`
 	AccelerometerWakeupThreshold         *uint16  `json:"accelerometerWakeupThreshold" validate:"gte=10,lte=8000"`
 	AccelerometerDelay                   *uint16  `json:"accelerometerDelay" validate:"gte=1000,lte=10000"`
-	HeartbeatInterval                    *uint8   `json:"heartbeatInterval" validate:"gte=300,lte=604800"`
+	HeartbeatInterval                    *uint8   `json:"heartbeatInterval" validate:"gte=0,lte=168"`
 	AdvertisementFirmwareUpgradeInterval *uint8   `json:"advertisementFirmwareUpgradeInterval" validate:"gte=1,lte=86400"`
 	Battery                              *float32 `json:"battery" validate:"gte=1,lte=5"`
 	FirmwareHash                         *string  `json:"firmwareHash"`
@@ -51,7 +51,7 @@ var _ decoder.UplinkFeatureBase = &Port151Payload{}
 var _ decoder.UplinkFeatureBattery = &Port151Payload{}
 var _ decoder.UplinkFeatureConfig = &Port151Payload{}
 
-func (p Port151Payload) GetTimestamp() *time.Time { // coverage-ignore
+func (p Port151Payload) GetTimestamp() *time.Time {
 	return nil
 }
 
@@ -59,11 +59,11 @@ func (p Port151Payload) GetBatteryVoltage() float64 {
 	return float64(*p.Battery)
 }
 
-func (p Port151Payload) GetLowBattery() *bool { // coverage-ignore
+func (p Port151Payload) GetLowBattery() *bool {
 	return nil
 }
 
-func (p Port151Payload) GetBle() *bool { // coverage-ignore
+func (p Port151Payload) GetBle() *bool {
 	return nil
 }
 
@@ -79,7 +79,7 @@ func (p Port151Payload) GetAcceleration() *bool {
 	return p.AccelerometerEnabled
 }
 
-func (p Port151Payload) GetMovingInterval() *uint32 { // coverage-ignore
+func (p Port151Payload) GetMovingInterval() *uint32 {
 	if p.LocalizationIntervalWhileMoving == nil {
 		return nil
 	}
@@ -87,7 +87,7 @@ func (p Port151Payload) GetMovingInterval() *uint32 { // coverage-ignore
 	return &movingInterval
 }
 
-func (p Port151Payload) GetSteadyInterval() *uint32 { // coverage-ignore
+func (p Port151Payload) GetSteadyInterval() *uint32 {
 	if p.LocalizationIntervalWhileSteady == nil {
 		return nil
 	}
@@ -95,15 +95,15 @@ func (p Port151Payload) GetSteadyInterval() *uint32 { // coverage-ignore
 	return &steadyInterval
 }
 
-func (p Port151Payload) GetConfigInterval() *uint32 { // coverage-ignore
+func (p Port151Payload) GetConfigInterval() *uint32 {
 	if p.HeartbeatInterval == nil {
 		return nil
 	}
-	interval := uint32(*p.HeartbeatInterval) * 60 * 60 // convert to seconds
+	interval := uint32(*p.HeartbeatInterval) * 60 * 60
 	return &interval
 }
 
-func (p Port151Payload) GetGnssTimeout() *uint16 { // coverage-ignore
+func (p Port151Payload) GetGnssTimeout() *uint16 {
 	return nil
 }
 
@@ -115,42 +115,42 @@ func (p Port151Payload) GetAccelerometerDelay() *uint16 {
 	return p.AccelerometerDelay
 }
 
-func (p Port151Payload) GetBatteryInterval() *uint32 { // coverage-ignore
+func (p Port151Payload) GetBatteryInterval() *uint32 {
 	return nil
 }
 
-func (p Port151Payload) GetRejoinInterval() *uint32 { // coverage-ignore
+func (p Port151Payload) GetRejoinInterval() *uint32 {
 	return nil
 }
 
-func (p Port151Payload) GetLowLightThreshold() *uint16 { // coverage-ignore
+func (p Port151Payload) GetLowLightThreshold() *uint16 {
 	return nil
 }
 
-func (p Port151Payload) GetHighLightThreshold() *uint16 { // coverage-ignore
+func (p Port151Payload) GetHighLightThreshold() *uint16 {
 	return nil
 }
 
-func (p Port151Payload) GetLowTemperatureThreshold() *int8 { // coverage-ignore
+func (p Port151Payload) GetLowTemperatureThreshold() *int8 {
 	return nil
 }
 
-func (p Port151Payload) GetHighTemperatureThreshold() *int8 { // coverage-ignore
+func (p Port151Payload) GetHighTemperatureThreshold() *int8 {
 	return nil
 }
 
-func (p Port151Payload) GetAccessPointsThreshold() *uint8 { // coverage-ignore
+func (p Port151Payload) GetAccessPointsThreshold() *uint8 {
 	return nil
 }
 
-func (p Port151Payload) GetBatchSize() *uint16 { // coverage-ignore
+func (p Port151Payload) GetBatchSize() *uint16 {
 	return nil
 }
 
-func (p Port151Payload) GetBufferSize() *uint16 { // coverage-ignore
+func (p Port151Payload) GetBufferSize() *uint16 {
 	return nil
 }
 
-func (p Port151Payload) GetDataRate() *decoder.DataRate { // coverage-ignore
+func (p Port151Payload) GetDataRate() *decoder.DataRate {
 	return nil
 }

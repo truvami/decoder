@@ -188,6 +188,30 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
+			payload:     "01eb0101f052fab920feac",
+			port:        3,
+			autoPadding: false,
+			expected: Port3Payload{
+				ScanPointer:    491,
+				TotalMessages:  1,
+				CurrentMessage: 1,
+				Mac1:           "f052fab920fe",
+				Rssi1:          -84,
+			},
+		},
+		{
+			payload:     "1eb0101f052fab920feae",
+			port:        3,
+			autoPadding: true,
+			expected: Port3Payload{
+				ScanPointer:    491,
+				TotalMessages:  1,
+				CurrentMessage: 1,
+				Mac1:           "f052fab920fe",
+				Rssi1:          -82,
+			},
+		},
+		{
 			payload:     "822f0101f052fab920feafd0e4158b38b9afe05994cb2f5cb2",
 			port:        3,
 			autoPadding: false,
@@ -197,10 +221,10 @@ func TestDecode(t *testing.T) {
 				CurrentMessage: 1,
 				Mac1:           "f052fab920fe",
 				Rssi1:          -81,
-				Mac2:           "d0e4158b38b9",
-				Rssi2:          -81,
-				Mac3:           "e05994cb2f5c",
-				Rssi3:          -78,
+				Mac2:           helpers.StringPtr("d0e4158b38b9"),
+				Rssi2:          helpers.Int8Ptr(-81),
+				Mac3:           helpers.StringPtr("e05994cb2f5c"),
+				Rssi3:          helpers.Int8Ptr(-78),
 			},
 		},
 		{
@@ -213,30 +237,10 @@ func TestDecode(t *testing.T) {
 				CurrentMessage: 1,
 				Mac1:           "f052fab920fe",
 				Rssi1:          -83,
-				Mac2:           "d0e4158b38b9",
-				Rssi2:          -81,
-				Mac3:           "e05994cb2f5c",
-				Rssi3:          -83,
-			},
-		},
-		{
-			payload:     "01eb0101",
-			port:        3,
-			autoPadding: false,
-			expected: Port3Payload{
-				ScanPointer:    491,
-				TotalMessages:  1,
-				CurrentMessage: 1,
-			},
-		},
-		{
-			payload:     "1eb0101",
-			port:        3,
-			autoPadding: true,
-			expected: Port3Payload{
-				ScanPointer:    491,
-				TotalMessages:  1,
-				CurrentMessage: 1,
+				Mac2:           helpers.StringPtr("d0e4158b38b9"),
+				Rssi2:          helpers.Int8Ptr(-81),
+				Mac3:           helpers.StringPtr("e05994cb2f5c"),
+				Rssi3:          helpers.Int8Ptr(-83),
 			},
 		},
 		{
@@ -2465,6 +2469,92 @@ func TestMarshal(t *testing.T) {
 				if !strings.Contains(string(marshaled), value) {
 					t.Fatalf("expected to find %s\n", value)
 				}
+			}
+		})
+	}
+}
+
+func TestDeviceState(t *testing.T) {
+	tests := []struct {
+		data     Port4Payload
+		expected string
+	}{
+		{
+			data:     Port4Payload{DeviceState: 0},
+			expected: "\"deviceState\":\"unknown\"",
+		},
+		{
+			data:     Port4Payload{DeviceState: 1},
+			expected: "\"deviceState\":\"moving\"",
+		},
+		{
+			data:     Port4Payload{DeviceState: 2},
+			expected: "\"deviceState\":\"steady\"",
+		},
+		{
+			data:     Port4Payload{DeviceState: 3},
+			expected: "\"deviceState\":\"unknown\"",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run("TestDeviceState", func(t *testing.T) {
+			result, err := test.data.MarshalJSON()
+			if err != nil {
+				t.Fatalf("unexpected err %s", err)
+			}
+			t.Logf("%s", result)
+			if !strings.Contains(string(result), test.expected) {
+				t.Errorf("expected to find %s", test.expected)
+			}
+		})
+	}
+}
+
+func TestResetReason(t *testing.T) {
+	tests := []struct {
+		data     Port198Payload
+		expected decoder.ResetReason
+	}{
+		{
+			data:     Port198Payload{Reason: 0},
+			expected: decoder.ResetReasonUnknown,
+		},
+		{
+			data:     Port198Payload{Reason: 1},
+			expected: decoder.ResetReasonLrr1110FailCode,
+		},
+		{
+			data:     Port198Payload{Reason: 2},
+			expected: decoder.ResetReasonPowerReset,
+		},
+		{
+			data:     Port198Payload{Reason: 3},
+			expected: decoder.ResetReasonPinReset,
+		},
+		{
+			data:     Port198Payload{Reason: 4},
+			expected: decoder.ResetReasonWatchdog,
+		},
+		{
+			data:     Port198Payload{Reason: 5},
+			expected: decoder.ResetReasonSystemReset,
+		},
+		{
+			data:     Port198Payload{Reason: 6},
+			expected: decoder.ResetReasonOtherReset,
+		},
+		{
+			data:     Port198Payload{Reason: 7},
+			expected: decoder.ResetReasonUnknown,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run("TestResetReason", func(t *testing.T) {
+			result := test.data.GetResetReason()
+			if test.expected != result {
+				t.Errorf("expected %v, received %v", test.expected, result)
 			}
 		})
 	}

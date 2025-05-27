@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 )
@@ -23,31 +24,38 @@ func TestHexStringToBytes(t *testing.T) {
 }
 
 type Port1Payload struct {
-	Moving bool    `json:"moving"`
-	Lat    float64 `json:"gpsLat" validate:"gte=-90,lte=90"`
-	Lon    float64 `json:"gpsLon" validate:"gte=-180,lte=180"`
-	Alt    float64 `json:"gpsAlt" validate:"gte=0,lte=20000"`
-	Year   uint8   `json:"year" validate:"gte=0,lte=255"`
-	Month  uint8   `json:"month" validate:"gte=0,lte=255"`
-	Day    uint8   `json:"day" validate:"gte=1,lte=31"`
-	Hour   uint8   `json:"hour" validate:"gte=0,lte=23"`
-	Minute uint8   `json:"minute" validate:"gte=0,lte=59"`
-	Second uint8   `json:"second" validate:"gte=0,lte=59"`
-	TS     int64   `json:"ts"`
+	Moving    bool           `json:"moving"`
+	Latitude  float64        `json:"latitude" validate:"gte=-90,lte=90"`
+	Longitude float64        `json:"longitude" validate:"gte=-180,lte=180"`
+	Altitude  float32        `json:"altitude" validate:"gte=0,lte=20000"`
+	Year      uint8          `json:"year" validate:"gte=0,lte=255"`
+	Month     uint8          `json:"month" validate:"gte=0,lte=255"`
+	Day       uint8          `json:"day" validate:"gte=1,lte=31"`
+	Hour      uint8          `json:"hour" validate:"gte=0,lte=23"`
+	Minute    uint8          `json:"minute" validate:"gte=0,lte=59"`
+	Second    uint8          `json:"second" validate:"gte=0,lte=59"`
+	Ttf       *time.Duration `json:"satellites" validate:"gte=0,lte=27"`
 }
 
-func TestParse(t *testing.T) {
-	config := PayloadConfig{
+type Port2Payload struct {
+	Time     *uint32    `json:"time" validate:"gte=315532800"`
+	Power    *uint16    `json:"power" validate:"gte=2560,lte=4352"`
+	Sensor   *uint16    `json:"sensor" validate:"gte=0,lte=5120"`
+	Duration *time.Time `json:"duration"`
+}
+
+func TestDecode(t *testing.T) {
+	fieldConfig := PayloadConfig{
 		Fields: []FieldConfig{
 			{Name: "Moving", Start: 0, Length: 1},
-			{Name: "Lat", Start: 1, Length: 4, Transform: func(v any) any {
+			{Name: "Latitude", Start: 1, Length: 4, Transform: func(v any) any {
 				return float64(BytesToInt32(v.([]byte))) / 1000000
 			}},
-			{Name: "Lon", Start: 5, Length: 4, Transform: func(v any) any {
+			{Name: "Longitude", Start: 5, Length: 4, Transform: func(v any) any {
 				return float64(BytesToInt32(v.([]byte))) / 1000000
 			}},
-			{Name: "Alt", Start: 9, Length: 2, Transform: func(v any) any {
-				return float64(BytesToUint16(v.([]byte))) / 10
+			{Name: "Altitude", Start: 9, Length: 2, Transform: func(v any) any {
+				return float32(BytesToUint16(v.([]byte))) / 10
 			}},
 			{Name: "Year", Start: 11, Length: 1},
 			{Name: "Month", Start: 12, Length: 1},
@@ -55,55 +63,198 @@ func TestParse(t *testing.T) {
 			{Name: "Hour", Start: 14, Length: 1},
 			{Name: "Minute", Start: 15, Length: 1},
 			{Name: "Second", Start: 16, Length: 1},
+			{Name: "Ttf", Start: 17, Length: 1, Optional: true},
 		},
 		TargetType: reflect.TypeOf(Port1Payload{}),
 	}
 
+	tagConfig := PayloadConfig{
+		Tags: []TagConfig{
+			{Name: "Time", Tag: 0x00},
+			{Name: "Power", Tag: 0x01, Optional: true},
+			{Name: "Sensor", Tag: 0x02, Optional: true},
+			{Name: "Duration", Tag: 0x03, Optional: true},
+		},
+		TargetType: reflect.TypeOf(Port2Payload{}),
+	}
+
 	tests := []struct {
-		payload  string
-		config   PayloadConfig
-		expected any
+		payload     string
+		config      PayloadConfig
+		expected    any
+		expectedErr string
 	}{
 		{
 			payload: "8002cdcd1300744f5e166018040b14341a",
-			config:  config,
+			config:  fieldConfig,
 			expected: Port1Payload{
-				Moving: false,
-				Lat:    47.041811,
-				Lon:    7.622494,
-				Alt:    572.8,
-				Year:   24,
-				Month:  4,
-				Day:    11,
-				Hour:   20,
-				Minute: 52,
-				Second: 26,
+				Moving:    false,
+				Latitude:  47.041811,
+				Longitude: 7.622494,
+				Altitude:  572.8,
+				Year:      24,
+				Month:     4,
+				Day:       11,
+				Hour:      20,
+				Minute:    52,
+				Second:    26,
 			},
+		},
+		{
+			payload:     "8002cdcd1300744f5e166018",
+			config:      fieldConfig,
+			expected:    nil,
+			expectedErr: "field out of bounds",
+		},
+		{
+			payload:     "8002cdcd1300744f5e166018040b14341afd",
+			config:      fieldConfig,
+			expected:    nil,
+			expectedErr: "unsupported field type: time.Duration",
+		},
+		{
+			payload: "ffffff0004386d438001020f320202088b",
+			config:  tagConfig,
+			expected: Port2Payload{
+				Time:   Uint32Ptr(946684800),
+				Power:  Uint16Ptr(3890),
+				Sensor: Uint16Ptr(2187),
+			},
+		},
+		{
+			payload: "ffffff0000",
+			config:  tagConfig,
+			expected: Port2Payload{
+				Time:   nil,
+				Power:  nil,
+				Sensor: nil,
+			},
+		},
+		{
+			payload: "ffffff000400000000",
+			config:  tagConfig,
+			expected: Port2Payload{
+				Time:   Uint32Ptr(0),
+				Power:  nil,
+				Sensor: nil,
+			},
+			expectedErr: "validation failed for Time",
+		},
+		{
+			payload:     "ffffff040100",
+			config:      tagConfig,
+			expected:    nil,
+			expectedErr: "unknown tag 4",
+		},
+		{
+			payload:     "ffffff010200",
+			config:      tagConfig,
+			expected:    nil,
+			expectedErr: "field out of bounds",
+		},
+		{
+			payload:     "ffffff030100",
+			config:      tagConfig,
+			expected:    nil,
+			expectedErr: "unsupported field type: time.Time",
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.payload, func(t *testing.T) {
-			decodedData, err := Parse(test.payload, &test.config)
-			if err != nil {
-				t.Fatalf("error decoding payload: %v", err)
+			decodedData, err := Decode(StringPtr(test.payload), &test.config)
+			if err != nil && !strings.Contains(err.Error(), test.expectedErr) {
+				t.Fatalf("expected %s received %s", test.expectedErr, err)
 			}
-
-			// Type assert to Payload
-			payload := decodedData.(Port1Payload)
-
-			// Check the decoded data against the expected data using reflect.DeepEqual
-			if !reflect.DeepEqual(payload, test.expected) {
-				t.Fatalf("decoded data does not match expected data expected: %+v got: %+v", test.expected, payload)
+			if !reflect.DeepEqual(decodedData, test.expected) {
+				t.Fatalf("expected: %+v received: %+v", test.expected, decodedData)
 			}
 		})
 	}
 }
-func TestConvertFieldToType(t *testing.T) {
+
+func TestExtractFieldValue(t *testing.T) {
 	tests := []struct {
-		value     any
-		fieldType reflect.Type
-		expected  any
+		payload     []byte
+		start       int
+		length      int
+		optional    bool
+		hexadecimal bool
+		expected    any
+		expectedErr string
+	}{
+		{
+			payload:  []byte{0x73, 0x6f, 0x72, 0x65, 0x6e},
+			start:    0,
+			length:   1,
+			expected: []byte{0x73},
+		},
+		{
+			payload:  []byte{0x73, 0x6f, 0x72, 0x65, 0x6e},
+			start:    0,
+			length:   5,
+			expected: []byte{0x73, 0x6f, 0x72, 0x65, 0x6e},
+		},
+		{
+			payload:  []byte{0x73, 0x6f, 0x72, 0x65, 0x6e},
+			start:    1,
+			length:   2,
+			expected: []byte{0x6f, 0x72},
+		},
+		{
+			payload:  []byte{0x73, 0x6f, 0x72, 0x65, 0x6e},
+			start:    2,
+			length:   3,
+			expected: []byte{0x72, 0x65, 0x6e},
+		},
+		{
+			payload:  []byte{0x73, 0x6f, 0x72, 0x65, 0x6e},
+			start:    0,
+			length:   -1,
+			expected: []byte{0x73, 0x6f, 0x72, 0x65, 0x6e},
+		},
+		{
+			payload:  []byte{0x73, 0x6f, 0x72, 0x65, 0x6e},
+			start:    5,
+			length:   1,
+			optional: true,
+			expected: nil,
+		},
+		{
+			payload:     []byte{0x73, 0x6f, 0x72, 0x65, 0x6e},
+			start:       8,
+			length:      2,
+			expected:    nil,
+			expectedErr: "field out of bounds",
+		},
+		{
+			payload:     []byte{0x73, 0x6f, 0x72, 0x65, 0x6e},
+			start:       8,
+			length:      -1,
+			expected:    nil,
+			expectedErr: "field start out of bounds",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(fmt.Sprintf("%v_%v_%v", test.payload, test.start, test.length), func(t *testing.T) {
+			result, err := extractFieldValue(test.payload, test.start, test.length, test.optional, test.hexadecimal)
+			if err != nil && err.Error() != test.expectedErr {
+				t.Fatalf("expected: %s received: %s", test.expectedErr, err.Error())
+			}
+			if !reflect.DeepEqual(result, test.expected) {
+				t.Fatalf("expected: %v received: %v", test.expected, result)
+			}
+		})
+	}
+}
+
+func TestConvertFieldValue(t *testing.T) {
+	tests := []struct {
+		value       any
+		fieldType   reflect.Type
+		expected    any
+		expectedErr string
 	}{
 		{
 			value:     []byte{0x00},
@@ -205,20 +356,35 @@ func TestConvertFieldToType(t *testing.T) {
 			fieldType: reflect.TypeOf(string("")),
 			expected:  "lorem ipsum dolor",
 		},
+		{
+			value:       nil,
+			fieldType:   reflect.TypeOf(time.Time{}),
+			expected:    nil,
+			expectedErr: "unsupported field type: time.Time",
+		},
+		{
+			value:       nil,
+			fieldType:   reflect.TypeOf(time.Duration(0)),
+			expected:    nil,
+			expectedErr: "unsupported field type: time.Duration",
+		},
 	}
 
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("%v_%v", test.value, test.fieldType), func(t *testing.T) {
-			result := convertFieldToType(test.value, test.fieldType, nil)
+			result, err := convertFieldValue(test.value, test.fieldType, nil)
+			if err != nil && err.Error() != test.expectedErr {
+				t.Fatalf("expected: %s received: %s", test.expectedErr, err.Error())
+			}
 			if !reflect.DeepEqual(result, test.expected) {
-				t.Fatalf("converted value does not match expected value expected: %v got: %v", test.expected, result)
+				t.Fatalf("expected: %v received: %v", test.expected, result)
 			}
 		})
 	}
 }
 
 func TestInvalidPayload(t *testing.T) {
-	_, err := Parse("", &PayloadConfig{
+	_, err := Decode(StringPtr(""), &PayloadConfig{
 		Fields: []FieldConfig{
 			{Name: "Moving", Start: 0, Length: 1},
 		},
@@ -228,7 +394,7 @@ func TestInvalidPayload(t *testing.T) {
 		t.Fatal("expected field out of bounds")
 	}
 
-	_, err = Parse("01", &PayloadConfig{
+	_, err = Decode(StringPtr("01"), &PayloadConfig{
 		Fields: []FieldConfig{
 			{Name: "Moving", Start: 0, Length: 2},
 		},
@@ -238,7 +404,7 @@ func TestInvalidPayload(t *testing.T) {
 		t.Fatal("expected field out of bounds")
 	}
 
-	_, err = Parse("01", &PayloadConfig{
+	_, err = Decode(StringPtr("01"), &PayloadConfig{
 		Fields: []FieldConfig{
 			{Name: "Moving", Start: 10, Length: 1},
 		},
@@ -250,7 +416,6 @@ func TestInvalidPayload(t *testing.T) {
 }
 
 func TestTimePointerCompare(t *testing.T) {
-
 	tests := []struct {
 		alpha    *time.Time
 		bravo    *time.Time

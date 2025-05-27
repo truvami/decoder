@@ -80,8 +80,8 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 				{Name: "ScanPointer", Start: 0, Length: 2},
 				{Name: "TotalMessages", Start: 2, Length: 1},
 				{Name: "CurrentMessage", Start: 3, Length: 1},
-				{Name: "Mac1", Start: 4, Length: 6, Optional: true, Hex: true},
-				{Name: "Rssi1", Start: 10, Length: 1, Optional: true},
+				{Name: "Mac1", Start: 4, Length: 6, Hex: true},
+				{Name: "Rssi1", Start: 10, Length: 1},
 				{Name: "Mac2", Start: 11, Length: 6, Optional: true, Hex: true},
 				{Name: "Rssi2", Start: 17, Length: 1, Optional: true},
 				{Name: "Mac3", Start: 18, Length: 6, Optional: true, Hex: true},
@@ -425,7 +425,7 @@ func (t TagSLv1Decoder) Decode(data string, port uint8, devEui string) (*decoder
 		}
 	}
 
-	decodedData, err := common.Parse(data, &config)
+	decodedData, err := common.Decode(&data, &config)
 	return decoder.NewDecodedUplink(config.Features, decodedData), err
 }
 

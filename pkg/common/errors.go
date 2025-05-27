@@ -11,6 +11,8 @@ var (
 	ErrInvalidPayloadLength = errors.New("invalid payload length")
 	ErrPayloadTooShort      = errors.New("payload too short")
 	ErrPayloadTooLong       = errors.New("payload too long")
+
+	ErrValidationFailed = errors.New("validation failed")
 )
 
 // WrapError wraps two errors into a single error, combining the parent and child errors.
