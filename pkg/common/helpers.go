@@ -23,40 +23,32 @@ func HexStringToBytes(hexString string) ([]byte, error) {
 	return bytes, nil
 }
 
-func convertFieldToType(value any, fieldType reflect.Type) any {
+func convertFieldToType(value any, fieldType reflect.Type, transform func(v any) any) any {
+	if transform != nil {
+		return transform(value)
+	}
+
 	switch fieldType {
-	case reflect.TypeOf(int(0)):
-		return int(value.(int))
-	case reflect.TypeOf(int8(0)):
-		return int8(value.(int))
-	case reflect.TypeOf(int16(0)):
-		return int16(value.(int))
-	case reflect.TypeOf(int32(0)):
-		return int32(value.(int))
-	case reflect.TypeOf(int64(0)):
-		return int64(value.(int))
-	case reflect.TypeOf(uint(0)):
-		return uint(value.(int))
-	case reflect.TypeOf(uint8(0)):
-		return uint8(value.(int))
-	case reflect.TypeOf(uint16(0)):
-		return uint16(value.(int))
-	case reflect.TypeOf(uint32(0)):
-		return uint32(value.(int))
-	case reflect.TypeOf(uint64(0)):
-		return uint64(value.(int))
-	case reflect.TypeOf(float32(0)):
-		return float32(value.(int))
-	case reflect.TypeOf(float64(0)):
-		return float64(value.(int))
-	case reflect.TypeOf(string("")):
-		return fmt.Sprintf("%v", value)
 	case reflect.TypeOf(bool(false)):
-		return value.(int)&0x01 == 1
-	case reflect.TypeOf(time.Duration(0)):
-		return time.Duration(value.(int))
-	case reflect.TypeOf(time.Time{}):
-		return ParseTimestamp(value.(int))
+		return value.([]byte)[0]&0x01 == 1
+	case reflect.TypeOf(int8(0)):
+		return BytesToInt8(value.([]byte))
+	case reflect.TypeOf(int16(0)):
+		return BytesToInt16(value.([]byte))
+	case reflect.TypeOf(int32(0)):
+		return BytesToInt32(value.([]byte))
+	case reflect.TypeOf(int64(0)):
+		return BytesToInt64(value.([]byte))
+	case reflect.TypeOf(uint8(0)):
+		return BytesToUint8(value.([]byte))
+	case reflect.TypeOf(uint16(0)):
+		return BytesToUint16(value.([]byte))
+	case reflect.TypeOf(uint32(0)):
+		return BytesToUint32(value.([]byte))
+	case reflect.TypeOf(uint64(0)):
+		return BytesToUint64(value.([]byte))
+	case reflect.TypeOf(string("")):
+		return fmt.Sprintf("%s", value)
 	default:
 		panic(fmt.Sprintf("unsupported field type: %v", fieldType))
 	}
@@ -80,14 +72,9 @@ func extractFieldValue(payloadBytes []byte, start int, length int, optional bool
 	}
 
 	// Extract the field value based on its length
-	var value any
+	var value any = payloadBytes[start : start+length]
 	if hexadecimal {
-		value = hex.EncodeToString(payloadBytes[start : start+length])
-	} else {
-		value = 0
-		for i := 0; i < length; i++ {
-			value = (value.(int) << 8) | int(payloadBytes[start+i])
-		}
+		value = hex.EncodeToString(value.([]byte))
 	}
 
 	return value, nil
@@ -196,14 +183,14 @@ func Parse(payloadHex string, config *PayloadConfig) (any, error) {
 						ptr := reflect.New(targetTypeNonPointer)
 
 						// Set the dereferenced value
-						ptr.Elem().Set(reflect.ValueOf(convertFieldToType(value, targetTypeNonPointer)))
+						ptr.Elem().Set(reflect.ValueOf(convertFieldToType(value, targetTypeNonPointer, tagConfig.Transform)))
 
 						// Set the pointer to the field
 						fieldValue.Set(ptr)
 						continue
 					}
 
-					fieldValue.Set(reflect.ValueOf(convertFieldToType(value, targetTypeNonPointer)))
+					fieldValue.Set(reflect.ValueOf(convertFieldToType(value, targetTypeNonPointer, tagConfig.Transform)))
 				}
 			}
 			if found {
@@ -238,20 +225,14 @@ func Parse(payloadHex string, config *PayloadConfig) (any, error) {
 
 			if fieldValue.Kind() == reflect.Pointer && field.Optional {
 				ptrValue := reflect.New(fieldValue.Type().Elem())
-				convertedValue := convertFieldToType(value, ptrValue.Elem().Type())
+				convertedValue := convertFieldToType(value, ptrValue.Elem().Type(), field.Transform)
 
 				ptrValue.Elem().Set(reflect.ValueOf(convertedValue))
 				fieldValue.Set(ptrValue)
 			} else {
-				fieldType := convertFieldToType(value, fieldValue.Type())
+				fieldType := convertFieldToType(value, fieldValue.Type(), field.Transform)
 				fieldValue.Set(reflect.ValueOf(fieldType))
 			}
-		}
-
-		// Apply the transform function if provided
-		if field.Transform != nil {
-			transformedValue := field.Transform(value)
-			fieldValue.Set(reflect.ValueOf(transformedValue))
 		}
 
 		fieldName, ok := targetValue.Type().FieldByName(field.Name)
@@ -264,22 +245,6 @@ func Parse(payloadHex string, config *PayloadConfig) (any, error) {
 	}
 
 	return targetValue.Interface(), errors.Join(errs...)
-}
-
-func ParseTimestamp(timestamp int) time.Time {
-	return time.Unix(int64(timestamp), 0).UTC()
-}
-
-// UintToBinaryArray converts a uint64 value to a binary array of specified length.
-// The value parameter represents the uint64 value to be converted.
-// The length parameter specifies the length of the resulting binary array.
-// The function returns a byte slice representing the binary array.
-func UintToBinaryArray(value uint64, length int) []byte {
-	binaryArray := make([]byte, length)
-	for i := 0; i < length; i++ {
-		binaryArray[length-1-i] = byte((value >> uint(i)) & 0x01)
-	}
-	return binaryArray
 }
 
 func HexNullPad(payload *string, config *PayloadConfig) string {
@@ -459,15 +424,6 @@ func IntToBytes(value int64, length int) []byte {
 		value >>= 8
 	}
 	return buf
-}
-
-func BytesToInt64(bytes []byte) int64 {
-	var value int64 = 0
-	for i := range bytes {
-		value <<= 8
-		value |= int64(bytes[i])
-	}
-	return value
 }
 
 func Float32ToBytes(value float32) []byte {
