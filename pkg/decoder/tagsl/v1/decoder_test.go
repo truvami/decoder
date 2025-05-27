@@ -549,7 +549,7 @@ func TestDecode(t *testing.T) {
 				ScanTime:                              20,
 				MaxBeacons:                            30,
 				MinRssiValue:                          -100,
-				AdvertisingFilter:                     "4048812220199682886",
+				AdvertisingFilter:                     "EW80ECCCCF",
 				AccelerometerTriggerHoldTimer:         120,
 				AccelerometerThreshold:                300,
 				BLECurrentConfigurationUplinkInterval: 43200,
@@ -566,7 +566,7 @@ func TestDecode(t *testing.T) {
 				ScanTime:                              20,
 				MaxBeacons:                            30,
 				MinRssiValue:                          -100,
-				AdvertisingFilter:                     "4048812220199682886",
+				AdvertisingFilter:                     "EW80ECCCCF",
 				AccelerometerTriggerHoldTimer:         120,
 				AccelerometerThreshold:                300,
 				BLECurrentConfigurationUplinkInterval: 43200,
@@ -582,7 +582,7 @@ func TestDecode(t *testing.T) {
 				ScanTime:                              20,
 				MaxBeacons:                            30,
 				MinRssiValue:                          -100,
-				AdvertisingFilter:                     "4048812220199682886",
+				AdvertisingFilter:                     "EW80ECCCCF",
 				AccelerometerTriggerHoldTimer:         120,
 				AccelerometerThreshold:                300,
 				BLECurrentConfigurationUplinkInterval: 43200,
@@ -1591,6 +1591,66 @@ func TestDecode(t *testing.T) {
 				Function: helpers.StringPtr("gps_start_multiple"),
 			},
 		},
+		{
+			payload: "078f64e7dcffff00000f3e00127802",
+			port:    199,
+			expected: Port199Payload{
+				Constant: "078f64e7dcffff",
+				Sequence: 3902,
+				Number:   4728,
+				Id:       2,
+			},
+		},
+		{
+			payload: "078f64e7dcffff00000f3f00127902",
+			port:    199,
+			expected: Port199Payload{
+				Constant: "078f64e7dcffff",
+				Sequence: 3903,
+				Number:   4729,
+				Id:       2,
+			},
+		},
+		{
+			payload: "078f64e7dcffff00000f4000127a02",
+			port:    199,
+			expected: Port199Payload{
+				Constant: "078f64e7dcffff",
+				Sequence: 3904,
+				Number:   4730,
+				Id:       2,
+			},
+		},
+		{
+			payload: "078f64e7dcffff00000f4100127b02",
+			port:    199,
+			expected: Port199Payload{
+				Constant: "078f64e7dcffff",
+				Sequence: 3905,
+				Number:   4731,
+				Id:       2,
+			},
+		},
+		{
+			payload: "078f64e7dcffff00000f4200127c02",
+			port:    199,
+			expected: Port199Payload{
+				Constant: "078f64e7dcffff",
+				Sequence: 3906,
+				Number:   4732,
+				Id:       2,
+			},
+		},
+		{
+			payload: "078f64e7dcffff00000f4300127d02",
+			port:    199,
+			expected: Port199Payload{
+				Constant: "078f64e7dcffff",
+				Sequence: 3907,
+				Number:   4733,
+				Id:       2,
+			},
+		},
 	}
 
 	for _, test := range tests {
@@ -2133,8 +2193,13 @@ func TestFeatures(t *testing.T) {
 			port:    151,
 		},
 		{
-			payload: "01",
+			payload: "043131373a7372632f6770732e633a6770735f73746172745f6d756c7469706c65",
 			port:    198,
+		},
+		{
+			payload:         "078f64e7dcffff00000f4300127d02",
+			port:            199,
+			allowNoFeatures: true,
 		},
 	}
 
@@ -2334,7 +2399,7 @@ func TestMarshal(t *testing.T) {
 		{
 			payload:  "012c141e9c455738304543434343460078012c01a8c0",
 			port:     8,
-			expected: []string{"\"minRssiValue\": -100", "\"advertisingFilter\": \"4048812220199682886\""},
+			expected: []string{"\"minRssiValue\": -100", "\"advertisingFilter\": \"EW80ECCCCF\""},
 		},
 		{
 			payload:  "0002d308b50082457f16eb66c4a5cd0ed32a0807",

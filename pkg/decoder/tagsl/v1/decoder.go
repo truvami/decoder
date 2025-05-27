@@ -154,7 +154,7 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 	case 7:
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
-				{Name: "Timestamp", Start: 0, Length: 4},
+				{Name: "Timestamp", Start: 0, Length: 4, Transform: timestamp},
 				{Name: "DutyCycle", Start: 4, Length: 1, Transform: dutyCycle},
 				{Name: "ConfigId", Start: 4, Length: 1, Transform: configId},
 				{Name: "ConfigChange", Start: 4, Length: 1, Transform: configSuccess},
@@ -201,16 +201,10 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 				{Name: "Latitude", Start: 1, Length: 4, Transform: latitude},
 				{Name: "Longitude", Start: 5, Length: 4, Transform: longitude},
 				{Name: "Altitude", Start: 9, Length: 2, Transform: altitude},
-				{Name: "Timestamp", Start: 11, Length: 4},
-				{Name: "Battery", Start: 15, Length: 2, Transform: func(v any) any {
-					return float64(v.(int)) / 1000
-				}},
-				{Name: "TTF", Start: 17, Length: 1, Optional: true, Transform: func(v any) any {
-					return common.DurationPtr(time.Duration(v.(int)) * time.Second)
-				}},
-				{Name: "PDOP", Start: 18, Length: 1, Optional: true, Transform: func(v any) any {
-					return common.Float64Ptr(float64(v.(int)) / 2)
-				}},
+				{Name: "Timestamp", Start: 11, Length: 4, Transform: timestamp},
+				{Name: "Battery", Start: 15, Length: 2, Transform: battery},
+				{Name: "TTF", Start: 17, Length: 1, Optional: true, Transform: ttf},
+				{Name: "PDOP", Start: 18, Length: 1, Optional: true, Transform: pdop},
 				{Name: "Satellites", Start: 19, Length: 1, Optional: true},
 			},
 			TargetType: reflect.TypeOf(Port10Payload{}),
@@ -221,9 +215,7 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 			Fields: []common.FieldConfig{
 				{Name: "DutyCycle", Start: 0, Length: 1, Transform: dutyCycle},
 				{Name: "LowBattery", Start: 0, Length: 1, Transform: lowBattery},
-				{Name: "Battery", Start: 1, Length: 2, Transform: func(v any) any {
-					return float64(v.(int)) / 1000
-				}},
+				{Name: "Battery", Start: 1, Length: 2, Transform: battery},
 			},
 			TargetType: reflect.TypeOf(Port15Payload{}),
 			Features:   []decoder.Feature{decoder.FeatureDutyCycle, decoder.FeatureBattery},
@@ -238,13 +230,9 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 				{Name: "Latitude", Start: 1, Length: 4, Transform: latitude},
 				{Name: "Longitude", Start: 5, Length: 4, Transform: longitude},
 				{Name: "Altitude", Start: 9, Length: 2, Transform: altitude},
-				{Name: "Timestamp", Start: 11, Length: 4},
-				{Name: "Battery", Start: 15, Length: 2, Transform: func(v any) any {
-					return float64(v.(int)) / 1000
-				}},
-				{Name: "TTF", Start: 17, Length: 1, Transform: func(v any) any {
-					return time.Duration(v.(int)) * time.Second
-				}},
+				{Name: "Timestamp", Start: 11, Length: 4, Transform: timestamp},
+				{Name: "Battery", Start: 15, Length: 2, Transform: battery},
+				{Name: "TTF", Start: 17, Length: 1, Transform: ttf},
 				{Name: "Mac1", Start: 18, Length: 6, Hex: true},
 				{Name: "Rssi1", Start: 24, Length: 1},
 				{Name: "Mac2", Start: 25, Length: 6, Optional: true, Hex: true},
@@ -267,16 +255,10 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 				{Name: "Latitude", Start: 1, Length: 4, Transform: latitude},
 				{Name: "Longitude", Start: 5, Length: 4, Transform: longitude},
 				{Name: "Altitude", Start: 9, Length: 2, Transform: altitude},
-				{Name: "Timestamp", Start: 11, Length: 4},
-				{Name: "Battery", Start: 15, Length: 2, Transform: func(v any) any {
-					return float64(v.(int)) / 1000
-				}},
-				{Name: "TTF", Start: 17, Length: 1, Transform: func(v any) any {
-					return time.Duration(v.(int)) * time.Second
-				}},
-				{Name: "PDOP", Start: 18, Length: 1, Transform: func(v any) any {
-					return float64(v.(int)) / 2
-				}},
+				{Name: "Timestamp", Start: 11, Length: 4, Transform: timestamp},
+				{Name: "Battery", Start: 15, Length: 2, Transform: battery},
+				{Name: "TTF", Start: 17, Length: 1, Transform: ttf},
+				{Name: "PDOP", Start: 18, Length: 1, Transform: pdop},
 				{Name: "Satellites", Start: 19, Length: 1},
 				{Name: "Mac1", Start: 20, Length: 6, Hex: true},
 				{Name: "Rssi1", Start: 26, Length: 1},
@@ -294,7 +276,7 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
 				{Name: "BufferLevel", Start: 0, Length: 2},
-				{Name: "Timestamp", Start: 2, Length: 4},
+				{Name: "Timestamp", Start: 2, Length: 4, Transform: timestamp},
 				{Name: "DutyCycle", Start: 6, Length: 1, Transform: dutyCycle},
 				{Name: "ConfigId", Start: 6, Length: 1, Transform: configId},
 				{Name: "ConfigChange", Start: 6, Length: 1, Transform: configSuccess},
@@ -326,16 +308,10 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 				{Name: "Latitude", Start: 3, Length: 4, Transform: latitude},
 				{Name: "Longitude", Start: 7, Length: 4, Transform: longitude},
 				{Name: "Altitude", Start: 11, Length: 2, Transform: altitude},
-				{Name: "Timestamp", Start: 13, Length: 4},
-				{Name: "Battery", Start: 17, Length: 2, Transform: func(v any) any {
-					return float64(v.(int)) / 1000
-				}},
-				{Name: "TTF", Start: 19, Length: 1, Optional: true, Transform: func(v any) any {
-					return common.DurationPtr(time.Duration(v.(int)) * time.Second)
-				}},
-				{Name: "PDOP", Start: 20, Length: 1, Optional: true, Transform: func(v any) any {
-					return common.Float64Ptr(float64(v.(int)) / 2)
-				}},
+				{Name: "Timestamp", Start: 13, Length: 4, Transform: timestamp},
+				{Name: "Battery", Start: 17, Length: 2, Transform: battery},
+				{Name: "TTF", Start: 19, Length: 1, Optional: true, Transform: ttf},
+				{Name: "PDOP", Start: 20, Length: 1, Optional: true, Transform: pdop},
 				{Name: "Satellites", Start: 21, Length: 1, Optional: true},
 			},
 			TargetType: reflect.TypeOf(Port110Payload{}),
@@ -352,13 +328,9 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 				{Name: "Latitude", Start: 3, Length: 4, Transform: latitude},
 				{Name: "Longitude", Start: 7, Length: 4, Transform: longitude},
 				{Name: "Altitude", Start: 11, Length: 2, Transform: altitude},
-				{Name: "Timestamp", Start: 13, Length: 4},
-				{Name: "Battery", Start: 17, Length: 2, Transform: func(v any) any {
-					return float64(v.(int)) / 1000
-				}},
-				{Name: "TTF", Start: 19, Length: 1, Transform: func(v any) any {
-					return time.Duration(v.(int)) * time.Second
-				}},
+				{Name: "Timestamp", Start: 13, Length: 4, Transform: timestamp},
+				{Name: "Battery", Start: 17, Length: 2, Transform: battery},
+				{Name: "TTF", Start: 19, Length: 1, Transform: ttf},
 				{Name: "Mac1", Start: 20, Length: 6, Hex: true},
 				{Name: "Rssi1", Start: 26, Length: 1},
 				{Name: "Mac2", Start: 27, Length: 6, Optional: true, Hex: true},
@@ -386,16 +358,10 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 				{Name: "Latitude", Start: 3, Length: 4, Transform: latitude},
 				{Name: "Longitude", Start: 7, Length: 4, Transform: longitude},
 				{Name: "Altitude", Start: 11, Length: 2, Transform: altitude},
-				{Name: "Timestamp", Start: 13, Length: 4},
-				{Name: "Battery", Start: 17, Length: 2, Transform: func(v any) any {
-					return float64(v.(int)) / 1000
-				}},
-				{Name: "TTF", Start: 19, Length: 1, Transform: func(v any) any {
-					return time.Duration(v.(int)) * time.Second
-				}},
-				{Name: "PDOP", Start: 20, Length: 1, Transform: func(v any) any {
-					return float64(v.(int)) / 2
-				}},
+				{Name: "Timestamp", Start: 13, Length: 4, Transform: timestamp},
+				{Name: "Battery", Start: 17, Length: 2, Transform: battery},
+				{Name: "TTF", Start: 19, Length: 1, Transform: ttf},
+				{Name: "PDOP", Start: 20, Length: 1, Transform: pdop},
 				{Name: "Satellites", Start: 21, Length: 1},
 				{Name: "Mac1", Start: 22, Length: 6, Hex: true},
 				{Name: "Rssi1", Start: 28, Length: 1},
@@ -413,18 +379,29 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
 				{Name: "Reason", Start: 0, Length: 1},
-				{Name: "Line", Start: 1, Length: -1, Optional: true, Hex: true, Transform: func(v any) any {
-					return stacktrace(v.(string), 0)
+				{Name: "Line", Start: 1, Length: -1, Optional: true, Transform: func(v any) any {
+					return stacktrace(v.([]byte), 0)
 				}},
-				{Name: "File", Start: 1, Length: -1, Optional: true, Hex: true, Transform: func(v any) any {
-					return stacktrace(v.(string), 1)
+				{Name: "File", Start: 1, Length: -1, Optional: true, Transform: func(v any) any {
+					return stacktrace(v.([]byte), 1)
 				}},
-				{Name: "Function", Start: 1, Length: -1, Optional: true, Hex: true, Transform: func(v any) any {
-					return stacktrace(v.(string), 2)
+				{Name: "Function", Start: 1, Length: -1, Optional: true, Transform: func(v any) any {
+					return stacktrace(v.([]byte), 2)
 				}},
 			},
 			TargetType: reflect.TypeOf(Port198Payload{}),
 			Features:   []decoder.Feature{decoder.FeatureResetReason},
+		}, nil
+	case 199:
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
+				{Name: "Constant", Start: 0, Length: 7, Hex: true},
+				{Name: "Sequence", Start: 7, Length: 4},
+				{Name: "Number", Start: 11, Length: 3},
+				{Name: "Id", Start: 14, Length: 1},
+			},
+			TargetType: reflect.TypeOf(Port199Payload{}),
+			Features:   []decoder.Feature{},
 		}, nil
 	}
 
@@ -453,65 +430,57 @@ func (t TagSLv1Decoder) Decode(data string, port uint8, devEui string) (*decoder
 }
 
 func dutyCycle(v any) any {
-	i, ok := v.(int)
-	if !ok {
-		return nil
-	}
-	return (byte(i)>>7)&0x01 == 1
+	return ((v.([]byte))[0]>>7)&0x01 == 1
 }
 
 func configId(v any) any {
-	i, ok := v.(int)
-	if !ok {
-		return nil
-	}
-	return (byte(i) >> 3) & 0x0f
+	return ((v.([]byte))[0] >> 3) & 0x0f
 }
 
 func configSuccess(v any) any {
-	i, ok := v.(int)
-	if !ok {
-		return nil
-	}
-	return (byte(i)>>2)&0x01 == 1
+	return ((v.([]byte))[0]>>2)&0x01 == 1
 }
 
 func moving(v any) any {
-	i, ok := v.(int)
-	if !ok {
-		return nil
-	}
-	return byte(i)&0x01 == 1
+	return (v.([]byte))[0]&0x01 == 1
 }
 
 func lowBattery(v any) any {
-	i, ok := v.(int)
-	if !ok {
-		return nil
-	}
-	return byte(i)&0x01 == 1
+	return (v.([]byte))[0]&0x01 == 1
 }
 
 func latitude(v any) any {
-	return float64(int32(v.(int))) / 1000000
+	return float64(common.BytesToInt32(v.([]byte))) / 1000000
 }
 
 func longitude(v any) any {
-	return float64(int32(v.(int))) / 1000000
+	return float64(common.BytesToInt32(v.([]byte))) / 1000000
 }
 
 func altitude(v any) any {
-	return float64(v.(int)) / 10
+	return float64(common.BytesToUint16(v.([]byte))) / 10
 }
 
-func stacktrace(v string, i int) *string {
-	bytes, err := common.HexStringToBytes(v)
-	if err != nil {
-		return nil
-	}
-	frags := strings.Split(string(bytes), ":")
+func timestamp(v any) any {
+	return time.Unix(int64(common.BytesToUint32(v.([]byte))), 0).UTC()
+}
+
+func battery(v any) any {
+	return float64(common.BytesToUint16(v.([]byte))) / 1000
+}
+
+func ttf(v any) any {
+	return time.Duration(int64(common.BytesToUint8(v.([]byte)))) * time.Second
+}
+
+func pdop(v any) any {
+	return float64(common.BytesToUint8(v.([]byte))) / 2
+}
+
+func stacktrace(v []byte, i int) any {
+	frags := strings.Split(string(v), ":")
 	if len(frags) > i {
-		return common.StringPtr(frags[i])
+		return frags[i]
 	}
 	return nil
 }
