@@ -23,6 +23,32 @@ func HexStringToBytes(hexString string) ([]byte, error) {
 	return bytes, nil
 }
 
+func extractFieldValue(payloadBytes []byte, start int, length int, optional bool, hexadecimal bool) (any, error) {
+	if length == -1 {
+		if start >= len(payloadBytes) && !optional {
+			return nil, fmt.Errorf("field start out of bounds")
+		}
+		// Dynamic length: read until the end of the payload
+		length = len(payloadBytes) - start
+		if length == 0 {
+			return nil, nil
+		}
+	} else if start+length > len(payloadBytes) {
+		if optional {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("field out of bounds")
+	}
+
+	// Extract the field value based on its length
+	var value any = payloadBytes[start : start+length]
+	if hexadecimal {
+		value = hex.EncodeToString(value.([]byte))
+	}
+
+	return value, nil
+}
+
 func convertFieldValue(rawValue any, fieldType reflect.Type, transform func(v any) any) (any, error) {
 	var ptr bool = false
 	var value any = nil
@@ -69,32 +95,6 @@ func convertFieldValue(rawValue any, fieldType reflect.Type, transform func(v an
 	}
 
 	return value, err
-}
-
-func extractFieldValue(payloadBytes []byte, start int, length int, optional bool, hexadecimal bool) (any, error) {
-	if length == -1 {
-		if start >= len(payloadBytes) && !optional {
-			return nil, fmt.Errorf("field start out of bounds")
-		}
-		// Dynamic length: read until the end of the payload
-		length = len(payloadBytes) - start
-		if length == 0 {
-			return nil, nil
-		}
-	} else if start+length > len(payloadBytes) {
-		if optional {
-			return nil, nil
-		}
-		return nil, fmt.Errorf("field out of bounds")
-	}
-
-	// Extract the field value based on its length
-	var value any = payloadBytes[start : start+length]
-	if hexadecimal {
-		value = hex.EncodeToString(value.([]byte))
-	}
-
-	return value, nil
 }
 
 func validateFieldValue(field reflect.StructField, fieldValue reflect.Value) error {
