@@ -520,11 +520,3 @@ func TimePointerCompare(alpha *time.Time, bravo *time.Time) bool {
 	}
 	return alpha.Equal(*bravo)
 }
-
-func TransformPointerToValue(ptr interface{}) interface{} {
-	val := reflect.ValueOf(ptr)
-	if val.Kind() == reflect.Ptr && !val.IsNil() {
-		return val.Elem().Interface()
-	}
-	panic(fmt.Sprintf("expected a pointer with not nil value, got %T", ptr))
-}
