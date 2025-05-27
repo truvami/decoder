@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 )
@@ -37,9 +38,9 @@ type Port1Payload struct {
 }
 
 type Port2Payload struct {
-	Time   uint32 `json:"time"`
-	Power  uint16 `json:"power"`
-	Sensor uint16 `json:"sensor"`
+	Time   *uint32 `json:"time" validate:"gte=315532800"`
+	Power  *uint16 `json:"power"`
+	Sensor *uint16 `json:"sensor"`
 }
 
 func TestDecode(t *testing.T) {
@@ -113,10 +114,29 @@ func TestDecode(t *testing.T) {
 			payload: "ffffff0004386d438001020f320202088b",
 			config:  tagConfig,
 			expected: Port2Payload{
-				Time:   946684800,
-				Power:  3890,
-				Sensor: 2187,
+				Time:   Uint32Ptr(946684800),
+				Power:  Uint16Ptr(3890),
+				Sensor: Uint16Ptr(2187),
 			},
+		},
+		{
+			payload: "ffffff0000",
+			config:  tagConfig,
+			expected: Port2Payload{
+				Time:   nil,
+				Power:  nil,
+				Sensor: nil,
+			},
+		},
+		{
+			payload: "ffffff000400000000",
+			config:  tagConfig,
+			expected: Port2Payload{
+				Time:   Uint32Ptr(0),
+				Power:  nil,
+				Sensor: nil,
+			},
+			expectedErr: "validation failed for Time",
 		},
 		{
 			payload:     "ffffff030100",
@@ -135,7 +155,7 @@ func TestDecode(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.payload, func(t *testing.T) {
 			decodedData, err := Decode(StringPtr(test.payload), &test.config)
-			if err != nil && err.Error() != test.expectedErr {
+			if err != nil && !strings.Contains(err.Error(), test.expectedErr) {
 				t.Fatalf("expected %s received %s", test.expectedErr, err)
 			}
 			if !reflect.DeepEqual(decodedData, test.expected) {
