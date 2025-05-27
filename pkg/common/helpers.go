@@ -71,37 +71,6 @@ func convertFieldValue(rawValue any, fieldType reflect.Type, transform func(v an
 	return value, err
 }
 
-func convertFieldToType(value any, fieldType reflect.Type, transform func(v any) any) any {
-	if transform != nil {
-		return transform(value)
-	}
-
-	switch fieldType {
-	case reflect.TypeOf(bool(false)):
-		return value.([]byte)[0]&0x01 == 1
-	case reflect.TypeOf(int8(0)):
-		return BytesToInt8(value.([]byte))
-	case reflect.TypeOf(int16(0)):
-		return BytesToInt16(value.([]byte))
-	case reflect.TypeOf(int32(0)):
-		return BytesToInt32(value.([]byte))
-	case reflect.TypeOf(int64(0)):
-		return BytesToInt64(value.([]byte))
-	case reflect.TypeOf(uint8(0)):
-		return BytesToUint8(value.([]byte))
-	case reflect.TypeOf(uint16(0)):
-		return BytesToUint16(value.([]byte))
-	case reflect.TypeOf(uint32(0)):
-		return BytesToUint32(value.([]byte))
-	case reflect.TypeOf(uint64(0)):
-		return BytesToUint64(value.([]byte))
-	case reflect.TypeOf(string("")):
-		return fmt.Sprintf("%s", value)
-	default:
-		panic(fmt.Sprintf("unsupported field type: %v", fieldType))
-	}
-}
-
 func extractFieldValue(payloadBytes []byte, start int, length int, optional bool, hexadecimal bool) (any, error) {
 	if length == -1 {
 		if start >= len(payloadBytes) && !optional {
@@ -180,65 +149,20 @@ func Decode(payloadHex *string, config *PayloadConfig) (any, error) {
 					}
 
 					fieldValue := targetValue.FieldByName(tagConfig.Name)
-					if fieldValue.IsValid() && fieldValue.CanSet() && tagConfig.Transform != nil {
+					if fieldValue.IsValid() && fieldValue.CanSet() {
 						if value == nil && tagConfig.Optional {
 							continue
 						}
 
-						config.Features = append(config.Features, tagConfig.Feature...)
-
-						// transform value from pointer to value
-						if fieldValue.Kind() == reflect.Pointer {
-							// if fieldValue is nil set the value to nil
-							if value == nil {
-								fieldValue.Set(reflect.Zero(fieldValue.Type()))
-								continue
-							}
-
-							transformed := tagConfig.Transform(value)
-
-							// value is a pointer and not nil, convert to value
-							// transform value from pointer to value
-							// Create a new pointer of the right type
-							ptr := reflect.New(fieldValue.Type().Elem())
-
-							// Set the dereferenced value
-							ptr.Elem().Set(reflect.ValueOf(transformed))
-
-							// Set the pointer to the field
-							fieldValue.Set(ptr)
-							continue
+						convertedValue, err := convertFieldValue(value, fieldValue.Type(), tagConfig.Transform)
+						if err != nil {
+							return nil, err
 						}
-						fieldValue.Set(reflect.ValueOf(tagConfig.Transform(value)))
-						continue
+
+						if convertedValue != nil {
+							fieldValue.Set(reflect.ValueOf(convertedValue))
+						}
 					}
-
-					// if fieldValue is nil set the value to nil
-					if value == nil && tagConfig.Optional {
-						continue
-					}
-
-					if !fieldValue.IsValid() || !fieldValue.CanSet() {
-						return nil, fmt.Errorf("field %s not found in target struct", tagConfig.Name)
-					}
-
-					// pointer field type e.g *uint8 -> t = uint8
-					targetTypeNonPointer := fieldValue.Type().Elem()
-
-					// transform value from pointer to value with the right type
-					if fieldValue.Kind() == reflect.Pointer {
-						// Create a new pointer of the right type
-						ptr := reflect.New(targetTypeNonPointer)
-
-						// Set the dereferenced value
-						ptr.Elem().Set(reflect.ValueOf(convertFieldToType(value, targetTypeNonPointer, tagConfig.Transform)))
-
-						// Set the pointer to the field
-						fieldValue.Set(ptr)
-						continue
-					}
-
-					fieldValue.Set(reflect.ValueOf(convertFieldToType(value, targetTypeNonPointer, tagConfig.Transform)))
 				}
 			}
 			if found {
