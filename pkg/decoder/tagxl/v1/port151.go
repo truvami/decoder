@@ -10,11 +10,11 @@ import (
 // | Tag | Size | Description                                    | Format     |
 // +-----+------+------------------------------------------------+------------+
 // | 40  | 1    | device flags                                   | byte       |
-// |     |      | firmware upgrade flag                          | uint1      |
-// |     |      | gnss flag                                      | uint1      |
-// |     |      | wifi flag                                      | uint1      |
-// |     |      | accelerometer flag                             | uint1      |
 // |     |      | reserved                                       | uint4      |
+// |     |      | accelerometer flag                             | uint1      |
+// |     |      | wifi flag                                      | uint1      |
+// |     |      | gnss flag                                      | uint1      |
+// |     |      | firmware upgrade flag                          | uint1      |
 // | 41  | 4    | moving interval                                | uint16, s  |
 // |     |      | steady interval                                | uint16, s  |
 // | 42  | 4    | accelerometer threshold                        | uint16, mg |
@@ -23,6 +23,10 @@ import (
 // | 44  | 1    | firmware upgrade advertisement                 | uint8, s   |
 // | 45  | 2    | battery voltage                                | uint16, mv |
 // | 46  | 4    | firmware hash                                  | byte[4]    |
+// | 47  | 1    | rotation flags                                 | byte       |
+// |     |      | reserved                                       | uint6      |
+// |     |      | rotation invert                                | uint1      |
+// |     |      | rotation confirmed                             | uint1      |
 // | 49  | 2    | reset count since flash erase                  | uint16     |
 // | 4a  | 4    | reset cause register value                     | uint32     |
 // | 4b  | 4    | gnss scans since reset                         | uint16     |
@@ -30,9 +34,10 @@ import (
 // +-----+------+------------------------------------------------+------------+
 
 type Port151Payload struct {
-	GnssEnabled                          *bool    `json:"gnssEnabled"`
-	WiFiEnabled                          *bool    `json:"wifiEnabled"`
 	AccelerometerEnabled                 *bool    `json:"accelerometerEnabled"`
+	WifiEnabled                          *bool    `json:"wifiEnabled"`
+	GnssEnabled                          *bool    `json:"gnssEnabled"`
+	FirmwareUpgrade                      *bool    `json:"firmwareUpgrade"`
 	LocalizationIntervalWhileMoving      *uint16  `json:"movingInterval" validate:"gte=60,lte=86400"`
 	LocalizationIntervalWhileSteady      *uint16  `json:"steadyInterval" validate:"gte=120,lte=86400"`
 	AccelerometerWakeupThreshold         *uint16  `json:"accelerometerWakeupThreshold" validate:"gte=10,lte=8000"`
@@ -41,6 +46,8 @@ type Port151Payload struct {
 	AdvertisementFirmwareUpgradeInterval *uint8   `json:"advertisementFirmwareUpgradeInterval" validate:"gte=1,lte=86400"`
 	Battery                              *float32 `json:"battery" validate:"gte=1,lte=5"`
 	FirmwareHash                         *string  `json:"firmwareHash"`
+	RotationInvert                       *bool    `json:"rotationInvert"`
+	RotationConfirmed                    *bool    `json:"rotationConfirmed"`
 	ResetCount                           *uint16  `json:"resetCount"`
 	ResetCause                           *uint32  `json:"resetCause"`
 	GnssScans                            *uint16  `json:"gnssScans"`
@@ -72,7 +79,7 @@ func (p Port151Payload) GetGnss() *bool {
 }
 
 func (p Port151Payload) GetWifi() *bool {
-	return p.WiFiEnabled
+	return p.WifiEnabled
 }
 
 func (p Port151Payload) GetAcceleration() *bool {
