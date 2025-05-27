@@ -38,9 +38,10 @@ type Port1Payload struct {
 }
 
 type Port2Payload struct {
-	Time   *uint32 `json:"time" validate:"gte=315532800"`
-	Power  *uint16 `json:"power"`
-	Sensor *uint16 `json:"sensor"`
+	Time     *uint32    `json:"time" validate:"gte=315532800"`
+	Power    *uint16    `json:"power" validate:"gte=2560,lte=4352"`
+	Sensor   *uint16    `json:"sensor" validate:"gte=0,lte=5120"`
+	Duration *time.Time `json:"duration"`
 }
 
 func TestDecode(t *testing.T) {
@@ -72,6 +73,7 @@ func TestDecode(t *testing.T) {
 			{Name: "Time", Tag: 0x00},
 			{Name: "Power", Tag: 0x01, Optional: true},
 			{Name: "Sensor", Tag: 0x02, Optional: true},
+			{Name: "Duration", Tag: 0x03, Optional: true},
 		},
 		TargetType: reflect.TypeOf(Port2Payload{}),
 	}
@@ -139,16 +141,22 @@ func TestDecode(t *testing.T) {
 			expectedErr: "validation failed for Time",
 		},
 		{
-			payload:     "ffffff030100",
+			payload:     "ffffff040100",
 			config:      tagConfig,
 			expected:    nil,
-			expectedErr: "unknown tag 3",
+			expectedErr: "unknown tag 4",
 		},
 		{
 			payload:     "ffffff010200",
 			config:      tagConfig,
 			expected:    nil,
 			expectedErr: "field out of bounds",
+		},
+		{
+			payload:     "ffffff030100",
+			config:      tagConfig,
+			expected:    nil,
+			expectedErr: "unsupported field type: time.Time",
 		},
 	}
 
