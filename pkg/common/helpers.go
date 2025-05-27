@@ -106,8 +106,6 @@ func validateFieldValue(field reflect.StructField, fieldValue reflect.Value) err
 	return validator.New().Struct(structValue.Interface())
 }
 
-var ErrValidationFailed = errors.New("validation failed")
-
 func UnwrapError(err error) []error {
 	var errs []error = []error{}
 	if err, ok := err.(interface{ Unwrap() []error }); ok {
