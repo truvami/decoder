@@ -425,7 +425,7 @@ func (t TagSLv1Decoder) Decode(data string, port uint8, devEui string) (*decoder
 		}
 	}
 
-	decodedData, err := common.Parse(data, &config)
+	decodedData, err := common.Decode(&data, &config)
 	return decoder.NewDecodedUplink(config.Features, decodedData), err
 }
 

@@ -84,7 +84,7 @@ func TestParse(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.payload, func(t *testing.T) {
-			decodedData, err := Parse(test.payload, &test.config)
+			decodedData, err := Decode(StringPtr(test.payload), &test.config)
 			if err != nil {
 				t.Fatalf("error decoding payload: %v", err)
 			}
@@ -218,7 +218,7 @@ func TestConvertFieldToType(t *testing.T) {
 }
 
 func TestInvalidPayload(t *testing.T) {
-	_, err := Parse("", &PayloadConfig{
+	_, err := Decode(StringPtr(""), &PayloadConfig{
 		Fields: []FieldConfig{
 			{Name: "Moving", Start: 0, Length: 1},
 		},
@@ -228,7 +228,7 @@ func TestInvalidPayload(t *testing.T) {
 		t.Fatal("expected field out of bounds")
 	}
 
-	_, err = Parse("01", &PayloadConfig{
+	_, err = Decode(StringPtr("01"), &PayloadConfig{
 		Fields: []FieldConfig{
 			{Name: "Moving", Start: 0, Length: 2},
 		},
@@ -238,7 +238,7 @@ func TestInvalidPayload(t *testing.T) {
 		t.Fatal("expected field out of bounds")
 	}
 
-	_, err = Parse("01", &PayloadConfig{
+	_, err = Decode(StringPtr("01"), &PayloadConfig{
 		Fields: []FieldConfig{
 			{Name: "Moving", Start: 10, Length: 1},
 		},

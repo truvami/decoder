@@ -99,10 +99,10 @@ func UnwrapError(err error) []error {
 	return errs
 }
 
-// Parse decodes the payload based on the provided configuration and populates the target struct
-func Parse(payloadHex string, config *PayloadConfig) (any, error) {
+// Decode decodes the payload based on the provided configuration and populates the target struct
+func Decode(payloadHex *string, config *PayloadConfig) (any, error) {
 	// Convert hex payload to bytes
-	payloadBytes, err := HexStringToBytes(payloadHex)
+	payloadBytes, err := HexStringToBytes(*payloadHex)
 	if err != nil {
 		return nil, err
 	}
