@@ -23,31 +23,31 @@ func TestHexStringToBytes(t *testing.T) {
 }
 
 type Port1Payload struct {
-	Moving bool    `json:"moving"`
-	Lat    float64 `json:"gpsLat" validate:"gte=-90,lte=90"`
-	Lon    float64 `json:"gpsLon" validate:"gte=-180,lte=180"`
-	Alt    float64 `json:"gpsAlt" validate:"gte=0,lte=20000"`
-	Year   uint8   `json:"year" validate:"gte=0,lte=255"`
-	Month  uint8   `json:"month" validate:"gte=0,lte=255"`
-	Day    uint8   `json:"day" validate:"gte=1,lte=31"`
-	Hour   uint8   `json:"hour" validate:"gte=0,lte=23"`
-	Minute uint8   `json:"minute" validate:"gte=0,lte=59"`
-	Second uint8   `json:"second" validate:"gte=0,lte=59"`
-	TS     int64   `json:"ts"`
+	Moving    bool           `json:"moving"`
+	Latitude  float64        `json:"latitude" validate:"gte=-90,lte=90"`
+	Longitude float64        `json:"longitude" validate:"gte=-180,lte=180"`
+	Altitude  float32        `json:"altitude" validate:"gte=0,lte=20000"`
+	Year      uint8          `json:"year" validate:"gte=0,lte=255"`
+	Month     uint8          `json:"month" validate:"gte=0,lte=255"`
+	Day       uint8          `json:"day" validate:"gte=1,lte=31"`
+	Hour      uint8          `json:"hour" validate:"gte=0,lte=23"`
+	Minute    uint8          `json:"minute" validate:"gte=0,lte=59"`
+	Second    uint8          `json:"second" validate:"gte=0,lte=59"`
+	Ttf       *time.Duration `json:"satellites" validate:"gte=0,lte=27"`
 }
 
 func TestDecode(t *testing.T) {
 	config := PayloadConfig{
 		Fields: []FieldConfig{
 			{Name: "Moving", Start: 0, Length: 1},
-			{Name: "Lat", Start: 1, Length: 4, Transform: func(v any) any {
+			{Name: "Latitude", Start: 1, Length: 4, Transform: func(v any) any {
 				return float64(BytesToInt32(v.([]byte))) / 1000000
 			}},
-			{Name: "Lon", Start: 5, Length: 4, Transform: func(v any) any {
+			{Name: "Longitude", Start: 5, Length: 4, Transform: func(v any) any {
 				return float64(BytesToInt32(v.([]byte))) / 1000000
 			}},
-			{Name: "Alt", Start: 9, Length: 2, Transform: func(v any) any {
-				return float64(BytesToUint16(v.([]byte))) / 10
+			{Name: "Altitude", Start: 9, Length: 2, Transform: func(v any) any {
+				return float32(BytesToUint16(v.([]byte))) / 10
 			}},
 			{Name: "Year", Start: 11, Length: 1},
 			{Name: "Month", Start: 12, Length: 1},
@@ -55,46 +55,55 @@ func TestDecode(t *testing.T) {
 			{Name: "Hour", Start: 14, Length: 1},
 			{Name: "Minute", Start: 15, Length: 1},
 			{Name: "Second", Start: 16, Length: 1},
+			{Name: "Ttf", Start: 17, Length: 1, Optional: true},
 		},
 		TargetType: reflect.TypeOf(Port1Payload{}),
 	}
 
 	tests := []struct {
-		payload  string
-		config   PayloadConfig
-		expected any
+		payload     string
+		config      PayloadConfig
+		expected    any
+		expectedErr string
 	}{
 		{
 			payload: "8002cdcd1300744f5e166018040b14341a",
 			config:  config,
 			expected: Port1Payload{
-				Moving: false,
-				Lat:    47.041811,
-				Lon:    7.622494,
-				Alt:    572.8,
-				Year:   24,
-				Month:  4,
-				Day:    11,
-				Hour:   20,
-				Minute: 52,
-				Second: 26,
+				Moving:    false,
+				Latitude:  47.041811,
+				Longitude: 7.622494,
+				Altitude:  572.8,
+				Year:      24,
+				Month:     4,
+				Day:       11,
+				Hour:      20,
+				Minute:    52,
+				Second:    26,
 			},
+		},
+		{
+			payload:     "8002cdcd1300744f5e166018",
+			config:      config,
+			expected:    nil,
+			expectedErr: "field out of bounds",
+		},
+		{
+			payload:     "8002cdcd1300744f5e166018040b14341afd",
+			config:      config,
+			expected:    nil,
+			expectedErr: "unsupported field type: time.Duration",
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.payload, func(t *testing.T) {
 			decodedData, err := Decode(StringPtr(test.payload), &test.config)
-			if err != nil {
-				t.Fatalf("error decoding payload: %v", err)
+			if err != nil && err.Error() != test.expectedErr {
+				t.Fatalf("expected %s received %s", test.expectedErr, err)
 			}
-
-			// Type assert to Payload
-			payload := decodedData.(Port1Payload)
-
-			// Check the decoded data against the expected data using reflect.DeepEqual
-			if !reflect.DeepEqual(payload, test.expected) {
-				t.Fatalf("decoded data does not match expected data expected: %+v got: %+v", test.expected, payload)
+			if !reflect.DeepEqual(decodedData, test.expected) {
+				t.Fatalf("expected: %+v received: %+v", test.expected, decodedData)
 			}
 		})
 	}
