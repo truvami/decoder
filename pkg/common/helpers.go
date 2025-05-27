@@ -163,6 +163,14 @@ func Decode(payloadHex *string, config *PayloadConfig) (any, error) {
 							fieldValue.Set(reflect.ValueOf(convertedValue))
 						}
 					}
+
+					fieldName, ok := targetValue.Type().FieldByName(tagConfig.Name)
+					if ok {
+						err := validateFieldValue(fieldName, fieldValue)
+						if err != nil {
+							errs = append(errs, fmt.Errorf("%w for %s %v", ErrValidationFailed, fieldName.Name, fieldValue))
+						}
+					}
 				}
 			}
 			if found {

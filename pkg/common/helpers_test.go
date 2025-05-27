@@ -36,8 +36,14 @@ type Port1Payload struct {
 	Ttf       *time.Duration `json:"satellites" validate:"gte=0,lte=27"`
 }
 
+type Port2Payload struct {
+	Time   uint32 `json:"time"`
+	Power  uint16 `json:"power"`
+	Sensor uint16 `json:"sensor"`
+}
+
 func TestDecode(t *testing.T) {
-	config := PayloadConfig{
+	fieldConfig := PayloadConfig{
 		Fields: []FieldConfig{
 			{Name: "Moving", Start: 0, Length: 1},
 			{Name: "Latitude", Start: 1, Length: 4, Transform: func(v any) any {
@@ -60,6 +66,15 @@ func TestDecode(t *testing.T) {
 		TargetType: reflect.TypeOf(Port1Payload{}),
 	}
 
+	tagConfig := PayloadConfig{
+		Tags: []TagConfig{
+			{Name: "Time", Tag: 0x00},
+			{Name: "Power", Tag: 0x01, Optional: true},
+			{Name: "Sensor", Tag: 0x02, Optional: true},
+		},
+		TargetType: reflect.TypeOf(Port2Payload{}),
+	}
+
 	tests := []struct {
 		payload     string
 		config      PayloadConfig
@@ -68,7 +83,7 @@ func TestDecode(t *testing.T) {
 	}{
 		{
 			payload: "8002cdcd1300744f5e166018040b14341a",
-			config:  config,
+			config:  fieldConfig,
 			expected: Port1Payload{
 				Moving:    false,
 				Latitude:  47.041811,
@@ -84,15 +99,36 @@ func TestDecode(t *testing.T) {
 		},
 		{
 			payload:     "8002cdcd1300744f5e166018",
-			config:      config,
+			config:      fieldConfig,
 			expected:    nil,
 			expectedErr: "field out of bounds",
 		},
 		{
 			payload:     "8002cdcd1300744f5e166018040b14341afd",
-			config:      config,
+			config:      fieldConfig,
 			expected:    nil,
 			expectedErr: "unsupported field type: time.Duration",
+		},
+		{
+			payload: "ffffff0004386d438001020f320202088b",
+			config:  tagConfig,
+			expected: Port2Payload{
+				Time:   946684800,
+				Power:  3890,
+				Sensor: 2187,
+			},
+		},
+		{
+			payload:     "ffffff030100",
+			config:      tagConfig,
+			expected:    nil,
+			expectedErr: "unknown tag 3",
+		},
+		{
+			payload:     "ffffff010200",
+			config:      tagConfig,
+			expected:    nil,
+			expectedErr: "field out of bounds",
 		},
 	}
 

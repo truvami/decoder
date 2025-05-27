@@ -37,7 +37,7 @@ type Port151Payload struct {
 	LocalizationIntervalWhileSteady      *uint16  `json:"steadyInterval" validate:"gte=120,lte=86400"`
 	AccelerometerWakeupThreshold         *uint16  `json:"accelerometerWakeupThreshold" validate:"gte=10,lte=8000"`
 	AccelerometerDelay                   *uint16  `json:"accelerometerDelay" validate:"gte=1000,lte=10000"`
-	HeartbeatInterval                    *uint8   `json:"heartbeatInterval" validate:"gte=300,lte=604800"`
+	HeartbeatInterval                    *uint8   `json:"heartbeatInterval" validate:"gte=0,lte=168"`
 	AdvertisementFirmwareUpgradeInterval *uint8   `json:"advertisementFirmwareUpgradeInterval" validate:"gte=1,lte=86400"`
 	Battery                              *float32 `json:"battery" validate:"gte=1,lte=5"`
 	FirmwareHash                         *string  `json:"firmwareHash"`
