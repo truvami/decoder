@@ -69,32 +69,28 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 		}
 		return common.PayloadConfig{
 			Tags: []common.TagConfig{
+				{Name: "FirmwareUpgrade", Tag: 0x40, Optional: true, Feature: []decoder.Feature{decoder.FeatureConfig}, Transform: func(v any) any {
+					return (v.([]byte)[0] & 0x01) != 0
+				}},
 				{Name: "GnssEnabled", Tag: 0x40, Optional: true, Feature: []decoder.Feature{decoder.FeatureConfig}, Transform: func(v any) any {
-					// bit 1: GNSS_ENABLE
-					return (v.([]byte)[0] & 0x02) != 0
+					return ((v.([]byte)[0] >> 1) & 0x01) != 0
 				}},
 				{Name: "WiFiEnabled", Tag: 0x40, Optional: true, Feature: []decoder.Feature{decoder.FeatureConfig}, Transform: func(v any) any {
-					// bit 2: WIFI_ENABLE
-					return (v.([]byte)[0] & 0x04) != 0
+					return ((v.([]byte)[0] >> 2) & 0x01) != 0
 				}},
 				{Name: "AccelerometerEnabled", Tag: 0x40, Optional: true, Feature: []decoder.Feature{decoder.FeatureConfig}, Transform: func(v any) any {
-					// bit 3: ACCELERATION_ENABLE
-					return (v.([]byte)[0] & 0x08) != 0
+					return ((v.([]byte)[0] >> 3) & 0x01) != 0
 				}},
 				{Name: "LocalizationIntervalWhileMoving", Tag: 0x41, Optional: true, Feature: []decoder.Feature{decoder.FeatureConfig}, Transform: func(v any) any {
-					// data 0: MOVING_INTERVAL
 					return uint16((common.BytesToUint32(v.([]byte)) >> 16) & 0xffff)
 				}},
 				{Name: "LocalizationIntervalWhileSteady", Tag: 0x41, Optional: true, Feature: []decoder.Feature{decoder.FeatureConfig}, Transform: func(v any) any {
-					// data 1: STEADY_INTERVAL
 					return uint16(common.BytesToUint32(v.([]byte)) & 0xffff)
 				}},
 				{Name: "AccelerometerWakeupThreshold", Tag: 0x42, Optional: true, Feature: []decoder.Feature{decoder.FeatureConfig}, Transform: func(v any) any {
-					// data 0: WAKEUP_THRESHOLD
 					return uint16((common.BytesToUint32(v.([]byte)) >> 16) & 0xffff)
 				}},
 				{Name: "AccelerometerDelay", Tag: 0x42, Optional: true, Feature: []decoder.Feature{decoder.FeatureConfig}, Transform: func(v any) any {
-					// data 1: WAKEUP_DELAY
 					return uint16(common.BytesToUint32(v.([]byte)) & 0xffff)
 				}},
 				{Name: "HeartbeatInterval", Tag: 0x43, Optional: true},
@@ -103,6 +99,12 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 					return float32(common.BytesToUint16(v.([]byte))) / 1000
 				}},
 				{Name: "FirmwareHash", Tag: 0x46, Optional: true, Hex: true},
+				{Name: "RotationInvert", Tag: 0x47, Optional: true, Transform: func(v any) any {
+					return (v.([]byte)[0] & 0x01) != 0
+				}},
+				{Name: "RotationConfirmed", Tag: 0x47, Optional: true, Transform: func(v any) any {
+					return ((v.([]byte)[0] >> 1) & 0x01) != 0
+				}},
 				{Name: "ResetCount", Tag: 0x49, Optional: true},
 				{Name: "ResetCause", Tag: 0x4a, Optional: true},
 				{Name: "GnssScans", Tag: 0x4b, Optional: true, Transform: func(v any) any {

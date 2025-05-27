@@ -23,6 +23,10 @@ import (
 // | 44  | 1    | firmware upgrade advertisement                 | uint8, s   |
 // | 45  | 2    | battery voltage                                | uint16, mv |
 // | 46  | 4    | firmware hash                                  | byte[4]    |
+// | 47  | 1    | rotation flags                                 | byte       |
+// |     |      | reserved                                       | uint6      |
+// |     |      | rotation invert                                | uint1      |
+// |     |      | rotation confirmed                             | uint1      |
 // | 49  | 2    | reset count since flash erase                  | uint16     |
 // | 4a  | 4    | reset cause register value                     | uint32     |
 // | 4b  | 4    | gnss scans since reset                         | uint16     |
@@ -41,6 +45,8 @@ type Port151Payload struct {
 	AdvertisementFirmwareUpgradeInterval *uint8   `json:"advertisementFirmwareUpgradeInterval" validate:"gte=1,lte=86400"`
 	Battery                              *float32 `json:"battery" validate:"gte=1,lte=5"`
 	FirmwareHash                         *string  `json:"firmwareHash"`
+	RotationInvert                       *bool    `json:"rotationInvert"`
+	RotationConfirmed                    *bool    `json:"rotationConfirmed"`
 	ResetCount                           *uint16  `json:"resetCount"`
 	ResetCause                           *uint32  `json:"resetCause"`
 	GnssScans                            *uint16  `json:"gnssScans"`
