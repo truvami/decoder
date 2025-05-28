@@ -69,36 +69,36 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 		}
 		return common.PayloadConfig{
 			Tags: []common.TagConfig{
-				{Name: "AccelerometerEnabled", Tag: 0x40, Optional: true, Feature: []decoder.Feature{decoder.FeatureConfig}, Transform: func(v any) any {
+				{Name: "AccelerometerEnabled", Tag: 0x40, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
 					return ((v.([]byte)[0] >> 3) & 0x01) != 0
 				}},
-				{Name: "WifiEnabled", Tag: 0x40, Optional: true, Feature: []decoder.Feature{decoder.FeatureConfig}, Transform: func(v any) any {
+				{Name: "WifiEnabled", Tag: 0x40, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
 					return ((v.([]byte)[0] >> 2) & 0x01) != 0
 				}},
-				{Name: "GnssEnabled", Tag: 0x40, Optional: true, Feature: []decoder.Feature{decoder.FeatureConfig}, Transform: func(v any) any {
+				{Name: "GnssEnabled", Tag: 0x40, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
 					return ((v.([]byte)[0] >> 1) & 0x01) != 0
 				}},
-				{Name: "FirmwareUpgrade", Tag: 0x40, Optional: true, Feature: []decoder.Feature{decoder.FeatureConfig}, Transform: func(v any) any {
+				{Name: "FirmwareUpgrade", Tag: 0x40, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
 					return (v.([]byte)[0] & 0x01) != 0
 				}},
-				{Name: "LocalizationIntervalWhileMoving", Tag: 0x41, Optional: true, Feature: []decoder.Feature{decoder.FeatureConfig}, Transform: func(v any) any {
+				{Name: "LocalizationIntervalWhileMoving", Tag: 0x41, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
 					return uint16((common.BytesToUint32(v.([]byte)) >> 16) & 0xffff)
 				}},
-				{Name: "LocalizationIntervalWhileSteady", Tag: 0x41, Optional: true, Feature: []decoder.Feature{decoder.FeatureConfig}, Transform: func(v any) any {
+				{Name: "LocalizationIntervalWhileSteady", Tag: 0x41, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
 					return uint16(common.BytesToUint32(v.([]byte)) & 0xffff)
 				}},
-				{Name: "AccelerometerWakeupThreshold", Tag: 0x42, Optional: true, Feature: []decoder.Feature{decoder.FeatureConfig}, Transform: func(v any) any {
+				{Name: "AccelerometerWakeupThreshold", Tag: 0x42, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
 					return uint16((common.BytesToUint32(v.([]byte)) >> 16) & 0xffff)
 				}},
-				{Name: "AccelerometerDelay", Tag: 0x42, Optional: true, Feature: []decoder.Feature{decoder.FeatureConfig}, Transform: func(v any) any {
+				{Name: "AccelerometerDelay", Tag: 0x42, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
 					return uint16(common.BytesToUint32(v.([]byte)) & 0xffff)
 				}},
 				{Name: "HeartbeatInterval", Tag: 0x43, Optional: true},
 				{Name: "AdvertisementFirmwareUpgradeInterval", Tag: 0x44, Optional: true},
-				{Name: "Battery", Tag: 0x45, Optional: true, Feature: []decoder.Feature{decoder.FeatureBattery}, Transform: func(v any) any {
+				{Name: "Battery", Tag: 0x45, Optional: true, Feature: decoder.FeatureBattery, Transform: func(v any) any {
 					return float32(common.BytesToUint16(v.([]byte))) / 1000
 				}},
-				{Name: "FirmwareHash", Tag: 0x46, Optional: true, Hex: true},
+				{Name: "FirmwareHash", Tag: 0x46, Optional: true, Feature: decoder.FeatureFirmwareVersion, Hex: true},
 				{Name: "RotationInvert", Tag: 0x47, Optional: true, Transform: func(v any) any {
 					return (v.([]byte)[0] & 0x01) != 0
 				}},
