@@ -23,6 +23,61 @@ func HexStringToBytes(hexString string) ([]byte, error) {
 	return bytes, nil
 }
 
+func HexNullPad(payload *string, config *PayloadConfig) string {
+	var requiredBits = 0
+	for _, field := range config.Fields {
+		if !field.Optional {
+			requiredBits = (field.Start + field.Length) * 8
+		}
+	}
+	var providedBits = len(*payload) * 4
+
+	if providedBits < requiredBits {
+		var paddingBits = (requiredBits - providedBits) / 4
+		*payload = strings.Repeat("0", paddingBits) + *payload
+	}
+	return *payload
+}
+
+func ValidateLength(payload *string, config *PayloadConfig) error {
+	var payloadLength = len(*payload) / 2
+
+	if len(config.Tags) != 0 {
+		var minLength = 3
+		if payloadLength < minLength {
+			return WrapErrorWithMessage(ErrInvalidPayloadLength, ErrPayloadTooShort, fmt.Sprintf("payload length %d is less than minimum required length %d", payloadLength, minLength))
+		} else {
+			return nil
+		}
+	}
+
+	var minLength = 0
+	for _, field := range config.Fields {
+		if !field.Optional {
+			minLength = field.Start + field.Length
+		}
+	}
+
+	var maxLength = 0
+	for _, field := range config.Fields {
+		if field.Length == -1 {
+			maxLength = 50
+		} else {
+			maxLength = field.Start + field.Length
+		}
+	}
+
+	if payloadLength < minLength {
+		return WrapErrorWithMessage(ErrInvalidPayloadLength, ErrPayloadTooShort, fmt.Sprintf("payload length %d is less than minimum required length %d", payloadLength, minLength))
+	}
+
+	if payloadLength > maxLength {
+		return WrapErrorWithMessage(ErrInvalidPayloadLength, ErrPayloadTooLong, fmt.Sprintf("payload length %d is greater than maximum allowed length %d", payloadLength, maxLength))
+	}
+
+	return nil
+}
+
 func extractFieldValue(payloadBytes []byte, start int, length int, optional bool, hexadecimal bool) (any, error) {
 	if length == -1 {
 		if start >= len(payloadBytes) && !optional {
@@ -106,25 +161,13 @@ func validateFieldValue(field reflect.StructField, fieldValue reflect.Value) err
 	return validator.New().Struct(structValue.Interface())
 }
 
-func UnwrapError(err error) []error {
-	var errs []error = []error{}
-	if err, ok := err.(interface{ Unwrap() []error }); ok {
-		errs = append(errs, err.Unwrap()...)
-	}
-	return errs
-}
-
-// Decode decodes the payload based on the provided configuration and populates the target struct
 func Decode(payloadHex *string, config *PayloadConfig) (any, error) {
-	// Convert hex payload to bytes
 	payloadBytes, err := HexStringToBytes(*payloadHex)
 	if err != nil {
 		return nil, err
 	}
 
-	// Create an instance of the target struct
 	targetValue := reflect.New(config.TargetType).Elem()
-
 	errs := []error{}
 
 	if len(config.Tags) != 0 {
@@ -215,65 +258,73 @@ func Decode(payloadHex *string, config *PayloadConfig) (any, error) {
 	return targetValue.Interface(), errors.Join(errs...)
 }
 
-func HexNullPad(payload *string, config *PayloadConfig) string {
-	var requiredBits = 0
-	for _, field := range config.Fields {
-		if !field.Optional {
-			requiredBits = (field.Start + field.Length) * 8
-		}
-	}
-	var providedBits = len(*payload) * 4
+func insertFieldBytes(fieldValue reflect.Value, length int, transform func(v any) any) (bool, []byte, error) {
+	var null bool = false
+	var set bool = false
+	var bytes []byte
+	var err error = nil
 
-	if providedBits < requiredBits {
-		var paddingBits = (requiredBits - providedBits) / 4
-		*payload = strings.Repeat("0", paddingBits) + *payload
-	}
-	return *payload
-}
-
-func ValidateLength(payload *string, config *PayloadConfig) error {
-	var payloadLength = len(*payload) / 2
-
-	if len(config.Tags) != 0 {
-		var minLength = 3
-		if payloadLength < minLength {
-			return WrapErrorWithMessage(ErrInvalidPayloadLength, ErrPayloadTooShort, fmt.Sprintf("payload length %d is less than minimum required length %d", payloadLength, minLength))
+	if fieldValue.Kind() == reflect.Ptr {
+		if fieldValue.IsNil() {
+			null = true
+			bytes = make([]byte, length)
 		} else {
-			return nil
+			fieldValue = fieldValue.Elem()
 		}
 	}
 
-	var minLength = 0
-	for _, field := range config.Fields {
-		if !field.Optional {
-			minLength = field.Start + field.Length
+	if !null {
+		switch fieldValue.Type() {
+		case reflect.TypeOf(bool(false)):
+			set = true
+			bytes = BoolToBytes(fieldValue.Bool(), 0)
+		case reflect.TypeOf(int8(0)), reflect.TypeOf(int16(0)), reflect.TypeOf(int32(0)), reflect.TypeOf(int64(0)):
+			value := fieldValue.Int()
+			set = value != 0
+			bytes = IntToBytes(value, length)
+		case reflect.TypeOf(uint8(0)), reflect.TypeOf(uint16(0)), reflect.TypeOf(uint32(0)), reflect.TypeOf(uint64(0)):
+			value := fieldValue.Uint()
+			set = value != 0
+			bytes = UintToBytes(value, length)
+		case reflect.TypeOf(float32(0)):
+			value := float32(fieldValue.Float())
+			set = value != 0
+			bytes = Float32ToBytes(value)
+		case reflect.TypeOf(float64(0)):
+			value := fieldValue.Float()
+			set = value != 0
+			bytes = Float64ToBytes(value)
+		case reflect.TypeOf([]byte{}):
+			value := fieldValue.Bytes()
+			set = len(value) != 0
+			bytes = value
+		case reflect.TypeOf(string("")):
+			value := fieldValue.String()
+			set = len(value) != 0
+			bytes, err = HexStringToBytes(value)
+		case reflect.TypeOf(time.Time{}):
+			value := fieldValue.Interface().(time.Time).Unix()
+			set = value != 0
+			bytes = IntToBytes(value, int(unsafe.Sizeof(value)))
+		case reflect.TypeOf(time.Duration(0)):
+			value := fieldValue.Interface().(time.Duration).Nanoseconds()
+			set = value != 0
+			bytes = IntToBytes(value, int(unsafe.Sizeof(value)))
+		default:
+			err = fmt.Errorf("unsupported field type: %s", fieldValue.Kind())
 		}
 	}
 
-	var maxLength = 0
-	for _, field := range config.Fields {
-		if field.Length == -1 {
-			maxLength = 50
-		} else {
-			maxLength = field.Start + field.Length
-		}
+	if !null && transform != nil && err == nil {
+		bytes = transform(bytes).([]byte)
 	}
 
-	if payloadLength < minLength {
-		return WrapErrorWithMessage(ErrInvalidPayloadLength, ErrPayloadTooShort, fmt.Sprintf("payload length %d is less than minimum required length %d", payloadLength, minLength))
-	}
-
-	if payloadLength > maxLength {
-		return WrapErrorWithMessage(ErrInvalidPayloadLength, ErrPayloadTooLong, fmt.Sprintf("payload length %d is greater than maximum allowed length %d", payloadLength, maxLength))
-	}
-
-	return nil
+	return set, bytes, err
 }
 
 func Encode(data any, config PayloadConfig) (string, error) {
 	v := reflect.ValueOf(data)
 
-	// Validate input data is a struct
 	if v.Kind() != reflect.Struct {
 		return "", fmt.Errorf("data must be a struct")
 	}
@@ -286,78 +337,25 @@ func Encode(data any, config PayloadConfig) (string, error) {
 	}
 	payload := make([]byte, maxLength)
 
-	// Encode fields into the payload
 	var actualLength int
 	for _, field := range config.Fields {
 		fieldValue := v.FieldByName(field.Name)
 
-		// Check if the field exists
 		if !fieldValue.IsValid() {
 			return "", fmt.Errorf("field %s not found in data", field.Name)
 		}
 
-		var unset bool = false
-		var fieldBytes []byte
-
-		if fieldValue.Kind() == reflect.Ptr {
-			if fieldValue.IsNil() {
-				unset = true
-				fieldBytes = make([]byte, field.Length)
-			} else {
-				fieldValue = fieldValue.Elem()
-			}
+		set, bytes, err := insertFieldBytes(fieldValue, field.Length, field.Transform)
+		if err != nil {
+			return "", err
 		}
 
-		if !unset {
-			switch fieldValue.Type() {
-			case reflect.TypeOf(bool(false)):
-				fieldBytes = BoolToBytes(fieldValue.Bool(), 0)
-			case reflect.TypeOf([]byte{}):
-				value := fieldValue.Bytes()
-				unset = len(value) == 0
-				fieldBytes = value
-			case reflect.TypeOf(string("")):
-				value, err := HexStringToBytes(fieldValue.String())
-				if err != nil {
-					panic(err)
-				}
-				unset = len(value) == 0
-				fieldBytes = value
-			case reflect.TypeOf(uint(0)), reflect.TypeOf(uint8(0)), reflect.TypeOf(uint16(0)), reflect.TypeOf(uint32(0)), reflect.TypeOf(uint64(0)):
-				value := fieldValue.Uint()
-				unset = value == 0
-				fieldBytes = UintToBytes(value, field.Length)
-			case reflect.TypeOf(int(0)), reflect.TypeOf(int8(0)), reflect.TypeOf(int16(0)), reflect.TypeOf(int32(0)), reflect.TypeOf(int64(0)):
-				value := fieldValue.Int()
-				unset = value == 0
-				fieldBytes = IntToBytes(value, field.Length)
-			case reflect.TypeOf(float32(0)):
-				fieldBytes = Float32ToBytes(float32(fieldValue.Float()))
-			case reflect.TypeOf(float64(0)):
-				fieldBytes = Float64ToBytes(fieldValue.Float())
-			case reflect.TypeOf(time.Duration(0)):
-				duration := fieldValue.Interface().(time.Duration).Nanoseconds()
-				fieldBytes = IntToBytes(duration, int(unsafe.Sizeof(duration)))
-			case reflect.TypeOf(time.Time{}):
-				timestamp := fieldValue.Interface().(time.Time).Unix()
-				fieldBytes = IntToBytes(timestamp, int(unsafe.Sizeof(timestamp)))
-			default:
-				return "", fmt.Errorf("unsupported field type: %s", fieldValue.Kind())
-			}
-		}
-
-		// Apply the transform function if provided
-		if field.Transform != nil {
-			fieldBytes = field.Transform(fieldBytes).([]byte)
-		}
-
-		if !unset || !field.Optional {
-			copy(payload[field.Start:field.Start+field.Length], fieldBytes)
+		if set || !field.Optional {
+			copy(payload[field.Start:field.Start+field.Length], bytes)
 			actualLength += field.Length
 		}
 	}
 
-	// Convert the payload to a hexadecimal string
 	return hex.EncodeToString(payload[0:actualLength]), nil
 }
 
