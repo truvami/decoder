@@ -114,8 +114,8 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 					return uint16(common.BytesToUint32(v.([]byte)) & 0xffff)
 				}},
 			},
-			Features:   []decoder.Feature{decoder.FeatureConfig},
 			TargetType: reflect.TypeOf(Port151Payload{}),
+			Features:   []decoder.Feature{},
 		}, nil
 	case 152:
 		var version uint8 = payload[0]

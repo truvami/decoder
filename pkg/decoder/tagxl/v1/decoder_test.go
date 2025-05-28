@@ -553,6 +553,10 @@ func TestFeatures(t *testing.T) {
 			payload: "4c2a0940010f4104012c1c204204012c05dc43010644011e45020d4e4604f6c7d8104902000a4a0400000002",
 		},
 		{
+			port:    151,
+			payload: "4c2d0a40010b410402581c204204012c05dc43010644011e45020d6c4604a25b545547010249020003",
+		},
+		{
 			payload: "010b0066acbcf0000000000756",
 			port:    152,
 		},
@@ -712,6 +716,16 @@ func TestFeatures(t *testing.T) {
 				config.GetBatchSize()
 				config.GetBufferSize()
 				config.GetDataRate()
+			}
+			if decodedPayload.Is(decoder.FeatureFirmwareVersion) {
+				firmwareVersion, ok := decodedPayload.Data.(decoder.UplinkFeatureFirmwareVersion)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureFirmwareVersion, got %T", decodedPayload)
+				}
+				firmwareVersion.GetFirmwareVersion()
+				if firmwareVersion.GetFirmwareHash() == nil {
+					t.Fatalf("expected non nil firmware hash")
+				}
 			}
 			if decodedPayload.Is(decoder.FeatureRotationState) {
 				rotationState, ok := decodedPayload.Data.(decoder.UplinkFeatureRotationState)

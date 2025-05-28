@@ -2348,7 +2348,6 @@ func TestFeatures(t *testing.T) {
 					t.Fatalf("expected non empty hardware version")
 				}
 			}
-
 			if decodedPayload.Is(decoder.FeatureResetReason) {
 				resetReason, ok := decodedPayload.Data.(decoder.UplinkFeatureResetReason)
 				if !ok {
