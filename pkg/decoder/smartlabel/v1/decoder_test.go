@@ -683,24 +683,6 @@ func TestMarshal(t *testing.T) {
 	}
 }
 
-func TestWithAutoPadding(t *testing.T) {
-	middleware := loracloud.NewLoracloudMiddleware("access_token")
-
-	decoder := NewSmartLabelv1Decoder(
-		middleware,
-		WithAutoPadding(true),
-	)
-
-	// Type assert to access the internal field
-	if d, ok := decoder.(*SmartLabelv1Decoder); ok {
-		if !d.autoPadding {
-			t.Error("expected autoPadding to be true")
-		}
-	} else {
-		t.Error("failed to type assert decoder")
-	}
-}
-
 func TestWithFCount(t *testing.T) {
 	decoder := NewSmartLabelv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"), WithFCount(123))
 

@@ -32,11 +32,7 @@ var tagxlCmd = &cobra.Command{
 		}
 
 		logger.Logger.Debug("initializing tagxl decoder")
-		d := tagxl.NewTagXLv1Decoder(
-			loracloud.NewLoracloudMiddleware(accessToken),
-			tagxl.WithAutoPadding(AutoPadding),
-			tagxl.WithSkipValidation(SkipValidation),
-		)
+		d := tagxl.NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware(accessToken), tagxl.WithSkipValidation(SkipValidation))
 
 		port, err := strconv.Atoi(args[0])
 		if err != nil {

@@ -12,7 +12,6 @@ import (
 type Option func(*NomadXLv1Decoder)
 
 type NomadXLv1Decoder struct {
-	autoPadding    bool
 	skipValidation bool
 }
 
@@ -24,12 +23,6 @@ func NewNomadXLv1Decoder(options ...Option) decoder.Decoder {
 	}
 
 	return nomadXLv1Decoder
-}
-
-func WithAutoPadding(autoPadding bool) Option {
-	return func(t *NomadXLv1Decoder) {
-		t.autoPadding = autoPadding
-	}
 }
 
 func WithSkipValidation(skipValidation bool) Option {
@@ -84,10 +77,6 @@ func (t NomadXLv1Decoder) Decode(data string, port uint8, devEui string) (*decod
 	config, err := t.getConfig(port)
 	if err != nil {
 		return nil, err
-	}
-
-	if t.autoPadding {
-		data = common.HexNullPad(&data, &config)
 	}
 
 	if !t.skipValidation {

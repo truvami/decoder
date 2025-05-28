@@ -8,7 +8,6 @@ import (
 	"unsafe"
 
 	"reflect"
-	"strings"
 	"time"
 
 	"github.com/go-playground/validator"
@@ -21,22 +20,6 @@ func HexStringToBytes(hexString string) ([]byte, error) {
 	}
 
 	return bytes, nil
-}
-
-func HexNullPad(payload *string, config *PayloadConfig) string {
-	var requiredBits = 0
-	for _, field := range config.Fields {
-		if !field.Optional {
-			requiredBits = (field.Start + field.Length) * 8
-		}
-	}
-	var providedBits = len(*payload) * 4
-
-	if providedBits < requiredBits {
-		var paddingBits = (requiredBits - providedBits) / 4
-		*payload = strings.Repeat("0", paddingBits) + *payload
-	}
-	return *payload
 }
 
 func ValidateLength(payload *string, config *PayloadConfig) error {

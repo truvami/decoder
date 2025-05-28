@@ -13,7 +13,6 @@ import (
 type Option func(*TagSLv1Decoder)
 
 type TagSLv1Decoder struct {
-	autoPadding    bool
 	skipValidation bool
 }
 
@@ -25,12 +24,6 @@ func NewTagSLv1Decoder(options ...Option) decoder.Decoder {
 	}
 
 	return tagSLv1Decoder
-}
-
-func WithAutoPadding(autoPadding bool) Option {
-	return func(t *TagSLv1Decoder) {
-		t.autoPadding = autoPadding
-	}
 }
 
 func WithSkipValidation(skipValidation bool) Option {
@@ -412,10 +405,6 @@ func (t TagSLv1Decoder) Decode(data string, port uint8, devEui string) (*decoder
 	config, err := t.getConfig(port)
 	if err != nil {
 		return nil, err
-	}
-
-	if t.autoPadding {
-		data = common.HexNullPad(&data, &config)
 	}
 
 	if !t.skipValidation {

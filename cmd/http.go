@@ -70,31 +70,11 @@ var httpCmd = &cobra.Command{
 		}
 
 		var decoders []decoderEndpoint = []decoderEndpoint{
-			{
-				"tagxl/v1",
-				tagxlDecoder.NewTagXLv1Decoder(
-					loracloud.NewLoracloudMiddleware(accessToken),
-					tagxlDecoder.WithAutoPadding(AutoPadding),
-					tagxlDecoder.WithSkipValidation(SkipValidation),
-				),
-			},
-			{"tagsl/v1", tagslDecoder.NewTagSLv1Decoder(
-				tagslDecoder.WithAutoPadding(AutoPadding),
-				tagslDecoder.WithSkipValidation(SkipValidation),
-			)},
-			{"nomadxs/v1", nomadxsDecoder.NewNomadXSv1Decoder(
-				nomadxsDecoder.WithAutoPadding(AutoPadding),
-				nomadxsDecoder.WithSkipValidation(SkipValidation),
-			)},
-			{"nomadxl/v1", nomadxlDecoder.NewNomadXLv1Decoder(
-				nomadxlDecoder.WithAutoPadding(AutoPadding),
-				nomadxlDecoder.WithSkipValidation(SkipValidation),
-			)},
-			{"smartlabel/v1", smartlabelDecoder.NewSmartLabelv1Decoder(
-				loracloud.NewLoracloudMiddleware(accessToken),
-				smartlabelDecoder.WithAutoPadding(AutoPadding),
-				smartlabelDecoder.WithSkipValidation(SkipValidation),
-			)},
+			{"tagxl/v1", tagxlDecoder.NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware(accessToken), tagxlDecoder.WithSkipValidation(SkipValidation))},
+			{"tagsl/v1", tagslDecoder.NewTagSLv1Decoder(tagslDecoder.WithSkipValidation(SkipValidation))},
+			{"nomadxs/v1", nomadxsDecoder.NewNomadXSv1Decoder(nomadxsDecoder.WithSkipValidation(SkipValidation))},
+			{"nomadxl/v1", nomadxlDecoder.NewNomadXLv1Decoder(nomadxlDecoder.WithSkipValidation(SkipValidation))},
+			{"smartlabel/v1", smartlabelDecoder.NewSmartLabelv1Decoder(loracloud.NewLoracloudMiddleware(accessToken), smartlabelDecoder.WithSkipValidation(SkipValidation))},
 		}
 
 		// add the decoders

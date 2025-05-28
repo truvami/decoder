@@ -14,7 +14,6 @@ type Option func(*TagXLv1Decoder)
 
 type TagXLv1Decoder struct {
 	loracloudMiddleware loracloud.LoracloudMiddleware
-	autoPadding         bool
 	skipValidation      bool
 	fCount              uint32
 }
@@ -29,12 +28,6 @@ func NewTagXLv1Decoder(loracloudMiddleware loracloud.LoracloudMiddleware, option
 	}
 
 	return tagXLv1Decoder
-}
-
-func WithAutoPadding(autoPadding bool) Option {
-	return func(t *TagXLv1Decoder) {
-		t.autoPadding = autoPadding
-	}
 }
 
 func WithSkipValidation(skipValidation bool) Option {
@@ -228,10 +221,6 @@ func (t TagXLv1Decoder) Decode(data string, port uint8, devEui string) (*decoder
 		config, err := t.getConfig(port, bytes)
 		if err != nil {
 			return nil, err
-		}
-
-		if t.autoPadding {
-			data = common.HexNullPad(&data, &config)
 		}
 
 		if !t.skipValidation {
