@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/truvami/decoder/pkg/common"
 	"github.com/truvami/decoder/pkg/decoder"
 )
 
@@ -133,8 +134,12 @@ func (p Port4Payload) GetDataRate() *decoder.DataRate {
 	return nil
 }
 
-func (p Port4Payload) GetFirmwareVersion() string {
-	return fmt.Sprintf("%d.%d.%d", p.FirmwareVersionMajor, p.FirmwareVersionMinor, p.FirmwareVersionPatch)
+func (p Port4Payload) GetFirmwareHash() *string {
+	return nil
+}
+
+func (p Port4Payload) GetFirmwareVersion() *string {
+	return common.StringPtr(fmt.Sprintf("%d.%d.%d", p.FirmwareVersionMajor, p.FirmwareVersionMinor, p.FirmwareVersionPatch))
 }
 
 func (p Port4Payload) GetHardwareVersion() string {

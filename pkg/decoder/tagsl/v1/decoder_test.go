@@ -2334,9 +2334,10 @@ func TestFeatures(t *testing.T) {
 				if !ok {
 					t.Fatalf("expected UplinkFeatureFirmwareVersion, got %T", decodedPayload)
 				}
-				if firmwareVersion.GetFirmwareVersion() == "" {
-					t.Fatalf("expected non empty firmware version")
+				if firmwareVersion.GetFirmwareVersion() == nil {
+					t.Fatalf("expected non nil firmware version")
 				}
+				firmwareVersion.GetFirmwareHash()
 			}
 			if decodedPayload.Is(decoder.FeatureHardwareVersion) {
 				hardwareVersion, ok := decodedPayload.Data.(decoder.UplinkFeatureHardwareVersion)
@@ -2347,7 +2348,6 @@ func TestFeatures(t *testing.T) {
 					t.Fatalf("expected non empty hardware version")
 				}
 			}
-
 			if decodedPayload.Is(decoder.FeatureResetReason) {
 				resetReason, ok := decodedPayload.Data.(decoder.UplinkFeatureResetReason)
 				if !ok {

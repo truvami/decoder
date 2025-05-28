@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/truvami/decoder/pkg/common"
 	"github.com/truvami/decoder/pkg/decoder"
 )
 
@@ -171,14 +172,16 @@ func (p Port4Payload) GetDataRate() *decoder.DataRate {
 	return nil
 }
 
-// GetHardwareVersion implements decoder.UplinkFeatureHardwareVersion.
-func (p Port4Payload) GetHardwareVersion() string {
-	return fmt.Sprintf("%d.%d", p.HardwareVersionType, p.HardwareVersionRevision)
+func (p Port4Payload) GetFirmwareHash() *string {
+	return nil
 }
 
-// GetFirmwareVersion implements decoder.UplinkFeatureFirmwareVersion.
-func (p Port4Payload) GetFirmwareVersion() string {
-	return fmt.Sprintf("%d.%d.%d", p.FirmwareVersionMajor, p.FirmwareVersionMinor, p.FirmwareVersionPatch)
+func (p Port4Payload) GetFirmwareVersion() *string {
+	return common.StringPtr(fmt.Sprintf("%d.%d.%d", p.FirmwareVersionMajor, p.FirmwareVersionMinor, p.FirmwareVersionPatch))
+}
+
+func (p Port4Payload) GetHardwareVersion() string {
+	return fmt.Sprintf("%d.%d", p.HardwareVersionType, p.HardwareVersionRevision)
 }
 
 func (p Port4Payload) IsMoving() bool {
