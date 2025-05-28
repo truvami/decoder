@@ -69,7 +69,6 @@ func TestDecode(t *testing.T) {
 		payload     string
 		port        uint8
 		devEui      string
-		autoPadding bool
 		expected    any
 		expectedErr string
 	}{
@@ -77,7 +76,6 @@ func TestDecode(t *testing.T) {
 			port:        0,
 			payload:     "00",
 			devEui:      "",
-			autoPadding: false,
 			expected:    nil,
 			expectedErr: "port 0 not supported",
 		},
@@ -319,17 +317,15 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			port:        192,
-			payload:     "87821f50490200b520fbe977844d222a3a14a89293956245cc75a9ca1bbc25ddf658542909",
-			devEui:      "10CE45FFFE00C7EC",
-			autoPadding: false,
-			expected:    &exampleResponse,
+			port:     192,
+			payload:  "87821f50490200b520fbe977844d222a3a14a89293956245cc75a9ca1bbc25ddf658542909",
+			devEui:   "10CE45FFFE00C7EC",
+			expected: &exampleResponse,
 		},
 		{
 			port:        192,
 			payload:     "87821f50490200b520fbe977844d222a3a14a89293956245cc75a9ca1bbc25ddf658542909",
 			devEui:      "10CE45FFFE00C7ED",
-			autoPadding: false,
 			expected:    &exampleResponse,
 			expectedErr: "",
 		},
@@ -448,7 +444,7 @@ func TestDecode(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestPort%vWith%v", test.port, test.payload), func(t *testing.T) {
-			decoder := NewTagXLv1Decoder(middleware, WithAutoPadding(test.autoPadding), WithFCount(1))
+			decoder := NewTagXLv1Decoder(middleware, WithFCount(1))
 			got, err := decoder.Decode(test.payload, test.port, test.devEui)
 
 			if err == nil && len(test.expectedErr) != 0 {

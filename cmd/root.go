@@ -24,7 +24,6 @@ var banner = []string{
 
 var Debug bool
 var Json bool
-var AutoPadding bool
 var SkipValidation bool
 
 func init() {
@@ -38,12 +37,6 @@ func init() {
 	err = viper.BindPFlag("json", rootCmd.PersistentFlags().Lookup("json"))
 	if err != nil {
 		logger.Logger.Error("error while binding json flag", zap.Error(err))
-	}
-
-	rootCmd.PersistentFlags().BoolVarP(&AutoPadding, "auto-padding", "", false, "Enable automatic padding of payload. (default: \033[31mfalse\033[0m)\n\033[33mWarning:\033[0m this may lead to corrupted data.")
-	err = viper.BindPFlag("auto-padding", rootCmd.PersistentFlags().Lookup("auto-padding"))
-	if err != nil {
-		logger.Logger.Error("error while binding auto-padding flag", zap.Error(err))
 	}
 
 	rootCmd.PersistentFlags().BoolVarP(&SkipValidation, "skip-validation", "", false, "Skip length validation of payload. (default: \033[31mfalse\033[0m)")

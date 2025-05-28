@@ -44,3 +44,11 @@ func WrapError(parent error, child error) error {
 func WrapErrorWithMessage(parent error, child error, message string) error {
 	return fmt.Errorf("%s: %w: %w", message, parent, child)
 }
+
+func UnwrapError(err error) []error {
+	var errs []error = []error{}
+	if err, ok := err.(interface{ Unwrap() []error }); ok {
+		errs = append(errs, err.Unwrap()...)
+	}
+	return errs
+}

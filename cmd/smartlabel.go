@@ -22,11 +22,7 @@ var smartlabelCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		logger.Logger.Debug("initializing smartlabel decoder")
-		d := smartlabel.NewSmartLabelv1Decoder(
-			loracloud.NewLoracloudMiddleware("appEui"),
-			smartlabel.WithAutoPadding(AutoPadding),
-			smartlabel.WithSkipValidation(SkipValidation),
-		)
+		d := smartlabel.NewSmartLabelv1Decoder(loracloud.NewLoracloudMiddleware("appEui"), smartlabel.WithSkipValidation(SkipValidation))
 
 		port, err := strconv.Atoi(args[0])
 		if err != nil {

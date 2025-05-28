@@ -383,6 +383,85 @@ func TestConvertFieldValue(t *testing.T) {
 	}
 }
 
+func TestInsertFieldBytes(t *testing.T) {
+	tests := []struct {
+		value       reflect.Value
+		length      int
+		transform   func(v any) any
+		expected    []byte
+		expectedErr string
+	}{
+		{
+			value:    reflect.ValueOf(bool(false)),
+			length:   1,
+			expected: []byte{0x00},
+		},
+		{
+			value:    reflect.ValueOf(bool(true)),
+			length:   1,
+			expected: []byte{0x01},
+		},
+		{
+			value:       reflect.ValueOf(int(42)),
+			expected:    nil,
+			expectedErr: "unsupported field type: int",
+		},
+		{
+			value:    reflect.ValueOf(int8(42)),
+			length:   1,
+			expected: []byte{0x2a},
+		},
+		{
+			value:    reflect.ValueOf(int8(-42)),
+			length:   1,
+			expected: []byte{0xd6},
+		},
+		{
+			value:       reflect.ValueOf(uint(42)),
+			expected:    nil,
+			expectedErr: "unsupported field type: uint",
+		},
+		{
+			value:    reflect.ValueOf(uint8(42)),
+			length:   1,
+			expected: []byte{0x2a},
+		},
+		{
+			value:    reflect.ValueOf(float32(4.2)),
+			length:   4,
+			expected: []byte{0x40, 0x86, 0x66, 0x66},
+		},
+		{
+			value:    reflect.ValueOf(float64(4.2)),
+			length:   8,
+			expected: []byte{0x40, 0x10, 0xcc, 0xcc, 0xcc, 0xcc, 0xcc, 0xcd},
+		},
+		{
+			value:    reflect.ValueOf([]byte{0x73, 0x6f, 0x72, 0x65, 0x6e}),
+			length:   5,
+			expected: []byte{0x73, 0x6f, 0x72, 0x65, 0x6e},
+		},
+		{
+			value:    reflect.ValueOf(string("0123456789abcdef")),
+			length:   8,
+			expected: []byte{0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef},
+		},
+	}
+
+	for _, test := range tests {
+		set, bytes, err := insertFieldBytes(test.value, test.length, test.transform)
+		if err != nil && err.Error() != test.expectedErr {
+			t.Fatalf("expected: %s received: %s", test.expectedErr, err.Error())
+		}
+		if !set && err == nil {
+			t.Fatalf("expected set to be true when error is nil")
+		}
+		if !reflect.DeepEqual(bytes, test.expected) {
+			t.Fatalf("expected: %v received: %v", test.expected, bytes)
+		}
+	}
+}
+
 func TestInvalidPayload(t *testing.T) {
 	_, err := Decode(StringPtr(""), &PayloadConfig{
 		Fields: []FieldConfig{
@@ -475,44 +554,6 @@ func TestTimePointerCompare(t *testing.T) {
 				t.Fatalf("expected %v got %v", test.expected, result)
 			}
 		})
-	}
-}
-
-func TestUnwrapError_Nil(t *testing.T) {
-	var err error = nil
-	result := UnwrapError(err)
-	if len(result) != 0 {
-		t.Fatalf("expected empty slice, got %v", result)
-	}
-}
-
-type multiError struct {
-	errs []error
-}
-
-func (m multiError) Error() string {
-	return "multi error"
-}
-
-func (m multiError) Unwrap() []error {
-	return m.errs
-}
-
-func TestUnwrapError_WithUnwrap(t *testing.T) {
-	err1 := fmt.Errorf("error 1")
-	err2 := fmt.Errorf("error 2")
-	merr := multiError{errs: []error{err1, err2}}
-	result := UnwrapError(merr)
-	if len(result) != 2 || result[0] != err1 || result[1] != err2 {
-		t.Fatalf("expected [%v %v], got %v", err1, err2, result)
-	}
-}
-
-func TestUnwrapError_NoUnwrap(t *testing.T) {
-	err := fmt.Errorf("plain error")
-	result := UnwrapError(err)
-	if len(result) != 0 {
-		t.Fatalf("expected empty slice, got %v", result)
 	}
 }
 

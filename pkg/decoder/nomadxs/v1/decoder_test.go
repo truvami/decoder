@@ -14,15 +14,13 @@ import (
 
 func TestDecode(t *testing.T) {
 	tests := []struct {
-		payload     string
-		port        uint8
-		autoPadding bool
-		expected    any
+		payload  string
+		port     uint8
+		expected any
 	}{
 		{
-			payload:     "0002d2b47a0081f3f6115219031412361629002300170046fc19098625e3",
-			port:        1,
-			autoPadding: false,
+			port:    1,
+			payload: "0002d2b47a0081f3f6115219031412361629002300170046fc19098625e3",
 			expected: Port1Payload{
 				DutyCycle:          false,
 				ConfigId:           0,
@@ -47,9 +45,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "8002c420ff005ed85a12b4180719142607240001ffbaffc2fc6f00d71d2e00d6ffc5ff8405310b3810b1",
-			port:        1,
-			autoPadding: false,
+			port:    1,
+			payload: "8002c420ff005ed85a12b4180719142607240001ffbaffc2fc6f00d71d2e00d6ffc5ff8405310b3810b1",
 			expected: Port1Payload{
 				DutyCycle:          true,
 				ConfigId:           0,
@@ -80,9 +77,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "0102c420ff005ed85a12b4180719142607240001ffbaffc2fc6f",
-			port:        1,
-			autoPadding: false,
+			port:    1,
+			payload: "0102c420ff005ed85a12b4180719142607240001ffbaffc2fc6f",
 			expected: Port1Payload{
 				DutyCycle:          false,
 				ConfigId:           0,
@@ -105,9 +101,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "8102c420ff005ed85a12b4180719142607240001ffbaffc2fc6f",
-			port:        1,
-			autoPadding: false,
+			port:    1,
+			payload: "8102c420ff005ed85a12b4180719142607240001ffbaffc2fc6f",
 			expected: Port1Payload{
 				DutyCycle:          true,
 				ConfigId:           0,
@@ -130,34 +125,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "2c420ff005ed85a12b4180719142607240001ffbaffc2fc6f",
-			port:        1,
-			autoPadding: true,
-			expected: Port1Payload{
-				DutyCycle:          false,
-				ConfigId:           0,
-				ConfigChange:       false,
-				Moving:             false,
-				Year:               24,
-				Month:              7,
-				Day:                25,
-				Hour:               20,
-				Minute:             38,
-				Second:             7,
-				Latitude:           46.407935,
-				Longitude:          6.21577,
-				Altitude:           478.8,
-				TimeToFix:          time.Duration(36) * time.Second,
-				AmbientLight:       1,
-				AccelerometerXAxis: -70,
-				AccelerometerYAxis: -62,
-				AccelerometerZAxis: -913,
-			},
-		},
-		{
-			payload:     "0000007800000708000151800078012c05dc000100010100000258000002580500000000",
-			port:        4,
-			autoPadding: false,
+			port:    4,
+			payload: "0000007800000708000151800078012c05dc000100010100000258000002580500000000",
 			expected: Port4Payload{
 				LocalizationIntervalWhileMoving: 120,
 				LocalizationIntervalWhileSteady: 1800,
@@ -178,32 +147,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "7800000708000151800078012c05dc000100010100000258000002580500000000",
-			port:        4,
-			autoPadding: true,
-			expected: Port4Payload{
-				LocalizationIntervalWhileMoving: 120,
-				LocalizationIntervalWhileSteady: 1800,
-				HeartbeatInterval:               86400,
-				GPSTimeoutWhileWaitingForFix:    120,
-				AccelerometerWakeupThreshold:    300,
-				AccelerometerDelay:              1500,
-				FirmwareVersionMajor:            0,
-				FirmwareVersionMinor:            1,
-				FirmwareVersionPatch:            0,
-				BatteryKeepAliveMessageInterval: 600,
-				HardwareVersionType:             1,
-				HardwareVersionRevision:         1,
-				ReJoinInterval:                  600,
-				AccuracyEnhancement:             5,
-				LightLowerThreshold:             0,
-				LightUpperThreshold:             0,
-			},
-		},
-		{
-			payload:     "010df6",
-			port:        15,
-			autoPadding: false,
+			port:    15,
+			payload: "010df6",
 			expected: Port15Payload{
 				DutyCycle:  false,
 				LowBattery: true,
@@ -211,9 +156,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "800df6",
-			port:        15,
-			autoPadding: false,
+			port:    15,
+			payload: "800df6",
 			expected: Port15Payload{
 				DutyCycle:  true,
 				LowBattery: false,
@@ -221,9 +165,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "810df6",
-			port:        15,
-			autoPadding: false,
+			port:    15,
+			payload: "810df6",
 			expected: Port15Payload{
 				DutyCycle:  true,
 				LowBattery: true,
@@ -231,9 +174,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "10df6",
-			port:        15,
-			autoPadding: true,
+			port:    15,
+			payload: "010df6",
 			expected: Port15Payload{
 				DutyCycle:  false,
 				LowBattery: true,
@@ -244,7 +186,7 @@ func TestDecode(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestPort%vWith%v", test.port, test.payload), func(t *testing.T) {
-			decoder := NewNomadXSv1Decoder(WithAutoPadding(test.autoPadding))
+			decoder := NewNomadXSv1Decoder()
 			got, err := decoder.Decode(test.payload, test.port, "")
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
