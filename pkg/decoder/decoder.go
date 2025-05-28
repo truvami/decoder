@@ -165,8 +165,8 @@ type UplinkFeatureConfigChange interface {
 }
 
 type UplinkFeatureFirmwareVersion interface {
-	// GetFirmwareVersion returns the firmware version of the device.
-	GetFirmwareVersion() string
+	GetFirmwareHash() *string
+	GetFirmwareVersion() *string
 }
 
 type UplinkFeatureHardwareVersion interface {

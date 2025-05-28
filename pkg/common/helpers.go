@@ -166,6 +166,7 @@ func Decode(payloadHex *string, config *PayloadConfig) (any, error) {
 			for _, tagConfig := range config.Tags {
 				if tagConfig.Tag == tag {
 					found = true
+					config.Features = append(config.Features, tagConfig.Feature)
 
 					value, err := extractFieldValue(payloadBytes, int(index), int(length), false, tagConfig.Hex)
 					if err != nil {

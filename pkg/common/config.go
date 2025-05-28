@@ -10,7 +10,7 @@ type TagConfig struct {
 	Name      string
 	Tag       uint8
 	Optional  bool
-	Feature   []decoder.Feature
+	Feature   decoder.Feature
 	Transform func(any) any
 	Hex       bool
 }

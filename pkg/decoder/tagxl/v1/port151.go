@@ -57,6 +57,7 @@ type Port151Payload struct {
 var _ decoder.UplinkFeatureBase = &Port151Payload{}
 var _ decoder.UplinkFeatureBattery = &Port151Payload{}
 var _ decoder.UplinkFeatureConfig = &Port151Payload{}
+var _ decoder.UplinkFeatureFirmwareVersion = &Port151Payload{}
 
 func (p Port151Payload) GetTimestamp() *time.Time {
 	return nil
@@ -159,5 +160,13 @@ func (p Port151Payload) GetBufferSize() *uint16 {
 }
 
 func (p Port151Payload) GetDataRate() *decoder.DataRate {
+	return nil
+}
+
+func (p Port151Payload) GetFirmwareHash() *string {
+	return p.FirmwareHash
+}
+
+func (p Port151Payload) GetFirmwareVersion() *string {
 	return nil
 }
