@@ -14,15 +14,13 @@ import (
 
 func TestDecode(t *testing.T) {
 	tests := []struct {
-		payload     string
-		port        uint8
-		autoPadding bool
-		expected    any
+		payload  string
+		port     uint8
+		expected any
 	}{
 		{
-			payload:     "00000001fdd5c693000079300001b45d000000000000000000d700000000000000000b3fd724",
-			port:        101,
-			autoPadding: false,
+			port:    101,
+			payload: "00000001fdd5c693000079300001b45d000000000000000000d700000000000000000b3fd724",
 			expected: Port101Payload{
 				SystemTime:         8553612947,
 				UTCDate:            31024,
@@ -38,39 +36,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "1fdd5c693000079300001b45d000000000000000000d700000000000000000b3fd724",
-			port:        101,
-			autoPadding: true,
-			expected: Port101Payload{
-				SystemTime:         8553612947,
-				UTCDate:            31024,
-				UTCTime:            111709,
-				Temperature:        21.5,
-				Pressure:           0,
-				TimeToFix:          time.Duration(36) * time.Second,
-				AccelerometerXAxis: 0,
-				AccelerometerYAxis: 0,
-				AccelerometerZAxis: 0,
-				Battery:            2.879,
-				BatteryLorawan:     215,
-			},
-		},
-		{
-			payload:     "0000793000020152004b6076000c838c00003994",
-			port:        103,
-			autoPadding: false,
-			expected: Port103Payload{
-				UTCDate:   31024,
-				UTCTime:   131410,
-				Latitude:  49.39894,
-				Longitude: 8.20108,
-				Altitude:  147.4,
-			},
-		},
-		{
-			payload:     "793000020152004b6076000c838c00003994",
-			port:        103,
-			autoPadding: true,
+			port:    103,
+			payload: "0000793000020152004b6076000c838c00003994",
 			expected: Port103Payload{
 				UTCDate:   31024,
 				UTCTime:   131410,
@@ -83,7 +50,7 @@ func TestDecode(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestPort%vWith%v", test.port, test.payload), func(t *testing.T) {
-			decoder := NewNomadXLv1Decoder(WithAutoPadding(test.autoPadding))
+			decoder := NewNomadXLv1Decoder()
 			got, err := decoder.Decode(test.payload, test.port, "")
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
