@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -68,12 +69,12 @@ func TestDecode(t *testing.T) {
 				AccelerometerZAxis: -913,
 				Temperature:        2.15,
 				Pressure:           747,
-				GyroscopeXAxis:     21.4,
-				GyroscopeYAxis:     -5.9,
-				GyroscopeZAxis:     -12.4,
-				MagnetometerXAxis:  1.329,
-				MagnetometerYAxis:  2.872,
-				MagnetometerZAxis:  4.273,
+				GyroscopeXAxis:     helpers.Float32Ptr(21.4),
+				GyroscopeYAxis:     helpers.Float32Ptr(-5.9),
+				GyroscopeZAxis:     helpers.Float32Ptr(-12.4),
+				MagnetometerXAxis:  helpers.Float32Ptr(1.329),
+				MagnetometerYAxis:  helpers.Float32Ptr(2.872),
+				MagnetometerZAxis:  helpers.Float32Ptr(4.273),
 			},
 		},
 		{
@@ -194,8 +195,8 @@ func TestDecode(t *testing.T) {
 
 			t.Logf("got %v", got)
 
-			if got.Data != test.expected {
-				t.Errorf("expected: %v, got: %v", test.expected, got)
+			if got == nil || !reflect.DeepEqual(&got.Data, &test.expected) {
+				t.Errorf("expected: %v\ngot: %v", test.expected, got)
 			}
 		})
 	}
@@ -493,7 +494,7 @@ func TestMarshal(t *testing.T) {
 		{
 			payload:  "0000007800000708000151800078012c05dc000100010100000258000002580500000000",
 			port:     4,
-			expected: []string{"\"heartbeatInterval\": 86400", "\"reJoinInterval\": 600"},
+			expected: []string{"\"configInterval\": \"24h0m0s\"", "\"rejoinInterval\": \"10m0s\""},
 		},
 		{
 			payload:  "010df6",

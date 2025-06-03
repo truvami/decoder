@@ -61,12 +61,12 @@ type Port1Payload struct {
 	AccelerometerZAxis int16         `json:"accelerometerZAxis"`
 	Temperature        float32       `json:"temperature" validate:"gte=-20,lte=60"`
 	Pressure           float32       `json:"pressure" validate:"gte=0,lte=1100"`
-	GyroscopeXAxis     float32       `json:"gyroscopeXAxis"`
-	GyroscopeYAxis     float32       `json:"gyroscopeYAxis"`
-	GyroscopeZAxis     float32       `json:"gyroscopeZAxis"`
-	MagnetometerXAxis  float32       `json:"magnetometerXAxis"`
-	MagnetometerYAxis  float32       `json:"magnetometerYAxis"`
-	MagnetometerZAxis  float32       `json:"magnetometerZAxis"`
+	GyroscopeXAxis     *float32      `json:"gyroscopeXAxis"`
+	GyroscopeYAxis     *float32      `json:"gyroscopeYAxis"`
+	GyroscopeZAxis     *float32      `json:"gyroscopeZAxis"`
+	MagnetometerXAxis  *float32      `json:"magnetometerXAxis"`
+	MagnetometerYAxis  *float32      `json:"magnetometerYAxis"`
+	MagnetometerZAxis  *float32      `json:"magnetometerZAxis"`
 }
 
 func (p Port1Payload) MarshalJSON() ([]byte, error) {
