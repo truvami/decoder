@@ -70,13 +70,50 @@ type Port1Payload struct {
 }
 
 func (p Port1Payload) MarshalJSON() ([]byte, error) {
-	type Alias Port1Payload
 	return json.Marshal(&struct {
-		*Alias
-		TimeToFix string `json:"timeToFix"`
+		DutyCycle          bool     `json:"dutyCycle"`
+		ConfigId           uint8    `json:"configId"`
+		ConfigChange       bool     `json:"configChange"`
+		Moving             bool     `json:"moving"`
+		Latitude           float64  `json:"latitude"`
+		Longitude          float64  `json:"longitude"`
+		Altitude           string   `json:"altitude"`
+		Timestamp          string   `json:"timestamp"`
+		TimeToFix          string   `json:"timeToFix"`
+		AmbientLight       string   `json:"ambientLight"`
+		AccelerometerXAxis int16    `json:"accelerometerXAxis"`
+		AccelerometerYAxis int16    `json:"accelerometerYAxis"`
+		AccelerometerZAxis int16    `json:"accelerometerZAxis"`
+		Temperature        string   `json:"temperature"`
+		Pressure           string   `json:"pressure"`
+		GyroscopeXAxis     *float32 `json:"gyroscopeXAxis"`
+		GyroscopeYAxis     *float32 `json:"gyroscopeYAxis"`
+		GyroscopeZAxis     *float32 `json:"gyroscopeZAxis"`
+		MagnetometerXAxis  *float32 `json:"magnetometerXAxis"`
+		MagnetometerYAxis  *float32 `json:"magnetometerYAxis"`
+		MagnetometerZAxis  *float32 `json:"magnetometerZAxis"`
 	}{
-		Alias:     (*Alias)(&p),
-		TimeToFix: fmt.Sprintf("%.0fs", p.TimeToFix.Seconds()),
+		DutyCycle:          p.DutyCycle,
+		ConfigId:           p.ConfigId,
+		ConfigChange:       p.ConfigChange,
+		Moving:             p.Moving,
+		Latitude:           p.Latitude,
+		Longitude:          p.Longitude,
+		Altitude:           fmt.Sprintf("%.2fm", p.Altitude),
+		Timestamp:          p.GetTimestamp().Format(time.RFC3339),
+		TimeToFix:          fmt.Sprintf("%.0fs", p.TimeToFix.Seconds()),
+		AmbientLight:       fmt.Sprintf("%dlux", p.AmbientLight),
+		AccelerometerXAxis: p.AccelerometerXAxis,
+		AccelerometerYAxis: p.AccelerometerYAxis,
+		AccelerometerZAxis: p.AccelerometerZAxis,
+		Temperature:        fmt.Sprintf("%.2fc", p.Temperature),
+		Pressure:           fmt.Sprintf("%.1fhpa", p.Pressure),
+		GyroscopeXAxis:     p.GyroscopeXAxis,
+		GyroscopeYAxis:     p.GyroscopeYAxis,
+		GyroscopeZAxis:     p.GyroscopeZAxis,
+		MagnetometerXAxis:  p.MagnetometerXAxis,
+		MagnetometerYAxis:  p.MagnetometerYAxis,
+		MagnetometerZAxis:  p.MagnetometerZAxis,
 	})
 }
 
