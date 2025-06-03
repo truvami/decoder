@@ -1,6 +1,8 @@
 package nomadxs
 
 import (
+	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/truvami/decoder/pkg/decoder"
@@ -19,6 +21,17 @@ type Port15Payload struct {
 	DutyCycle  bool    `json:"dutyCycle"`
 	LowBattery bool    `json:"lowBattery"`
 	Battery    float64 `json:"battery" validate:"gte=1,lte=5"`
+}
+
+func (p Port15Payload) MarshalJSON() ([]byte, error) {
+	type Alias Port15Payload
+	return json.Marshal(&struct {
+		*Alias
+		Battery string `json:"battery"`
+	}{
+		Alias:   (*Alias)(&p),
+		Battery: fmt.Sprintf("%.3fv", p.Battery),
+	})
 }
 
 var _ decoder.UplinkFeatureBase = &Port15Payload{}
