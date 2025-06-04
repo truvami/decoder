@@ -145,9 +145,7 @@ func (t TagSLv1Encoder) getConfig(port uint8) (common.PayloadConfig, error) {
 	case 15:
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
-				{Name: "LowBattery", Start: 0, Length: 1, Transform: func(v any) any {
-					return common.BoolToBytes(common.BytesToBool(v.([]byte)), 0)
-				}},
+				{Name: "LowBattery", Start: 0, Length: 1, Transform: lowBattery},
 				{Name: "Battery", Start: 1, Length: 2, Transform: battery},
 			},
 			TargetType: reflect.TypeOf(tagsl.Port15Payload{}),
@@ -330,6 +328,10 @@ func longitude(v any) any {
 
 func altitude(v any) any {
 	return common.UintToBytes(uint64(common.BytesToFloat64(v.([]byte))*10), 2)
+}
+
+func lowBattery(v any) any {
+	return common.BoolToBytes(common.BytesToBool(v.([]byte)), 0)
 }
 
 func battery(v any) any {

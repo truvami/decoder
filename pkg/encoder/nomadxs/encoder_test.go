@@ -196,6 +196,46 @@ func TestEncode(t *testing.T) {
 			port:     4,
 			expected: "0000025800000e100001518001e0012c0fa0010102010600000e10000002581800800800",
 		},
+		{
+			data: nomadxs.Port15Payload{
+				LowBattery: false,
+				Battery:    3.895,
+			},
+			port:     15,
+			expected: "000f37",
+		},
+		{
+			data: nomadxs.Port15Payload{
+				LowBattery: false,
+				Battery:    3.645,
+			},
+			port:     15,
+			expected: "000e3d",
+		},
+		{
+			data: nomadxs.Port15Payload{
+				LowBattery: true,
+				Battery:    3.720,
+			},
+			port:     15,
+			expected: "010e88",
+		},
+		{
+			data: nomadxs.Port15Payload{
+				LowBattery: false,
+				Battery:    3.895,
+			},
+			port:     15,
+			expected: "000f37",
+		},
+		{
+			data: nomadxs.Port15Payload{
+				LowBattery: true,
+				Battery:    3.920,
+			},
+			port:     15,
+			expected: "010f50",
+		},
 	}
 
 	for _, test := range tests {
