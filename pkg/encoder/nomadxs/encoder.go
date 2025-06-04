@@ -9,18 +9,10 @@ import (
 	"github.com/truvami/decoder/pkg/encoder"
 )
 
-type Option func(*NomadXSv1Encoder)
-
 type NomadXSv1Encoder struct{}
 
-func NewNomadXSv1Encoder(options ...Option) encoder.Encoder {
-	nomadXSv1Encoder := &NomadXSv1Encoder{}
-
-	for _, option := range options {
-		option(nomadXSv1Encoder)
-	}
-
-	return nomadXSv1Encoder
+func NewNomadXSv1Encoder() encoder.Encoder {
+	return &NomadXSv1Encoder{}
 }
 
 func (n NomadXSv1Encoder) Encode(data any, port uint8) (any, error) {
@@ -62,7 +54,28 @@ func (n NomadXSv1Encoder) getConfig(port uint8) (common.PayloadConfig, error) {
 			},
 			TargetType: reflect.TypeOf(nomadxs.Port1Payload{}),
 		}, nil
-
+	case 4:
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
+				{Name: "LocalizationIntervalWhileMoving", Start: 0, Length: 4},
+				{Name: "LocalizationIntervalWhileSteady", Start: 4, Length: 4},
+				{Name: "HeartbeatInterval", Start: 8, Length: 4},
+				{Name: "GPSTimeoutWhileWaitingForFix", Start: 12, Length: 2},
+				{Name: "AccelerometerWakeupThreshold", Start: 14, Length: 2},
+				{Name: "AccelerometerDelay", Start: 16, Length: 2},
+				{Name: "FirmwareVersionMajor", Start: 18, Length: 1},
+				{Name: "FirmwareVersionMinor", Start: 19, Length: 1},
+				{Name: "FirmwareVersionPatch", Start: 20, Length: 1},
+				{Name: "HardwareVersionType", Start: 21, Length: 1},
+				{Name: "HardwareVersionRevision", Start: 22, Length: 1},
+				{Name: "BatteryKeepAliveMessageInterval", Start: 23, Length: 4},
+				{Name: "ReJoinInterval", Start: 27, Length: 4},
+				{Name: "AccuracyEnhancement", Start: 31, Length: 1},
+				{Name: "LightLowerThreshold", Start: 32, Length: 2},
+				{Name: "LightUpperThreshold", Start: 34, Length: 2},
+			},
+			TargetType: reflect.TypeOf(nomadxs.Port4Payload{}),
+		}, nil
 	}
 
 	return common.PayloadConfig{}, fmt.Errorf("%w: port %v not supported", common.ErrPortNotSupported, port)
