@@ -193,7 +193,7 @@ func Decode(payloadHex *string, config *PayloadConfig) (any, error) {
 					if ok {
 						err := validateFieldValue(fieldName, fieldValue)
 						if err != nil {
-							errs = append(errs, fmt.Errorf("%w for %s %v", ErrValidationFailed, fieldName.Name, fieldValue))
+							errs = append(errs, fmt.Errorf("%w for %s %v", ErrValidationFailed, fieldName.Name, DerefValue(fieldValue)))
 						}
 					}
 				}
@@ -234,7 +234,7 @@ func Decode(payloadHex *string, config *PayloadConfig) (any, error) {
 		if ok {
 			err := validateFieldValue(fieldName, fieldValue)
 			if err != nil {
-				errs = append(errs, fmt.Errorf("%w for %s %v", ErrValidationFailed, fieldName.Name, fieldValue))
+				errs = append(errs, fmt.Errorf("%w for %s %v", ErrValidationFailed, fieldName.Name, DerefValue(fieldValue)))
 			}
 		}
 	}
@@ -467,4 +467,12 @@ func TimePointerCompare(alpha *time.Time, bravo *time.Time) bool {
 		return false
 	}
 	return alpha.Equal(*bravo)
+}
+
+func DerefValue(value reflect.Value) any {
+	if value.Kind() == reflect.Ptr && !value.IsNil() {
+		return value.Elem().Interface()
+	}
+
+	return value
 }
