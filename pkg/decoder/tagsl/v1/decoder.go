@@ -207,11 +207,13 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
 				{Name: "DutyCycle", Start: 0, Length: 1, Transform: dutyCycle},
+				{Name: "ConfigId", Start: 0, Length: 1, Transform: configId},
+				{Name: "ConfigChange", Start: 0, Length: 1, Transform: configSuccess},
 				{Name: "LowBattery", Start: 0, Length: 1, Transform: lowBattery},
 				{Name: "Battery", Start: 1, Length: 2, Transform: battery},
 			},
 			TargetType: reflect.TypeOf(Port15Payload{}),
-			Features:   []decoder.Feature{decoder.FeatureDutyCycle, decoder.FeatureBattery},
+			Features:   []decoder.Feature{decoder.FeatureDutyCycle, decoder.FeatureConfigChange, decoder.FeatureBattery},
 		}, nil
 	case 50:
 		return common.PayloadConfig{
