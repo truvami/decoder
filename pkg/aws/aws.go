@@ -9,6 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/iotwireless"
 	"github.com/aws/aws-sdk-go-v2/service/iotwireless/types"
+	geojson "github.com/paulmach/go.geojson"
+	"github.com/truvami/decoder/pkg/decoder"
 	"go.uber.org/zap"
 )
 
@@ -26,7 +28,7 @@ import (
 // Returns:
 //   - error:      An error if the AWS config could not be loaded or the position
 //     estimate request fails; otherwise, nil.
-func Solve(logger *zap.Logger, payload string, captureTime time.Time) error {
+func Solve(logger *zap.Logger, payload string, captureTime time.Time) (*Position, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -38,7 +40,7 @@ func Solve(logger *zap.Logger, payload string, captureTime time.Time) error {
 	// Load AWS config with context (respects timeout)
 	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to load AWS config: %w", err)
+		return nil, fmt.Errorf("failed to load AWS config: %w", err)
 	}
 
 	client := iotwireless.NewFromConfig(cfg)
@@ -54,9 +56,17 @@ func Solve(logger *zap.Logger, payload string, captureTime time.Time) error {
 		},
 	}
 
+	// The position information of the resource, displayed as a JSON payload. The
+	// payload is of type blob and uses the [GeoJSON]format, which a format that's used to
+	// encode geographic data structures. A sample payload contains the timestamp
+	// information, the WGS84 coordinates of the location, and the accuracy and
+	// confidence level. For more information and examples, see [Resolve device location (console)].
+	//
+	// [Resolve device location (console)]: https://docs.aws.amazon.com/iot/latest/developerguide/location-resolve-console.html
+	// [GeoJSON]: https://geojson.org/
 	output, err := client.GetPositionEstimate(ctx, input)
 	if err != nil {
-		return fmt.Errorf("failed to get position estimate: %w", err)
+		return nil, fmt.Errorf("failed to get position estimate: %w", err)
 	}
 
 	logger.Debug("Position estimate received",
@@ -64,5 +74,70 @@ func Solve(logger *zap.Logger, payload string, captureTime time.Time) error {
 		zap.ByteString("geoJson", output.GeoJsonPayload),
 		zap.Any("metadata", output.ResultMetadata),
 	)
+
+	position, err := geojson.UnmarshalFeature(output.GeoJsonPayload)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal GeoJSON payload: %w", err)
+	}
+
+	if position == nil {
+		return nil, fmt.Errorf("received nil position from AWS IoT Wireless")
+	}
+	if position.Type != string(geojson.GeometryPoint) {
+		return nil, fmt.Errorf("expected GeoJSON Feature, got %s", position.Type)
+	}
+	if position.Geometry.Point == nil || len(position.Geometry.Point) < 2 {
+		return nil, fmt.Errorf("invalid GeoJSON point: %v", position.Geometry.Point)
+	}
+	return &Position{
+		Latitude:  position.Geometry.Point[1],
+		Longitude: position.Geometry.Point[0],
+		Timestamp: &captureTime,
+		Altitude:  nil, // Altitude is optional, set to nil if not provided
+	}, nil
+}
+
+type Position struct {
+	Latitude  float64    `json:"latitude"`
+	Longitude float64    `json:"longitude"`
+	Altitude  *float64   `json:"altitude"` // Optional altitude
+	Timestamp *time.Time `json:"timestamp"`
+}
+
+var _ decoder.UplinkFeatureBase = &Position{}
+var _ decoder.UplinkFeatureGNSS = &Position{}
+
+func (p Position) GetTimestamp() *time.Time {
+	return p.Timestamp
+}
+
+func (p Position) GetLatitude() float64 {
+	return p.Latitude
+}
+
+func (p Position) GetLongitude() float64 {
+	return p.Longitude
+}
+
+func (p Position) GetAltitude() float64 {
+	if p.Altitude == nil {
+		return 0.0 // Return 0 if altitude is not set
+	}
+	return *p.Altitude
+}
+
+func (p Position) GetAccuracy() *float64 {
+	return nil
+}
+
+func (p Position) GetTTF() *time.Duration {
+	return nil
+}
+
+func (p Position) GetPDOP() *float64 {
+	return nil
+}
+
+func (p Position) GetSatellites() *uint8 {
 	return nil
 }

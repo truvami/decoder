@@ -14,9 +14,11 @@ import (
 )
 
 var accessToken string
+var useAWS bool
 
 func init() {
 	tagxlCmd.Flags().StringVar(&accessToken, "token", "", "Access token for the loracloud API")
+	tagxlCmd.Flags().BoolVar(&useAWS, "use-aws", false, "Experimental: Use AWS IoT Wireless to decode payloads (requires AWS credentials)")
 	rootCmd.AddCommand(tagxlCmd)
 }
 
@@ -32,7 +34,7 @@ var tagxlCmd = &cobra.Command{
 		}
 
 		logger.Logger.Debug("initializing tagxl decoder")
-		d := tagxl.NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware(accessToken), tagxl.WithSkipValidation(SkipValidation))
+		d := tagxl.NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware(accessToken), logger.Logger, tagxl.WithSkipValidation(SkipValidation))
 
 		port, err := strconv.Atoi(args[0])
 		if err != nil {
