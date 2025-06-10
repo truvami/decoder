@@ -50,6 +50,12 @@ func WithFCount(fCount uint32) Option {
 	}
 }
 
+func WithUseAWS(useAWS bool) Option {
+	return func(t *TagXLv1Decoder) {
+		t.useAWS = useAWS
+	}
+}
+
 // https://docs.truvami.com/docs/payloads/tag-xl
 func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadConfig, error) {
 	switch port {

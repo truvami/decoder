@@ -34,7 +34,7 @@ var tagxlCmd = &cobra.Command{
 		}
 
 		logger.Logger.Debug("initializing tagxl decoder")
-		d := tagxl.NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware(accessToken), logger.Logger, tagxl.WithSkipValidation(SkipValidation))
+		d := tagxl.NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware(accessToken), logger.Logger, tagxl.WithSkipValidation(SkipValidation), tagxl.WithUseAWS(useAWS))
 
 		port, err := strconv.Atoi(args[0])
 		if err != nil {
