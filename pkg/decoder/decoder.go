@@ -11,6 +11,7 @@ type Decoder interface {
 type Feature string
 
 const (
+	FeatureTimestamp       Feature = "timestamp"
 	FeatureResetReason     Feature = "resetReason"
 	FeatureGNSS            Feature = "gnss"
 	FeatureBuffered        Feature = "buffered"
@@ -65,10 +66,8 @@ func (d DecodedUplink) GetFeatures() []Feature {
 	return d.features
 }
 
-type UplinkFeatureBase interface {
+type UplinkFeatureTimestamp interface {
 	// GetTimestamp returns the timestamp of the uplink message.
-	// Not all uplink messages have a timestamp, so this method returns a pointer to a time.Time.
-	// If the uplink message does not have a timestamp, the method returns nil.
 	GetTimestamp() *time.Time
 }
 
