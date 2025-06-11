@@ -18,7 +18,7 @@ import (
 // | 0     | 1    | Moving flag                               | uint1                  |
 // | 1-4   | 4    | Latitude                                  | int32, 1/1’000’000 deg |
 // | 5-8   | 4    | Longitude                                 | int32, 1/1’000’000 deg |
-// | 9-10  | 2    | Altitude                                  | uint16, 1/100 meter    |
+// | 9-10  | 2    | Altitude                                  | uint16, 1/10 meter     |
 // | 11    | 1    | Year                                      | uint8, year after 2000 |
 // | 12    | 1    | Month                                     | uint8, [1..12]         |
 // | 13    | 1    | Day                                       | uint8, [1..31]         |
@@ -99,7 +99,7 @@ func (p Port1Payload) MarshalJSON() ([]byte, error) {
 		Moving:             p.Moving,
 		Latitude:           p.Latitude,
 		Longitude:          p.Longitude,
-		Altitude:           fmt.Sprintf("%.2fm", p.Altitude),
+		Altitude:           fmt.Sprintf("%.1fm", p.Altitude),
 		Timestamp:          p.GetTimestamp().Format(time.RFC3339),
 		TimeToFix:          fmt.Sprintf("%.0fs", p.TimeToFix.Seconds()),
 		AmbientLight:       fmt.Sprintf("%dlux", p.AmbientLight),
