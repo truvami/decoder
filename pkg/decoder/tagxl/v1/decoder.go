@@ -53,7 +53,7 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 				{Name: "Timestamp", Start: 5, Length: 4, Transform: timestamp},
 			},
 			TargetType: reflect.TypeOf(Port150Payload{}),
-			Features:   []decoder.Feature{},
+			Features:   []decoder.Feature{decoder.FeatureTimestamp},
 		}, nil
 	case 151:
 		var payloadType byte = payload[0]
@@ -130,7 +130,7 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 					{Name: "ElapsedSeconds", Start: 9, Length: 4},
 				},
 				TargetType: reflect.TypeOf(Port152Payload{}),
-				Features:   []decoder.Feature{decoder.FeatureRotationState},
+				Features:   []decoder.Feature{decoder.FeatureRotationState, decoder.FeatureTimestamp},
 			}, nil
 		case 0x02:
 			return common.PayloadConfig{
@@ -150,7 +150,7 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 					{Name: "ElapsedSeconds", Start: 10, Length: 4},
 				},
 				TargetType: reflect.TypeOf(Port152Payload{}),
-				Features:   []decoder.Feature{decoder.FeatureRotationState, decoder.FeatureSequenceNumber},
+				Features:   []decoder.Feature{decoder.FeatureRotationState, decoder.FeatureSequenceNumber, decoder.FeatureTimestamp},
 			}, nil
 		default:
 			return common.PayloadConfig{}, fmt.Errorf("%w: version %v for port %d not supported", common.ErrPortNotSupported, version, port)
@@ -203,7 +203,7 @@ func (t TagXLv1Decoder) Decode(data string, port uint8, devEui string) (*decoder
 			Payload: data,
 			FCount:  t.fCount,
 		})
-		return decoder.NewDecodedUplink([]decoder.Feature{decoder.FeatureGNSS}, decodedData), err
+		return decoder.NewDecodedUplink([]decoder.Feature{decoder.FeatureGNSS, decoder.FeatureTimestamp}, decodedData), err
 	case 199:
 		decodedData, err := t.loracloudMiddleware.DeliverUplinkMessage(devEui, loracloud.UplinkMsg{
 			MsgType: "updf",

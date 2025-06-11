@@ -54,7 +54,7 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 				{Name: "Second", Start: 16, Length: 1},
 			},
 			TargetType: reflect.TypeOf(Port1Payload{}),
-			Features:   []decoder.Feature{decoder.FeatureDutyCycle, decoder.FeatureConfigChange, decoder.FeatureMoving, decoder.FeatureGNSS},
+			Features:   []decoder.Feature{decoder.FeatureDutyCycle, decoder.FeatureConfigChange, decoder.FeatureMoving, decoder.FeatureGNSS, decoder.FeatureTimestamp},
 		}, nil
 	case 2:
 		return common.PayloadConfig{
@@ -166,7 +166,7 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 				{Name: "Rssi6", Start: 46, Length: 1, Optional: true},
 			},
 			TargetType: reflect.TypeOf(Port7Payload{}),
-			Features:   []decoder.Feature{decoder.FeatureDutyCycle, decoder.FeatureConfigChange, decoder.FeatureMoving, decoder.FeatureWiFi},
+			Features:   []decoder.Feature{decoder.FeatureTimestamp, decoder.FeatureDutyCycle, decoder.FeatureConfigChange, decoder.FeatureMoving, decoder.FeatureWiFi},
 		}, nil
 	case 8:
 		return common.PayloadConfig{
@@ -201,7 +201,7 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 				{Name: "Satellites", Start: 19, Length: 1, Optional: true},
 			},
 			TargetType: reflect.TypeOf(Port10Payload{}),
-			Features:   []decoder.Feature{decoder.FeatureDutyCycle, decoder.FeatureConfigChange, decoder.FeatureMoving, decoder.FeatureGNSS, decoder.FeatureBattery},
+			Features:   []decoder.Feature{decoder.FeatureDutyCycle, decoder.FeatureConfigChange, decoder.FeatureMoving, decoder.FeatureGNSS, decoder.FeatureTimestamp, decoder.FeatureBattery},
 		}, nil
 	case 15:
 		return common.PayloadConfig{
@@ -238,7 +238,7 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 				{Name: "Rssi4", Start: 45, Length: 1, Optional: true},
 			},
 			TargetType: reflect.TypeOf(Port50Payload{}),
-			Features:   []decoder.Feature{decoder.FeatureDutyCycle, decoder.FeatureConfigChange, decoder.FeatureMoving, decoder.FeatureGNSS, decoder.FeatureBattery, decoder.FeatureWiFi},
+			Features:   []decoder.Feature{decoder.FeatureDutyCycle, decoder.FeatureConfigChange, decoder.FeatureMoving, decoder.FeatureGNSS, decoder.FeatureTimestamp, decoder.FeatureBattery, decoder.FeatureWiFi},
 		}, nil
 	case 51:
 		return common.PayloadConfig{
@@ -265,7 +265,7 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 				{Name: "Rssi4", Start: 47, Length: 1, Optional: true},
 			},
 			TargetType: reflect.TypeOf(Port51Payload{}),
-			Features:   []decoder.Feature{decoder.FeatureDutyCycle, decoder.FeatureConfigChange, decoder.FeatureMoving, decoder.FeatureGNSS, decoder.FeatureBattery, decoder.FeatureWiFi},
+			Features:   []decoder.Feature{decoder.FeatureDutyCycle, decoder.FeatureConfigChange, decoder.FeatureMoving, decoder.FeatureGNSS, decoder.FeatureTimestamp, decoder.FeatureBattery, decoder.FeatureWiFi},
 		}, nil
 	case 105:
 		return common.PayloadConfig{
@@ -290,7 +290,7 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 				{Name: "Rssi6", Start: 48, Length: 1, Optional: true},
 			},
 			TargetType: reflect.TypeOf(Port105Payload{}),
-			Features:   []decoder.Feature{decoder.FeatureBuffered, decoder.FeatureDutyCycle, decoder.FeatureConfigChange, decoder.FeatureMoving, decoder.FeatureWiFi},
+			Features:   []decoder.Feature{decoder.FeatureBuffered, decoder.FeatureTimestamp, decoder.FeatureDutyCycle, decoder.FeatureConfigChange, decoder.FeatureMoving, decoder.FeatureWiFi},
 		}, nil
 	case 110:
 		return common.PayloadConfig{
@@ -310,7 +310,7 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 				{Name: "Satellites", Start: 21, Length: 1, Optional: true},
 			},
 			TargetType: reflect.TypeOf(Port110Payload{}),
-			Features:   []decoder.Feature{decoder.FeatureBuffered, decoder.FeatureDutyCycle, decoder.FeatureConfigChange, decoder.FeatureMoving, decoder.FeatureGNSS, decoder.FeatureBattery},
+			Features:   []decoder.Feature{decoder.FeatureBuffered, decoder.FeatureDutyCycle, decoder.FeatureConfigChange, decoder.FeatureMoving, decoder.FeatureGNSS, decoder.FeatureTimestamp, decoder.FeatureBattery},
 		}, nil
 	case 150:
 		return common.PayloadConfig{
@@ -340,7 +340,7 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 				{Name: "Rssi6", Start: 61, Length: 1, Optional: true},
 			},
 			TargetType: reflect.TypeOf(Port150Payload{}),
-			Features:   []decoder.Feature{decoder.FeatureBuffered, decoder.FeatureDutyCycle, decoder.FeatureConfigChange, decoder.FeatureMoving, decoder.FeatureGNSS, decoder.FeatureBattery, decoder.FeatureWiFi},
+			Features:   []decoder.Feature{decoder.FeatureBuffered, decoder.FeatureDutyCycle, decoder.FeatureConfigChange, decoder.FeatureMoving, decoder.FeatureGNSS, decoder.FeatureTimestamp, decoder.FeatureBattery, decoder.FeatureWiFi},
 		}, nil
 	case 151:
 		return common.PayloadConfig{
@@ -368,7 +368,7 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 				{Name: "Rssi4", Start: 49, Length: 1, Optional: true},
 			},
 			TargetType: reflect.TypeOf(Port151Payload{}),
-			Features:   []decoder.Feature{decoder.FeatureBuffered, decoder.FeatureDutyCycle, decoder.FeatureConfigChange, decoder.FeatureMoving, decoder.FeatureGNSS, decoder.FeatureBattery, decoder.FeatureWiFi},
+			Features:   []decoder.Feature{decoder.FeatureBuffered, decoder.FeatureDutyCycle, decoder.FeatureConfigChange, decoder.FeatureMoving, decoder.FeatureGNSS, decoder.FeatureTimestamp, decoder.FeatureBattery, decoder.FeatureWiFi},
 		}, nil
 	case 198:
 		return common.PayloadConfig{

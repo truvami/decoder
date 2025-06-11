@@ -42,7 +42,7 @@ type Port1Payload struct {
 }
 
 // Enforce that Port1Payload implements interfaces
-var _ decoder.UplinkFeatureBase = &Port1Payload{}
+var _ decoder.UplinkFeatureTimestamp = &Port1Payload{}
 var _ decoder.UplinkFeatureGNSS = &Port1Payload{}
 var _ decoder.UplinkFeatureMoving = &Port1Payload{}
 var _ decoder.UplinkFeatureDutyCycle = &Port1Payload{}
