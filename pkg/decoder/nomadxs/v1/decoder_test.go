@@ -497,7 +497,7 @@ func TestMarshal(t *testing.T) {
 		{
 			payload:  "0002c420ff005ed85a12b4180719142607240001ffbaffc2fc6f00d71d2e",
 			port:     1,
-			expected: []string{"\"altitude\": \"478.80m\"", "\"temperature\": \"2.15c\"", "\"timeToFix\": \"36s\""},
+			expected: []string{"\"altitude\": \"478.8m\"", "\"temperature\": \"2.15c\"", "\"timeToFix\": \"36s\""},
 		},
 		{
 			payload:  "0000007800000708000151800078012c05dc000100010100000258000002580500000000",
