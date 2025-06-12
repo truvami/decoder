@@ -215,9 +215,7 @@ func (t TagXLv1Decoder) Decode(data string, port uint8, devEui string) (*decoder
 		if t.useAWS {
 			t.logger.Debug("solving position using AWS IoT Wireless")
 			position, err = aws.Solve(t.logger, data, time.Now())
-			if err != nil {
-				return nil, fmt.Errorf("failed to solve position using AWS IoT Wireless: %w", err)
-			}
+			t.logger.Error("error solving position using AWS IoT Wireless, try with loracloud", zap.Error(err))
 		}
 
 		if position == nil {
@@ -227,6 +225,14 @@ func (t TagXLv1Decoder) Decode(data string, port uint8, devEui string) (*decoder
 				Payload: data,
 				FCount:  t.fCount,
 			})
+
+			if t.useAWS {
+				t.logger.Info("solving position using loracloud middleware as fallback")
+				if err != nil {
+					t.logger.Error("there was an error solving position using loracloud middleware as fallback", zap.Error(err))
+				}
+			}
+
 			return decoder.NewDecodedUplink([]decoder.Feature{decoder.FeatureGNSS}, decodedData), err
 		}
 		return decoder.NewDecodedUplink([]decoder.Feature{decoder.FeatureGNSS}, position), err
