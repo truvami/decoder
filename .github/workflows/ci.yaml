@@ -49,3 +49,6 @@ jobs:
 
       - name: Run JSON tags camelCase check
         run: make check-json-tags
+
+      - name: Check Prometheus metrics
+        run: make check-metrics

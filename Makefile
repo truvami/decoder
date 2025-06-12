@@ -57,3 +57,15 @@ check-json-tags:
 		fi \
 	'
 
+check-metrics:
+	@echo "🔍 Checking Prometheus metrics for 'truvami_' prefix..."
+	@bad_metrics=$$(grep -r --include="*.go" -E 'prometheus\.(CounterOpts|GaugeOpts|HistogramOpts|SummaryOpts)' . | cut -d: -f1 | sort -u | xargs grep -n 'Name:' | grep -v -E 'Name:.*"truvami_'); \
+	if [ -n "$$bad_metrics" ]; then \
+		echo "❌ ERROR: Found Prometheus metrics without 'truvami_' prefix:"; \
+		echo "$$bad_metrics"; \
+		exit 1; \
+	else \
+		echo "✅ All Prometheus metrics are correctly prefixed."; \
+	fi
+
+.PHONY: generate proto check-metrics seed populate-with-demo-data
