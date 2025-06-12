@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-playground/validator"
 	"github.com/google/uuid"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
 	"github.com/truvami/decoder/internal/logger"
 	helpers "github.com/truvami/decoder/pkg/common"
@@ -29,12 +30,14 @@ import (
 var host string
 var port uint16
 var health bool
+var metrics bool
 
 func init() {
 	httpCmd.Flags().StringVar(&host, "host", "localhost", "Host to bind the HTTP server to")
 	httpCmd.Flags().Uint16Var(&port, "port", 8080, "Port to bind the HTTP server to")
 	httpCmd.Flags().StringVar(&accessToken, "token", "", "Access token for the loracloud API")
 	httpCmd.Flags().BoolVar(&health, "health", false, "Enable /health endpoint")
+	httpCmd.Flags().BoolVar(&metrics, "metrics", false, "Enable prometheus /metrics endpoint")
 	rootCmd.AddCommand(httpCmd)
 
 	// Add the generic encoder endpoint
@@ -62,6 +65,12 @@ var httpCmd = &cobra.Command{
 		// health endpoint
 		if health {
 			router.HandleFunc("/health", healthHandler)
+		}
+
+		// metrics endpoint
+		if metrics {
+			logger.Logger.Debug("enabling prometheus metrics endpoint")
+			router.Handle("/metrics", promhttp.Handler())
 		}
 
 		type decoderEndpoint struct {

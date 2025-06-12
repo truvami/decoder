@@ -367,3 +367,41 @@ func TestGetEncoderHandler(t *testing.T) {
 		t.Errorf("expected status code %d, got %d", http.StatusBadRequest, resp.StatusCode)
 	}
 }
+
+func TestMetricsEndpoint(t *testing.T) {
+	logger.NewLogger()
+	defer logger.Sync()
+
+	// Enable metrics endpoint
+	metrics = true
+	defer func() { metrics = false }()
+
+	router := http.NewServeMux()
+	if metrics {
+		router.Handle("/metrics", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte("metrics ok"))
+		}))
+	}
+
+	server := httptest.NewServer(router)
+	defer server.Close()
+
+	resp, err := http.Get(server.URL + "/metrics")
+	if err != nil {
+		t.Fatalf("failed to GET /metrics: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("expected status code %d, got %d", http.StatusOK, resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("failed to read response body: %v", err)
+	}
+	if !strings.Contains(string(body), "metrics ok") {
+		t.Errorf("expected response body to contain 'metrics ok', got %q", string(body))
+	}
+}
