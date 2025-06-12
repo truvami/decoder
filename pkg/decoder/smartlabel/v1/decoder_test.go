@@ -327,8 +327,8 @@ func TestDecode(t *testing.T) {
 				Tag:   byte(0x00),
 				Rssi1: -42,
 				Mac1:  "3385f8ee30c2",
-				Rssi2: -48,
-				Mac2:  "a0382c2601db",
+				Rssi2: helpers.Int8Ptr(-48),
+				Mac2:  helpers.StringPtr("a0382c2601db"),
 			},
 		},
 		{
@@ -338,10 +338,10 @@ func TestDecode(t *testing.T) {
 				Tag:   byte(0x64),
 				Rssi1: -56,
 				Mac1:  "b5eded55a313",
-				Rssi2: -64,
-				Mac2:  "a0b8b5e86e31",
-				Rssi3: -72,
-				Mac3:  "94a765f3ad40",
+				Rssi2: helpers.Int8Ptr(-64),
+				Mac2:  helpers.StringPtr("a0b8b5e86e31"),
+				Rssi3: helpers.Int8Ptr(-72),
+				Mac3:  helpers.StringPtr("94a765f3ad40"),
 			},
 		},
 		{
@@ -351,14 +351,14 @@ func TestDecode(t *testing.T) {
 				Tag:   byte(0xae),
 				Rssi1: -67,
 				Mac1:  "6fbcfdd76434",
-				Rssi2: -69,
-				Mac2:  "7e7cbff22fc5",
-				Rssi3: -71,
-				Mac3:  "00dc0af60588",
-				Rssi4: -73,
-				Mac4:  "010161302d9c",
-				Rssi5: -75,
-				Mac5:  "1bf1f8d1a97b",
+				Rssi2: helpers.Int8Ptr(-69),
+				Mac2:  helpers.StringPtr("7e7cbff22fc5"),
+				Rssi3: helpers.Int8Ptr(-71),
+				Mac3:  helpers.StringPtr("00dc0af60588"),
+				Rssi4: helpers.Int8Ptr(-73),
+				Mac4:  helpers.StringPtr("010161302d9c"),
+				Rssi5: helpers.Int8Ptr(-75),
+				Mac5:  helpers.StringPtr("1bf1f8d1a97b"),
 			},
 		},
 		{
@@ -368,16 +368,16 @@ func TestDecode(t *testing.T) {
 				Tag:   byte(0xfd),
 				Rssi1: -73,
 				Mac1:  "218f6c166fad",
-				Rssi2: -77,
-				Mac2:  "59ea3bdec77d",
-				Rssi3: -81,
-				Mac3:  "f72faac81784",
-				Rssi4: -85,
-				Mac4:  "263386a455d3",
-				Rssi5: -89,
-				Mac5:  "3592a063900b",
-				Rssi6: -94,
-				Mac6:  "62b95a6ffc86",
+				Rssi2: helpers.Int8Ptr(-77),
+				Mac2:  helpers.StringPtr("59ea3bdec77d"),
+				Rssi3: helpers.Int8Ptr(-81),
+				Mac3:  helpers.StringPtr("f72faac81784"),
+				Rssi4: helpers.Int8Ptr(-85),
+				Mac4:  helpers.StringPtr("263386a455d3"),
+				Rssi5: helpers.Int8Ptr(-89),
+				Mac5:  helpers.StringPtr("3592a063900b"),
+				Rssi6: helpers.Int8Ptr(-94),
+				Mac6:  helpers.StringPtr("62b95a6ffc86"),
 			},
 		},
 	}
@@ -611,9 +611,10 @@ func TestFeatures(t *testing.T) {
 				if !ok {
 					t.Fatalf("expected UplinkFeatureFirmwareVersion, got %T", decodedPayload)
 				}
-				if firmwareVersion.GetFirmwareVersion() == "" {
-					t.Fatalf("expected non empty firmware version")
+				if firmwareVersion.GetFirmwareVersion() == nil {
+					t.Fatalf("expected non nil firmware version")
 				}
+				firmwareVersion.GetFirmwareHash()
 			}
 		})
 	}
@@ -683,24 +684,6 @@ func TestMarshal(t *testing.T) {
 	}
 }
 
-func TestWithAutoPadding(t *testing.T) {
-	middleware := loracloud.NewLoracloudMiddleware("access_token")
-
-	decoder := NewSmartLabelv1Decoder(
-		middleware,
-		WithAutoPadding(true),
-	)
-
-	// Type assert to access the internal field
-	if d, ok := decoder.(*SmartLabelv1Decoder); ok {
-		if !d.autoPadding {
-			t.Error("expected autoPadding to be true")
-		}
-	} else {
-		t.Error("failed to type assert decoder")
-	}
-}
-
 func TestWithFCount(t *testing.T) {
 	decoder := NewSmartLabelv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"), WithFCount(123))
 
@@ -708,5 +691,58 @@ func TestWithFCount(t *testing.T) {
 	tagXLv1Decoder := decoder.(*SmartLabelv1Decoder)
 	if tagXLv1Decoder.fCount != 123 {
 		t.Fatalf("expected fCount to be 123, got %v", tagXLv1Decoder.fCount)
+	}
+}
+
+func TestDataRate(t *testing.T) {
+	tests := []struct {
+		data     Port4Payload
+		expected any
+	}{
+		{
+			data:     Port4Payload{DataRate: 0},
+			expected: decoder.DataRateBlazing,
+		},
+		{
+			data:     Port4Payload{DataRate: 1},
+			expected: decoder.DataRateFast,
+		},
+		{
+			data:     Port4Payload{DataRate: 2},
+			expected: decoder.DataRateQuick,
+		},
+		{
+			data:     Port4Payload{DataRate: 3},
+			expected: decoder.DataRateModerate,
+		},
+		{
+			data:     Port4Payload{DataRate: 4},
+			expected: decoder.DataRateSlow,
+		},
+		{
+			data:     Port4Payload{DataRate: 5},
+			expected: decoder.DataRateGlacial,
+		},
+		{
+			data:     Port4Payload{DataRate: 6},
+			expected: decoder.DataRateAutomaticNarrow,
+		},
+		{
+			data:     Port4Payload{DataRate: 7},
+			expected: decoder.DataRateAutomaticWide,
+		},
+		{
+			data:     Port4Payload{DataRate: 8},
+			expected: nil,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run("TestDataRate", func(t *testing.T) {
+			result := test.data.GetDataRate()
+			if test.expected != nil && (result == nil || test.expected != *result) || test.expected == nil && result != nil {
+				t.Errorf("expected %v, received %v", test.expected, result)
+			}
+		})
 	}
 }

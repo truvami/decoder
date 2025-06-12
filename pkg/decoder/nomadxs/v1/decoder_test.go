@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -14,15 +15,13 @@ import (
 
 func TestDecode(t *testing.T) {
 	tests := []struct {
-		payload     string
-		port        uint8
-		autoPadding bool
-		expected    any
+		payload  string
+		port     uint8
+		expected any
 	}{
 		{
-			payload:     "0002d2b47a0081f3f6115219031412361629002300170046fc19098625e3",
-			port:        1,
-			autoPadding: false,
+			port:    1,
+			payload: "0002d2b47a0081f3f6115219031412361629002300170046fc19098625e3",
 			expected: Port1Payload{
 				DutyCycle:          false,
 				ConfigId:           0,
@@ -47,9 +46,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "8002c420ff005ed85a12b4180719142607240001ffbaffc2fc6f00d71d2e00d6ffc5ff8405310b3810b1",
-			port:        1,
-			autoPadding: false,
+			port:    1,
+			payload: "8002c420ff005ed85a12b4180719142607240001ffbaffc2fc6f00d71d2e00d6ffc5ff8405310b3810b1",
 			expected: Port1Payload{
 				DutyCycle:          true,
 				ConfigId:           0,
@@ -71,18 +69,17 @@ func TestDecode(t *testing.T) {
 				AccelerometerZAxis: -913,
 				Temperature:        2.15,
 				Pressure:           747,
-				GyroscopeXAxis:     21.4,
-				GyroscopeYAxis:     -5.9,
-				GyroscopeZAxis:     -12.4,
-				MagnetometerXAxis:  1.329,
-				MagnetometerYAxis:  2.872,
-				MagnetometerZAxis:  4.273,
+				GyroscopeXAxis:     helpers.Float32Ptr(21.4),
+				GyroscopeYAxis:     helpers.Float32Ptr(-5.9),
+				GyroscopeZAxis:     helpers.Float32Ptr(-12.4),
+				MagnetometerXAxis:  helpers.Float32Ptr(1.329),
+				MagnetometerYAxis:  helpers.Float32Ptr(2.872),
+				MagnetometerZAxis:  helpers.Float32Ptr(4.273),
 			},
 		},
 		{
-			payload:     "0102c420ff005ed85a12b4180719142607240001ffbaffc2fc6f",
-			port:        1,
-			autoPadding: false,
+			port:    1,
+			payload: "0102c420ff005ed85a12b4180719142607240001ffbaffc2fc6f",
 			expected: Port1Payload{
 				DutyCycle:          false,
 				ConfigId:           0,
@@ -105,9 +102,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "8102c420ff005ed85a12b4180719142607240001ffbaffc2fc6f",
-			port:        1,
-			autoPadding: false,
+			port:    1,
+			payload: "8102c420ff005ed85a12b4180719142607240001ffbaffc2fc6f",
 			expected: Port1Payload{
 				DutyCycle:          true,
 				ConfigId:           0,
@@ -130,34 +126,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "2c420ff005ed85a12b4180719142607240001ffbaffc2fc6f",
-			port:        1,
-			autoPadding: true,
-			expected: Port1Payload{
-				DutyCycle:          false,
-				ConfigId:           0,
-				ConfigChange:       false,
-				Moving:             false,
-				Year:               24,
-				Month:              7,
-				Day:                25,
-				Hour:               20,
-				Minute:             38,
-				Second:             7,
-				Latitude:           46.407935,
-				Longitude:          6.21577,
-				Altitude:           478.8,
-				TimeToFix:          time.Duration(36) * time.Second,
-				AmbientLight:       1,
-				AccelerometerXAxis: -70,
-				AccelerometerYAxis: -62,
-				AccelerometerZAxis: -913,
-			},
-		},
-		{
-			payload:     "0000007800000708000151800078012c05dc000100010100000258000002580500000000",
-			port:        4,
-			autoPadding: false,
+			port:    4,
+			payload: "0000007800000708000151800078012c05dc000100010100000258000002580500000000",
 			expected: Port4Payload{
 				LocalizationIntervalWhileMoving: 120,
 				LocalizationIntervalWhileSteady: 1800,
@@ -178,73 +148,54 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "7800000708000151800078012c05dc000100010100000258000002580500000000",
-			port:        4,
-			autoPadding: true,
-			expected: Port4Payload{
-				LocalizationIntervalWhileMoving: 120,
-				LocalizationIntervalWhileSteady: 1800,
-				HeartbeatInterval:               86400,
-				GPSTimeoutWhileWaitingForFix:    120,
-				AccelerometerWakeupThreshold:    300,
-				AccelerometerDelay:              1500,
-				FirmwareVersionMajor:            0,
-				FirmwareVersionMinor:            1,
-				FirmwareVersionPatch:            0,
-				BatteryKeepAliveMessageInterval: 600,
-				HardwareVersionType:             1,
-				HardwareVersionRevision:         1,
-				ReJoinInterval:                  600,
-				AccuracyEnhancement:             5,
-				LightLowerThreshold:             0,
-				LightUpperThreshold:             0,
+			port:    15,
+			payload: "010df6",
+			expected: Port15Payload{
+				DutyCycle:    false,
+				ConfigId:     0,
+				ConfigChange: false,
+				LowBattery:   true,
+				Battery:      3.574,
 			},
 		},
 		{
-			payload:     "010df6",
-			port:        15,
-			autoPadding: false,
+			port:    15,
+			payload: "800df6",
 			expected: Port15Payload{
-				DutyCycle:  false,
-				LowBattery: true,
-				Battery:    3.574,
+				DutyCycle:    true,
+				ConfigId:     0,
+				ConfigChange: false,
+				LowBattery:   false,
+				Battery:      3.574,
 			},
 		},
 		{
-			payload:     "800df6",
-			port:        15,
-			autoPadding: false,
+			port:    15,
+			payload: "810df6",
 			expected: Port15Payload{
-				DutyCycle:  true,
-				LowBattery: false,
-				Battery:    3.574,
+				DutyCycle:    true,
+				ConfigId:     0,
+				ConfigChange: false,
+				LowBattery:   true,
+				Battery:      3.574,
 			},
 		},
 		{
-			payload:     "810df6",
-			port:        15,
-			autoPadding: false,
+			port:    15,
+			payload: "250df6",
 			expected: Port15Payload{
-				DutyCycle:  true,
-				LowBattery: true,
-				Battery:    3.574,
-			},
-		},
-		{
-			payload:     "10df6",
-			port:        15,
-			autoPadding: true,
-			expected: Port15Payload{
-				DutyCycle:  false,
-				LowBattery: true,
-				Battery:    3.574,
+				DutyCycle:    false,
+				ConfigId:     4,
+				ConfigChange: true,
+				LowBattery:   true,
+				Battery:      3.574,
 			},
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestPort%vWith%v", test.port, test.payload), func(t *testing.T) {
-			decoder := NewNomadXSv1Decoder(WithAutoPadding(test.autoPadding))
+			decoder := NewNomadXSv1Decoder()
 			got, err := decoder.Decode(test.payload, test.port, "")
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
@@ -252,8 +203,8 @@ func TestDecode(t *testing.T) {
 
 			t.Logf("got %v", got)
 
-			if got.Data != test.expected {
-				t.Errorf("expected: %v, got: %v", test.expected, got)
+			if got == nil || !reflect.DeepEqual(&got.Data, &test.expected) {
+				t.Errorf("expected: %v\ngot: %v", test.expected, got)
 			}
 		})
 	}
@@ -519,9 +470,10 @@ func TestFeatures(t *testing.T) {
 				if !ok {
 					t.Fatalf("expected UplinkFeatureFirmwareVersion, got %T", decodedPayload)
 				}
-				if firmwareVersion.GetFirmwareVersion() == "" {
-					t.Fatalf("expected non empty firmware version")
+				if firmwareVersion.GetFirmwareVersion() == nil {
+					t.Fatalf("expected non nil firmware version")
 				}
+				firmwareVersion.GetFirmwareHash()
 			}
 			if decodedPayload.Is(decoder.FeatureHardwareVersion) {
 				hardwareVersion, ok := decodedPayload.Data.(decoder.UplinkFeatureHardwareVersion)
@@ -545,17 +497,17 @@ func TestMarshal(t *testing.T) {
 		{
 			payload:  "0002c420ff005ed85a12b4180719142607240001ffbaffc2fc6f00d71d2e",
 			port:     1,
-			expected: []string{"\"altitude\": 478.8", "\"temperature\": 2.15", "\"timeToFix\": \"36s\""},
+			expected: []string{"\"altitude\": \"478.8m\"", "\"temperature\": \"2.15c\"", "\"timeToFix\": \"36s\""},
 		},
 		{
 			payload:  "0000007800000708000151800078012c05dc000100010100000258000002580500000000",
 			port:     4,
-			expected: []string{"\"heartbeatInterval\": 86400", "\"reJoinInterval\": 600"},
+			expected: []string{"\"configInterval\": \"24h0m0s\"", "\"rejoinInterval\": \"10m0s\""},
 		},
 		{
 			payload:  "010df6",
 			port:     15,
-			expected: []string{"\"lowBattery\": true", "\"battery\": 3.574"},
+			expected: []string{"\"lowBattery\": true", "\"battery\": \"3.574v\""},
 		},
 	}
 

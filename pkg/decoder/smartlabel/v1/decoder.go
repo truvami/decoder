@@ -13,7 +13,6 @@ type Option func(*SmartLabelv1Decoder)
 
 type SmartLabelv1Decoder struct {
 	loracloudMiddleware loracloud.LoracloudMiddleware
-	autoPadding         bool
 	skipValidation      bool
 	fCount              uint32
 }
@@ -28,12 +27,6 @@ func NewSmartLabelv1Decoder(loracloudMiddleware loracloud.LoracloudMiddleware, o
 	}
 
 	return smartLabelv1Decoder
-}
-
-func WithAutoPadding(autoPadding bool) Option {
-	return func(t *SmartLabelv1Decoder) {
-		t.autoPadding = autoPadding
-	}
 }
 
 func WithSkipValidation(skipValidation bool) Option {
@@ -184,7 +177,7 @@ func (t SmartLabelv1Decoder) Decode(data string, port uint8, devEui string) (*de
 			}
 		}
 
-		decodedData, err := common.Parse(data, &config)
+		decodedData, err := common.Decode(&data, &config)
 		return decoder.NewDecodedUplink(config.Features, decodedData), err
 	}
 }

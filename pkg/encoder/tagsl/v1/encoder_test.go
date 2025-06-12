@@ -828,15 +828,14 @@ func TestEncode(t *testing.T) {
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestPort%vWith%v", test.port, test.expected), func(t *testing.T) {
 			encoder := NewTagSLv1Encoder()
-			got, err := encoder.Encode(test.data, test.port)
+			received, err := encoder.Encode(test.data, test.port)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
 
-			t.Logf("got %v", got)
-
-			if got != test.expected {
-				t.Errorf("expected: %v\ngot: %v", test.expected, got)
+			if received != test.expected {
+				t.Errorf("expected: %v\n", test.expected)
+				t.Errorf("received: %v\n", received)
 			}
 		})
 	}

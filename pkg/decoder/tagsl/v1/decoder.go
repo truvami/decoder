@@ -13,7 +13,6 @@ import (
 type Option func(*TagSLv1Decoder)
 
 type TagSLv1Decoder struct {
-	autoPadding    bool
 	skipValidation bool
 }
 
@@ -25,12 +24,6 @@ func NewTagSLv1Decoder(options ...Option) decoder.Decoder {
 	}
 
 	return tagSLv1Decoder
-}
-
-func WithAutoPadding(autoPadding bool) Option {
-	return func(t *TagSLv1Decoder) {
-		t.autoPadding = autoPadding
-	}
 }
 
 func WithSkipValidation(skipValidation bool) Option {
@@ -80,8 +73,8 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 				{Name: "ScanPointer", Start: 0, Length: 2},
 				{Name: "TotalMessages", Start: 2, Length: 1},
 				{Name: "CurrentMessage", Start: 3, Length: 1},
-				{Name: "Mac1", Start: 4, Length: 6, Optional: true, Hex: true},
-				{Name: "Rssi1", Start: 10, Length: 1, Optional: true},
+				{Name: "Mac1", Start: 4, Length: 6, Hex: true},
+				{Name: "Rssi1", Start: 10, Length: 1},
 				{Name: "Mac2", Start: 11, Length: 6, Optional: true, Hex: true},
 				{Name: "Rssi2", Start: 17, Length: 1, Optional: true},
 				{Name: "Mac3", Start: 18, Length: 6, Optional: true, Hex: true},
@@ -214,11 +207,13 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
 				{Name: "DutyCycle", Start: 0, Length: 1, Transform: dutyCycle},
+				{Name: "ConfigId", Start: 0, Length: 1, Transform: configId},
+				{Name: "ConfigChange", Start: 0, Length: 1, Transform: configSuccess},
 				{Name: "LowBattery", Start: 0, Length: 1, Transform: lowBattery},
 				{Name: "Battery", Start: 1, Length: 2, Transform: battery},
 			},
 			TargetType: reflect.TypeOf(Port15Payload{}),
-			Features:   []decoder.Feature{decoder.FeatureDutyCycle, decoder.FeatureBattery},
+			Features:   []decoder.Feature{decoder.FeatureDutyCycle, decoder.FeatureConfigChange, decoder.FeatureBattery},
 		}, nil
 	case 50:
 		return common.PayloadConfig{
@@ -379,14 +374,14 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
 				{Name: "Reason", Start: 0, Length: 1},
-				{Name: "Line", Start: 1, Length: -1, Optional: true, Hex: true, Transform: func(v any) any {
-					return stacktrace(v.(string), 0)
+				{Name: "Line", Start: 1, Length: -1, Optional: true, Transform: func(v any) any {
+					return stacktrace(v.([]byte), 0)
 				}},
-				{Name: "File", Start: 1, Length: -1, Optional: true, Hex: true, Transform: func(v any) any {
-					return stacktrace(v.(string), 1)
+				{Name: "File", Start: 1, Length: -1, Optional: true, Transform: func(v any) any {
+					return stacktrace(v.([]byte), 1)
 				}},
-				{Name: "Function", Start: 1, Length: -1, Optional: true, Hex: true, Transform: func(v any) any {
-					return stacktrace(v.(string), 2)
+				{Name: "Function", Start: 1, Length: -1, Optional: true, Transform: func(v any) any {
+					return stacktrace(v.([]byte), 2)
 				}},
 			},
 			TargetType: reflect.TypeOf(Port198Payload{}),
@@ -414,10 +409,6 @@ func (t TagSLv1Decoder) Decode(data string, port uint8, devEui string) (*decoder
 		return nil, err
 	}
 
-	if t.autoPadding {
-		data = common.HexNullPad(&data, &config)
-	}
-
 	if !t.skipValidation {
 		err := common.ValidateLength(&data, &config)
 		if err != nil {
@@ -425,7 +416,7 @@ func (t TagSLv1Decoder) Decode(data string, port uint8, devEui string) (*decoder
 		}
 	}
 
-	decodedData, err := common.Parse(data, &config)
+	decodedData, err := common.Decode(&data, &config)
 	return decoder.NewDecodedUplink(config.Features, decodedData), err
 }
 
@@ -477,14 +468,10 @@ func pdop(v any) any {
 	return float64(common.BytesToUint8(v.([]byte))) / 2
 }
 
-func stacktrace(v string, i int) *string {
-	bytes, err := common.HexStringToBytes(v)
-	if err != nil {
-		return nil
-	}
-	frags := strings.Split(string(bytes), ":")
+func stacktrace(v []byte, i int) any {
+	frags := strings.Split(string(v), ":")
 	if len(frags) > i {
-		return common.StringPtr(frags[i])
+		return frags[i]
 	}
 	return nil
 }

@@ -5,23 +5,28 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/truvami/decoder/pkg/aws"
 	"github.com/truvami/decoder/pkg/common"
 	"github.com/truvami/decoder/pkg/decoder"
 	"github.com/truvami/decoder/pkg/loracloud"
+	"go.uber.org/zap"
 )
 
 type Option func(*TagXLv1Decoder)
 
 type TagXLv1Decoder struct {
 	loracloudMiddleware loracloud.LoracloudMiddleware
-	autoPadding         bool
 	skipValidation      bool
 	fCount              uint32
+	logger              *zap.Logger
+
+	useAWS bool
 }
 
-func NewTagXLv1Decoder(loracloudMiddleware loracloud.LoracloudMiddleware, options ...Option) decoder.Decoder {
+func NewTagXLv1Decoder(loracloudMiddleware loracloud.LoracloudMiddleware, logger *zap.Logger, options ...Option) decoder.Decoder {
 	tagXLv1Decoder := &TagXLv1Decoder{
 		loracloudMiddleware: loracloudMiddleware,
+		logger:              logger,
 	}
 
 	for _, option := range options {
@@ -29,12 +34,6 @@ func NewTagXLv1Decoder(loracloudMiddleware loracloud.LoracloudMiddleware, option
 	}
 
 	return tagXLv1Decoder
-}
-
-func WithAutoPadding(autoPadding bool) Option {
-	return func(t *TagXLv1Decoder) {
-		t.autoPadding = autoPadding
-	}
 }
 
 func WithSkipValidation(skipValidation bool) Option {
@@ -48,6 +47,12 @@ func WithSkipValidation(skipValidation bool) Option {
 func WithFCount(fCount uint32) Option {
 	return func(t *TagXLv1Decoder) {
 		t.fCount = fCount
+	}
+}
+
+func WithUseAWS(useAWS bool) Option {
+	return func(t *TagXLv1Decoder) {
+		t.useAWS = useAWS
 	}
 }
 
@@ -69,40 +74,42 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 		}
 		return common.PayloadConfig{
 			Tags: []common.TagConfig{
-				{Name: "GnssEnabled", Tag: 0x40, Optional: true, Feature: []decoder.Feature{decoder.FeatureConfig}, Transform: func(v any) any {
-					// bit 1: GNSS_ENABLE
-					return (v.([]byte)[0] & 0x02) != 0
+				{Name: "AccelerometerEnabled", Tag: 0x40, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
+					return ((v.([]byte)[0] >> 3) & 0x01) != 0
 				}},
-				{Name: "WiFiEnabled", Tag: 0x40, Optional: true, Feature: []decoder.Feature{decoder.FeatureConfig}, Transform: func(v any) any {
-					// bit 2: WIFI_ENABLE
-					return (v.([]byte)[0] & 0x04) != 0
+				{Name: "WifiEnabled", Tag: 0x40, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
+					return ((v.([]byte)[0] >> 2) & 0x01) != 0
 				}},
-				{Name: "AccelerometerEnabled", Tag: 0x40, Optional: true, Feature: []decoder.Feature{decoder.FeatureConfig}, Transform: func(v any) any {
-					// bit 3: ACCELERATION_ENABLE
-					return (v.([]byte)[0] & 0x08) != 0
+				{Name: "GnssEnabled", Tag: 0x40, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
+					return ((v.([]byte)[0] >> 1) & 0x01) != 0
 				}},
-				{Name: "LocalizationIntervalWhileMoving", Tag: 0x41, Optional: true, Feature: []decoder.Feature{decoder.FeatureConfig}, Transform: func(v any) any {
-					// data 0: MOVING_INTERVAL
+				{Name: "FirmwareUpgrade", Tag: 0x40, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
+					return (v.([]byte)[0] & 0x01) != 0
+				}},
+				{Name: "LocalizationIntervalWhileMoving", Tag: 0x41, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
 					return uint16((common.BytesToUint32(v.([]byte)) >> 16) & 0xffff)
 				}},
-				{Name: "LocalizationIntervalWhileSteady", Tag: 0x41, Optional: true, Feature: []decoder.Feature{decoder.FeatureConfig}, Transform: func(v any) any {
-					// data 1: STEADY_INTERVAL
+				{Name: "LocalizationIntervalWhileSteady", Tag: 0x41, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
 					return uint16(common.BytesToUint32(v.([]byte)) & 0xffff)
 				}},
-				{Name: "AccelerometerWakeupThreshold", Tag: 0x42, Optional: true, Feature: []decoder.Feature{decoder.FeatureConfig}, Transform: func(v any) any {
-					// data 0: WAKEUP_THRESHOLD
+				{Name: "AccelerometerWakeupThreshold", Tag: 0x42, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
 					return uint16((common.BytesToUint32(v.([]byte)) >> 16) & 0xffff)
 				}},
-				{Name: "AccelerometerDelay", Tag: 0x42, Optional: true, Feature: []decoder.Feature{decoder.FeatureConfig}, Transform: func(v any) any {
-					// data 1: WAKEUP_DELAY
+				{Name: "AccelerometerDelay", Tag: 0x42, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
 					return uint16(common.BytesToUint32(v.([]byte)) & 0xffff)
 				}},
 				{Name: "HeartbeatInterval", Tag: 0x43, Optional: true},
 				{Name: "AdvertisementFirmwareUpgradeInterval", Tag: 0x44, Optional: true},
-				{Name: "Battery", Tag: 0x45, Optional: true, Feature: []decoder.Feature{decoder.FeatureBattery}, Transform: func(v any) any {
+				{Name: "Battery", Tag: 0x45, Optional: true, Feature: decoder.FeatureBattery, Transform: func(v any) any {
 					return float32(common.BytesToUint16(v.([]byte))) / 1000
 				}},
-				{Name: "FirmwareHash", Tag: 0x46, Optional: true, Hex: true},
+				{Name: "FirmwareHash", Tag: 0x46, Optional: true, Feature: decoder.FeatureFirmwareVersion, Hex: true},
+				{Name: "RotationInvert", Tag: 0x47, Optional: true, Transform: func(v any) any {
+					return (v.([]byte)[0] & 0x01) != 0
+				}},
+				{Name: "RotationConfirmed", Tag: 0x47, Optional: true, Transform: func(v any) any {
+					return ((v.([]byte)[0] >> 1) & 0x01) != 0
+				}},
 				{Name: "ResetCount", Tag: 0x49, Optional: true},
 				{Name: "ResetCause", Tag: 0x4a, Optional: true},
 				{Name: "GnssScans", Tag: 0x4b, Optional: true, Transform: func(v any) any {
@@ -112,8 +119,8 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 					return uint16(common.BytesToUint32(v.([]byte)) & 0xffff)
 				}},
 			},
-			Features:   []decoder.Feature{decoder.FeatureConfig},
 			TargetType: reflect.TypeOf(Port151Payload{}),
+			Features:   []decoder.Feature{},
 		}, nil
 	case 152:
 		var version uint8 = payload[0]
@@ -202,13 +209,35 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 func (t TagXLv1Decoder) Decode(data string, port uint8, devEui string) (*decoder.DecodedUplink, error) {
 	switch port {
 	case 192:
-		decodedData, err := t.loracloudMiddleware.DeliverUplinkMessage(devEui, loracloud.UplinkMsg{
-			MsgType: "updf",
-			Port:    port,
-			Payload: data,
-			FCount:  t.fCount,
-		})
-		return decoder.NewDecodedUplink([]decoder.Feature{decoder.FeatureGNSS}, decodedData), err
+		var position *aws.Position
+		var err error
+
+		if t.useAWS {
+			t.logger.Debug("solving position using AWS IoT Wireless")
+			position, err = aws.Solve(t.logger, data, time.Now())
+			t.logger.Error("error solving position using AWS IoT Wireless, try with loracloud", zap.Error(err))
+		}
+
+		if position == nil {
+			decodedData, err := t.loracloudMiddleware.DeliverUplinkMessage(devEui, loracloud.UplinkMsg{
+				MsgType: "updf",
+				Port:    port,
+				Payload: data,
+				FCount:  t.fCount,
+			})
+
+			if t.useAWS {
+				t.logger.Info("solving position using loracloud middleware as fallback")
+				if err != nil {
+					t.logger.Error("there was an error solving position using loracloud middleware as fallback", zap.Error(err))
+				}
+			}
+
+			return decoder.NewDecodedUplink([]decoder.Feature{decoder.FeatureGNSS}, decodedData), err
+		}
+
+		t.logger.Info("position solved using AWS IoT Wireless", zap.String("devEui", devEui))
+		return decoder.NewDecodedUplink([]decoder.Feature{decoder.FeatureGNSS}, position), err
 	case 199:
 		decodedData, err := t.loracloudMiddleware.DeliverUplinkMessage(devEui, loracloud.UplinkMsg{
 			MsgType: "updf",
@@ -228,10 +257,6 @@ func (t TagXLv1Decoder) Decode(data string, port uint8, devEui string) (*decoder
 			return nil, err
 		}
 
-		if t.autoPadding {
-			data = common.HexNullPad(&data, &config)
-		}
-
 		if !t.skipValidation {
 			err := common.ValidateLength(&data, &config)
 			if err != nil {
@@ -239,7 +264,7 @@ func (t TagXLv1Decoder) Decode(data string, port uint8, devEui string) (*decoder
 			}
 		}
 
-		decodedData, err := common.Parse(data, &config)
+		decodedData, err := common.Decode(&data, &config)
 		return decoder.NewDecodedUplink(config.Features, decodedData), err
 	}
 }

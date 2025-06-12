@@ -21,8 +21,9 @@ import (
 	tagslDecoder "github.com/truvami/decoder/pkg/decoder/tagsl/v1"
 	tagxlDecoder "github.com/truvami/decoder/pkg/decoder/tagxl/v1"
 	"github.com/truvami/decoder/pkg/encoder"
-	encoderSmartlabel "github.com/truvami/decoder/pkg/encoder/smartlabel/v1"
-	encoderTagsl "github.com/truvami/decoder/pkg/encoder/tagsl/v1"
+	nomadxsEncoder "github.com/truvami/decoder/pkg/encoder/nomadxs/v1"
+	smartlabelEncoder "github.com/truvami/decoder/pkg/encoder/smartlabel/v1"
+	tagslEncoder "github.com/truvami/decoder/pkg/encoder/tagsl/v1"
 	"github.com/truvami/decoder/pkg/loracloud"
 	"go.uber.org/zap"
 )
@@ -38,6 +39,7 @@ func init() {
 	httpCmd.Flags().StringVar(&accessToken, "token", "", "Access token for the loracloud API")
 	httpCmd.Flags().BoolVar(&health, "health", false, "Enable /health endpoint")
 	httpCmd.Flags().BoolVar(&metrics, "metrics", false, "Enable prometheus /metrics endpoint")
+	httpCmd.Flags().BoolVar(&useAWS, "use-aws", false, "Experimental: Use AWS IoT Wireless to decode payloads (requires AWS credentials)")
 	rootCmd.AddCommand(httpCmd)
 
 	// Add the generic encoder endpoint
@@ -79,31 +81,11 @@ var httpCmd = &cobra.Command{
 		}
 
 		var decoders []decoderEndpoint = []decoderEndpoint{
-			{
-				"tagxl/v1",
-				tagxlDecoder.NewTagXLv1Decoder(
-					loracloud.NewLoracloudMiddleware(accessToken),
-					tagxlDecoder.WithAutoPadding(AutoPadding),
-					tagxlDecoder.WithSkipValidation(SkipValidation),
-				),
-			},
-			{"tagsl/v1", tagslDecoder.NewTagSLv1Decoder(
-				tagslDecoder.WithAutoPadding(AutoPadding),
-				tagslDecoder.WithSkipValidation(SkipValidation),
-			)},
-			{"nomadxs/v1", nomadxsDecoder.NewNomadXSv1Decoder(
-				nomadxsDecoder.WithAutoPadding(AutoPadding),
-				nomadxsDecoder.WithSkipValidation(SkipValidation),
-			)},
-			{"nomadxl/v1", nomadxlDecoder.NewNomadXLv1Decoder(
-				nomadxlDecoder.WithAutoPadding(AutoPadding),
-				nomadxlDecoder.WithSkipValidation(SkipValidation),
-			)},
-			{"smartlabel/v1", smartlabelDecoder.NewSmartLabelv1Decoder(
-				loracloud.NewLoracloudMiddleware(accessToken),
-				smartlabelDecoder.WithAutoPadding(AutoPadding),
-				smartlabelDecoder.WithSkipValidation(SkipValidation),
-			)},
+			{"tagsl/v1", tagslDecoder.NewTagSLv1Decoder(tagslDecoder.WithSkipValidation(SkipValidation))},
+			{"tagxl/v1", tagxlDecoder.NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware(accessToken), logger.Logger, tagxlDecoder.WithUseAWS(useAWS), tagxlDecoder.WithSkipValidation(SkipValidation))},
+			{"nomadxs/v1", nomadxsDecoder.NewNomadXSv1Decoder(nomadxsDecoder.WithSkipValidation(SkipValidation))},
+			{"nomadxl/v1", nomadxlDecoder.NewNomadXLv1Decoder(nomadxlDecoder.WithSkipValidation(SkipValidation))},
+			{"smartlabel/v1", smartlabelDecoder.NewSmartLabelv1Decoder(loracloud.NewLoracloudMiddleware(accessToken), smartlabelDecoder.WithSkipValidation(SkipValidation))},
 		}
 
 		// add the decoders
@@ -118,8 +100,9 @@ var httpCmd = &cobra.Command{
 		}
 
 		var encoders []encoderEndpoint = []encoderEndpoint{
-			{"encode/tagsl/v1", encoderTagsl.NewTagSLv1Encoder()},
-			{"encode/smartlabel/v1", encoderSmartlabel.NewSmartlabelv1Encoder()},
+			{"encode/tagsl/v1", tagslEncoder.NewTagSLv1Encoder()},
+			{"encode/nomadxs/v1", nomadxsEncoder.NewNomadXSv1Encoder()},
+			{"encode/smartlabel/v1", smartlabelEncoder.NewSmartlabelv1Encoder()},
 		}
 
 		// add the encoders
@@ -253,7 +236,7 @@ func getEncoderHandler(encoder encoder.Encoder) func(http.ResponseWriter, *http.
 		case "/encode/tagsl/v1":
 			switch rawReq.Port {
 			case 128:
-				var payload encoderTagsl.Port128Payload
+				var payload tagslEncoder.Port128Payload
 				if err := json.Unmarshal(rawReq.Payload, &payload); err != nil {
 					logger.Logger.Error("error unmarshaling payload", zap.Error(err))
 					setBody(w, http.StatusBadRequest, map[string]any{
@@ -264,7 +247,7 @@ func getEncoderHandler(encoder encoder.Encoder) func(http.ResponseWriter, *http.
 				}
 				structPayload = payload
 			case 129:
-				var payload encoderTagsl.Port129Payload
+				var payload tagslEncoder.Port129Payload
 				if err := json.Unmarshal(rawReq.Payload, &payload); err != nil {
 					logger.Logger.Error("error unmarshaling payload", zap.Error(err))
 					setBody(w, http.StatusBadRequest, map[string]any{
@@ -275,7 +258,7 @@ func getEncoderHandler(encoder encoder.Encoder) func(http.ResponseWriter, *http.
 				}
 				structPayload = payload
 			case 131:
-				var payload encoderTagsl.Port131Payload
+				var payload tagslEncoder.Port131Payload
 				if err := json.Unmarshal(rawReq.Payload, &payload); err != nil {
 					logger.Logger.Error("error unmarshaling payload", zap.Error(err))
 					setBody(w, http.StatusBadRequest, map[string]any{
@@ -286,7 +269,7 @@ func getEncoderHandler(encoder encoder.Encoder) func(http.ResponseWriter, *http.
 				}
 				structPayload = payload
 			case 134:
-				var payload encoderTagsl.Port134Payload
+				var payload tagslEncoder.Port134Payload
 				if err := json.Unmarshal(rawReq.Payload, &payload); err != nil {
 					logger.Logger.Error("error unmarshaling payload", zap.Error(err))
 					setBody(w, http.StatusBadRequest, map[string]any{

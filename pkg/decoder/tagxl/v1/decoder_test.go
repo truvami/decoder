@@ -13,6 +13,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/truvami/decoder/internal/logger"
 	helpers "github.com/truvami/decoder/pkg/common"
 	"github.com/truvami/decoder/pkg/decoder"
 	"github.com/truvami/decoder/pkg/loracloud"
@@ -69,18 +70,22 @@ func TestDecode(t *testing.T) {
 		payload     string
 		port        uint8
 		devEui      string
-		autoPadding bool
 		expected    any
 		expectedErr string
 	}{
-
 		{
 			port:        0,
 			payload:     "00",
 			devEui:      "",
-			autoPadding: false,
 			expected:    nil,
 			expectedErr: "port 0 not supported",
+		},
+		{
+			port:        150,
+			payload:     "xx",
+			devEui:      "",
+			expected:    nil,
+			expectedErr: "encoding/hex: invalid byte: U+0078 'x'",
 		},
 		{
 			port:    150,
@@ -107,6 +112,36 @@ func TestDecode(t *testing.T) {
 			payload:     "4c0501ff020000",
 			expected:    Port151Payload{},
 			expectedErr: "unknown tag ff",
+		},
+		{
+			port:    151,
+			payload: "4c040140010a",
+			expected: Port151Payload{
+				AccelerometerEnabled: helpers.BoolPtr(true),
+				WifiEnabled:          helpers.BoolPtr(false),
+				GnssEnabled:          helpers.BoolPtr(true),
+				FirmwareUpgrade:      helpers.BoolPtr(false),
+			},
+		},
+		{
+			port:    151,
+			payload: "4c040140010e",
+			expected: Port151Payload{
+				AccelerometerEnabled: helpers.BoolPtr(true),
+				WifiEnabled:          helpers.BoolPtr(true),
+				GnssEnabled:          helpers.BoolPtr(true),
+				FirmwareUpgrade:      helpers.BoolPtr(false),
+			},
+		},
+		{
+			port:    151,
+			payload: "4c0401400103",
+			expected: Port151Payload{
+				AccelerometerEnabled: helpers.BoolPtr(false),
+				WifiEnabled:          helpers.BoolPtr(false),
+				GnssEnabled:          helpers.BoolPtr(true),
+				FirmwareUpgrade:      helpers.BoolPtr(true),
+			},
 		},
 		{
 			port:    151,
@@ -176,9 +211,10 @@ func TestDecode(t *testing.T) {
 			port:    151,
 			payload: "4c2a0940010f4104012c1c204204012c05dc43010644011e45020d4e4604f6c7d8104902000a4a0400000002",
 			expected: Port151Payload{
-				GnssEnabled:                          helpers.BoolPtr(true),
-				WiFiEnabled:                          helpers.BoolPtr(true),
 				AccelerometerEnabled:                 helpers.BoolPtr(true),
+				WifiEnabled:                          helpers.BoolPtr(true),
+				GnssEnabled:                          helpers.BoolPtr(true),
+				FirmwareUpgrade:                      helpers.BoolPtr(true),
 				LocalizationIntervalWhileMoving:      helpers.Uint16Ptr(300),
 				LocalizationIntervalWhileSteady:      helpers.Uint16Ptr(7200),
 				AccelerometerWakeupThreshold:         helpers.Uint16Ptr(300),
@@ -189,7 +225,29 @@ func TestDecode(t *testing.T) {
 				FirmwareHash:                         helpers.StringPtr("f6c7d810"),
 				ResetCount:                           helpers.Uint16Ptr(10),
 				ResetCause:                           helpers.Uint32Ptr(2),
-			}},
+			},
+		},
+		{
+			port:    151,
+			payload: "4c2d0a40010b410402581c204204012c05dc43010644011e45020d6c4604a25b545547010249020003",
+			expected: Port151Payload{
+				AccelerometerEnabled:                 helpers.BoolPtr(true),
+				WifiEnabled:                          helpers.BoolPtr(false),
+				GnssEnabled:                          helpers.BoolPtr(true),
+				FirmwareUpgrade:                      helpers.BoolPtr(true),
+				LocalizationIntervalWhileMoving:      helpers.Uint16Ptr(600),
+				LocalizationIntervalWhileSteady:      helpers.Uint16Ptr(7200),
+				AccelerometerWakeupThreshold:         helpers.Uint16Ptr(300),
+				AccelerometerDelay:                   helpers.Uint16Ptr(1500),
+				HeartbeatInterval:                    helpers.Uint8Ptr(6),
+				AdvertisementFirmwareUpgradeInterval: helpers.Uint8Ptr(30),
+				Battery:                              helpers.Float32Ptr(3.436),
+				FirmwareHash:                         helpers.StringPtr("a25b5455"),
+				RotationInvert:                       helpers.BoolPtr(false),
+				RotationConfirmed:                    helpers.BoolPtr(true),
+				ResetCount:                           helpers.Uint16Ptr(3),
+			},
+		},
 		{
 			port:        152,
 			payload:     "ff",
@@ -260,17 +318,15 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			port:        192,
-			payload:     "87821f50490200b520fbe977844d222a3a14a89293956245cc75a9ca1bbc25ddf658542909",
-			devEui:      "10CE45FFFE00C7EC",
-			autoPadding: false,
-			expected:    &exampleResponse,
+			port:     192,
+			payload:  "87821f50490200b520fbe977844d222a3a14a89293956245cc75a9ca1bbc25ddf658542909",
+			devEui:   "10CE45FFFE00C7EC",
+			expected: &exampleResponse,
 		},
 		{
 			port:        192,
 			payload:     "87821f50490200b520fbe977844d222a3a14a89293956245cc75a9ca1bbc25ddf658542909",
 			devEui:      "10CE45FFFE00C7ED",
-			autoPadding: false,
 			expected:    &exampleResponse,
 			expectedErr: "",
 		},
@@ -282,10 +338,17 @@ func TestDecode(t *testing.T) {
 		},
 		{
 			port:    197,
+			payload: "003385f8ee30c2",
+			expected: Port197Payload{
+				Mac1: "3385f8ee30c2",
+			},
+		},
+		{
+			port:    197,
 			payload: "003385f8ee30c2a0382c2601db",
 			expected: Port197Payload{
 				Mac1: "3385f8ee30c2",
-				Mac2: "a0382c2601db",
+				Mac2: helpers.StringPtr("a0382c2601db"),
 			},
 		},
 		{
@@ -293,8 +356,8 @@ func TestDecode(t *testing.T) {
 			payload: "00b5eded55a313a0b8b5e86e3194a765f3ad40",
 			expected: Port197Payload{
 				Mac1: "b5eded55a313",
-				Mac2: "a0b8b5e86e31",
-				Mac3: "94a765f3ad40",
+				Mac2: helpers.StringPtr("a0b8b5e86e31"),
+				Mac3: helpers.StringPtr("94a765f3ad40"),
 			},
 		},
 		{
@@ -302,9 +365,9 @@ func TestDecode(t *testing.T) {
 			payload: "006fbcfdd764347e7cbff22fc500dc0af60588010161302d9c",
 			expected: Port197Payload{
 				Mac1: "6fbcfdd76434",
-				Mac2: "7e7cbff22fc5",
-				Mac3: "00dc0af60588",
-				Mac4: "010161302d9c",
+				Mac2: helpers.StringPtr("7e7cbff22fc5"),
+				Mac3: helpers.StringPtr("00dc0af60588"),
+				Mac4: helpers.StringPtr("010161302d9c"),
 			},
 		},
 		{
@@ -312,10 +375,18 @@ func TestDecode(t *testing.T) {
 			payload: "00218f6c166fad59ea3bdec77df72faac81784263386a455d33592a063900b",
 			expected: Port197Payload{
 				Mac1: "218f6c166fad",
-				Mac2: "59ea3bdec77d",
-				Mac3: "f72faac81784",
-				Mac4: "263386a455d3",
-				Mac5: "3592a063900b",
+				Mac2: helpers.StringPtr("59ea3bdec77d"),
+				Mac3: helpers.StringPtr("f72faac81784"),
+				Mac4: helpers.StringPtr("263386a455d3"),
+				Mac5: helpers.StringPtr("3592a063900b"),
+			},
+		},
+		{
+			port:    197,
+			payload: "01d63385f8ee30c2",
+			expected: Port197Payload{
+				Rssi1: -42,
+				Mac1:  "3385f8ee30c2",
 			},
 		},
 		{
@@ -324,8 +395,8 @@ func TestDecode(t *testing.T) {
 			expected: Port197Payload{
 				Rssi1: -42,
 				Mac1:  "3385f8ee30c2",
-				Rssi2: -48,
-				Mac2:  "a0382c2601db",
+				Rssi2: helpers.Int8Ptr(-48),
+				Mac2:  helpers.StringPtr("a0382c2601db"),
 			},
 		},
 		{
@@ -334,10 +405,10 @@ func TestDecode(t *testing.T) {
 			expected: Port197Payload{
 				Rssi1: -56,
 				Mac1:  "b5eded55a313",
-				Rssi2: -64,
-				Mac2:  "a0b8b5e86e31",
-				Rssi3: -72,
-				Mac3:  "94a765f3ad40",
+				Rssi2: helpers.Int8Ptr(-64),
+				Mac2:  helpers.StringPtr("a0b8b5e86e31"),
+				Rssi3: helpers.Int8Ptr(-72),
+				Mac3:  helpers.StringPtr("94a765f3ad40"),
 			},
 		},
 		{
@@ -346,12 +417,12 @@ func TestDecode(t *testing.T) {
 			expected: Port197Payload{
 				Rssi1: -67,
 				Mac1:  "6fbcfdd76434",
-				Rssi2: -69,
-				Mac2:  "7e7cbff22fc5",
-				Rssi3: -71,
-				Mac3:  "00dc0af60588",
-				Rssi4: -73,
-				Mac4:  "010161302d9c",
+				Rssi2: helpers.Int8Ptr(-69),
+				Mac2:  helpers.StringPtr("7e7cbff22fc5"),
+				Rssi3: helpers.Int8Ptr(-71),
+				Mac3:  helpers.StringPtr("00dc0af60588"),
+				Rssi4: helpers.Int8Ptr(-73),
+				Mac4:  helpers.StringPtr("010161302d9c"),
 			},
 		},
 		{
@@ -360,21 +431,24 @@ func TestDecode(t *testing.T) {
 			expected: Port197Payload{
 				Rssi1: -73,
 				Mac1:  "218f6c166fad",
-				Rssi2: -77,
-				Mac2:  "59ea3bdec77d",
-				Rssi3: -81,
-				Mac3:  "f72faac81784",
-				Rssi4: -85,
-				Mac4:  "263386a455d3",
-				Rssi5: -89,
-				Mac5:  "3592a063900b",
+				Rssi2: helpers.Int8Ptr(-77),
+				Mac2:  helpers.StringPtr("59ea3bdec77d"),
+				Rssi3: helpers.Int8Ptr(-81),
+				Mac3:  helpers.StringPtr("f72faac81784"),
+				Rssi4: helpers.Int8Ptr(-85),
+				Mac4:  helpers.StringPtr("263386a455d3"),
+				Rssi5: helpers.Int8Ptr(-89),
+				Mac5:  helpers.StringPtr("3592a063900b"),
 			},
 		},
 	}
 
+	if logger.Logger == nil {
+		logger.NewLogger()
+	}
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestPort%vWith%v", test.port, test.payload), func(t *testing.T) {
-			decoder := NewTagXLv1Decoder(middleware, WithAutoPadding(test.autoPadding), WithFCount(1))
+			decoder := NewTagXLv1Decoder(middleware, logger.Logger, WithFCount(1))
 			got, err := decoder.Decode(test.payload, test.port, test.devEui)
 
 			if err == nil && len(test.expectedErr) != 0 {
@@ -414,9 +488,13 @@ func TestValidationErrors(t *testing.T) {
 		expected error
 	}{}
 
+	if logger.Logger == nil {
+		logger.NewLogger()
+	}
+
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestPort%vValidationWith%v", test.port, test.payload), func(t *testing.T) {
-			decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"))
+			decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"), logger.Logger)
 			got, err := decoder.Decode(test.payload, test.port, "")
 
 			if err == nil && test.expected == nil {
@@ -433,7 +511,11 @@ func TestValidationErrors(t *testing.T) {
 }
 
 func TestInvalidPort(t *testing.T) {
-	decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"))
+	if logger.Logger == nil {
+		logger.NewLogger()
+	}
+
+	decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"), logger.Logger)
 	_, err := decoder.Decode("00", 0, "")
 
 	if err == nil || !errors.Is(err, helpers.ErrPortNotSupported) {
@@ -442,7 +524,11 @@ func TestInvalidPort(t *testing.T) {
 }
 
 func TestPayloadTooShort(t *testing.T) {
-	decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"))
+	if logger.Logger == nil {
+		logger.NewLogger()
+	}
+
+	decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"), logger.Logger)
 	_, err := decoder.Decode("01adbeef", 152, "")
 
 	if err == nil || !errors.Is(err, helpers.ErrPayloadTooShort) {
@@ -451,7 +537,11 @@ func TestPayloadTooShort(t *testing.T) {
 }
 
 func TestPayloadTooLong(t *testing.T) {
-	decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"))
+	if logger.Logger == nil {
+		logger.NewLogger()
+	}
+
+	decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"), logger.Logger)
 	_, err := decoder.Decode("01adbeef4242deadbeef4242deadbeef4242", 152, "")
 
 	if err == nil || !errors.Is(err, helpers.ErrPayloadTooLong) {
@@ -475,20 +565,44 @@ func TestFeatures(t *testing.T) {
 			payload: "4c050145020b10",
 		},
 		{
+			port:    151,
+			payload: "4c03014104003c0078",
+		},
+		{
+			port:    151,
+			payload: "4c03014204000a03e8",
+		},
+		{
+			port:    151,
+			payload: "4c2a0940010f4104012c1c204204012c05dc43010644011e45020d4e4604f6c7d8104902000a4a0400000002",
+		},
+		{
+			port:    151,
+			payload: "4c2d0a40010b410402581c204204012c05dc43010644011e45020d6c4604a25b545547010249020003",
+		},
+		{
+			payload: "010b0066acbcf0000000000756",
+			port:    152,
+		},
+		{
 			payload: "010b0266acbcf0000000000756",
 			port:    152,
 		},
 		{
-			payload: "020c62206822f120000d00000024",
+			payload: "020c62016822f120000d00000024",
 			port:    152,
 		},
 		{
-			payload: "020c09016823166a000000000109",
+			payload: "020c09036823166a000000000109",
 			port:    152,
 		},
 		{
 			payload: "87821f50490200b520fbe977844d222a3a14a89293956245cc75a9ca1bbc25ddf658542909",
 			port:    192,
+		},
+		{
+			payload: "00218f6c166fad59ea3bdec77df72faac81784263386a455d33592a063900b",
+			port:    197,
 		},
 		{
 			payload: "01b7218f6c166fadb359ea3bdec77daff72faac81784ab263386a455d3a73592a063900b",
@@ -524,9 +638,13 @@ func TestFeatures(t *testing.T) {
 	middleware.BaseUrl = server.URL
 	defer server.Close()
 
+	if logger.Logger == nil {
+		logger.NewLogger()
+	}
+
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestFeaturesWithPort%vAndPayload%v", test.port, test.payload), func(t *testing.T) {
-			d := NewTagXLv1Decoder(middleware, WithFCount(42))
+			d := NewTagXLv1Decoder(middleware, logger.Logger, WithFCount(42))
 			decodedPayload, err := d.Decode(test.payload, test.port, "927da4b72110927d")
 			if err != nil {
 				t.Fatalf("error %s", err)
@@ -627,6 +745,16 @@ func TestFeatures(t *testing.T) {
 				config.GetBufferSize()
 				config.GetDataRate()
 			}
+			if decodedPayload.Is(decoder.FeatureFirmwareVersion) {
+				firmwareVersion, ok := decodedPayload.Data.(decoder.UplinkFeatureFirmwareVersion)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureFirmwareVersion, got %T", decodedPayload)
+				}
+				firmwareVersion.GetFirmwareVersion()
+				if firmwareVersion.GetFirmwareHash() == nil {
+					t.Fatalf("expected non nil firmware hash")
+				}
+			}
 			if decodedPayload.Is(decoder.FeatureRotationState) {
 				rotationState, ok := decodedPayload.Data.(decoder.UplinkFeatureRotationState)
 				if !ok {
@@ -642,33 +770,6 @@ func TestFeatures(t *testing.T) {
 				}
 				// call function to check if it panics
 				sequenceNumber.GetSequenceNumber()
-			}
-			if decodedPayload.Is(decoder.FeatureConfig) {
-				config, ok := decodedPayload.Data.(decoder.UplinkFeatureConfig)
-				if !ok {
-					t.Fatalf("expected UplinkFeatureConfig, got %T", decodedPayload)
-				}
-				// call functions to check if it panics
-				config.GetBle()
-				config.GetGnss()
-				config.GetWifi()
-				config.GetAcceleration()
-				config.GetMovingInterval()
-				config.GetSteadyInterval()
-				config.GetConfigInterval()
-				config.GetGnssTimeout()
-				config.GetAccelerometerThreshold()
-				config.GetAccelerometerDelay()
-				config.GetBatteryInterval()
-				config.GetRejoinInterval()
-				config.GetLowLightThreshold()
-				config.GetHighLightThreshold()
-				config.GetLowTemperatureThreshold()
-				config.GetHighTemperatureThreshold()
-				config.GetAccessPointsThreshold()
-				config.GetBatchSize()
-				config.GetBufferSize()
-				config.GetDataRate()
 			}
 		})
 	}
@@ -687,9 +788,13 @@ func TestMarshal(t *testing.T) {
 		},
 	}
 
+	if logger.Logger == nil {
+		logger.NewLogger()
+	}
+
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestMarshalWithPort%vAndPayload%v", test.port, test.payload), func(t *testing.T) {
-			decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"))
+			decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"), logger.Logger)
 
 			data, _ := decoder.Decode(test.payload, test.port, "")
 
@@ -714,7 +819,11 @@ func TestMarshal(t *testing.T) {
 }
 
 func TestWithFCount(t *testing.T) {
-	decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"), WithFCount(123))
+	if logger.Logger == nil {
+		logger.NewLogger()
+	}
+
+	decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"), logger.Logger, WithFCount(123))
 
 	// cast to TagXLv1Decoder to access fCount
 	tagXLv1Decoder := decoder.(*TagXLv1Decoder)

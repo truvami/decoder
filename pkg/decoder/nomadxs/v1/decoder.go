@@ -12,7 +12,6 @@ import (
 type Option func(*NomadXSv1Decoder)
 
 type NomadXSv1Decoder struct {
-	autoPadding    bool
 	skipValidation bool
 }
 
@@ -24,12 +23,6 @@ func NewNomadXSv1Decoder(options ...Option) decoder.Decoder {
 	}
 
 	return nomadXSv1Decoder
-}
-
-func WithAutoPadding(autoPadding bool) Option {
-	return func(t *NomadXSv1Decoder) {
-		t.autoPadding = autoPadding
-	}
 }
 
 func WithSkipValidation(skipValidation bool) Option {
@@ -101,11 +94,13 @@ func (t NomadXSv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
 				{Name: "DutyCycle", Start: 0, Length: 1, Transform: dutyCycle},
+				{Name: "ConfigId", Start: 0, Length: 1, Transform: configId},
+				{Name: "ConfigChange", Start: 0, Length: 1, Transform: configSuccess},
 				{Name: "LowBattery", Start: 0, Length: 1, Transform: lowBattery},
 				{Name: "Battery", Start: 1, Length: 2, Transform: battery},
 			},
 			TargetType: reflect.TypeOf(Port15Payload{}),
-			Features:   []decoder.Feature{decoder.FeatureDutyCycle, decoder.FeatureBattery},
+			Features:   []decoder.Feature{decoder.FeatureDutyCycle, decoder.FeatureConfigChange, decoder.FeatureBattery},
 		}, nil
 	}
 
@@ -118,10 +113,6 @@ func (t NomadXSv1Decoder) Decode(data string, port uint8, devEui string) (*decod
 		return nil, err
 	}
 
-	if t.autoPadding {
-		data = common.HexNullPad(&data, &config)
-	}
-
 	if !t.skipValidation {
 		err := common.ValidateLength(&data, &config)
 		if err != nil {
@@ -129,7 +120,7 @@ func (t NomadXSv1Decoder) Decode(data string, port uint8, devEui string) (*decod
 		}
 	}
 
-	decodedData, err := common.Parse(data, &config)
+	decodedData, err := common.Decode(&data, &config)
 	return decoder.NewDecodedUplink(config.Features, decodedData), err
 }
 

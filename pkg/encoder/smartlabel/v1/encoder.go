@@ -15,8 +15,8 @@ func NewSmartlabelv1Encoder() encoder.Encoder {
 	return &Smartlabelv1Encoder{}
 }
 
-func (t Smartlabelv1Encoder) Encode(data any, port uint8) (any, error) {
-	config, err := t.getConfig(port)
+func (s Smartlabelv1Encoder) Encode(data any, port uint8) (any, error) {
+	config, err := s.getConfig(port)
 	if err != nil {
 		return nil, err
 	}

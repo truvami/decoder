@@ -18,7 +18,7 @@ import (
 // | 0     | 1    | Moving flag                               | uint1                  |
 // | 1-4   | 4    | Latitude                                  | int32, 1/1’000’000 deg |
 // | 5-8   | 4    | Longitude                                 | int32, 1/1’000’000 deg |
-// | 9-10  | 2    | Altitude                                  | uint16, 1/100 meter    |
+// | 9-10  | 2    | Altitude                                  | uint16, 1/10 meter     |
 // | 11    | 1    | Year                                      | uint8, year after 2000 |
 // | 12    | 1    | Month                                     | uint8, [1..12]         |
 // | 13    | 1    | Day                                       | uint8, [1..31]         |
@@ -61,22 +61,59 @@ type Port1Payload struct {
 	AccelerometerZAxis int16         `json:"accelerometerZAxis"`
 	Temperature        float32       `json:"temperature" validate:"gte=-20,lte=60"`
 	Pressure           float32       `json:"pressure" validate:"gte=0,lte=1100"`
-	GyroscopeXAxis     float32       `json:"gyroscopeXAxis"`
-	GyroscopeYAxis     float32       `json:"gyroscopeYAxis"`
-	GyroscopeZAxis     float32       `json:"gyroscopeZAxis"`
-	MagnetometerXAxis  float32       `json:"magnetometerXAxis"`
-	MagnetometerYAxis  float32       `json:"magnetometerYAxis"`
-	MagnetometerZAxis  float32       `json:"magnetometerZAxis"`
+	GyroscopeXAxis     *float32      `json:"gyroscopeXAxis"`
+	GyroscopeYAxis     *float32      `json:"gyroscopeYAxis"`
+	GyroscopeZAxis     *float32      `json:"gyroscopeZAxis"`
+	MagnetometerXAxis  *float32      `json:"magnetometerXAxis"`
+	MagnetometerYAxis  *float32      `json:"magnetometerYAxis"`
+	MagnetometerZAxis  *float32      `json:"magnetometerZAxis"`
 }
 
 func (p Port1Payload) MarshalJSON() ([]byte, error) {
-	type Alias Port1Payload
 	return json.Marshal(&struct {
-		*Alias
-		TimeToFix string `json:"timeToFix"`
+		DutyCycle          bool     `json:"dutyCycle"`
+		ConfigId           uint8    `json:"configId"`
+		ConfigChange       bool     `json:"configChange"`
+		Moving             bool     `json:"moving"`
+		Latitude           float64  `json:"latitude"`
+		Longitude          float64  `json:"longitude"`
+		Altitude           string   `json:"altitude"`
+		Timestamp          string   `json:"timestamp"`
+		TimeToFix          string   `json:"timeToFix"`
+		AmbientLight       string   `json:"ambientLight"`
+		AccelerometerXAxis int16    `json:"accelerometerXAxis"`
+		AccelerometerYAxis int16    `json:"accelerometerYAxis"`
+		AccelerometerZAxis int16    `json:"accelerometerZAxis"`
+		Temperature        string   `json:"temperature"`
+		Pressure           string   `json:"pressure"`
+		GyroscopeXAxis     *float32 `json:"gyroscopeXAxis"`
+		GyroscopeYAxis     *float32 `json:"gyroscopeYAxis"`
+		GyroscopeZAxis     *float32 `json:"gyroscopeZAxis"`
+		MagnetometerXAxis  *float32 `json:"magnetometerXAxis"`
+		MagnetometerYAxis  *float32 `json:"magnetometerYAxis"`
+		MagnetometerZAxis  *float32 `json:"magnetometerZAxis"`
 	}{
-		Alias:     (*Alias)(&p),
-		TimeToFix: fmt.Sprintf("%.0fs", p.TimeToFix.Seconds()),
+		DutyCycle:          p.DutyCycle,
+		ConfigId:           p.ConfigId,
+		ConfigChange:       p.ConfigChange,
+		Moving:             p.Moving,
+		Latitude:           p.Latitude,
+		Longitude:          p.Longitude,
+		Altitude:           fmt.Sprintf("%.1fm", p.Altitude),
+		Timestamp:          p.GetTimestamp().Format(time.RFC3339),
+		TimeToFix:          fmt.Sprintf("%.0fs", p.TimeToFix.Seconds()),
+		AmbientLight:       fmt.Sprintf("%dlux", p.AmbientLight),
+		AccelerometerXAxis: p.AccelerometerXAxis,
+		AccelerometerYAxis: p.AccelerometerYAxis,
+		AccelerometerZAxis: p.AccelerometerZAxis,
+		Temperature:        fmt.Sprintf("%.2fc", p.Temperature),
+		Pressure:           fmt.Sprintf("%.1fhpa", p.Pressure),
+		GyroscopeXAxis:     p.GyroscopeXAxis,
+		GyroscopeYAxis:     p.GyroscopeYAxis,
+		GyroscopeZAxis:     p.GyroscopeZAxis,
+		MagnetometerXAxis:  p.MagnetometerXAxis,
+		MagnetometerYAxis:  p.MagnetometerYAxis,
+		MagnetometerZAxis:  p.MagnetometerZAxis,
 	})
 }
 

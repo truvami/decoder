@@ -119,7 +119,7 @@ type UplinkFeaturePressure interface {
 
 type AccessPoint struct {
 	MAC  string `json:"mac"`
-	RSSI int8   `json:"rssi"`
+	RSSI *int8  `json:"rssi"`
 }
 
 type UplinkFeatureWiFi interface {
@@ -165,8 +165,8 @@ type UplinkFeatureConfigChange interface {
 }
 
 type UplinkFeatureFirmwareVersion interface {
-	// GetFirmwareVersion returns the firmware version of the device.
-	GetFirmwareVersion() string
+	GetFirmwareHash() *string
+	GetFirmwareVersion() *string
 }
 
 type UplinkFeatureHardwareVersion interface {

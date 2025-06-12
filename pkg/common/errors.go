@@ -11,6 +11,8 @@ var (
 	ErrInvalidPayloadLength = errors.New("invalid payload length")
 	ErrPayloadTooShort      = errors.New("payload too short")
 	ErrPayloadTooLong       = errors.New("payload too long")
+
+	ErrValidationFailed = errors.New("validation failed")
 )
 
 // WrapError wraps two errors into a single error, combining the parent and child errors.
@@ -41,4 +43,12 @@ func WrapError(parent error, child error) error {
 //     in a formatted string.
 func WrapErrorWithMessage(parent error, child error, message string) error {
 	return fmt.Errorf("%s: %w: %w", message, parent, child)
+}
+
+func UnwrapError(err error) []error {
+	var errs []error = []error{}
+	if err, ok := err.(interface{ Unwrap() []error }); ok {
+		errs = append(errs, err.Unwrap()...)
+	}
+	return errs
 }

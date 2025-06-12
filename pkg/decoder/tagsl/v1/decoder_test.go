@@ -17,14 +17,12 @@ func TestDecode(t *testing.T) {
 	tests := []struct {
 		payload        string
 		port           uint8
-		autoPadding    bool
 		skipValidation bool
 		expected       any
 	}{
 		{
-			payload:     "8002cdcd1300744f5e166018040b14341a",
-			port:        1,
-			autoPadding: false,
+			port:    1,
+			payload: "8002cdcd1300744f5e166018040b14341a",
 			expected: Port1Payload{
 				DutyCycle:    true,
 				ConfigId:     0,
@@ -42,9 +40,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "8002cdcd1300744f5e166018040b14341a",
-			port:        1,
-			autoPadding: true,
+			port:    1,
+			payload: "8002cdcd1300744f5e166018040b14341a",
 			expected: Port1Payload{
 				DutyCycle:    true,
 				ConfigId:     0,
@@ -62,9 +59,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:        "8002cdcd1300744f5e166018040b14341adeadbeef",
 			port:           1,
-			autoPadding:    false,
+			payload:        "8002cdcd1300744f5e166018040b14341adeadbeef",
 			skipValidation: true,
 			expected: Port1Payload{
 				DutyCycle:    true,
@@ -83,9 +79,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:        "adfe019c3cfbc9ac0c14500a0c0e160a3b",
 			port:           1,
-			autoPadding:    false,
+			payload:        "adfe019c3cfbc9ac0c14500a0c0e160a3b",
 			skipValidation: false,
 			expected: Port1Payload{
 				DutyCycle:    true,
@@ -104,9 +99,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
+			port:           2,
 			payload:        "00",
-			port:           2,
-			autoPadding:    false,
 			skipValidation: true,
 			expected: Port2Payload{
 				DutyCycle:    false,
@@ -116,9 +110,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
+			port:           2,
 			payload:        "01",
-			port:           2,
-			autoPadding:    false,
 			skipValidation: true,
 			expected: Port2Payload{
 				DutyCycle:    false,
@@ -128,9 +121,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
+			port:           2,
 			payload:        "80",
-			port:           2,
-			autoPadding:    false,
 			skipValidation: true,
 			expected: Port2Payload{
 				DutyCycle:    true,
@@ -140,9 +132,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
+			port:           2,
 			payload:        "81",
-			port:           2,
-			autoPadding:    false,
 			skipValidation: true,
 			expected: Port2Payload{
 				DutyCycle:    true,
@@ -152,9 +143,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:        "38",
 			port:           2,
-			autoPadding:    false,
+			payload:        "38",
 			skipValidation: true,
 			expected: Port2Payload{
 				DutyCycle:    false,
@@ -164,9 +154,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:        "39",
 			port:           2,
-			autoPadding:    false,
+			payload:        "39",
 			skipValidation: true,
 			expected: Port2Payload{
 				DutyCycle:    false,
@@ -176,9 +165,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:        "b9",
 			port:           2,
-			autoPadding:    false,
+			payload:        "b9",
 			skipValidation: true,
 			expected: Port2Payload{
 				DutyCycle:    true,
@@ -188,61 +176,60 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "822f0101f052fab920feafd0e4158b38b9afe05994cb2f5cb2",
-			port:        3,
-			autoPadding: false,
+			port:    3,
+			payload: "01eb0101f052fab920feac",
+			expected: Port3Payload{
+				ScanPointer:    491,
+				TotalMessages:  1,
+				CurrentMessage: 1,
+				Mac1:           "f052fab920fe",
+				Rssi1:          -84,
+			},
+		},
+		{
+			port:    3,
+			payload: "01eb0101f052fab920feae",
+			expected: Port3Payload{
+				ScanPointer:    491,
+				TotalMessages:  1,
+				CurrentMessage: 1,
+				Mac1:           "f052fab920fe",
+				Rssi1:          -82,
+			},
+		},
+		{
+			port:    3,
+			payload: "822f0101f052fab920feafd0e4158b38b9afe05994cb2f5cb2",
 			expected: Port3Payload{
 				ScanPointer:    33327,
 				TotalMessages:  1,
 				CurrentMessage: 1,
 				Mac1:           "f052fab920fe",
 				Rssi1:          -81,
-				Mac2:           "d0e4158b38b9",
-				Rssi2:          -81,
-				Mac3:           "e05994cb2f5c",
-				Rssi3:          -78,
+				Mac2:           helpers.StringPtr("d0e4158b38b9"),
+				Rssi2:          helpers.Int8Ptr(-81),
+				Mac3:           helpers.StringPtr("e05994cb2f5c"),
+				Rssi3:          helpers.Int8Ptr(-78),
 			},
 		},
 		{
-			payload:     "01eb0101f052fab920feadd0e4158b38b9afe05994cb2f5cad",
-			port:        3,
-			autoPadding: false,
+			port:    3,
+			payload: "01eb0101f052fab920feadd0e4158b38b9afe05994cb2f5cad",
 			expected: Port3Payload{
 				ScanPointer:    491,
 				TotalMessages:  1,
 				CurrentMessage: 1,
 				Mac1:           "f052fab920fe",
 				Rssi1:          -83,
-				Mac2:           "d0e4158b38b9",
-				Rssi2:          -81,
-				Mac3:           "e05994cb2f5c",
-				Rssi3:          -83,
+				Mac2:           helpers.StringPtr("d0e4158b38b9"),
+				Rssi2:          helpers.Int8Ptr(-81),
+				Mac3:           helpers.StringPtr("e05994cb2f5c"),
+				Rssi3:          helpers.Int8Ptr(-83),
 			},
 		},
 		{
-			payload:     "01eb0101",
-			port:        3,
-			autoPadding: false,
-			expected: Port3Payload{
-				ScanPointer:    491,
-				TotalMessages:  1,
-				CurrentMessage: 1,
-			},
-		},
-		{
-			payload:     "1eb0101",
-			port:        3,
-			autoPadding: true,
-			expected: Port3Payload{
-				ScanPointer:    491,
-				TotalMessages:  1,
-				CurrentMessage: 1,
-			},
-		},
-		{
-			payload:     "0000012c00000e1000001c200078012c05dc02020100010200002328",
-			port:        4,
-			autoPadding: false,
+			port:    4,
+			payload: "0000012c00000e1000001c200078012c05dc02020100010200002328",
 			expected: Port4Payload{
 				LocalizationIntervalWhileMoving: 300,
 				LocalizationIntervalWhileSteady: 3600,
@@ -260,9 +247,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "0000003c0000012c000151800078012c05dc02020100010200005460",
-			port:        4,
-			autoPadding: false,
+			port:    4,
+			payload: "0000003c0000012c000151800078012c05dc02020100010200005460",
 			expected: Port4Payload{
 				LocalizationIntervalWhileMoving: 60,
 				LocalizationIntervalWhileSteady: 300,
@@ -280,9 +266,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:        "0000003c0000012c000151800078012c05dc02020100010200005460000a1000",
 			port:           4,
-			autoPadding:    false,
+			payload:        "0000003c0000012c000151800078012c05dc02020100010200005460000a1000",
 			skipValidation: true,
 			expected: Port4Payload{
 				LocalizationIntervalWhileMoving: 60,
@@ -303,9 +288,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "3c0000012c000151800078012c05dc02020100010200005460",
-			port:        4,
-			autoPadding: true,
+			port:    4,
+			payload: "0000003c0000012c000151800078012c05dc02020100010200005460",
 			expected: Port4Payload{
 				LocalizationIntervalWhileMoving: 60,
 				LocalizationIntervalWhileSteady: 300,
@@ -323,9 +307,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "808c59c3c99fc0ad",
-			port:        5,
-			autoPadding: false,
+			port:    5,
+			payload: "808c59c3c99fc0ad",
 			expected: Port5Payload{
 				Moving:    false,
 				DutyCycle: true,
@@ -334,9 +317,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "80e0286d8a2742a1",
-			port:        5,
-			autoPadding: false,
+			port:    5,
+			payload: "80e0286d8a2742a1",
 			expected: Port5Payload{
 				Moving:    false,
 				DutyCycle: true,
@@ -345,9 +327,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "001f3fd57cecb4c9b0140c96bbb2bd286d8a9478b8ad",
-			port:        5,
-			autoPadding: false,
+			port:    5,
+			payload: "001f3fd57cecb4c9b0140c96bbb2bd286d8a9478b8ad",
 			expected: Port5Payload{
 				Moving:    false,
 				DutyCycle: false,
@@ -360,9 +341,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "00e0286d8aabfca8e0286d8a9478c2726c9a74b58dab726cdac8b89dacf0b0140c96bbc8",
-			port:        5,
-			autoPadding: false,
+			port:    5,
+			payload: "00e0286d8aabfca8e0286d8a9478c2726c9a74b58dab726cdac8b89dacf0b0140c96bbc8",
 			expected: Port5Payload{
 				Moving:    false,
 				DutyCycle: false,
@@ -379,9 +359,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:        "00e0286d8aabfca8e0286d8a9478c2726c9a74b58dab726cdac8b89dacf0b0140c96bbc8deadbeef4242d6deadbeef4242d6",
 			port:           5,
-			autoPadding:    false,
+			payload:        "00e0286d8aabfca8e0286d8a9478c2726c9a74b58dab726cdac8b89dacf0b0140c96bbc8deadbeef4242d6deadbeef4242d6",
 			skipValidation: false,
 			expected: Port5Payload{
 				Moving:    false,
@@ -403,9 +382,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:        "00e0286d8aabfca8e0286d8a9478c2726c9a74b58dab726cdac8b89dacf0b0140c96bbc8deadbeef4242d6deadbeef4242d6deadbeefdeadbeef",
 			port:           5,
-			autoPadding:    false,
+			payload:        "00e0286d8aabfca8e0286d8a9478c2726c9a74b58dab726cdac8b89dacf0b0140c96bbc8deadbeef4242d6deadbeef4242d6deadbeefdeadbeef",
 			skipValidation: true,
 			expected: Port5Payload{
 				Moving:    false,
@@ -427,42 +405,30 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "01",
-			port:        6,
-			autoPadding: false,
+			port:    6,
+			payload: "01",
 			expected: Port6Payload{
 				ButtonPressed: true,
 			},
 		},
 		{
-			payload:     "1",
-			port:        6,
-			autoPadding: true,
-			expected: Port6Payload{
-				ButtonPressed: true,
-			},
-		},
-		{
-			payload:     "00",
-			port:        6,
-			autoPadding: false,
+			port:    6,
+			payload: "00",
 			expected: Port6Payload{
 				ButtonPressed: false,
 			},
 		},
 		{
-			payload:        "00deadbeef",
 			port:           6,
-			autoPadding:    false,
+			payload:        "00deadbeef",
 			skipValidation: true,
 			expected: Port6Payload{
 				ButtonPressed: false,
 			},
 		},
 		{
-			payload:     "66ec04bb80e0286d8aabfcbbec6c9a74b58fb2726c9a74b58db1e0286d8a9478cbf0b0140c96bbd2260122180d42ad",
-			port:        7,
-			autoPadding: false,
+			port:    7,
+			payload: "66ec04bb80e0286d8aabfcbbec6c9a74b58fb2726c9a74b58db1e0286d8a9478cbf0b0140c96bbd2260122180d42ad",
 			expected: Port7Payload{
 				Timestamp:    time.Date(2024, 9, 19, 11, 2, 19, 0, time.UTC),
 				DutyCycle:    true,
@@ -484,9 +450,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:        "66ec04bb01e0286d8aabfcbbec6c9a74b58fb2726c9a74b58db1e0286d8a9478cbf0b0140c96bbd2260122180d42addeadbeef",
 			port:           7,
-			autoPadding:    false,
+			payload:        "66ec04bb01e0286d8aabfcbbec6c9a74b58fb2726c9a74b58db1e0286d8a9478cbf0b0140c96bbd2260122180d42addeadbeef",
 			skipValidation: true,
 			expected: Port7Payload{
 				Timestamp:    time.Date(2024, 9, 19, 11, 2, 19, 0, time.UTC),
@@ -509,9 +474,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "66ec04bb81e0286d8aabfcbb",
-			port:        7,
-			autoPadding: false,
+			port:    7,
+			payload: "66ec04bb81e0286d8aabfcbb",
 			expected: Port7Payload{
 				Timestamp:    time.Date(2024, 9, 19, 11, 2, 19, 0, time.UTC),
 				DutyCycle:    true,
@@ -523,9 +487,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "66ec04bb3ce0286d8aabfcbb",
-			port:        7,
-			autoPadding: true,
+			port:    7,
+			payload: "66ec04bb3ce0286d8aabfcbb",
 			expected: Port7Payload{
 				Timestamp:    time.Date(2024, 9, 19, 11, 2, 19, 0, time.UTC),
 				DutyCycle:    false,
@@ -537,9 +500,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "012c141e9c455738304543434343460078012c01a8c0",
-			port:        8,
-			autoPadding: false,
+			port:    8,
+			payload: "012c141e9c455738304543434343460078012c01a8c0",
 			expected: Port8Payload{
 				ScanInterval:                          300,
 				ScanTime:                              20,
@@ -553,9 +515,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:        "012c141e9c455738304543434343460078012c01a8c0deadbeef",
 			port:           8,
-			autoPadding:    false,
+			payload:        "012c141e9c455738304543434343460078012c01a8c0deadbeef",
 			skipValidation: true,
 			expected: Port8Payload{
 				ScanInterval:                          300,
@@ -570,9 +531,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "12c141e9c455738304543434343460078012c01a8c0",
-			port:        8,
-			autoPadding: true,
+			port:    8,
+			payload: "012c141e9c455738304543434343460078012c01a8c0",
 			expected: Port8Payload{
 				ScanInterval:                          300,
 				ScanTime:                              20,
@@ -586,9 +546,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "0002d308b50082457f16eb66c4a5cd0ed3",
-			port:        10,
-			autoPadding: false,
+			port:    10,
+			payload: "0002d308b50082457f16eb66c4a5cd0ed3",
 			expected: Port10Payload{
 				Latitude:  47.384757,
 				Longitude: 8.537471,
@@ -598,9 +557,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "0002d30b070082491f11256718d9fe0ede190505",
-			port:        10,
-			autoPadding: false,
+			port:    10,
+			payload: "0002d30b070082491f11256718d9fe0ede190505",
 			expected: Port10Payload{
 				Latitude:   47.385351,
 				Longitude:  8.538399,
@@ -613,9 +571,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:        "0002d30b070082491f11256718d9fe0ede190505deadbeef",
 			port:           10,
-			autoPadding:    false,
+			payload:        "0002d30b070082491f11256718d9fe0ede190505deadbeef",
 			skipValidation: true,
 			expected: Port10Payload{
 				Latitude:   47.385351,
@@ -629,9 +586,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "0002d30b070082491f11256718d9fe0ede",
-			port:        10,
-			autoPadding: false,
+			port:    10,
+			payload: "0002d30b070082491f11256718d9fe0ede",
 			expected: Port10Payload{
 				Latitude:  47.385351,
 				Longitude: 8.538399,
@@ -641,9 +597,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "2d30b070082491f11256718d9fe0ede",
-			port:        10,
-			autoPadding: true,
+			port:    10,
+			payload: "0002d30b070082491f11256718d9fe0ede",
 			expected: Port10Payload{
 				Latitude:  47.385351,
 				Longitude: 8.538399,
@@ -671,60 +626,64 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "000ee5",
-			port:        15,
-			autoPadding: false,
+			port:    15,
+			payload: "000ee5",
 			expected: Port15Payload{
-				DutyCycle:  false,
-				LowBattery: false,
-				Battery:    3.813,
+				DutyCycle:    false,
+				ConfigId:     0,
+				ConfigChange: false,
+				LowBattery:   false,
+				Battery:      3.813,
 			},
 		},
 		{
-			payload:        "800ee5deadbeef",
 			port:           15,
-			autoPadding:    false,
+			payload:        "800ee5deadbeef",
 			skipValidation: true,
 			expected: Port15Payload{
-				DutyCycle:  true,
-				LowBattery: false,
-				Battery:    3.813,
+				DutyCycle:    true,
+				ConfigId:     0,
+				ConfigChange: false,
+				LowBattery:   false,
+				Battery:      3.813,
 			},
 		},
 		{
-			payload:     "011044",
-			port:        15,
-			autoPadding: false,
+			port:    15,
+			payload: "011044",
 			expected: Port15Payload{
-				DutyCycle:  false,
-				LowBattery: true,
-				Battery:    4.164,
+				DutyCycle:    false,
+				ConfigId:     0,
+				ConfigChange: false,
+				LowBattery:   true,
+				Battery:      4.164,
 			},
 		},
 		{
-			payload:     "811044",
-			port:        15,
-			autoPadding: false,
+			port:    15,
+			payload: "811044",
 			expected: Port15Payload{
-				DutyCycle:  true,
-				LowBattery: true,
-				Battery:    4.164,
+				DutyCycle:    true,
+				ConfigId:     0,
+				ConfigChange: false,
+				LowBattery:   true,
+				Battery:      4.164,
 			},
 		},
 		{
-			payload:     "1044",
-			port:        15,
-			autoPadding: true,
+			port:    15,
+			payload: "241044",
 			expected: Port15Payload{
-				DutyCycle:  false,
-				LowBattery: false,
-				Battery:    4.164,
+				DutyCycle:    false,
+				ConfigId:     4,
+				ConfigChange: true,
+				LowBattery:   false,
+				Battery:      4.164,
 			},
 		},
 		{
-			payload:     "0002d30c9300824c87117966c45dcd0f8118e0286d8aabfca9f0b0140c96bbc8726c9a74b58da8e0286d8a9478bf",
-			port:        50,
-			autoPadding: false,
+			port:    50,
+			payload: "0002d30c9300824c87117966c45dcd0f8118e0286d8aabfca9f0b0140c96bbc8726c9a74b58da8e0286d8a9478bf",
 			expected: Port50Payload{
 				Moving:    false,
 				DutyCycle: false,
@@ -745,9 +704,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "0102d30b2a0082499c10ee66c496900ed34af0b0140c96bbb3e0286d8a9478c3fc848e9b5571c2",
-			port:        50,
-			autoPadding: false,
+			port:    50,
+			payload: "0102d30b2a0082499c10ee66c496900ed34af0b0140c96bbb3e0286d8a9478c3fc848e9b5571c2",
 			expected: Port50Payload{
 				Moving:    true,
 				DutyCycle: false,
@@ -766,9 +724,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "0102d30b2a0082499c10ee66c496900ed34af0b0140c96bbb3e0286d8a9478c3fc848e9b5571c2deadbeef4242d6",
-			port:        50,
-			autoPadding: false,
+			port:    50,
+			payload: "0102d30b2a0082499c10ee66c496900ed34af0b0140c96bbb3e0286d8a9478c3fc848e9b5571c2deadbeef4242d6",
 			expected: Port50Payload{
 				Moving:    true,
 				DutyCycle: false,
@@ -788,9 +745,8 @@ func TestDecode(t *testing.T) {
 				Rssi4:     helpers.Int8Ptr(-42),
 			},
 		}, {
-			payload:        "0102d30b2a0082499c10ee66c496900ed34af0b0140c96bbb3e0286d8a9478c3fc848e9b5571c2deadbeef4242d6",
 			port:           50,
-			autoPadding:    false,
+			payload:        "0102d30b2a0082499c10ee66c496900ed34af0b0140c96bbb3e0286d8a9478c3fc848e9b5571c2deadbeef4242d6",
 			skipValidation: true,
 			expected: Port50Payload{
 				Moving:    true,
@@ -812,9 +768,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "0102d30b2a0082499c10ee66c496900ed34aa1b2c3d4e5f6b8",
-			port:        50,
-			autoPadding: false,
+			port:    50,
+			payload: "0102d30b2a0082499c10ee66c496900ed34aa1b2c3d4e5f6b8",
 			expected: Port50Payload{
 				Moving:    true,
 				DutyCycle: false,
@@ -829,9 +784,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "102d30b2a0082499c10ee66c496900ed34aa1b2c3d4e5f6b8",
-			port:        50,
-			autoPadding: true,
+			port:    50,
+			payload: "0102d30b2a0082499c10ee66c496900ed34aa1b2c3d4e5f6b8",
 			expected: Port50Payload{
 				Moving:    true,
 				DutyCycle: false,
@@ -864,9 +818,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "0002d30ba000824ace1122671b983e0eea340b06726c9a74b58db1fcf528f8634fb552a8db7bd6b5b9e0286d8aabfcbc",
-			port:        51,
-			autoPadding: false,
+			port:    51,
+			payload: "0002d30ba000824ace1122671b983e0eea340b06726c9a74b58db1fcf528f8634fb552a8db7bd6b5b9e0286d8aabfcbc",
 			expected: Port51Payload{
 				DutyCycle:    false,
 				ConfigId:     0,
@@ -891,9 +844,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "0002d30ba000824ace1122671b983e0eea340b06726c9a74b58db1",
-			port:        51,
-			autoPadding: false,
+			port:    51,
+			payload: "0002d30ba000824ace1122671b983e0eea340b06726c9a74b58db1",
 			expected: Port51Payload{
 				DutyCycle:    false,
 				ConfigId:     0,
@@ -912,9 +864,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "8002d30ba000824ace1122671b983e0eea340b06726c9a74b58db1",
-			port:        51,
-			autoPadding: false,
+			port:    51,
+			payload: "8002d30ba000824ace1122671b983e0eea340b06726c9a74b58db1",
 			expected: Port51Payload{
 				DutyCycle:    true,
 				ConfigId:     0,
@@ -933,9 +884,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "0102d30ba000824ace1122671b983e0eea340b06726c9a74b58db1",
-			port:        51,
-			autoPadding: false,
+			port:    51,
+			payload: "0102d30ba000824ace1122671b983e0eea340b06726c9a74b58db1",
 			expected: Port51Payload{
 				DutyCycle:    false,
 				ConfigId:     0,
@@ -954,9 +904,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "2d30ba000824ace1122671b983e0eea340b06726c9a74b58db1",
-			port:        51,
-			autoPadding: true,
+			port:    51,
+			payload: "0002d30ba000824ace1122671b983e0eea340b06726c9a74b58db1",
 			expected: Port51Payload{
 				DutyCycle:    false,
 				ConfigId:     0,
@@ -995,9 +944,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "000166c4a5ba00e0286d8aabfcb1e0286d8a9478c2ec6c9a74b58fad726c9a74b58dadf0b0140c96bbd0",
-			port:        105,
-			autoPadding: false,
+			port:    105,
+			payload: "000166c4a5ba00e0286d8aabfcb1e0286d8a9478c2ec6c9a74b58fad726c9a74b58dadf0b0140c96bbd0",
 			expected: Port105Payload{
 				BufferLevel: 1,
 				Timestamp:   time.Date(2024, 8, 20, 14, 18, 34, 0, time.UTC),
@@ -1016,9 +964,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "010166c4a5ba80e0286d8aabfcb1e0286d8a9478c2ec6c9a74b58fad726c9a74b58dadf0b0140c96bbd0",
-			port:        105,
-			autoPadding: false,
+			port:    105,
+			payload: "010166c4a5ba80e0286d8aabfcb1e0286d8a9478c2ec6c9a74b58fad726c9a74b58dadf0b0140c96bbd0",
 			expected: Port105Payload{
 				BufferLevel: 257,
 				Timestamp:   time.Date(2024, 8, 20, 14, 18, 34, 0, time.UTC),
@@ -1037,9 +984,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "001366ee2f4d01c4eb438ddde2a504e31aea1b01a7245a4c7a0d2ec026e98d560d2ebbccd42ef92ed4ae704f5708e1d1b9",
-			port:        105,
-			autoPadding: false,
+			port:    105,
+			payload: "001366ee2f4d01c4eb438ddde2a504e31aea1b01a7245a4c7a0d2ec026e98d560d2ebbccd42ef92ed4ae704f5708e1d1b9",
 			expected: Port105Payload{
 				BufferLevel: 19,
 				Timestamp:   time.Date(2024, 9, 21, 2, 28, 29, 0, time.UTC),
@@ -1060,9 +1006,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:        "001366ee2f4d81c4eb438ddde2a504e31aea1b01a7245a4c7a0d2ec026e98d560d2ebbccd42ef92ed4ae704f5708e1d1b9deadbeef",
 			port:           105,
-			autoPadding:    false,
+			payload:        "001366ee2f4d81c4eb438ddde2a504e31aea1b01a7245a4c7a0d2ec026e98d560d2ebbccd42ef92ed4ae704f5708e1d1b9deadbeef",
 			skipValidation: true,
 			expected: Port105Payload{
 				BufferLevel: 19,
@@ -1084,9 +1029,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "001366ee2f4d80c4eb438ddde2a5",
-			port:        105,
-			autoPadding: false,
+			port:    105,
+			payload: "001366ee2f4d80c4eb438ddde2a5",
 			expected: Port105Payload{
 				BufferLevel: 19,
 				Timestamp:   time.Date(2024, 9, 21, 2, 28, 29, 0, time.UTC),
@@ -1097,9 +1041,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "1366ee2f4d80c4eb438ddde2a5",
-			port:        105,
-			autoPadding: true,
+			port:    105,
+			payload: "001366ee2f4d80c4eb438ddde2a5",
 			expected: Port105Payload{
 				BufferLevel: 19,
 				Timestamp:   time.Date(2024, 9, 21, 2, 28, 29, 0, time.UTC),
@@ -1110,9 +1053,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "00020002d309ae008247c5113966c45d640f7e",
-			port:        110,
-			autoPadding: false,
+			port:    110,
+			payload: "00020002d309ae008247c5113966c45d640f7e",
 			expected: Port110Payload{
 				BufferLevel: 2,
 				Moving:      false,
@@ -1125,9 +1067,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "01020002d309ae008247c5113966c45d640f7e",
-			port:        110,
-			autoPadding: false,
+			port:    110,
+			payload: "01020002d309ae008247c5113966c45d640f7e",
 			expected: Port110Payload{
 				BufferLevel: 258,
 				Moving:      false,
@@ -1140,9 +1081,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:        "01020002d309ae008247c5113966c45d640f7ee72004deadbeef",
 			port:           110,
-			autoPadding:    false,
+			payload:        "01020002d309ae008247c5113966c45d640f7ee72004deadbeef",
 			skipValidation: true,
 			expected: Port110Payload{
 				BufferLevel: 258,
@@ -1159,9 +1099,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "00040002d30b8c00824a35112266c45c440f832a0807",
-			port:        110,
-			autoPadding: false,
+			port:    110,
+			payload: "00040002d30b8c00824a35112266c45c440f832a0807",
 			expected: Port110Payload{
 				BufferLevel: 4,
 				Moving:      false,
@@ -1177,9 +1116,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "40002d30b8c00824a35112266c45c440f83",
-			port:        110,
-			autoPadding: true,
+			port:    110,
+			payload: "00040002d30b8c00824a35112266c45c440f83",
 			expected: Port110Payload{
 				BufferLevel: 4,
 				Moving:      false,
@@ -1192,8 +1130,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload: "023881ff04631cfbf094fc8e946ef132401059f00906",
 			port:    110,
+			payload: "023881ff04631cfbf094fc8e946ef132401059f00906",
 			expected: Port110Payload{
 				BufferLevel:  568,
 				DutyCycle:    true,
@@ -1211,9 +1149,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "00020002d30c9300824c87117966c45dcd0f8118e0286d8aabfca9f0b0140c96bbc8726c9a74b58da8e0286d8a9478bf",
-			port:        150,
-			autoPadding: false,
+			port:    150,
+			payload: "00020002d30c9300824c87117966c45dcd0f8118e0286d8aabfca9f0b0140c96bbc8726c9a74b58da8e0286d8a9478bf",
 			expected: Port150Payload{
 				BufferLevel:  2,
 				DutyCycle:    false,
@@ -1237,9 +1174,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "01020002d30c9300824c87117966c45dcd0f8118e0286d8aabfca9f0b0140c96bbc8726c9a74b58da8e0286d8a9478bf",
-			port:        150,
-			autoPadding: false,
+			port:    150,
+			payload: "01020002d30c9300824c87117966c45dcd0f8118e0286d8aabfca9f0b0140c96bbc8726c9a74b58da8e0286d8a9478bf",
 			expected: Port150Payload{
 				BufferLevel:  258,
 				DutyCycle:    false,
@@ -1263,9 +1199,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "00000102d30a98008248b611ac66c45ed80f6b1be0286d0a6f42a3000000000044a4e0286d8a9478bff0b0140c96bbc9",
-			port:        150,
-			autoPadding: false,
+			port:    150,
+			payload: "00000102d30a98008248b611ac66c45ed80f6b1be0286d0a6f42a3000000000044a4e0286d8a9478bff0b0140c96bbc9",
 			expected: Port150Payload{
 				BufferLevel:  0,
 				DutyCycle:    false,
@@ -1289,9 +1224,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "00000102d30a98008248b611ac66c45ed80f6b1be0286d0a6f42a3000000000044a4e0286d8a9478bff0b0140c96bbc9",
-			port:        150,
-			autoPadding: false,
+			port:    150,
+			payload: "00000102d30a98008248b611ac66c45ed80f6b1be0286d0a6f42a3000000000044a4e0286d8a9478bff0b0140c96bbc9",
 			expected: Port150Payload{
 				BufferLevel:  0,
 				DutyCycle:    false,
@@ -1315,9 +1249,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:        "00000102d30a98008248b611ac66c45ed80f6b1be0286d0a6f42a3000000000044a4e0286d8a9478bff0b0140c96bbc9deadbeef",
 			port:           150,
-			autoPadding:    false,
+			payload:        "00000102d30a98008248b611ac66c45ed80f6b1be0286d0a6f42a3000000000044a4e0286d8a9478bff0b0140c96bbc9deadbeef",
 			skipValidation: true,
 			expected: Port150Payload{
 				BufferLevel:  0,
@@ -1342,48 +1275,46 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "00000102d30a98008248b611ac66c45ed80f6b1ba1b2c3d4e5f6c2",
-			port:        150,
-			autoPadding: false,
-			expected: Port150Payload{
-				BufferLevel:  0,
-				DutyCycle:    false,
-				ConfigId:     0,
-				ConfigChange: false,
-				Moving:       true,
-				Latitude:     47.38524,
-				Longitude:    8.538294,
-				Altitude:     452.4,
-				Timestamp:    time.Date(2024, 8, 20, 9, 16, 8, 0, time.UTC),
-				Battery:      3.947,
-				TTF:          time.Duration(27) * time.Second,
-				Mac1:         "a1b2c3d4e5f6",
-				Rssi1:        -62,
-			},
-		},
-		{
-			payload:     "102d30a98008248b611ac66c45ed80f6b1ba1b2c3d4e5f6c2",
-			port:        150,
-			autoPadding: true,
-			expected: Port150Payload{
-				BufferLevel:  0,
-				DutyCycle:    false,
-				ConfigId:     0,
-				ConfigChange: false,
-				Moving:       true,
-				Latitude:     47.38524,
-				Longitude:    8.538294,
-				Altitude:     452.4,
-				Timestamp:    time.Date(2024, 8, 20, 9, 16, 8, 0, time.UTC),
-				Battery:      3.947,
-				TTF:          time.Duration(27) * time.Second,
-				Mac1:         "a1b2c3d4e5f6",
-				Rssi1:        -62,
-			},
-		},
-		{
-			payload: "155e81fe624b04f97b74bc07d0602b67310f2131a1b2c3d4e5f6b0",
 			port:    150,
+			payload: "00000102d30a98008248b611ac66c45ed80f6b1ba1b2c3d4e5f6c2",
+			expected: Port150Payload{
+				BufferLevel:  0,
+				DutyCycle:    false,
+				ConfigId:     0,
+				ConfigChange: false,
+				Moving:       true,
+				Latitude:     47.38524,
+				Longitude:    8.538294,
+				Altitude:     452.4,
+				Timestamp:    time.Date(2024, 8, 20, 9, 16, 8, 0, time.UTC),
+				Battery:      3.947,
+				TTF:          time.Duration(27) * time.Second,
+				Mac1:         "a1b2c3d4e5f6",
+				Rssi1:        -62,
+			},
+		},
+		{
+			port:    150,
+			payload: "00000102d30a98008248b611ac66c45ed80f6b1ba1b2c3d4e5f6c2",
+			expected: Port150Payload{
+				BufferLevel:  0,
+				DutyCycle:    false,
+				ConfigId:     0,
+				ConfigChange: false,
+				Moving:       true,
+				Latitude:     47.38524,
+				Longitude:    8.538294,
+				Altitude:     452.4,
+				Timestamp:    time.Date(2024, 8, 20, 9, 16, 8, 0, time.UTC),
+				Battery:      3.947,
+				TTF:          time.Duration(27) * time.Second,
+				Mac1:         "a1b2c3d4e5f6",
+				Rssi1:        -62,
+			},
+		},
+		{
+			port:    150,
+			payload: "155e81fe624b04f97b74bc07d0602b67310f2131a1b2c3d4e5f6b0",
 			expected: Port150Payload{
 				BufferLevel:  5470,
 				DutyCycle:    true,
@@ -1401,9 +1332,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "00000002d30b27008247b81312671bd164133718030be0286d8a9478cbf0b0140c96bbce",
-			port:        151,
-			autoPadding: false,
+			port:    151,
+			payload: "00000002d30b27008247b81312671bd164133718030be0286d8a9478cbf0b0140c96bbce",
 			expected: Port151Payload{
 				BufferLevel:  0,
 				DutyCycle:    false,
@@ -1425,9 +1355,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "00000002d30b27008247b81312671bd164133718030be0286d8a9478cbf0b0140c96bbcedeadbeef4242d6deadbeef4242d6",
-			port:        151,
-			autoPadding: false,
+			port:    151,
+			payload: "00000002d30b27008247b81312671bd164133718030be0286d8a9478cbf0b0140c96bbcedeadbeef4242d6deadbeef4242d6",
 			expected: Port151Payload{
 				BufferLevel:  0,
 				DutyCycle:    false,
@@ -1453,9 +1382,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:        "00000002d30b27008247b81312671bd164133718030be0286d8a9478cbf0b0140c96bbcedeadbeef4242d6deadbeef4242d6deadbeef",
 			port:           151,
-			autoPadding:    false,
+			payload:        "00000002d30b27008247b81312671bd164133718030be0286d8a9478cbf0b0140c96bbcedeadbeef4242d6deadbeef4242d6deadbeef",
 			skipValidation: true,
 			expected: Port151Payload{
 				BufferLevel:  0,
@@ -1482,52 +1410,50 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload:     "00000002d30b27008247b81312671bd164133718030ba1b2c3d4e5f6c0",
-			port:        151,
-			autoPadding: false,
-			expected: Port151Payload{
-				BufferLevel:  0,
-				DutyCycle:    false,
-				ConfigId:     0,
-				ConfigChange: false,
-				Moving:       false,
-				Latitude:     47.385383,
-				Longitude:    8.53804,
-				Altitude:     488.2,
-				Timestamp:    time.Date(2024, 10, 25, 17, 12, 4, 0, time.UTC),
-				Battery:      4.919,
-				TTF:          time.Duration(24) * time.Second,
-				PDOP:         1.5,
-				Satellites:   11,
-				Mac1:         "a1b2c3d4e5f6",
-				Rssi1:        -64,
-			},
-		},
-		{
-			payload:     "2d30b27008247b81312671bd164133718030ba1b2c3d4e5f6c0",
-			port:        151,
-			autoPadding: true,
-			expected: Port151Payload{
-				BufferLevel:  0,
-				DutyCycle:    false,
-				ConfigId:     0,
-				ConfigChange: false,
-				Moving:       false,
-				Latitude:     47.385383,
-				Longitude:    8.53804,
-				Altitude:     488.2,
-				Timestamp:    time.Date(2024, 10, 25, 17, 12, 4, 0, time.UTC),
-				Battery:      4.919,
-				TTF:          time.Duration(24) * time.Second,
-				PDOP:         1.5,
-				Satellites:   11,
-				Mac1:         "a1b2c3d4e5f6",
-				Rssi1:        -64,
-			},
-		},
-		{
-			payload: "050021fcbbca14fbedc7cc00cc646ea2e40f8ca01004a1b2c3d4e5f6a8",
 			port:    151,
+			payload: "00000002d30b27008247b81312671bd164133718030ba1b2c3d4e5f6c0",
+			expected: Port151Payload{
+				BufferLevel:  0,
+				DutyCycle:    false,
+				ConfigId:     0,
+				ConfigChange: false,
+				Moving:       false,
+				Latitude:     47.385383,
+				Longitude:    8.53804,
+				Altitude:     488.2,
+				Timestamp:    time.Date(2024, 10, 25, 17, 12, 4, 0, time.UTC),
+				Battery:      4.919,
+				TTF:          time.Duration(24) * time.Second,
+				PDOP:         1.5,
+				Satellites:   11,
+				Mac1:         "a1b2c3d4e5f6",
+				Rssi1:        -64,
+			},
+		},
+		{
+			port:    151,
+			payload: "00000002d30b27008247b81312671bd164133718030ba1b2c3d4e5f6c0",
+			expected: Port151Payload{
+				BufferLevel:  0,
+				DutyCycle:    false,
+				ConfigId:     0,
+				ConfigChange: false,
+				Moving:       false,
+				Latitude:     47.385383,
+				Longitude:    8.53804,
+				Altitude:     488.2,
+				Timestamp:    time.Date(2024, 10, 25, 17, 12, 4, 0, time.UTC),
+				Battery:      4.919,
+				TTF:          time.Duration(24) * time.Second,
+				PDOP:         1.5,
+				Satellites:   11,
+				Mac1:         "a1b2c3d4e5f6",
+				Rssi1:        -64,
+			},
+		},
+		{
+			port:    151,
+			payload: "050021fcbbca14fbedc7cc00cc646ea2e40f8ca01004a1b2c3d4e5f6a8",
 			expected: Port151Payload{
 				BufferLevel:  1280,
 				DutyCycle:    false,
@@ -1547,30 +1473,30 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload: "02",
 			port:    198,
+			payload: "02",
 			expected: Port198Payload{
 				Reason: 2,
 			},
 		},
 		{
-			payload: "04",
 			port:    198,
+			payload: "04",
 			expected: Port198Payload{
 				Reason: 4,
 			},
 		},
 		{
-			payload: "04313137",
 			port:    198,
+			payload: "04313137",
 			expected: Port198Payload{
 				Reason: 4,
 				Line:   helpers.StringPtr("117"),
 			},
 		},
 		{
-			payload: "043131373a7372632f6770732e63",
 			port:    198,
+			payload: "043131373a7372632f6770732e63",
 			expected: Port198Payload{
 				Reason: 4,
 				Line:   helpers.StringPtr("117"),
@@ -1578,8 +1504,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload: "043131373a7372632f6770732e633a6770735f73746172745f6d756c7469706c65",
 			port:    198,
+			payload: "043131373a7372632f6770732e633a6770735f73746172745f6d756c7469706c65",
 			expected: Port198Payload{
 				Reason:   4,
 				Line:     helpers.StringPtr("117"),
@@ -1588,8 +1514,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload: "078f64e7dcffff00000f3e00127802",
 			port:    199,
+			payload: "078f64e7dcffff00000f3e00127802",
 			expected: Port199Payload{
 				Constant: "078f64e7dcffff",
 				Sequence: 3902,
@@ -1598,8 +1524,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload: "078f64e7dcffff00000f3f00127902",
 			port:    199,
+			payload: "078f64e7dcffff00000f3f00127902",
 			expected: Port199Payload{
 				Constant: "078f64e7dcffff",
 				Sequence: 3903,
@@ -1608,8 +1534,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload: "078f64e7dcffff00000f4000127a02",
 			port:    199,
+			payload: "078f64e7dcffff00000f4000127a02",
 			expected: Port199Payload{
 				Constant: "078f64e7dcffff",
 				Sequence: 3904,
@@ -1618,8 +1544,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload: "078f64e7dcffff00000f4100127b02",
 			port:    199,
+			payload: "078f64e7dcffff00000f4100127b02",
 			expected: Port199Payload{
 				Constant: "078f64e7dcffff",
 				Sequence: 3905,
@@ -1628,8 +1554,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload: "078f64e7dcffff00000f4200127c02",
 			port:    199,
+			payload: "078f64e7dcffff00000f4200127c02",
 			expected: Port199Payload{
 				Constant: "078f64e7dcffff",
 				Sequence: 3906,
@@ -1638,8 +1564,8 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload: "078f64e7dcffff00000f4300127d02",
 			port:    199,
+			payload: "078f64e7dcffff00000f4300127d02",
 			expected: Port199Payload{
 				Constant: "078f64e7dcffff",
 				Sequence: 3907,
@@ -1651,7 +1577,7 @@ func TestDecode(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestPort%vWith%v", test.port, test.payload), func(t *testing.T) {
-			decoder := NewTagSLv1Decoder(WithAutoPadding(test.autoPadding), WithSkipValidation(test.skipValidation))
+			decoder := NewTagSLv1Decoder(WithSkipValidation(test.skipValidation))
 			got, err := decoder.Decode(test.payload, test.port, "")
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
@@ -1688,37 +1614,37 @@ func TestValidationErrors(t *testing.T) {
 		{
 			payload:  "8005f5e10000744f5e166018040b14341a",
 			port:     1,
-			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Latitude"),
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Latitude", 100),
 		},
 		{
 			payload:  "8002cdcd130bebc200166018040b14341a",
 			port:     1,
-			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Longitude"),
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Longitude", 200),
 		},
 		{
 			payload:  "8002cdcd1300744f5e166018490b14341a",
 			port:     1,
-			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Month"),
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Month", 73),
 		},
 		{
 			payload:  "8002cdcd1300744f5e166018044914341a",
 			port:     1,
-			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Day"),
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Day", 73),
 		},
 		{
 			payload:  "8002cdcd1300744f5e166018040b49341a",
 			port:     1,
-			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Hour"),
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Hour", 73),
 		},
 		{
 			payload:  "8002cdcd1300744f5e166018040b14491a",
 			port:     1,
-			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Minute"),
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Minute", 73),
 		},
 		{
 			payload:  "8002cdcd1300744f5e166018040b143449",
 			port:     1,
-			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Second"),
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Second", 73),
 		},
 		{
 			payload:  "0002d30b070082491f11256718d9fe0ede190505",
@@ -1728,32 +1654,32 @@ func TestValidationErrors(t *testing.T) {
 		{
 			payload:  "0005f5e1000082491f11256718d9fe0ede190505",
 			port:     10,
-			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Latitude"),
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Latitude", 100),
 		},
 		{
 			payload:  "0002d30b070bebc20011256718d9fe0ede190505",
 			port:     10,
-			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Longitude"),
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Longitude", 200),
 		},
 		{
 			payload:  "0002d30b070082491f11256718d9fe01f4190505",
 			port:     10,
-			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Battery"),
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Battery", 0.5),
 		},
 		{
 			payload:  "0002d30b070082491f11256718d9fe157c190505",
 			port:     10,
-			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Battery"),
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Battery", 5.5),
 		},
 		{
 			payload:  "0002d30b070082491f11256718d9fe0ede190502",
 			port:     10,
-			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Satellites"),
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Satellites", 2),
 		},
 		{
 			payload:  "0002d30b070082491f11256718d9fe0ede19051c",
 			port:     10,
-			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Satellites"),
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Satellites", 28),
 		},
 		{
 			payload:  "001044",
@@ -1763,12 +1689,12 @@ func TestValidationErrors(t *testing.T) {
 		{
 			payload:  "0001f4",
 			port:     15,
-			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Battery"),
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Battery", 0.5),
 		},
 		{
 			payload:  "00157c",
 			port:     15,
-			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Battery"),
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Battery", 5.5),
 		},
 		{
 			payload:  "0002d30c9300824c87117966c45dcd0f8118a1b2c3d4e5f6b8",
@@ -1778,22 +1704,22 @@ func TestValidationErrors(t *testing.T) {
 		{
 			payload:  "0005f5e10000824c87117966c45dcd0f8118a1b2c3d4e5f6b8",
 			port:     50,
-			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Latitude"),
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Latitude", 100),
 		},
 		{
 			payload:  "0002d30c930bebc200117966c45dcd0f8118a1b2c3d4e5f6b8",
 			port:     50,
-			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Longitude"),
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Longitude", 200),
 		},
 		{
 			payload:  "0002d30c9300824c87117966c45dcd01f418a1b2c3d4e5f6b8",
 			port:     50,
-			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Battery"),
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Battery", 0.5),
 		},
 		{
 			payload:  "0002d30c9300824c87117966c45dcd157c18a1b2c3d4e5f6b8",
 			port:     50,
-			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Battery"),
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Battery", 5.5),
 		},
 		{
 			payload:  "0002d30c9300824c87117966c45dcd0f81180205a1b2c3d4e5f6a6",
@@ -1803,32 +1729,32 @@ func TestValidationErrors(t *testing.T) {
 		{
 			payload:  "0005f5e10000824c87117966c45dcd0f81180205a1b2c3d4e5f6a6",
 			port:     51,
-			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Latitude"),
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Latitude", 100),
 		},
 		{
 			payload:  "0002d30c930bebc200117966c45dcd0f81180205a1b2c3d4e5f6a6",
 			port:     51,
-			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Longitude"),
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Longitude", 200),
 		},
 		{
 			payload:  "0002d30c9300824c87117966c45dcd01f4180205a1b2c3d4e5f6a6",
 			port:     51,
-			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Battery"),
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Battery", 0.5),
 		},
 		{
 			payload:  "0002d30c9300824c87117966c45dcd157c180205a1b2c3d4e5f6a6",
 			port:     51,
-			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Battery"),
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Battery", 5.5),
 		},
 		{
 			payload:  "0002d30c9300824c87117966c45dcd0f81180202a1b2c3d4e5f6a6",
 			port:     51,
-			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Satellites"),
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Satellites", 2),
 		},
 		{
 			payload:  "0002d30c9300824c87117966c45dcd0f8118021ca1b2c3d4e5f6a6",
 			port:     51,
-			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Satellites"),
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Satellites", 28),
 		},
 		{
 			payload:  "00000002d30c9300824c87117966c45dcd0f81",
@@ -1838,22 +1764,22 @@ func TestValidationErrors(t *testing.T) {
 		{
 			payload:  "00000005f5e10000824c87117966c45dcd0f81",
 			port:     110,
-			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Latitude"),
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Latitude", 100),
 		},
 		{
 			payload:  "00000002d30c930bebc200117966c45dcd0f81",
 			port:     110,
-			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Longitude"),
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Longitude", 200),
 		},
 		{
 			payload:  "00000002d30c9300824c87117966c45dcd01f4",
 			port:     110,
-			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Battery"),
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Battery", 0.5),
 		},
 		{
 			payload:  "00000002d30c9300824c87117966c45dcd157c",
 			port:     110,
-			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Battery"),
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Battery", 5.5),
 		},
 		{
 			payload:  "00000002d30c9300824c87117966c45dcd0f812fa1b2c3d4e5f6c2",
@@ -1863,22 +1789,22 @@ func TestValidationErrors(t *testing.T) {
 		{
 			payload:  "00000005f5e10000824c87117966c45dcd0f812fa1b2c3d4e5f6c2",
 			port:     150,
-			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Latitude"),
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Latitude", 100),
 		},
 		{
 			payload:  "00000002d30c930bebc200117966c45dcd0f812fa1b2c3d4e5f6c2",
 			port:     150,
-			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Longitude"),
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Longitude", 200),
 		},
 		{
 			payload:  "00000002d30c9300824c87117966c45dcd01f42fa1b2c3d4e5f6c2",
 			port:     150,
-			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Battery"),
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Battery", 0.5),
 		},
 		{
 			payload:  "00000002d30c9300824c87117966c45dcd157c2fa1b2c3d4e5f6c2",
 			port:     150,
-			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Battery"),
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Battery", 5.5),
 		},
 		{
 			payload:  "00000002d30c9300824c87117966c45dcd0f812f0205a1b2c3d4e5f6c0",
@@ -1888,32 +1814,32 @@ func TestValidationErrors(t *testing.T) {
 		{
 			payload:  "00000005f5e10000824c87117966c45dcd0f812f0205a1b2c3d4e5f6c0",
 			port:     151,
-			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Latitude"),
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Latitude", 100),
 		},
 		{
 			payload:  "00000002d30c930bebc200117966c45dcd0f812f0205a1b2c3d4e5f6c0",
 			port:     151,
-			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Longitude"),
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Longitude", 200),
 		},
 		{
 			payload:  "00000002d30c9300824c87117966c45dcd01f42f0205a1b2c3d4e5f6c0",
 			port:     151,
-			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Battery"),
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Battery", 0.5),
 		},
 		{
 			payload:  "00000002d30c9300824c87117966c45dcd157c2f0205a1b2c3d4e5f6c0",
 			port:     151,
-			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Battery"),
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Battery", 5.5),
 		},
 		{
 			payload:  "00000002d30c9300824c87117966c45dcd0f812f0202a1b2c3d4e5f6c0",
 			port:     151,
-			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Satellites"),
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Satellites", 2),
 		},
 		{
 			payload:  "00000002d30c9300824c87117966c45dcd0f812f021ca1b2c3d4e5f6c0",
 			port:     151,
-			expected: fmt.Errorf("%s for %s", helpers.ErrValidationFailed, "Satellites"),
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Satellites", 28),
 		},
 	}
 
@@ -1954,7 +1880,6 @@ func TestInvalidHexString(t *testing.T) {
 func TestFullDecode(t *testing.T) {
 	tests := []struct {
 		payload        string
-		autoPadding    bool
 		skipValidation bool
 		expectedData   any
 		port           uint8
@@ -2078,7 +2003,7 @@ func TestFullDecode(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		decoder := NewTagSLv1Decoder(WithAutoPadding(test.autoPadding), WithSkipValidation(test.skipValidation))
+		decoder := NewTagSLv1Decoder(WithSkipValidation(test.skipValidation))
 		t.Run(fmt.Sprintf("TestFullDecodeWithPort%vAndPayload%v", test.port, test.payload), func(t *testing.T) {
 			decoded, err := decoder.Decode(test.payload, test.port, "")
 			if err != nil {
@@ -2330,9 +2255,10 @@ func TestFeatures(t *testing.T) {
 				if !ok {
 					t.Fatalf("expected UplinkFeatureFirmwareVersion, got %T", decodedPayload)
 				}
-				if firmwareVersion.GetFirmwareVersion() == "" {
-					t.Fatalf("expected non empty firmware version")
+				if firmwareVersion.GetFirmwareVersion() == nil {
+					t.Fatalf("expected non nil firmware version")
 				}
+				firmwareVersion.GetFirmwareHash()
 			}
 			if decodedPayload.Is(decoder.FeatureHardwareVersion) {
 				hardwareVersion, ok := decodedPayload.Data.(decoder.UplinkFeatureHardwareVersion)
@@ -2343,7 +2269,6 @@ func TestFeatures(t *testing.T) {
 					t.Fatalf("expected non empty hardware version")
 				}
 			}
-
 			if decodedPayload.Is(decoder.FeatureResetReason) {
 				resetReason, ok := decodedPayload.Data.(decoder.UplinkFeatureResetReason)
 				if !ok {
@@ -2465,6 +2390,92 @@ func TestMarshal(t *testing.T) {
 				if !strings.Contains(string(marshaled), value) {
 					t.Fatalf("expected to find %s\n", value)
 				}
+			}
+		})
+	}
+}
+
+func TestDeviceState(t *testing.T) {
+	tests := []struct {
+		data     Port4Payload
+		expected string
+	}{
+		{
+			data:     Port4Payload{DeviceState: 0},
+			expected: "\"deviceState\":\"unknown\"",
+		},
+		{
+			data:     Port4Payload{DeviceState: 1},
+			expected: "\"deviceState\":\"moving\"",
+		},
+		{
+			data:     Port4Payload{DeviceState: 2},
+			expected: "\"deviceState\":\"steady\"",
+		},
+		{
+			data:     Port4Payload{DeviceState: 3},
+			expected: "\"deviceState\":\"unknown\"",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run("TestDeviceState", func(t *testing.T) {
+			result, err := test.data.MarshalJSON()
+			if err != nil {
+				t.Fatalf("unexpected err %s", err)
+			}
+			t.Logf("%s", result)
+			if !strings.Contains(string(result), test.expected) {
+				t.Errorf("expected to find %s", test.expected)
+			}
+		})
+	}
+}
+
+func TestResetReason(t *testing.T) {
+	tests := []struct {
+		data     Port198Payload
+		expected decoder.ResetReason
+	}{
+		{
+			data:     Port198Payload{Reason: 0},
+			expected: decoder.ResetReasonUnknown,
+		},
+		{
+			data:     Port198Payload{Reason: 1},
+			expected: decoder.ResetReasonLrr1110FailCode,
+		},
+		{
+			data:     Port198Payload{Reason: 2},
+			expected: decoder.ResetReasonPowerReset,
+		},
+		{
+			data:     Port198Payload{Reason: 3},
+			expected: decoder.ResetReasonPinReset,
+		},
+		{
+			data:     Port198Payload{Reason: 4},
+			expected: decoder.ResetReasonWatchdog,
+		},
+		{
+			data:     Port198Payload{Reason: 5},
+			expected: decoder.ResetReasonSystemReset,
+		},
+		{
+			data:     Port198Payload{Reason: 6},
+			expected: decoder.ResetReasonOtherReset,
+		},
+		{
+			data:     Port198Payload{Reason: 7},
+			expected: decoder.ResetReasonUnknown,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run("TestResetReason", func(t *testing.T) {
+			result := test.data.GetResetReason()
+			if test.expected != result {
+				t.Errorf("expected %v, received %v", test.expected, result)
 			}
 		})
 	}

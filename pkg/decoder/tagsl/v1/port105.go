@@ -68,42 +68,42 @@ func (p Port105Payload) GetAccessPoints() []decoder.AccessPoint {
 	if p.Mac1 != "" && p.Rssi1 != 0 {
 		accessPoints = append(accessPoints, decoder.AccessPoint{
 			MAC:  p.Mac1,
-			RSSI: p.Rssi1,
+			RSSI: &p.Rssi1,
 		})
 	}
 
 	if p.Mac2 != nil && p.Rssi2 != nil {
 		accessPoints = append(accessPoints, decoder.AccessPoint{
 			MAC:  *p.Mac2,
-			RSSI: *p.Rssi2,
+			RSSI: p.Rssi2,
 		})
 	}
 
 	if p.Mac3 != nil && p.Rssi3 != nil {
 		accessPoints = append(accessPoints, decoder.AccessPoint{
 			MAC:  *p.Mac3,
-			RSSI: *p.Rssi3,
+			RSSI: p.Rssi3,
 		})
 	}
 
 	if p.Mac4 != nil && p.Rssi4 != nil {
 		accessPoints = append(accessPoints, decoder.AccessPoint{
 			MAC:  *p.Mac4,
-			RSSI: *p.Rssi4,
+			RSSI: p.Rssi4,
 		})
 	}
 
 	if p.Mac5 != nil && p.Rssi5 != nil {
 		accessPoints = append(accessPoints, decoder.AccessPoint{
 			MAC:  *p.Mac5,
-			RSSI: *p.Rssi5,
+			RSSI: p.Rssi5,
 		})
 	}
 
 	if p.Mac6 != nil && p.Rssi6 != nil {
 		accessPoints = append(accessPoints, decoder.AccessPoint{
 			MAC:  *p.Mac6,
-			RSSI: *p.Rssi6,
+			RSSI: p.Rssi6,
 		})
 	}
 
