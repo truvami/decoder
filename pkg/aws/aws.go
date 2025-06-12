@@ -10,8 +10,34 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iotwireless"
 	"github.com/aws/aws-sdk-go-v2/service/iotwireless/types"
 	geojson "github.com/paulmach/go.geojson"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/truvami/decoder/pkg/decoder"
 	"go.uber.org/zap"
+)
+
+var (
+	awsPostionEstimatesTotalCounter = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "truvami_aws_position_estimates_total",
+		Help: "The total number of processed position estimate requests",
+	})
+	awsPostionEstimatesErrorsCounter = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "truvami_aws_position_estimates_errors_total",
+		Help: "The total number of errors encountered while processing position estimate requests",
+	})
+	awsPostionEstimatesDurationHistogram = promauto.NewHistogram(prometheus.HistogramOpts{
+		Name:    "truvami_aws_position_estimates_duration_seconds",
+		Help:    "The duration of position estimate requests in seconds",
+		Buckets: prometheus.DefBuckets,
+	})
+	awsPostionEstimatesSuccessCounter = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "truvami_aws_position_estimates_success_total",
+		Help: "The total number of successful position estimate requests",
+	})
+	awsPostionEstimatesFailureCounter = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "truvami_aws_position_estimates_failure_total",
+		Help: "The total number of failed position estimate requests",
+	})
 )
 
 // Solve sends a GNSS payload to AWS IoT Wireless to obtain a position estimate.
@@ -32,6 +58,9 @@ func Solve(logger *zap.Logger, payload string, captureTime time.Time) (*Position
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
+	start := time.Now()
+	awsPostionEstimatesTotalCounter.Inc()
+
 	logger.Debug("Starting position estimate request",
 		zap.String("payload", payload),
 		zap.Time("captureTime", captureTime),
@@ -40,6 +69,7 @@ func Solve(logger *zap.Logger, payload string, captureTime time.Time) (*Position
 	// Load AWS config with context (respects timeout)
 	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
+		awsPostionEstimatesErrorsCounter.Inc()
 		return nil, fmt.Errorf("failed to load AWS config: %w", err)
 	}
 
@@ -66,6 +96,7 @@ func Solve(logger *zap.Logger, payload string, captureTime time.Time) (*Position
 	// [GeoJSON]: https://geojson.org/
 	output, err := client.GetPositionEstimate(ctx, input)
 	if err != nil {
+		awsPostionEstimatesFailureCounter.Inc()
 		return nil, fmt.Errorf("failed to get position estimate: %w", err)
 	}
 
@@ -77,18 +108,26 @@ func Solve(logger *zap.Logger, payload string, captureTime time.Time) (*Position
 
 	position, err := geojson.UnmarshalFeature(output.GeoJsonPayload)
 	if err != nil {
+		awsPostionEstimatesErrorsCounter.Inc()
 		return nil, fmt.Errorf("failed to unmarshal GeoJSON payload: %w", err)
 	}
-
 	if position == nil {
+		awsPostionEstimatesErrorsCounter.Inc()
 		return nil, fmt.Errorf("received nil position from AWS IoT Wireless")
 	}
 	if position.Type != string(geojson.GeometryPoint) {
+		awsPostionEstimatesErrorsCounter.Inc()
 		return nil, fmt.Errorf("expected GeoJSON Feature, got %s", position.Type)
 	}
-	if position.Geometry.Point == nil || len(position.Geometry.Point) < 2 {
+	if len(position.Geometry.Point) < 2 {
+		awsPostionEstimatesErrorsCounter.Inc()
 		return nil, fmt.Errorf("invalid GeoJSON point: %v", position.Geometry.Point)
 	}
+
+	// Log the position estimate success
+	awsPostionEstimatesSuccessCounter.Inc()
+	awsPostionEstimatesDurationHistogram.Observe(time.Since(start).Seconds())
+
 	return &Position{
 		Latitude:  position.Geometry.Point[1],
 		Longitude: position.Geometry.Point[0],
