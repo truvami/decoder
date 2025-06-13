@@ -17,7 +17,7 @@ import (
 
 type Port11Payload struct {
 	BatteryVoltage      float32 `json:"batteryVoltage" validate:"gte=1,lte=5"`
-	PhotovoltaicVoltage float32 `json:"photovoltaicVoltage" validate:"gte=1,lte=5"`
+	PhotovoltaicVoltage float32 `json:"photovoltaicVoltage" validate:"gte=0,lte=5"`
 	Temperature         float32 `json:"temperature" validate:"gte=-20,lte=60"`
 	Humidity            float32 `json:"humidity" validate:"gte=5,lte=95"`
 }
