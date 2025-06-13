@@ -3,9 +3,9 @@ name: CI 🚧
 on:
   push:
     paths:
-      - '**.go'
-      - '**.md'
-      - '**.mod'
+      - "**.go"
+      - "**.md"
+      - "**.mod"
 
 jobs:
   test:
@@ -49,3 +49,6 @@ jobs:
 
       - name: Run JSON tags camelCase check
         run: make check-json-tags
+
+      - name: Check Prometheus metrics
+        run: make check-metrics

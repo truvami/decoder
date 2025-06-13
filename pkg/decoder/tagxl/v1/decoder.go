@@ -5,9 +5,11 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/truvami/decoder/pkg/aws"
 	"github.com/truvami/decoder/pkg/common"
 	"github.com/truvami/decoder/pkg/decoder"
 	"github.com/truvami/decoder/pkg/loracloud"
+	"go.uber.org/zap"
 )
 
 type Option func(*TagXLv1Decoder)
@@ -16,11 +18,15 @@ type TagXLv1Decoder struct {
 	loracloudMiddleware loracloud.LoracloudMiddleware
 	skipValidation      bool
 	fCount              uint32
+	logger              *zap.Logger
+
+	useAWS bool
 }
 
-func NewTagXLv1Decoder(loracloudMiddleware loracloud.LoracloudMiddleware, options ...Option) decoder.Decoder {
+func NewTagXLv1Decoder(loracloudMiddleware loracloud.LoracloudMiddleware, logger *zap.Logger, options ...Option) decoder.Decoder {
 	tagXLv1Decoder := &TagXLv1Decoder{
 		loracloudMiddleware: loracloudMiddleware,
+		logger:              logger,
 	}
 
 	for _, option := range options {
@@ -41,6 +47,12 @@ func WithSkipValidation(skipValidation bool) Option {
 func WithFCount(fCount uint32) Option {
 	return func(t *TagXLv1Decoder) {
 		t.fCount = fCount
+	}
+}
+
+func WithUseAWS(useAWS bool) Option {
+	return func(t *TagXLv1Decoder) {
+		t.useAWS = useAWS
 	}
 }
 
@@ -197,13 +209,37 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 func (t TagXLv1Decoder) Decode(data string, port uint8, devEui string) (*decoder.DecodedUplink, error) {
 	switch port {
 	case 192:
-		decodedData, err := t.loracloudMiddleware.DeliverUplinkMessage(devEui, loracloud.UplinkMsg{
-			MsgType: "updf",
-			Port:    port,
-			Payload: data,
-			FCount:  t.fCount,
-		})
-		return decoder.NewDecodedUplink([]decoder.Feature{decoder.FeatureGNSS}, decodedData), err
+		var position *aws.Position
+		var err error
+
+		if t.useAWS {
+			t.logger.Debug("solving position using AWS IoT Wireless")
+			position, err = aws.Solve(t.logger, data, time.Now())
+			if err != nil {
+				t.logger.Error("error solving position using AWS IoT Wireless, try with loracloud", zap.Error(err))
+			}
+		}
+
+		if position == nil {
+			decodedData, err := t.loracloudMiddleware.DeliverUplinkMessage(devEui, loracloud.UplinkMsg{
+				MsgType: "updf",
+				Port:    port,
+				Payload: data,
+				FCount:  t.fCount,
+			})
+
+			if t.useAWS {
+				t.logger.Info("solving position using loracloud middleware as fallback")
+				if err != nil {
+					t.logger.Error("there was an error solving position using loracloud middleware as fallback", zap.Error(err))
+				}
+			}
+
+			return decoder.NewDecodedUplink([]decoder.Feature{decoder.FeatureGNSS}, decodedData), err
+		}
+
+		t.logger.Info("position solved using AWS IoT Wireless", zap.String("devEui", devEui))
+		return decoder.NewDecodedUplink([]decoder.Feature{decoder.FeatureGNSS}, position), err
 	case 199:
 		decodedData, err := t.loracloudMiddleware.DeliverUplinkMessage(devEui, loracloud.UplinkMsg{
 			MsgType: "updf",

@@ -13,6 +13,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/truvami/decoder/internal/logger"
 	helpers "github.com/truvami/decoder/pkg/common"
 	"github.com/truvami/decoder/pkg/decoder"
 	"github.com/truvami/decoder/pkg/loracloud"
@@ -442,9 +443,12 @@ func TestDecode(t *testing.T) {
 		},
 	}
 
+	if logger.Logger == nil {
+		logger.NewLogger()
+	}
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestPort%vWith%v", test.port, test.payload), func(t *testing.T) {
-			decoder := NewTagXLv1Decoder(middleware, WithFCount(1))
+			decoder := NewTagXLv1Decoder(middleware, logger.Logger, WithFCount(1))
 			got, err := decoder.Decode(test.payload, test.port, test.devEui)
 
 			if err == nil && len(test.expectedErr) != 0 {
@@ -484,9 +488,13 @@ func TestValidationErrors(t *testing.T) {
 		expected error
 	}{}
 
+	if logger.Logger == nil {
+		logger.NewLogger()
+	}
+
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestPort%vValidationWith%v", test.port, test.payload), func(t *testing.T) {
-			decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"))
+			decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"), logger.Logger)
 			got, err := decoder.Decode(test.payload, test.port, "")
 
 			if err == nil && test.expected == nil {
@@ -503,7 +511,11 @@ func TestValidationErrors(t *testing.T) {
 }
 
 func TestInvalidPort(t *testing.T) {
-	decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"))
+	if logger.Logger == nil {
+		logger.NewLogger()
+	}
+
+	decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"), logger.Logger)
 	_, err := decoder.Decode("00", 0, "")
 
 	if err == nil || !errors.Is(err, helpers.ErrPortNotSupported) {
@@ -512,7 +524,11 @@ func TestInvalidPort(t *testing.T) {
 }
 
 func TestPayloadTooShort(t *testing.T) {
-	decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"))
+	if logger.Logger == nil {
+		logger.NewLogger()
+	}
+
+	decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"), logger.Logger)
 	_, err := decoder.Decode("01adbeef", 152, "")
 
 	if err == nil || !errors.Is(err, helpers.ErrPayloadTooShort) {
@@ -521,7 +537,11 @@ func TestPayloadTooShort(t *testing.T) {
 }
 
 func TestPayloadTooLong(t *testing.T) {
-	decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"))
+	if logger.Logger == nil {
+		logger.NewLogger()
+	}
+
+	decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"), logger.Logger)
 	_, err := decoder.Decode("01adbeef4242deadbeef4242deadbeef4242", 152, "")
 
 	if err == nil || !errors.Is(err, helpers.ErrPayloadTooLong) {
@@ -618,9 +638,13 @@ func TestFeatures(t *testing.T) {
 	middleware.BaseUrl = server.URL
 	defer server.Close()
 
+	if logger.Logger == nil {
+		logger.NewLogger()
+	}
+
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestFeaturesWithPort%vAndPayload%v", test.port, test.payload), func(t *testing.T) {
-			d := NewTagXLv1Decoder(middleware, WithFCount(42))
+			d := NewTagXLv1Decoder(middleware, logger.Logger, WithFCount(42))
 			decodedPayload, err := d.Decode(test.payload, test.port, "927da4b72110927d")
 			if err != nil {
 				t.Fatalf("error %s", err)
@@ -764,9 +788,13 @@ func TestMarshal(t *testing.T) {
 		},
 	}
 
+	if logger.Logger == nil {
+		logger.NewLogger()
+	}
+
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestMarshalWithPort%vAndPayload%v", test.port, test.payload), func(t *testing.T) {
-			decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"))
+			decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"), logger.Logger)
 
 			data, _ := decoder.Decode(test.payload, test.port, "")
 
@@ -791,7 +819,11 @@ func TestMarshal(t *testing.T) {
 }
 
 func TestWithFCount(t *testing.T) {
-	decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"), WithFCount(123))
+	if logger.Logger == nil {
+		logger.NewLogger()
+	}
+
+	decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"), logger.Logger, WithFCount(123))
 
 	// cast to TagXLv1Decoder to access fCount
 	tagXLv1Decoder := decoder.(*TagXLv1Decoder)

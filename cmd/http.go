@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-playground/validator"
 	"github.com/google/uuid"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
 	"github.com/truvami/decoder/internal/logger"
 	helpers "github.com/truvami/decoder/pkg/common"
@@ -30,12 +31,15 @@ import (
 var host string
 var port uint16
 var health bool
+var metrics bool
 
 func init() {
 	httpCmd.Flags().StringVar(&host, "host", "localhost", "Host to bind the HTTP server to")
 	httpCmd.Flags().Uint16Var(&port, "port", 8080, "Port to bind the HTTP server to")
 	httpCmd.Flags().StringVar(&accessToken, "token", "", "Access token for the loracloud API")
 	httpCmd.Flags().BoolVar(&health, "health", false, "Enable /health endpoint")
+	httpCmd.Flags().BoolVar(&metrics, "metrics", false, "Enable prometheus /metrics endpoint")
+	httpCmd.Flags().BoolVar(&useAWS, "use-aws", false, "Experimental: Use AWS IoT Wireless to decode payloads (requires AWS credentials)")
 	rootCmd.AddCommand(httpCmd)
 
 	// Add the generic encoder endpoint
@@ -65,6 +69,12 @@ var httpCmd = &cobra.Command{
 			router.HandleFunc("/health", healthHandler)
 		}
 
+		// metrics endpoint
+		if metrics {
+			logger.Logger.Debug("enabling prometheus metrics endpoint")
+			router.Handle("/metrics", promhttp.Handler())
+		}
+
 		type decoderEndpoint struct {
 			path    string
 			decoder decoder.Decoder
@@ -72,7 +82,7 @@ var httpCmd = &cobra.Command{
 
 		var decoders []decoderEndpoint = []decoderEndpoint{
 			{"tagsl/v1", tagslDecoder.NewTagSLv1Decoder(tagslDecoder.WithSkipValidation(SkipValidation))},
-			{"tagxl/v1", tagxlDecoder.NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware(accessToken), tagxlDecoder.WithSkipValidation(SkipValidation))},
+			{"tagxl/v1", tagxlDecoder.NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware(accessToken), logger.Logger, tagxlDecoder.WithUseAWS(useAWS), tagxlDecoder.WithSkipValidation(SkipValidation))},
 			{"nomadxs/v1", nomadxsDecoder.NewNomadXSv1Decoder(nomadxsDecoder.WithSkipValidation(SkipValidation))},
 			{"nomadxl/v1", nomadxlDecoder.NewNomadXLv1Decoder(nomadxlDecoder.WithSkipValidation(SkipValidation))},
 			{"smartlabel/v1", smartlabelDecoder.NewSmartLabelv1Decoder(loracloud.NewLoracloudMiddleware(accessToken), smartlabelDecoder.WithSkipValidation(SkipValidation))},
