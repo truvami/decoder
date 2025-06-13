@@ -3,9 +3,9 @@ name: CI 🚧
 on:
   push:
     paths:
-      - '**.go'
-      - '**.md'
-      - '**.mod'
+      - "**.go"
+      - "**.md"
+      - "**.mod"
 
 jobs:
   test:
