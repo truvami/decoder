@@ -215,7 +215,9 @@ func (t TagXLv1Decoder) Decode(data string, port uint8, devEui string) (*decoder
 		if t.useAWS {
 			t.logger.Debug("solving position using AWS IoT Wireless")
 			position, err = aws.Solve(t.logger, data, time.Now())
-			t.logger.Error("error solving position using AWS IoT Wireless, try with loracloud", zap.Error(err))
+			if err != nil {
+				t.logger.Error("error solving position using AWS IoT Wireless, try with loracloud", zap.Error(err))
+			}
 		}
 
 		if position == nil {
