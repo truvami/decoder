@@ -28,7 +28,7 @@ var (
 	awsPostionEstimatesDurationHistogram = promauto.NewHistogram(prometheus.HistogramOpts{
 		Name:    "truvami_aws_position_estimates_duration_seconds",
 		Help:    "The duration of position estimate requests in seconds",
-		Buckets: prometheus.DefBuckets,
+		Buckets: []float64{0.1, 0.2, 0.3, 0.5, 1, 2, 5, 10, 30, 60},
 	})
 	awsPostionEstimatesSuccessCounter = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "truvami_aws_position_estimates_success_total",
