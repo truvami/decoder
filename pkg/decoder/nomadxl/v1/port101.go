@@ -85,7 +85,7 @@ func (p Port101Payload) GetPressure() float32 {
 	return p.Pressure
 }
 
-func (p Port101Payload) GetIsBuffered() bool {
+func (p Port101Payload) IsBuffered() bool {
 	return false
 }
 

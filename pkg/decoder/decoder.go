@@ -90,7 +90,7 @@ type UplinkFeatureGNSS interface {
 }
 
 type UplinkFeatureBuffered interface {
-	GetIsBuffered() bool
+	IsBuffered() bool
 	GetBufferLevel() *uint16
 }
 

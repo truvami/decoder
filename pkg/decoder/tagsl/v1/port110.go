@@ -121,7 +121,7 @@ func (p Port110Payload) GetLowBattery() *bool {
 	return nil
 }
 
-func (p Port110Payload) GetIsBuffered() bool {
+func (p Port110Payload) IsBuffered() bool {
 	return true
 }
 

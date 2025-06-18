@@ -110,7 +110,7 @@ func (p Port105Payload) GetAccessPoints() []decoder.AccessPoint {
 	return accessPoints
 }
 
-func (p Port105Payload) GetIsBuffered() bool {
+func (p Port105Payload) IsBuffered() bool {
 	return true
 }
 
