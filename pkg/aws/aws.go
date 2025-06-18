@@ -2,6 +2,7 @@ package aws
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -9,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/iotwireless"
 	"github.com/aws/aws-sdk-go-v2/service/iotwireless/types"
-	geojson "github.com/paulmach/go.geojson"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/truvami/decoder/pkg/decoder"
@@ -111,7 +111,8 @@ func Solve(logger *zap.Logger, payload string, captureTime time.Time) (*Position
 		zap.Any("metadata", output.ResultMetadata),
 	)
 
-	position, err := geojson.UnmarshalFeature(output.GeoJsonPayload)
+	var position *GeoJsonResponse
+	err = json.Unmarshal(output.GeoJsonPayload, &position)
 	if err != nil {
 		awsPostionEstimatesErrorsCounter.Inc()
 		return nil, fmt.Errorf("failed to unmarshal GeoJSON payload: %w", err)
@@ -120,25 +121,44 @@ func Solve(logger *zap.Logger, payload string, captureTime time.Time) (*Position
 		awsPostionEstimatesErrorsCounter.Inc()
 		return nil, fmt.Errorf("received nil position from AWS IoT Wireless")
 	}
-	if position.Type != string(geojson.GeometryPoint) {
+	if len(position.Coordinates) < 2 {
 		awsPostionEstimatesErrorsCounter.Inc()
-		return nil, fmt.Errorf("expected GeoJSON Feature, got %s", position.Type)
-	}
-	if len(position.Geometry.Point) < 2 {
-		awsPostionEstimatesErrorsCounter.Inc()
-		return nil, fmt.Errorf("invalid GeoJSON point: %v", position.Geometry.Point)
+		return nil, fmt.Errorf("invalid GeoJSON point: %v", position.Coordinates)
 	}
 
 	// Log the position estimate success
 	awsPostionEstimatesSuccessCounter.Inc()
 	awsPostionEstimatesDurationHistogram.Observe(time.Since(start).Seconds())
 
+	var altitude *float64
+	if len(position.Coordinates) > 2 {
+		altitude = position.Coordinates[2]
+	}
+
+	buffered := false
+	// add 10 seconds buffer to the timestamp
+	if position.Properties.Timestamp != nil && position.Properties.Timestamp.Before(captureTime.Add(10*time.Second)) {
+		buffered = true
+	}
+
 	return &Position{
-		Latitude:  position.Geometry.Point[1],
-		Longitude: position.Geometry.Point[0],
-		Timestamp: &captureTime,
-		Altitude:  nil, // Altitude is optional, set to nil if not provided
+		Latitude:  *position.Coordinates[1],
+		Longitude: *position.Coordinates[0],
+		Altitude:  altitude,
+		Timestamp: position.Properties.Timestamp,
+		Accuracy:  position.Properties.HorizontalAccuracy,
+		Buffered:  buffered,
 	}, nil
+}
+
+type GeoJsonResponse struct {
+	Coordinates []*float64 `json:"coordinates"`
+	Type        string     `json:"type"`
+	Properties  struct {
+		HorizontalAccuracy        *float64   `json:"horizontalAccuracy,omitempty"`
+		HorizontalConfidenceLevel *int       `json:"horizontalConfidenceLevel,omitempty"`
+		Timestamp                 *time.Time `json:"timestamp,omitempty"`
+	} `json:"properties"`
 }
 
 type Position struct {
@@ -146,10 +166,13 @@ type Position struct {
 	Longitude float64    `json:"longitude"`
 	Altitude  *float64   `json:"altitude"` // Optional altitude
 	Timestamp *time.Time `json:"timestamp"`
+	Accuracy  *float64   `json:"accuracy,omitempty"` // Optional accuracy
+	Buffered  bool       `json:"buffered,omitempty"` // Indicates if the position is buffered
 }
 
 var _ decoder.UplinkFeatureBase = &Position{}
 var _ decoder.UplinkFeatureGNSS = &Position{}
+var _ decoder.UplinkFeatureBuffered = &Position{}
 
 func (p Position) GetTimestamp() *time.Time {
 	return p.Timestamp
@@ -171,7 +194,7 @@ func (p Position) GetAltitude() float64 {
 }
 
 func (p Position) GetAccuracy() *float64 {
-	return nil
+	return p.Accuracy
 }
 
 func (p Position) GetTTF() *time.Duration {
@@ -184,4 +207,11 @@ func (p Position) GetPDOP() *float64 {
 
 func (p Position) GetSatellites() *uint8 {
 	return nil
+}
+
+func (p Position) GetBufferLevel() uint16 {
+	if p.Buffered {
+		return 1
+	}
+	return 0
 }

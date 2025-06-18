@@ -258,7 +258,7 @@ func (t TagXLv1Decoder) Decode(data string, port uint8, devEui string) (*decoder
 		}
 
 		t.logger.Info("position solved using AWS IoT Wireless", zap.String("devEui", devEui))
-		return decoder.NewDecodedUplink([]decoder.Feature{decoder.FeatureGNSS}, position), err
+		return decoder.NewDecodedUplink([]decoder.Feature{decoder.FeatureGNSS, decoder.FeatureBuffered}, position), err
 	case 199:
 		decodedData, err := t.loracloudMiddleware.DeliverUplinkMessage(devEui, loracloud.UplinkMsg{
 			MsgType: "updf",
