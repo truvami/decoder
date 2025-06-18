@@ -8,7 +8,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/iotwireless v1.47.1
 	github.com/go-playground/validator v9.31.0+incompatible
 	github.com/google/uuid v1.6.0
-	github.com/paulmach/go.geojson v1.5.0
 	github.com/prometheus/client_golang v1.22.0
 	github.com/spf13/cobra v1.8.1
 	go.uber.org/zap v1.27.0
