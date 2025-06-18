@@ -55,7 +55,7 @@ var (
 //   - error:      An error if the AWS config could not be loaded or the position
 //     estimate request fails; otherwise, nil.
 func Solve(logger *zap.Logger, payload string, captureTime time.Time) (*Position, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
 	start := time.Now()
@@ -71,6 +71,11 @@ func Solve(logger *zap.Logger, payload string, captureTime time.Time) (*Position
 	if err != nil {
 		awsPostionEstimatesErrorsCounter.Inc()
 		return nil, fmt.Errorf("failed to load AWS config: %w", err)
+	}
+
+	// remove first byte of payload (why? WE DO NOT KNOW)
+	if len(payload) > 0 {
+		payload = payload[1:]
 	}
 
 	client := iotwireless.NewFromConfig(cfg)
