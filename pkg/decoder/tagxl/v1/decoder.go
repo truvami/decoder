@@ -5,11 +5,24 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/truvami/decoder/pkg/aws"
 	"github.com/truvami/decoder/pkg/common"
 	"github.com/truvami/decoder/pkg/decoder"
 	"github.com/truvami/decoder/pkg/loracloud"
 	"go.uber.org/zap"
+)
+
+var (
+	awsLoracloudFallbackSuccess = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "truvami_aws_loracloud_fallback_success_total",
+		Help: "The total number of successful position estimate requests using Loracloud as a fallback",
+	})
+	awsLoracloudFallbackFailure = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "truvami_aws_loracloud_fallback_failure_total",
+		Help: "The total number of failed position estimate requests using Loracloud as a fallback",
+	})
 )
 
 type Option func(*TagXLv1Decoder)
@@ -233,6 +246,12 @@ func (t TagXLv1Decoder) Decode(data string, port uint8, devEui string) (*decoder
 				if err != nil {
 					t.logger.Error("there was an error solving position using loracloud middleware as fallback", zap.Error(err))
 				}
+			}
+
+			if decodedData.GetLatitude() != 0 {
+				awsLoracloudFallbackSuccess.Inc()
+			} else {
+				awsLoracloudFallbackFailure.Inc()
 			}
 
 			return decoder.NewDecodedUplink([]decoder.Feature{decoder.FeatureGNSS}, decodedData), err
