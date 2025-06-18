@@ -172,8 +172,12 @@ func (p Port150Payload) GetAccessPoints() []decoder.AccessPoint {
 	return accessPoints
 }
 
-func (p Port150Payload) GetBufferLevel() uint16 {
-	return p.BufferLevel
+func (p Port150Payload) GetIsBuffered() bool {
+	return true
+}
+
+func (p Port150Payload) GetBufferLevel() *uint16 {
+	return &p.BufferLevel
 }
 
 func (p Port150Payload) IsMoving() bool {

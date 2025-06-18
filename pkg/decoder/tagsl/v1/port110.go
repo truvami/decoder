@@ -121,8 +121,12 @@ func (p Port110Payload) GetLowBattery() *bool {
 	return nil
 }
 
-func (p Port110Payload) GetBufferLevel() uint16 {
-	return p.BufferLevel
+func (p Port110Payload) GetIsBuffered() bool {
+	return true
+}
+
+func (p Port110Payload) GetBufferLevel() *uint16 {
+	return &p.BufferLevel
 }
 
 func (p Port110Payload) IsMoving() bool {
