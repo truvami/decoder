@@ -32,7 +32,7 @@ func TestSolve(t *testing.T) {
 	logger := zap.NewExample()
 	for _, test := range tests {
 		t.Run(test.Payload, func(t *testing.T) {
-			result, err := Solve(logger, test.Payload, time.Now())
+			result, err := Solve(logger, test.Payload, test.CaptureTime)
 			assert.NoError(t, err, "expected no error during Solve")
 
 			timeDiff := result.Timestamp.Sub(*test.Expected.Timestamp)
