@@ -77,7 +77,7 @@ func TestEncode(t *testing.T) {
 				Humidity:    78.0,
 			},
 			port:     2,
-			expected: "fe0e9c",
+			expected: "00009c",
 		},
 		{
 			data: smartlabel.Port11Payload{
@@ -117,7 +117,7 @@ func TestEncode(t *testing.T) {
 				Humidity:            78.0,
 			},
 			port:     11,
-			expected: "0ee90cfafe0e9c",
+			expected: "0ee90cfa00009c",
 		},
 	}
 

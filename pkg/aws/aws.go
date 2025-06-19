@@ -73,18 +73,19 @@ func Solve(logger *zap.Logger, payload string, captureTime time.Time) (*Position
 		return nil, fmt.Errorf("failed to load AWS config: %w", err)
 	}
 
-	// remove first byte of payload (why? WE DO NOT KNOW)
-	if len(payload) > 0 {
-		payload = payload[1:]
+	// remove first 2 characters from the payload
+	if len(payload) > 2 {
+		payload = payload[2:]
 	}
 
 	client := iotwireless.NewFromConfig(cfg)
 	input := &iotwireless.GetPositionEstimateInput{
 		Gnss: &types.Gnss{
-			Payload:     aws.String(payload),
-			CaptureTime: aws.Float32(float32(captureTime.Unix())),
+			Payload: aws.String(payload),
 
-			// Optional improvements:
+			// in seconds GPS time (GPST)
+			// GPS Time (GPST) is a continuous time scale (no leap seconds) defined by the GPS Control segment on the basis of a set of atomic clocks at the Monitor Stations and onboard the satellites. It starts at 0h UTC (midnight) of January 5th to 6th 1980 (6.d0). At that epoch, the difference TAI−UTC was 19 seconds, thence GPS−UTC=n − 19s. GPS time is synchronised with the UTC(USNO) at 1 microsecond level (modulo one second), but actually is kept within 25 ns.[
+			CaptureTime: aws.Float32(getGPSTime(captureTime)),
 			// AssistAltitude: aws.Float32(50.0),
 			// AssistPosition: []float32{37.7749, -122.4194},
 			// Use2DSolver:    aws.Bool(true),
@@ -149,6 +150,12 @@ func Solve(logger *zap.Logger, payload string, captureTime time.Time) (*Position
 		Accuracy:  position.Properties.HorizontalAccuracy,
 		Buffered:  buffered,
 	}, nil
+}
+
+func getGPSTime(captureTime time.Time) float32 {
+	// GPS time starts at 0h UTC on January 5th, 1980
+	gpsEpoch := time.Date(1980, time.January, 6, 0, 0, 0, 0, time.UTC)
+	return float32(captureTime.Sub(gpsEpoch).Seconds())
 }
 
 type GeoJsonResponse struct {
