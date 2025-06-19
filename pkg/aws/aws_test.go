@@ -24,7 +24,19 @@ func TestSolve(t *testing.T) {
 				Altitude:  aws.Float64(486.05999755859375),
 				Timestamp: aws.Time(time.Date(2025, time.June, 19, 22, 19, 20, 652675294, time.UTC)),
 				Accuracy:  aws.Float64(33.6),
-				Buffered:  true,
+				Buffered:  false,
+			},
+		},
+		{
+			Payload:     "83ab812e9de68d0cc1006b9008acb2ab60b8c4dc4322d6f091c65dc11545946d8bd29879f0067bfbeee22fbef19db3cc0d",
+			CaptureTime: time.Date(2025, time.June, 18, 14, 30, 00, 0, time.UTC),
+			Expected: Position{
+				Latitude:  47.350059509277344,
+				Longitude: 8.561149597167969,
+				Altitude:  aws.Float64(471),
+				Timestamp: aws.Time(time.Date(2025, time.June, 19, 22, 31, 20, 652675294, time.UTC)),
+				Accuracy:  aws.Float64(22.4),
+				Buffered:  false,
 			},
 		},
 	}
@@ -41,8 +53,8 @@ func TestSolve(t *testing.T) {
 			// The assertions have been split to ensure each field is checked separately since the timestamp is not exact
 			assert.Equal(t, test.Expected.Latitude, result.Latitude, "latitude does not match expected value")
 			assert.Equal(t, test.Expected.Longitude, result.Longitude, "longitude does not match expected value")
-			assert.Equal(t, test.Expected.Altitude, result.Altitude, "altitude does not match expected value")
-			assert.Equal(t, test.Expected.Accuracy, result.Accuracy, "accuracy does not match expected value")
+			assert.Equal(t, *test.Expected.Altitude, *result.Altitude, "altitude does not match expected value")
+			assert.Equal(t, *test.Expected.Accuracy, *result.Accuracy, "accuracy does not match expected value")
 			assert.Equal(t, test.Expected.Buffered, result.Buffered, "buffered status does not match expected value")
 		})
 	}
