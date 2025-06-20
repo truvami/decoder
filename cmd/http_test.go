@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -158,8 +157,7 @@ func TestHTTPCmd(t *testing.T) {
 
 	go func() {
 		// call the command handler function
-		httpCmd.SetContext(context.TODO())
-		httpCmd.Run(httpCmd, []string{})
+		httpCmd.Run(nil, []string{})
 	}()
 
 	// create a new HTTP request to simulate the command execution

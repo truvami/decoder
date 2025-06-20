@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -73,7 +74,12 @@ var httpCmd = &cobra.Command{
 			decoder decoder.Decoder
 		}
 
-		solver, err := aws.NewAwsPositionEstimateClient(cmd.Context(), logger.Logger)
+		ctx := context.Background()
+		if cmd != nil {
+			ctx = cmd.Context()
+		}
+
+		solver, err := aws.NewAwsPositionEstimateClient(ctx, logger.Logger)
 		if err != nil {
 			logger.Logger.Error("error while creating AWS position estimate client", zap.Error(err))
 			os.Exit(1)
@@ -81,10 +87,10 @@ var httpCmd = &cobra.Command{
 
 		var decoders []decoderEndpoint = []decoderEndpoint{
 			{"tagsl/v1", tagslDecoder.NewTagSLv1Decoder(tagslDecoder.WithSkipValidation(SkipValidation))},
-			{"tagxl/v1", tagxlDecoder.NewTagXLv1Decoder(cmd.Context(), solver, logger.Logger, tagxlDecoder.WithSkipValidation(SkipValidation))},
+			{"tagxl/v1", tagxlDecoder.NewTagXLv1Decoder(ctx, solver, logger.Logger, tagxlDecoder.WithSkipValidation(SkipValidation))},
 			{"nomadxs/v1", nomadxsDecoder.NewNomadXSv1Decoder(nomadxsDecoder.WithSkipValidation(SkipValidation))},
 			{"nomadxl/v1", nomadxlDecoder.NewNomadXLv1Decoder(nomadxlDecoder.WithSkipValidation(SkipValidation))},
-			{"smartlabel/v1", smartlabelDecoder.NewSmartLabelv1Decoder(cmd.Context(), solver, logger.Logger, smartlabelDecoder.WithSkipValidation(SkipValidation))},
+			{"smartlabel/v1", smartlabelDecoder.NewSmartLabelv1Decoder(ctx, solver, logger.Logger, smartlabelDecoder.WithSkipValidation(SkipValidation))},
 		}
 
 		// add the decoders
