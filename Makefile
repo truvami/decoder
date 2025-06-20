@@ -37,7 +37,7 @@ install:
 check-json-tags:
 	@echo "Checking JSON tags for camelCase format..."
 	@bash -c ' \
-		files=$$(find . -name "*.go" -not -path "./vendor/*"  -not -path "./pkg/loracloud/*"); \
+		files=$$(find . -name "*.go" -not -path "./vendor/*"  -not -path "./pkg/solver/loracloud/*"); \
 		camel_case_regex="^[a-z]+([A-Za-z0-9]+)*$$"; \
 		error_found=false; \
 		for file in $$files; do \

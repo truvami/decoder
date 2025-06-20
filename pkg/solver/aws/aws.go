@@ -186,9 +186,9 @@ type GeoJsonResponse struct {
 	Coordinates []*float64 `json:"coordinates"`
 	Type        string     `json:"type"`
 	Properties  struct {
-		HorizontalAccuracy        *float64   `json:"horizontalAccuracy,omitempty"`
-		HorizontalConfidenceLevel *int       `json:"horizontalConfidenceLevel,omitempty"`
-		Timestamp                 *time.Time `json:"timestamp,omitempty"`
+		HorizontalAccuracy        *float64   `json:"horizontalAccuracy"`
+		HorizontalConfidenceLevel *int       `json:"horizontalConfidenceLevel"`
+		Timestamp                 *time.Time `json:"timestamp"`
 	} `json:"properties"`
 }
 
@@ -197,8 +197,8 @@ type Position struct {
 	Longitude float64    `json:"longitude"`
 	Altitude  *float64   `json:"altitude"` // Optional altitude
 	Timestamp *time.Time `json:"timestamp"`
-	Accuracy  *float64   `json:"accuracy,omitempty"` // Optional accuracy
-	Buffered  bool       `json:"buffered,omitempty"` // Indicates if the position is buffered
+	Accuracy  *float64   `json:"accuracy"` // Optional accuracy
+	Buffered  bool       `json:"buffered"` // Indicates if the position is buffered
 }
 
 var _ decoder.UplinkFeatureBase = &Position{}
