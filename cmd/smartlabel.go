@@ -13,8 +13,6 @@ import (
 )
 
 func init() {
-	smartlabelCmd.Flags().StringVar(&accessToken, "token", "", "Access token for the loracloud API")
-	smartlabelCmd.Flags().BoolVar(&useAWS, "use-aws", false, "Experimental: Use AWS IoT Wireless to decode payloads (requires AWS credentials)")
 	rootCmd.AddCommand(smartlabelCmd)
 }
 

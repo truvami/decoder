@@ -25,6 +25,7 @@ var banner = []string{
 var Debug bool
 var Json bool
 var SkipValidation bool
+var useAWS bool
 
 func init() {
 	rootCmd.PersistentFlags().BoolVarP(&Debug, "debug", "d", false, "Display debugging output in the console. (default: \033[31mfalse\033[0m)")
@@ -44,6 +45,9 @@ func init() {
 	if err != nil {
 		logger.Logger.Error("error while binding skip-validation flag", zap.Error(err))
 	}
+
+	rootCmd.Flags().StringVar(&accessToken, "token", "", "Access token for the loracloud API")
+	rootCmd.Flags().BoolVar(&useAWS, "use-aws", false, "Experimental: Use AWS IoT Wireless to decode payloads (requires AWS credentials)")
 }
 
 var rootCmd = &cobra.Command{

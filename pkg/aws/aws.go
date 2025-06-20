@@ -38,6 +38,15 @@ var (
 		Name: "truvami_aws_position_estimates_failure_total",
 		Help: "The total number of failed position estimate requests",
 	})
+
+	AwsLoracloudFallbackSuccess = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "truvami_aws_loracloud_fallback_success_total",
+		Help: "The total number of successful position estimate requests using Loracloud as a fallback",
+	})
+	AwsLoracloudFallbackFailure = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "truvami_aws_loracloud_fallback_failure_total",
+		Help: "The total number of failed position estimate requests using Loracloud as a fallback",
+	})
 )
 
 // Solve sends a GNSS payload to AWS IoT Wireless to obtain a position estimate.

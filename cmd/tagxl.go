@@ -14,11 +14,8 @@ import (
 )
 
 var accessToken string
-var useAWS bool
 
 func init() {
-	tagxlCmd.Flags().StringVar(&accessToken, "token", "", "Access token for the loracloud API")
-	tagxlCmd.Flags().BoolVar(&useAWS, "use-aws", false, "Experimental: Use AWS IoT Wireless to decode payloads (requires AWS credentials)")
 	rootCmd.AddCommand(tagxlCmd)
 }
 

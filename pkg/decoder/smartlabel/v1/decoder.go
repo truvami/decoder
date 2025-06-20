@@ -5,24 +5,11 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/truvami/decoder/pkg/aws"
 	"github.com/truvami/decoder/pkg/common"
 	"github.com/truvami/decoder/pkg/decoder"
 	"github.com/truvami/decoder/pkg/loracloud"
 	"go.uber.org/zap"
-)
-
-var (
-	awsLoracloudFallbackSuccess = promauto.NewCounter(prometheus.CounterOpts{
-		Name: "truvami_aws_loracloud_fallback_success_total",
-		Help: "The total number of successful position estimate requests using Loracloud as a fallback",
-	})
-	awsLoracloudFallbackFailure = promauto.NewCounter(prometheus.CounterOpts{
-		Name: "truvami_aws_loracloud_fallback_failure_total",
-		Help: "The total number of failed position estimate requests using Loracloud as a fallback",
-	})
 )
 
 type Option func(*SmartLabelv1Decoder)
@@ -44,6 +31,10 @@ func NewSmartLabelv1Decoder(loracloudMiddleware loracloud.LoracloudMiddleware, l
 
 	for _, option := range options {
 		option(smartLabelv1Decoder)
+	}
+
+	if smartLabelv1Decoder.useAWS {
+		logger.Info("smartlabel decoder using AWS IoT Wireless for GNSS position solving")
 	}
 
 	return smartLabelv1Decoder
@@ -210,9 +201,9 @@ func (t SmartLabelv1Decoder) Decode(data string, port uint8, devEui string) (*de
 			}
 
 			if decodedData.GetLatitude() != 0 {
-				awsLoracloudFallbackSuccess.Inc()
+				aws.AwsLoracloudFallbackSuccess.Inc()
 			} else {
-				awsLoracloudFallbackFailure.Inc()
+				aws.AwsLoracloudFallbackFailure.Inc()
 			}
 
 			return decoder.NewDecodedUplink([]decoder.Feature{decoder.FeatureGNSS}, decodedData), err
