@@ -384,7 +384,9 @@ func TestDecode(t *testing.T) {
 	}
 
 	logger := zap.NewExample()
-	defer logger.Sync() // flushes buffer, if any
+	defer func() {
+		_ = logger.Sync() // Flushes buffer, if any
+	}()
 
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestPort%vWith%v", test.port, test.payload), func(t *testing.T) {
@@ -409,7 +411,9 @@ func TestDecode(t *testing.T) {
 
 func TestInvalidPort(t *testing.T) {
 	logger := zap.NewExample()
-	defer logger.Sync() // flushes buffer, if any
+	defer func() {
+		_ = logger.Sync() // Flushes buffer, if any
+	}()
 	decoder := NewSmartLabelv1Decoder(loracloud.NewLoracloudMiddleware("appEui"), logger)
 	_, err := decoder.Decode("00", 0, "")
 	if err == nil || !errors.Is(err, helpers.ErrPortNotSupported) {
@@ -419,7 +423,9 @@ func TestInvalidPort(t *testing.T) {
 
 func TestPayloadTooShort(t *testing.T) {
 	logger := zap.NewExample()
-	defer logger.Sync() // flushes buffer, if any
+	defer func() {
+		_ = logger.Sync() // Flushes buffer, if any
+	}()
 	decoder := NewSmartLabelv1Decoder(loracloud.NewLoracloudMiddleware("appEui"), logger)
 	_, err := decoder.Decode("0ff0", 1, "")
 
@@ -430,7 +436,9 @@ func TestPayloadTooShort(t *testing.T) {
 
 func TestPayloadTooLong(t *testing.T) {
 	logger := zap.NewExample()
-	defer logger.Sync() // flushes buffer, if any
+	defer func() {
+		_ = logger.Sync() // Flushes buffer, if any
+	}()
 	decoder := NewSmartLabelv1Decoder(loracloud.NewLoracloudMiddleware("appEui"), logger)
 	_, err := decoder.Decode("0ff00ff00ff0", 1, "")
 
@@ -500,7 +508,9 @@ func TestFeatures(t *testing.T) {
 	defer server.Close()
 
 	logger := zap.NewExample()
-	defer logger.Sync() // flushes buffer, if any
+	defer func() {
+		_ = logger.Sync() // Flushes buffer, if any
+	}()
 
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestFeaturesWithPort%vAndPayload%v", test.port, test.payload), func(t *testing.T) {
@@ -672,7 +682,9 @@ func TestMarshal(t *testing.T) {
 	}
 
 	logger := zap.NewExample()
-	defer logger.Sync() // flushes buffer, if any
+	defer func() {
+		_ = logger.Sync() // Flushes buffer, if any
+	}()
 
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestMarshalWithPort%vAndPayload%v", test.port, test.payload), func(t *testing.T) {
@@ -702,7 +714,9 @@ func TestMarshal(t *testing.T) {
 
 func TestWithFCount(t *testing.T) {
 	logger := zap.NewExample()
-	defer logger.Sync() // flushes buffer, if any
+	defer func() {
+		_ = logger.Sync() // Flushes buffer, if any
+	}()
 
 	decoder := NewSmartLabelv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"), logger, WithFCount(123))
 
