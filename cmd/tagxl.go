@@ -9,7 +9,6 @@ import (
 	"github.com/truvami/decoder/internal/logger"
 	helpers "github.com/truvami/decoder/pkg/common"
 	tagxl "github.com/truvami/decoder/pkg/decoder/tagxl/v1"
-	"github.com/truvami/decoder/pkg/loracloud"
 	"go.uber.org/zap"
 )
 
@@ -31,7 +30,7 @@ var tagxlCmd = &cobra.Command{
 		}
 
 		logger.Logger.Debug("initializing tagxl decoder")
-		d := tagxl.NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware(accessToken), logger.Logger, tagxl.WithSkipValidation(SkipValidation), tagxl.WithUseAWS(useAWS))
+		d := tagxl.NewTagXLv1Decoder(cmd.Context(), nil, logger.Logger, tagxl.WithSkipValidation(SkipValidation))
 
 		port, err := strconv.Atoi(args[0])
 		if err != nil {
@@ -44,7 +43,7 @@ var tagxlCmd = &cobra.Command{
 			return
 		}
 
-		data, err := d.Decode(args[1], uint8(port), args[2])
+		data, err := d.Decode(args[1], uint8(port))
 		if err != nil {
 			if errors.Is(err, helpers.ErrValidationFailed) {
 				for _, err := range helpers.UnwrapError(err) {

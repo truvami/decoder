@@ -27,7 +27,7 @@ func TestPost(t *testing.T) {
 	})
 
 	server := startMockServer(mux)
-	middleware := NewLoracloudMiddleware("access_token")
+	middleware := NewLoracloudMiddleware("access_token", 123, "0123456789ABCDEF", 1)
 	middleware.BaseUrl = server.URL
 	defer server.Close()
 
@@ -89,7 +89,7 @@ func TestDeliverUplinkMessage(t *testing.T) {
 		})
 
 		server := startMockServer(mux)
-		middleware := NewLoracloudMiddleware("access_token")
+		middleware := NewLoracloudMiddleware("access_token", 123, "0123456789ABCDEF", 1)
 		middleware.BaseUrl = server.URL
 		defer server.Close()
 
@@ -113,7 +113,7 @@ func TestDeliverUplinkMessage(t *testing.T) {
 
 	t.Run("Validation error", func(t *testing.T) {
 		server := startMockServer(nil)
-		middleware := NewLoracloudMiddleware("access_token")
+		middleware := NewLoracloudMiddleware("access_token", 123, "0123456789ABCDEF", 1)
 		middleware.BaseUrl = server.URL
 		defer server.Close()
 
@@ -140,7 +140,7 @@ func TestDeliverUplinkMessage(t *testing.T) {
 		})
 
 		server := startMockServer(mux)
-		middleware := NewLoracloudMiddleware("access_token")
+		middleware := NewLoracloudMiddleware("access_token", 123, "0123456789ABCDEF", 1)
 		middleware.BaseUrl = server.URL
 		defer server.Close()
 
@@ -167,7 +167,7 @@ func TestDeliverUplinkMessage(t *testing.T) {
 		})
 
 		server := startMockServer(mux)
-		middleware := NewLoracloudMiddleware("access_token")
+		middleware := NewLoracloudMiddleware("access_token", 123, "0123456789ABCDEF", 1)
 		middleware.BaseUrl = server.URL
 		defer server.Close()
 
@@ -296,7 +296,7 @@ func TestResponseVariants(t *testing.T) {
 			})
 
 			server := startMockServer(mux)
-			middleware := NewLoracloudMiddleware("token")
+			middleware := NewLoracloudMiddleware("token", 42, "b2e6876e64be9692", 192)
 			middleware.BaseUrl = server.URL
 			defer server.Close()
 

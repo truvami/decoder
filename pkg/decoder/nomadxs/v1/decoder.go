@@ -107,7 +107,7 @@ func (t NomadXSv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 	return common.PayloadConfig{}, fmt.Errorf("%w: port %v not supported", common.ErrPortNotSupported, port)
 }
 
-func (t NomadXSv1Decoder) Decode(data string, port uint8, devEui string) (*decoder.DecodedUplink, error) {
+func (t NomadXSv1Decoder) Decode(data string, port uint8) (*decoder.DecodedUplink, error) {
 	config, err := t.getConfig(port)
 	if err != nil {
 		return nil, err

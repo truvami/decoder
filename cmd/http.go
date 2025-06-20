@@ -24,7 +24,7 @@ import (
 	nomadxsEncoder "github.com/truvami/decoder/pkg/encoder/nomadxs/v1"
 	smartlabelEncoder "github.com/truvami/decoder/pkg/encoder/smartlabel/v1"
 	tagslEncoder "github.com/truvami/decoder/pkg/encoder/tagsl/v1"
-	"github.com/truvami/decoder/pkg/loracloud"
+	"github.com/truvami/decoder/pkg/solver/aws"
 	"go.uber.org/zap"
 )
 
@@ -36,16 +36,9 @@ var metrics bool
 func init() {
 	httpCmd.Flags().StringVar(&host, "host", "localhost", "Host to bind the HTTP server to")
 	httpCmd.Flags().Uint16Var(&port, "port", 8080, "Port to bind the HTTP server to")
-	httpCmd.Flags().StringVar(&accessToken, "token", "", "Access token for the loracloud API")
 	httpCmd.Flags().BoolVar(&health, "health", false, "Enable /health endpoint")
 	httpCmd.Flags().BoolVar(&metrics, "metrics", false, "Enable prometheus /metrics endpoint")
-	httpCmd.Flags().BoolVar(&useAWS, "use-aws", false, "Experimental: Use AWS IoT Wireless to decode payloads (requires AWS credentials)")
 	rootCmd.AddCommand(httpCmd)
-
-	// Add the generic encoder endpoint
-	httpCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
-		// This will run before the Run function
-	}
 }
 
 var httpCmd = &cobra.Command{
@@ -80,12 +73,18 @@ var httpCmd = &cobra.Command{
 			decoder decoder.Decoder
 		}
 
+		solver, err := aws.NewAwsPositionEstimateClient(cmd.Context(), logger.Logger)
+		if err != nil {
+			logger.Logger.Error("error while creating AWS position estimate client", zap.Error(err))
+			os.Exit(1)
+		}
+
 		var decoders []decoderEndpoint = []decoderEndpoint{
 			{"tagsl/v1", tagslDecoder.NewTagSLv1Decoder(tagslDecoder.WithSkipValidation(SkipValidation))},
-			{"tagxl/v1", tagxlDecoder.NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware(accessToken), logger.Logger, tagxlDecoder.WithUseAWS(useAWS), tagxlDecoder.WithSkipValidation(SkipValidation))},
+			{"tagxl/v1", tagxlDecoder.NewTagXLv1Decoder(cmd.Context(), solver, logger.Logger, tagxlDecoder.WithSkipValidation(SkipValidation))},
 			{"nomadxs/v1", nomadxsDecoder.NewNomadXSv1Decoder(nomadxsDecoder.WithSkipValidation(SkipValidation))},
 			{"nomadxl/v1", nomadxlDecoder.NewNomadXLv1Decoder(nomadxlDecoder.WithSkipValidation(SkipValidation))},
-			{"smartlabel/v1", smartlabelDecoder.NewSmartLabelv1Decoder(loracloud.NewLoracloudMiddleware(accessToken), logger.Logger, smartlabelDecoder.WithUseAWS(useAWS), smartlabelDecoder.WithSkipValidation(SkipValidation))},
+			{"smartlabel/v1", smartlabelDecoder.NewSmartLabelv1Decoder(cmd.Context(), solver, logger.Logger, smartlabelDecoder.WithSkipValidation(SkipValidation))},
 		}
 
 		// add the decoders
@@ -114,7 +113,7 @@ var httpCmd = &cobra.Command{
 		handler := loggingMiddleware(logger.Logger, router)
 
 		logger.Logger.Info("starting HTTP server", zap.String("host", host), zap.Uint64("port", uint64(port)))
-		err := http.ListenAndServe(fmt.Sprintf("%v:%v", host, port), handler)
+		err = http.ListenAndServe(fmt.Sprintf("%v:%v", host, port), handler)
 
 		if err != nil {
 			logger.Logger.Error("error while starting HTTP server", zap.Error(err))
@@ -163,7 +162,7 @@ func getHandler(decoder decoder.Decoder) func(http.ResponseWriter, *http.Request
 		logger.Logger.Debug("decoding payload")
 
 		var warnings []string = nil
-		data, err := decoder.Decode(req.Payload, req.Port, req.DevEUI)
+		data, err := decoder.Decode(req.Payload, req.Port)
 		if err != nil {
 			if errors.Is(err, helpers.ErrValidationFailed) {
 				warnings = []string{}

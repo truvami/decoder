@@ -10,15 +10,36 @@ import (
 
 	"github.com/go-playground/validator"
 	"github.com/truvami/decoder/pkg/decoder"
+	"github.com/truvami/decoder/pkg/solver"
 )
 
 type LoracloudMiddleware struct {
 	accessToken string
 	BaseUrl     string
+
+	devEui string // The device EUI to use for the uplink messages
+	fCount uint32 // Frame count to use for the uplink messages
+	port   uint8  // Port to use for the uplink messages, default is 1
 }
 
-func NewLoracloudMiddleware(accessToken string) LoracloudMiddleware {
+var _ solver.SolverV1 = &LoracloudMiddleware{}
+
+func NewLoracloudMiddleware(accessToken string, fCount uint32, devEui string, port uint8) LoracloudMiddleware {
 	return LoracloudMiddleware{accessToken: accessToken, BaseUrl: "https://mgs.loracloud.com"}
+}
+
+func (m LoracloudMiddleware) Solve(payload string) (*decoder.DecodedUplink, error) {
+	decodedData, err := m.DeliverUplinkMessage(m.devEui, UplinkMsg{
+		MsgType: "updf",
+		Port:    m.port,
+		Payload: payload,
+		FCount:  m.fCount,
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("error delivering uplink message: %v", err)
+	}
+	return decoder.NewDecodedUplink([]decoder.Feature{decoder.FeatureGNSS}, decodedData), err
 }
 
 func (m LoracloudMiddleware) post(url string, body []byte) (*http.Response, error) {

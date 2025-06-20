@@ -1,40 +1,41 @@
 package smartlabel
 
 import (
+	"context"
 	"fmt"
 	"reflect"
-	"time"
 
-	"github.com/truvami/decoder/pkg/aws"
 	"github.com/truvami/decoder/pkg/common"
 	"github.com/truvami/decoder/pkg/decoder"
-	"github.com/truvami/decoder/pkg/loracloud"
+	"github.com/truvami/decoder/pkg/solver"
 	"go.uber.org/zap"
 )
 
 type Option func(*SmartLabelv1Decoder)
 
 type SmartLabelv1Decoder struct {
-	loracloudMiddleware loracloud.LoracloudMiddleware
-	skipValidation      bool
-	fCount              uint32
-	logger              *zap.Logger
+	skipValidation bool
+	logger         *zap.Logger
 
-	useAWS bool
+	solver solver.SolverV1
+
+	// This will be deprecated in the future.
+	fCount uint32
+	devEui string
 }
 
-func NewSmartLabelv1Decoder(loracloudMiddleware loracloud.LoracloudMiddleware, logger *zap.Logger, options ...Option) decoder.Decoder {
+func NewSmartLabelv1Decoder(ctx context.Context, solver solver.SolverV1, logger *zap.Logger, options ...Option) decoder.Decoder {
+	if solver == nil {
+		logger.Fatal("solver cannot be nil", zap.String("decoder", "SmartLabelv1Decoder"))
+	}
+
 	smartLabelv1Decoder := &SmartLabelv1Decoder{
-		loracloudMiddleware: loracloudMiddleware,
-		logger:              logger,
+		logger: logger,
+		solver: solver,
 	}
 
 	for _, option := range options {
 		option(smartLabelv1Decoder)
-	}
-
-	if smartLabelv1Decoder.useAWS {
-		logger.Info("smartlabel decoder using AWS IoT Wireless for GNSS position solving")
 	}
 
 	return smartLabelv1Decoder
@@ -48,15 +49,19 @@ func WithSkipValidation(skipValidation bool) Option {
 
 // WithFCount sets the frame counter for the decoder.
 // This is required for the loracloud middleware.
+// Will be deprecated in the future.
 func WithFCount(fCount uint32) Option {
 	return func(t *SmartLabelv1Decoder) {
 		t.fCount = fCount
 	}
 }
 
-func WithUseAWS(useAWS bool) Option {
+// WithDevEui sets the DevEUI for the decoder.
+// This is required for the loracloud middleware.
+// Will be deprecated in the future.
+func WithDevEui(devEui string) Option {
 	return func(t *SmartLabelv1Decoder) {
-		t.useAWS = useAWS
+		t.devEui = devEui
 	}
 }
 
@@ -171,46 +176,10 @@ func (t SmartLabelv1Decoder) getConfig(port uint8, data string) (common.PayloadC
 	}
 }
 
-func (t SmartLabelv1Decoder) Decode(data string, port uint8, devEui string) (*decoder.DecodedUplink, error) {
+func (t SmartLabelv1Decoder) Decode(data string, port uint8) (*decoder.DecodedUplink, error) {
 	switch port {
 	case 192:
-		var position *aws.Position
-		var err error
-
-		if t.useAWS {
-			t.logger.Debug("solving position using AWS IoT Wireless")
-			position, err = aws.Solve(t.logger, data, time.Now())
-			if err != nil {
-				t.logger.Error("error solving position using AWS IoT Wireless, try with loracloud", zap.Error(err))
-			}
-		}
-
-		if position == nil {
-			decodedData, err := t.loracloudMiddleware.DeliverUplinkMessage(devEui, loracloud.UplinkMsg{
-				MsgType: "updf",
-				Port:    port,
-				Payload: data,
-				FCount:  t.fCount,
-			})
-
-			if t.useAWS {
-				t.logger.Info("solving position using loracloud middleware as fallback")
-				if err != nil {
-					t.logger.Error("there was an error solving position using loracloud middleware as fallback", zap.Error(err))
-				}
-			}
-
-			if decodedData.GetLatitude() != 0 {
-				aws.AwsLoracloudFallbackSuccess.Inc()
-			} else {
-				aws.AwsLoracloudFallbackFailure.Inc()
-			}
-
-			return decoder.NewDecodedUplink([]decoder.Feature{decoder.FeatureGNSS}, decodedData), err
-		}
-
-		t.logger.Info("position solved using AWS IoT Wireless", zap.String("devEui", devEui))
-		return decoder.NewDecodedUplink([]decoder.Feature{decoder.FeatureGNSS, decoder.FeatureBuffered}, position), err
+		return t.solver.Solve(data)
 	default:
 		config, err := t.getConfig(port, data)
 		if err != nil {

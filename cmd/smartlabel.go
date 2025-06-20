@@ -8,7 +8,6 @@ import (
 	"github.com/truvami/decoder/internal/logger"
 	helpers "github.com/truvami/decoder/pkg/common"
 	smartlabel "github.com/truvami/decoder/pkg/decoder/smartlabel/v1"
-	"github.com/truvami/decoder/pkg/loracloud"
 	"go.uber.org/zap"
 )
 
@@ -22,7 +21,12 @@ var smartlabelCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		logger.Logger.Debug("initializing smartlabel decoder")
-		d := smartlabel.NewSmartLabelv1Decoder(loracloud.NewLoracloudMiddleware("appEui"), logger.Logger, smartlabel.WithSkipValidation(SkipValidation))
+		d := smartlabel.NewSmartLabelv1Decoder(
+			cmd.Context(),
+			nil,
+			logger.Logger,
+			smartlabel.WithSkipValidation(SkipValidation),
+		)
 
 		port, err := strconv.Atoi(args[0])
 		if err != nil {
@@ -35,7 +39,7 @@ var smartlabelCmd = &cobra.Command{
 			return
 		}
 
-		data, err := d.Decode(args[1], uint8(port), "")
+		data, err := d.Decode(args[1], uint8(port))
 		if err != nil {
 			if errors.Is(err, helpers.ErrValidationFailed) {
 				for _, err := range helpers.UnwrapError(err) {

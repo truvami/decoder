@@ -1,42 +1,42 @@
 package tagxl
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"time"
 
-	"github.com/truvami/decoder/pkg/aws"
 	"github.com/truvami/decoder/pkg/common"
 	"github.com/truvami/decoder/pkg/decoder"
-	"github.com/truvami/decoder/pkg/loracloud"
+	"github.com/truvami/decoder/pkg/solver"
 	"go.uber.org/zap"
 )
-
-var ()
 
 type Option func(*TagXLv1Decoder)
 
 type TagXLv1Decoder struct {
-	loracloudMiddleware loracloud.LoracloudMiddleware
-	skipValidation      bool
-	fCount              uint32
-	logger              *zap.Logger
+	skipValidation bool
+	logger         *zap.Logger
 
-	useAWS bool
+	solver solver.SolverV1
+
+	// This will be deprecated in the future.
+	fCount uint32
+	devEui string
 }
 
-func NewTagXLv1Decoder(loracloudMiddleware loracloud.LoracloudMiddleware, logger *zap.Logger, options ...Option) decoder.Decoder {
+func NewTagXLv1Decoder(ctx context.Context, solver solver.SolverV1, logger *zap.Logger, options ...Option) decoder.Decoder {
+	if solver == nil {
+		logger.Fatal("solver cannot be nil", zap.String("decoder", "TagXLv1Decoder"))
+	}
+
 	tagXLv1Decoder := &TagXLv1Decoder{
-		loracloudMiddleware: loracloudMiddleware,
-		logger:              logger,
+		logger: logger,
+		solver: solver,
 	}
 
 	for _, option := range options {
 		option(tagXLv1Decoder)
-	}
-
-	if tagXLv1Decoder.useAWS {
-		logger.Info("tag XL decoder using AWS IoT Wireless for GNSS position solving")
 	}
 
 	return tagXLv1Decoder
@@ -50,15 +50,19 @@ func WithSkipValidation(skipValidation bool) Option {
 
 // WithFCount sets the frame counter for the decoder.
 // This is required for the loracloud middleware.
+// Will be deprecated in the future.
 func WithFCount(fCount uint32) Option {
 	return func(t *TagXLv1Decoder) {
 		t.fCount = fCount
 	}
 }
 
-func WithUseAWS(useAWS bool) Option {
+// WithDevEui sets the DevEUI for the decoder.
+// This is required for the loracloud middleware.
+// Will be deprecated in the future.
+func WithDevEui(devEui string) Option {
 	return func(t *TagXLv1Decoder) {
-		t.useAWS = useAWS
+		t.devEui = devEui
 	}
 }
 
@@ -212,54 +216,10 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 	return common.PayloadConfig{}, fmt.Errorf("%w: port %v not supported", common.ErrPortNotSupported, port)
 }
 
-func (t TagXLv1Decoder) Decode(data string, port uint8, devEui string) (*decoder.DecodedUplink, error) {
+func (t TagXLv1Decoder) Decode(data string, port uint8) (*decoder.DecodedUplink, error) {
 	switch port {
-	case 192:
-		var position *aws.Position
-		var err error
-
-		if t.useAWS {
-			t.logger.Debug("solving position using AWS IoT Wireless")
-			position, err = aws.Solve(t.logger, data, time.Now())
-			if err != nil {
-				t.logger.Error("error solving position using AWS IoT Wireless, try with loracloud", zap.Error(err))
-			}
-		}
-
-		if position == nil {
-			decodedData, err := t.loracloudMiddleware.DeliverUplinkMessage(devEui, loracloud.UplinkMsg{
-				MsgType: "updf",
-				Port:    port,
-				Payload: data,
-				FCount:  t.fCount,
-			})
-
-			if t.useAWS {
-				t.logger.Info("solving position using loracloud middleware as fallback")
-				if err != nil {
-					t.logger.Error("there was an error solving position using loracloud middleware as fallback", zap.Error(err))
-				}
-			}
-
-			if decodedData.GetLatitude() != 0 {
-				aws.AwsLoracloudFallbackSuccess.Inc()
-			} else {
-				aws.AwsLoracloudFallbackFailure.Inc()
-			}
-
-			return decoder.NewDecodedUplink([]decoder.Feature{decoder.FeatureGNSS}, decodedData), err
-		}
-
-		t.logger.Info("position solved using AWS IoT Wireless", zap.String("devEui", devEui))
-		return decoder.NewDecodedUplink([]decoder.Feature{decoder.FeatureGNSS, decoder.FeatureBuffered}, position), err
-	case 199:
-		decodedData, err := t.loracloudMiddleware.DeliverUplinkMessage(devEui, loracloud.UplinkMsg{
-			MsgType: "updf",
-			Port:    port,
-			Payload: data,
-			FCount:  t.fCount,
-		})
-		return decoder.NewDecodedUplink([]decoder.Feature{}, decodedData), err
+	case 192, 199:
+		return t.solver.Solve(data)
 	default:
 		bytes, err := common.HexStringToBytes(data)
 		if err != nil {

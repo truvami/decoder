@@ -380,7 +380,11 @@ func TestMetricsEndpoint(t *testing.T) {
 	if metrics {
 		router.Handle("/metrics", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte("metrics ok"))
+			_, err := w.Write([]byte("metrics ok"))
+			if err != nil {
+				t.Fatalf("failed to write response: %v", err)
+				return
+			}
 		}))
 	}
 

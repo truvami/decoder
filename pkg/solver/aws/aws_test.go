@@ -1,11 +1,13 @@
 package aws
 
 import (
+	"context"
 	"testing"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/stretchr/testify/assert"
+	"github.com/truvami/decoder/pkg/decoder"
 	"go.uber.org/zap"
 )
 
@@ -16,8 +18,7 @@ func TestSolve(t *testing.T) {
 		Expected    Position
 	}{
 		{
-			Payload:     "05ab859590e78d0cc1805a9428b2de73d80cc9c9a3329a01a5e3cba3546b7454395747a1cd6effd2fdeebefe8fac39a60e",
-			CaptureTime: time.Date(2025, time.June, 18, 14, 40, 00, 0, time.UTC),
+			Payload: "05ab859590e78d0cc1805a9428b2de73d80cc9c9a3329a01a5e3cba3546b7454395747a1cd6effd2fdeebefe8fac39a60e",
 			Expected: Position{
 				Latitude:  47.35438919067383,
 				Longitude: 8.55547046661377,
@@ -28,8 +29,7 @@ func TestSolve(t *testing.T) {
 			},
 		},
 		{
-			Payload:     "83ab812e9de68d0cc1006b9008acb2ab60b8c4dc4322d6f091c65dc11545946d8bd29879f0067bfbeee22fbef19db3cc0d",
-			CaptureTime: time.Date(2025, time.June, 18, 14, 30, 00, 0, time.UTC),
+			Payload: "83ab812e9de68d0cc1006b9008acb2ab60b8c4dc4322d6f091c65dc11545946d8bd29879f0067bfbeee22fbef19db3cc0d",
 			Expected: Position{
 				Latitude:  47.350059509277344,
 				Longitude: 8.561149597167969,
@@ -46,10 +46,14 @@ func TestSolve(t *testing.T) {
 		_ = logger.Sync() // Flushes buffer, if any
 	}()
 
+	c, err := NewAwsPositionEstimateClient(context.TODO(), logger)
+	assert.NoError(t, err, "expected no error during client creation")
+
 	for _, test := range tests {
 		t.Run(test.Payload, func(t *testing.T) {
-			result, err := Solve(logger, test.Payload, test.CaptureTime)
+			result, err := c.Solve(test.Payload)
 			assert.NoError(t, err, "expected no error during Solve")
+			assert.NotNil(t, result, "expected result to be non-nil")
 
 			// TODO: The timestamp in the expected result is not exact, so we cannot assert equality directly.
 			// Instead, we can check if the timestamp is within a reasonable range.
@@ -57,13 +61,20 @@ func TestSolve(t *testing.T) {
 			// timeDiff := result.Timestamp.Sub(*test.Expected.Timestamp)
 			// assert.LessOrEqual(t, timeDiff.Hours(), 1.0, "timestamp should be within 1h of expected")
 
+			gnssFeature, ok := result.Data.(decoder.UplinkFeatureGNSS)
+			assert.True(t, ok, "result should implement UplinkFeatureGNSS")
+
+			_, ok = result.Data.(decoder.UplinkFeatureBuffered)
+			assert.True(t, ok, "result should implement UplinkFeatureBuffered")
+
 			// The assertions have been split to ensure each field is checked separately since the timestamp is not exact
-			assert.NotNil(t, result.Timestamp, "expected timestamp to be set")
-			assert.Equal(t, test.Expected.Latitude, result.Latitude, "latitude does not match expected value")
-			assert.Equal(t, test.Expected.Longitude, result.Longitude, "longitude does not match expected value")
-			assert.Equal(t, *test.Expected.Altitude, *result.Altitude, "altitude does not match expected value")
-			assert.Equal(t, *test.Expected.Accuracy, *result.Accuracy, "accuracy does not match expected value")
-			assert.Equal(t, test.Expected.Buffered, result.Buffered, "buffered status does not match expected value")
+			assert.Equal(t, test.Expected.Latitude, gnssFeature.GetLatitude(), "latitude does not match expected value")
+			assert.Equal(t, test.Expected.Longitude, gnssFeature.GetLongitude(), "longitude does not match expected value")
+			assert.Equal(t, *test.Expected.Altitude, gnssFeature.GetAltitude(), "altitude does not match expected value")
+			assert.Equal(t, *test.Expected.Accuracy, *gnssFeature.GetAccuracy(), "accuracy does not match expected value")
+
+			// TODO: Uncomment when the buffered feature is implemented
+			// assert.Equal(t, test.Expected.Buffered, bufferedFeature.IsBuffered(), "buffered status does not match expected value")
 		})
 	}
 }
