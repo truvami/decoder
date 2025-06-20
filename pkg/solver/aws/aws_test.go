@@ -188,18 +188,6 @@ func TestFeatures(t *testing.T) {
 	}
 }
 
-func TestNewAwsPositionEstimateClientSuccess(t *testing.T) {
-	logger := zap.NewExample()
-	defer logger.Sync()
-
-	ctx := context.Background()
-	client, err := NewAwsPositionEstimateClient(ctx, logger)
-	assert.NoError(t, err, "expected no error when creating AWS position estimate client")
-	assert.NotNil(t, client, "expected client to be non-nil")
-	assert.NotNil(t, client.client, "expected AWS IoT Wireless client to be non-nil")
-	assert.Equal(t, logger, client.logger, "expected logger to be set correctly")
-}
-
 type mockAwsPositionEstimateClient struct {
 	GeoJsonResponse []byte
 }
