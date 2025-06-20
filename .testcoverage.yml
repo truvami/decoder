@@ -47,6 +47,10 @@ exclude:
   paths:
     - ^cmd/
     - ^examples/
+    
+    # This solver will be deprecated after 31.07.2025
+    # https://www.semtech.com/loracloud-shutdown
+    - ^pkg/solver/loracloud/
 
  
 # NOTES:
