@@ -18,14 +18,17 @@ import (
 	"go.uber.org/zap"
 )
 
+var tagXlDevEui string
+
 func init() {
+	tagxlCmd.Flags().StringVar(&tagXlDevEui, "dev-eui", "", "DevEUI of the originator device.\nThis is only required for loracloud solver.")
 	rootCmd.AddCommand(tagxlCmd)
 }
 
 var tagxlCmd = &cobra.Command{
-	Use:   "tagxl [port] [payload] [devEui]",
+	Use:   "tagxl [port] [payload]",
 	Short: "decode tag XL payloads",
-	Args:  cobra.ExactArgs(3),
+	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx := context.Background()
 		if cmd != nil {
@@ -64,7 +67,7 @@ var tagxlCmd = &cobra.Command{
 			return
 		}
 
-		ctx = context.WithValue(ctx, decoder.DEVEUI_CONTEXT_KEY, args[2])
+		ctx = context.WithValue(ctx, decoder.DEVEUI_CONTEXT_KEY, tagXlDevEui)
 		ctx = context.WithValue(ctx, decoder.PORT_CONTEXT_KEY, port)
 		ctx = context.WithValue(ctx, decoder.FCNT_CONTEXT_KEY, 1) // Default frame count, can be adjusted as needed
 

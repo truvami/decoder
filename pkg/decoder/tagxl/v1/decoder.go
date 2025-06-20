@@ -48,24 +48,6 @@ func WithSkipValidation(skipValidation bool) Option {
 	}
 }
 
-// WithFCount sets the frame counter for the decoder.
-// This is required for the loracloud middleware.
-// Will be deprecated in the future.
-func WithFCount(fCount uint32) Option {
-	return func(t *TagXLv1Decoder) {
-		t.fCount = fCount
-	}
-}
-
-// WithDevEui sets the DevEUI for the decoder.
-// This is required for the loracloud middleware.
-// Will be deprecated in the future.
-func WithDevEui(devEui string) Option {
-	return func(t *TagXLv1Decoder) {
-		t.devEui = devEui
-	}
-}
-
 // https://docs.truvami.com/docs/payloads/tag-xl
 func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadConfig, error) {
 	switch port {

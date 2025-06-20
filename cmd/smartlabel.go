@@ -18,14 +18,17 @@ import (
 	"go.uber.org/zap"
 )
 
+var smartlabelDevEui string
+
 func init() {
+	smartlabelCmd.Flags().StringVar(&smartlabelDevEui, "dev-eui", "", "DevEUI of the originator device.\nThis is only required for loracloud solver.")
 	rootCmd.AddCommand(smartlabelCmd)
 }
 
 var smartlabelCmd = &cobra.Command{
-	Use:   "smartlabel [port] [payload] [deveui]",
+	Use:   "smartlabel [port] [payload]",
 	Short: "decode smartlabel payloads",
-	Args:  cobra.ExactArgs(3),
+	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx := context.Background()
 		if cmd != nil {
@@ -69,7 +72,7 @@ var smartlabelCmd = &cobra.Command{
 			return
 		}
 
-		ctx = context.WithValue(cmd.Context(), decoder.DEVEUI_CONTEXT_KEY, args[2])
+		ctx = context.WithValue(ctx, decoder.DEVEUI_CONTEXT_KEY, smartlabelDevEui)
 		ctx = context.WithValue(ctx, decoder.PORT_CONTEXT_KEY, port)
 		ctx = context.WithValue(ctx, decoder.FCNT_CONTEXT_KEY, 1) // Default frame count, can be adjusted as needed
 

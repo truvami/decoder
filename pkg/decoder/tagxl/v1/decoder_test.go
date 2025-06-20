@@ -828,17 +828,3 @@ func TestMarshal(t *testing.T) {
 		})
 	}
 }
-
-func TestWithFCount(t *testing.T) {
-	if logger.Logger == nil {
-		logger.NewLogger()
-	}
-
-	decoder := NewTagXLv1Decoder(context.TODO(), solver.MockSolverV1{}, logger.Logger, WithFCount(123))
-
-	// cast to TagXLv1Decoder to access fCount
-	tagXLv1Decoder := decoder.(*TagXLv1Decoder)
-	if tagXLv1Decoder.fCount != 123 {
-		t.Fatalf("expected fCount to be 123, got %v", tagXLv1Decoder.fCount)
-	}
-}
