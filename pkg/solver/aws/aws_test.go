@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iotwireless"
 	"github.com/stretchr/testify/assert"
 	"github.com/truvami/decoder/pkg/decoder"
 	"go.uber.org/zap"
@@ -197,4 +198,96 @@ func TestNewAwsPositionEstimateClientSuccess(t *testing.T) {
 	assert.NotNil(t, client, "expected client to be non-nil")
 	assert.NotNil(t, client.client, "expected AWS IoT Wireless client to be non-nil")
 	assert.Equal(t, logger, client.logger, "expected logger to be set correctly")
+}
+
+type mockAwsPositionEstimateClient struct {
+	GeoJsonResponse []byte
+}
+
+func (m *mockAwsPositionEstimateClient) GetPositionEstimate(ctx context.Context, params *iotwireless.GetPositionEstimateInput, optFns ...func(*iotwireless.Options)) (*iotwireless.GetPositionEstimateOutput, error) {
+	return &iotwireless.GetPositionEstimateOutput{
+		GeoJsonPayload: m.GeoJsonResponse,
+	}, nil
+}
+
+func TestSolveWithMock(t *testing.T) {
+	logger := zap.NewExample()
+	defer logger.Sync()
+
+	tests := []struct {
+		payload       string
+		geoJson       []byte
+		expectedError error
+	}{
+		{
+			payload: "05ab859590e78d0cc1805a9428b2de73d80cc9c9a3329a01a5e3cba3546b7454395747a1cd6effd2fdeebefe8fac39a60e",
+			geoJson: []byte(`
+				{
+					"coordinates": [
+						8.55547046661377,
+						47.35438919067383,
+						486.05999755859375
+					],
+					"type": "Point",
+					"properties": {
+						"horizontalAccuracy": 33.6,
+						"horizontalConfidenceLevel": -1,
+						"timestamp": "2025-06-20T21:31:38.146674492Z"
+					}
+				}
+			`),
+		},
+		{
+			payload: "05ab859590e78d0cc1805a9428b2de73d80cc9c9a3329a01a5e3cba3546b7454395747a1cd6effd2fdeebefe8fac39a60e",
+			geoJson: []byte(`
+				{
+					"coordinates": [
+						8.55547046661377
+					],
+					"type": "Point",
+					"properties": {
+						"horizontalAccuracy": 33.6,
+						"horizontalConfidenceLevel": -1,
+						"timestamp": "2025-06-20T21:31:38.146674492Z"
+					}
+				}
+			`),
+			expectedError: ErrInvalidGeoJSONCoordinates,
+		},
+		{
+			payload:       "05ab859590e78d0cc1805a9428b2de73d80cc9c9a3329a01a5e3cba3546b7454395747a1cd6effd2fdeebefe8fac39a60e",
+			geoJson:       []byte(``),
+			expectedError: ErrFailedToUnmarshalGeoJSON,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(fmt.Sprintf("TestSolveWithMockPayload%v", test.payload), func(t *testing.T) {
+			// Create a mock client with the provided GeoJSON response
+			mockClient := &mockAwsPositionEstimateClient{
+				GeoJsonResponse: test.geoJson,
+			}
+			c := &PositionEstimateClient{
+				client: mockClient,
+				logger: logger,
+			}
+
+			result, err := c.Solve(test.payload)
+
+			if test.expectedError != nil {
+				assert.Error(t, err, "expected an error during Solve with mock client")
+				assert.Equal(t, test.expectedError, err, "error does not match expected error")
+				return
+			}
+			assert.NoError(t, err, "expected no error during Solve with mock client")
+			assert.NotNil(t, result, "expected result to be non-nil")
+
+			gnssFeature, ok := result.Data.(decoder.UplinkFeatureGNSS)
+			assert.True(t, ok, "result should implement UplinkFeatureGNSS")
+			assert.Equal(t, 47.35438919067383, gnssFeature.GetLatitude(), "latitude does not match expected value")
+			assert.Equal(t, 8.55547046661377, gnssFeature.GetLongitude(), "longitude does not match expected value")
+			assert.Equal(t, 486.05999755859375, gnssFeature.GetAltitude(), "altitude does not match expected value")
+			assert.Equal(t, 33.6, *gnssFeature.GetAccuracy(), "accuracy does not match expected value")
+		})
+	}
 }

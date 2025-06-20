@@ -51,8 +51,12 @@ var (
 )
 
 type PositionEstimateClient struct {
-	client *iotwireless.Client
+	client iotwirelessClient
 	logger *zap.Logger
+}
+
+type iotwirelessClient interface {
+	GetPositionEstimate(ctx context.Context, params *iotwireless.GetPositionEstimateInput, optFns ...func(*iotwireless.Options)) (*iotwireless.GetPositionEstimateOutput, error)
 }
 
 var _ solver.SolverV1 = &PositionEstimateClient{}
@@ -137,15 +141,11 @@ func (c PositionEstimateClient) Solve(payload string) (*decoder.DecodedUplink, e
 	err = json.Unmarshal(output.GeoJsonPayload, &position)
 	if err != nil {
 		awsPostionEstimatesErrorsCounter.Inc()
-		return nil, fmt.Errorf("failed to unmarshal GeoJSON payload: %w", err)
-	}
-	if position == nil {
-		awsPostionEstimatesErrorsCounter.Inc()
-		return nil, fmt.Errorf("received nil position from AWS IoT Wireless")
+		return nil, ErrFailedToUnmarshalGeoJSON
 	}
 	if len(position.Coordinates) < 2 {
 		awsPostionEstimatesErrorsCounter.Inc()
-		return nil, fmt.Errorf("invalid GeoJSON point: %v", position.Coordinates)
+		return nil, ErrInvalidGeoJSONCoordinates
 	}
 
 	// Log the position estimate success
