@@ -8,10 +8,9 @@ on:
       - "**.mod"
 
 jobs:
-  test:
-    name: Test 🧪
+  lint-and-format:
+    name: Lint & Format 🧹
     runs-on: ubuntu-latest
-
     steps:
       - name: Check out the repo
         uses: actions/checkout@v4
@@ -20,27 +19,10 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: 1.22
-
-      - name: Generate test coverage
-        env:
-          ENV: test
-        run: go test ./... -coverprofile=./cover.out -covermode=atomic -coverpkg=./...
-
-      - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v4.0.1
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-
-      - name: Check test coverage
-        uses: vladopajic/go-test-coverage@v2
-        with:
-          # Configure action using config file (option 1)
-          config: ./.testcoverage.yml
-          profile: cover.out
-          local-prefix: github.com/truvami/decoder
-          threshold-file: 75
-          threshold-package: 80
-          threshold-total: 80
+          # Enable caching for Go modules
+          cache: true
+          # Optional: Specify a cache-dependency path if your go.mod/go.sum are not at the root
+          # cache-dependency-path: go.sum
 
       - name: Lint
         uses: golangci/golangci-lint-action@v6
@@ -52,3 +34,44 @@ jobs:
 
       - name: Check Prometheus metrics
         run: make check-metrics
+
+  test-coverage:
+    name: Test & Coverage 🧪
+    runs-on: ubuntu-latest
+    env:
+      ENV: test
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: ${{ vars.AWS_DEFAULT_REGION }}
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.22
+          # Enable caching for Go modules
+          cache: true
+          # Optional: Specify a cache-dependency path if your go.mod/go.sum are not at the root
+          # cache-dependency-path: go.sum
+
+      - name: Generate test coverage
+        # No explicit 'go mod download' needed if tests directly use modules,
+        # as the 'go test' command will use the cached modules.
+        run: go test ./... -coverprofile=./cover.out -covermode=atomic -coverpkg=./...
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v4.0.1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Check test coverage
+        uses: vladopajic/go-test-coverage@v2
+        with:
+          config: ./.testcoverage.yml
+          profile: cover.out
+          local-prefix: github.com/truvami/decoder
+          threshold-file: 75
+          threshold-package: 80
+          threshold-total: 80
