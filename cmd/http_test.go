@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -26,7 +27,7 @@ func TestAddDecoder(t *testing.T) {
 	path := "test/path"
 	decoder := tagslDecoder.NewTagSLv1Decoder()
 
-	addDecoder(router, path, decoder)
+	addDecoder(context.TODO(), router, path, decoder)
 
 	handler, pattern := router.Handler(&http.Request{Method: "POST", URL: &url.URL{Path: "/test/path"}})
 	if handler == nil {
@@ -42,7 +43,7 @@ func TestGetHandler(t *testing.T) {
 	defer logger.Sync()
 
 	decoder := tagslDecoder.NewTagSLv1Decoder()
-	handler := getHandler(decoder)
+	handler := getHandler(context.TODO(), decoder)
 
 	reqBody := `{"port": 1, "payload": "8002cdcd1300744f5e166018040b14341a", "devEui": ""}`
 	req, err := http.NewRequest("POST", "/test/path", strings.NewReader(reqBody))
@@ -365,5 +366,47 @@ func TestGetEncoderHandler(t *testing.T) {
 
 	if resp.StatusCode != http.StatusBadRequest {
 		t.Errorf("expected status code %d, got %d", http.StatusBadRequest, resp.StatusCode)
+	}
+}
+
+func TestMetricsEndpoint(t *testing.T) {
+	logger.NewLogger()
+	defer logger.Sync()
+
+	// Enable metrics endpoint
+	metrics = true
+	defer func() { metrics = false }()
+
+	router := http.NewServeMux()
+	if metrics {
+		router.Handle("/metrics", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+			_, err := w.Write([]byte("metrics ok"))
+			if err != nil {
+				t.Fatalf("failed to write response: %v", err)
+				return
+			}
+		}))
+	}
+
+	server := httptest.NewServer(router)
+	defer server.Close()
+
+	resp, err := http.Get(server.URL + "/metrics")
+	if err != nil {
+		t.Fatalf("failed to GET /metrics: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("expected status code %d, got %d", http.StatusOK, resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("failed to read response body: %v", err)
+	}
+	if !strings.Contains(string(body), "metrics ok") {
+		t.Errorf("expected response body to contain 'metrics ok', got %q", string(body))
 	}
 }

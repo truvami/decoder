@@ -1,38 +1,60 @@
 package cmd
 
 import (
+	"context"
 	"errors"
+	"os"
 	"strconv"
+	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"github.com/truvami/decoder/internal/logger"
 	helpers "github.com/truvami/decoder/pkg/common"
+	"github.com/truvami/decoder/pkg/decoder"
 	tagxl "github.com/truvami/decoder/pkg/decoder/tagxl/v1"
-	"github.com/truvami/decoder/pkg/loracloud"
+	"github.com/truvami/decoder/pkg/solver"
+	"github.com/truvami/decoder/pkg/solver/aws"
+	"github.com/truvami/decoder/pkg/solver/loracloud"
 	"go.uber.org/zap"
 )
 
-var accessToken string
+var tagXlDevEui string
 
 func init() {
-	tagxlCmd.Flags().StringVar(&accessToken, "token", "", "Access token for the loracloud API")
+	tagxlCmd.Flags().StringVar(&tagXlDevEui, "dev-eui", "", "DevEUI of the originator device.\nThis is only required for loracloud solver.")
 	rootCmd.AddCommand(tagxlCmd)
 }
 
 var tagxlCmd = &cobra.Command{
-	Use:   "tagxl [port] [payload] [devEui] --token [token]",
+	Use:   "tagxl [port] [payload]",
 	Short: "decode tag XL payloads",
-	Args:  cobra.ExactArgs(3),
+	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
-		err := viper.BindPFlag("token", cmd.Flags().Lookup("token"))
-		if err != nil {
-			logger.Logger.Error("error while binding token flag", zap.Error(err))
-			return
+		ctx := context.Background()
+		if cmd != nil {
+			ctx = cmd.Context()
+		}
+
+		var solver solver.SolverV1
+		var err error
+
+		switch strings.ToLower(Solver) {
+		case "aws":
+			solver, err = aws.NewAwsPositionEstimateClient(ctx, logger.Logger)
+			if err != nil {
+				logger.Logger.Error("error while creating AWS position estimate client", zap.Error(err))
+				os.Exit(1)
+			}
+		case "loracloud":
+			if LoracloudAccessToken == "" {
+				logger.Logger.Error("loracloud access token is required for loracloud solver")
+				os.Exit(1)
+			}
+			solver = loracloud.NewLoracloudMiddleware(ctx, LoracloudAccessToken, logger.Logger)
 		}
 
 		logger.Logger.Debug("initializing tagxl decoder")
-		d := tagxl.NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware(accessToken), tagxl.WithSkipValidation(SkipValidation))
+		d := tagxl.NewTagXLv1Decoder(ctx, solver, logger.Logger, tagxl.WithSkipValidation(SkipValidation))
 
 		port, err := strconv.Atoi(args[0])
 		if err != nil {
@@ -45,7 +67,11 @@ var tagxlCmd = &cobra.Command{
 			return
 		}
 
-		data, err := d.Decode(args[1], uint8(port), args[2])
+		ctx = context.WithValue(ctx, decoder.DEVEUI_CONTEXT_KEY, tagXlDevEui)
+		ctx = context.WithValue(ctx, decoder.PORT_CONTEXT_KEY, port)
+		ctx = context.WithValue(ctx, decoder.FCNT_CONTEXT_KEY, 1) // Default frame count, can be adjusted as needed
+
+		data, err := d.Decode(ctx, args[1], uint8(port))
 		if err != nil {
 			if errors.Is(err, helpers.ErrValidationFailed) {
 				for _, err := range helpers.UnwrapError(err) {

@@ -34,7 +34,7 @@ var nomadxsCmd = &cobra.Command{
 			return
 		}
 
-		data, err := d.Decode(args[1], uint8(port), "")
+		data, err := d.Decode(cmd.Context(), args[1], uint8(port))
 		if err != nil {
 			if errors.Is(err, helpers.ErrValidationFailed) {
 				for _, err := range helpers.UnwrapError(err) {

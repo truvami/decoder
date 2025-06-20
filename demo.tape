@@ -63,7 +63,7 @@ Require jq
 
 Set Shell "bash"
 Set FontSize 12
-Set Width 800
+Set Width 1000
 Set Height 600
 
 Type "decoder help" Sleep 500ms  Enter

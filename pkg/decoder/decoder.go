@@ -1,11 +1,12 @@
 package decoder
 
 import (
+	"context"
 	"time"
 )
 
 type Decoder interface {
-	Decode(payload string, port uint8, devEui string) (*DecodedUplink, error)
+	Decode(ctx context.Context, payload string, port uint8) (*DecodedUplink, error)
 }
 
 type Feature string

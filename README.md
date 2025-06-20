@@ -2,6 +2,9 @@
 
 # 🎉 truvami Decoder 🚀
 
+> [!WARNING]  
+> [LoRa Cloud is Sunsetting on July 31st 2025](https://www.semtech.com/loracloud-shutdown)
+
 **truvami Decoder** is a command-line interface (CLI) tool written in Go for decoding truvami payloads. This reference implementation supports various payload types, including Nomad XS and different Tag formats. 🛠️
 
 ## 🎬 Demo
@@ -28,18 +31,6 @@ You can install the truvami Decoder binary easily using the following command:
 ```zsh
 # This will install the binary at $(go env GOPATH)/bin/decoder
 curl -sSfL https://raw.githubusercontent.com/truvami/decoder/main/install.sh | sh -s -- -b $(go env GOPATH)/bin
-
-# ✅ Verify the installation by checking the help
-decoder --help
-```
-
-### 🖥️ Windows
-
-For Windows users, you can install the truvami Decoder binary using Chocolatey:
-
-```powershell
-# Install using Chocolatey
-choco install truvami-decoder
 
 # ✅ Verify the installation by checking the help
 decoder --help
@@ -85,6 +76,8 @@ decoder [command] [flags]
 - `-h, --help` - ℹ️ Display help information.
 - `-j, --json` - 📄 Output the result in JSON format. (default: false)
 - `-v, --verbose` - 📢 Display more verbose output in the console. (default: false)
+- `--solver` - 🧩 Specify the solver to use passive GNSS payloads like tag XL or smartlabel. (default AWS)
+- `--loracloud-access-token` - 🔑 Specify the LoraCloud access token for GNSS payloads. This will be deprecated by 31.07.2025 (default: "")
 
 ### 💡 Example Usage
 
@@ -242,3 +235,27 @@ Available device types for encoding:
 
 - `tagsl` - Tag S/L devices
 - More device types will be added as they become available
+
+
+## 🛠️ Development
+
+For developers looking to contribute to the truvami Decoder, you can set up your local development environment by following these steps:
+
+### 🆙 Prerequisites
+- Go 1.20 or later
+- Make sure you have `go` installed and configured properly.
+- Install dependencies using `go mod tidy`.
+- If you want to develop for the AWS solver, you need to have the AWS CLI installed and configured with your credentials.
+
+### 🚧 Running Tests
+To run the tests, use the following command:
+
+```sh
+go test ./... -v
+```
+
+or to run tests with coverage:
+
+```sh
+make check-coverage
+```
