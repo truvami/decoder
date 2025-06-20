@@ -518,7 +518,9 @@ func TestFeatures(t *testing.T) {
 		t.Run(fmt.Sprintf("TestFeaturesWithPort%vAndPayload%v", test.port, test.payload), func(t *testing.T) {
 			d := NewSmartLabelv1Decoder(
 				context.TODO(),
-				solver.MockSolverV1{},
+				solver.MockSolverV1{
+					Data: decoder.NewDecodedUplink([]decoder.Feature{decoder.FeatureWiFi}, Port197Payload{}),
+				},
 				logger,
 				WithFCount(42),
 				WithDevEui("927da4b72110927d"),
