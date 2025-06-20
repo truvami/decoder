@@ -65,7 +65,7 @@ func NewAwsPositionEstimateClient(ctx context.Context, logger *zap.Logger) (*Pos
 	// Load AWS config with context (respects timeout)
 	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
-		awsPostionEstimatesErrorsCounter.Inc()
+		awsPositionEstimatesErrorsCounter.Inc()
 		return nil, fmt.Errorf("failed to load AWS config: %w", err)
 	}
 
@@ -94,7 +94,7 @@ func (c PositionEstimateClient) Solve(ctx context.Context, payload string) (*dec
 	defer cancel()
 
 	start := time.Now()
-	awsPostionEstimatesTotalCounter.Inc()
+	awsPositionEstimatesTotalCounter.Inc()
 
 	c.logger.Debug("Starting position estimate request",
 		zap.String("payload", payload),
@@ -127,7 +127,7 @@ func (c PositionEstimateClient) Solve(ctx context.Context, payload string) (*dec
 	// [GeoJSON]: https://geojson.org/
 	output, err := c.client.GetPositionEstimate(ctx, input)
 	if err != nil {
-		awsPostionEstimatesFailureCounter.Inc()
+		awsPositionEstimatesFailureCounter.Inc()
 		return nil, fmt.Errorf("failed to get position estimate: %w", err)
 	}
 
@@ -140,17 +140,17 @@ func (c PositionEstimateClient) Solve(ctx context.Context, payload string) (*dec
 	var position *GeoJsonResponse
 	err = json.Unmarshal(output.GeoJsonPayload, &position)
 	if err != nil {
-		awsPostionEstimatesErrorsCounter.Inc()
+		awsPositionEstimatesErrorsCounter.Inc()
 		return nil, ErrFailedToUnmarshalGeoJSON
 	}
 	if len(position.Coordinates) < 2 {
-		awsPostionEstimatesErrorsCounter.Inc()
+		awsPositionEstimatesErrorsCounter.Inc()
 		return nil, ErrInvalidGeoJSONCoordinates
 	}
 
 	// Log the position estimate success
-	awsPostionEstimatesSuccessCounter.Inc()
-	awsPostionEstimatesDurationHistogram.Observe(time.Since(start).Seconds())
+	awsPositionEstimatesSuccessCounter.Inc()
+	awsPositionEstimatesDurationHistogram.Observe(time.Since(start).Seconds())
 
 	var altitude *float64
 	if len(position.Coordinates) > 2 {
