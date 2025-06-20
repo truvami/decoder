@@ -176,10 +176,10 @@ func (t SmartLabelv1Decoder) getConfig(port uint8, data string) (common.PayloadC
 	}
 }
 
-func (t SmartLabelv1Decoder) Decode(data string, port uint8) (*decoder.DecodedUplink, error) {
+func (t SmartLabelv1Decoder) Decode(ctx context.Context, data string, port uint8) (*decoder.DecodedUplink, error) {
 	switch port {
 	case 192:
-		return t.solver.Solve(data)
+		return t.solver.Solve(ctx, data)
 	default:
 		config, err := t.getConfig(port, data)
 		if err != nil {

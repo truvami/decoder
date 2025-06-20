@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -26,7 +27,7 @@ func TestAddDecoder(t *testing.T) {
 	path := "test/path"
 	decoder := tagslDecoder.NewTagSLv1Decoder()
 
-	addDecoder(router, path, decoder)
+	addDecoder(context.TODO(), router, path, decoder)
 
 	handler, pattern := router.Handler(&http.Request{Method: "POST", URL: &url.URL{Path: "/test/path"}})
 	if handler == nil {
@@ -42,7 +43,7 @@ func TestGetHandler(t *testing.T) {
 	defer logger.Sync()
 
 	decoder := tagslDecoder.NewTagSLv1Decoder()
-	handler := getHandler(decoder)
+	handler := getHandler(context.TODO(), decoder)
 
 	reqBody := `{"port": 1, "payload": "8002cdcd1300744f5e166018040b14341a", "devEui": ""}`
 	req, err := http.NewRequest("POST", "/test/path", strings.NewReader(reqBody))

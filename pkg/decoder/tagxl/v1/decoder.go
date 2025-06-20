@@ -216,10 +216,10 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 	return common.PayloadConfig{}, fmt.Errorf("%w: port %v not supported", common.ErrPortNotSupported, port)
 }
 
-func (t TagXLv1Decoder) Decode(data string, port uint8) (*decoder.DecodedUplink, error) {
+func (t TagXLv1Decoder) Decode(ctx context.Context, data string, port uint8) (*decoder.DecodedUplink, error) {
 	switch port {
 	case 192, 199:
-		return t.solver.Solve(data)
+		return t.solver.Solve(ctx, data)
 	default:
 		bytes, err := common.HexStringToBytes(data)
 		if err != nil {

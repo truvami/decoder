@@ -1,13 +1,20 @@
 package cmd
 
 import (
+	"context"
 	"errors"
+	"os"
 	"strconv"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/truvami/decoder/internal/logger"
 	helpers "github.com/truvami/decoder/pkg/common"
+	"github.com/truvami/decoder/pkg/decoder"
 	smartlabel "github.com/truvami/decoder/pkg/decoder/smartlabel/v1"
+	"github.com/truvami/decoder/pkg/solver"
+	"github.com/truvami/decoder/pkg/solver/aws"
+	"github.com/truvami/decoder/pkg/solver/loracloud"
 	"go.uber.org/zap"
 )
 
@@ -16,14 +23,37 @@ func init() {
 }
 
 var smartlabelCmd = &cobra.Command{
-	Use:   "smartlabel [port] [payload]",
+	Use:   "smartlabel [port] [payload] [deveui]",
 	Short: "decode smartlabel payloads",
-	Args:  cobra.ExactArgs(2),
+	Args:  cobra.ExactArgs(3),
 	Run: func(cmd *cobra.Command, args []string) {
+		ctx := context.Background()
+		if cmd != nil {
+			ctx = cmd.Context()
+		}
+
+		var solver solver.SolverV1
+		var err error
+
+		switch strings.ToLower(Solver) {
+		case "aws":
+			solver, err = aws.NewAwsPositionEstimateClient(ctx, logger.Logger)
+			if err != nil {
+				logger.Logger.Error("error while creating AWS position estimate client", zap.Error(err))
+				os.Exit(1)
+			}
+		case "loracloud":
+			if LoracloudAccessToken == "" {
+				logger.Logger.Error("loracloud access token is required for loracloud solver")
+				os.Exit(1)
+			}
+			solver = loracloud.NewLoracloudMiddleware(ctx, LoracloudAccessToken, logger.Logger)
+		}
+
 		logger.Logger.Debug("initializing smartlabel decoder")
 		d := smartlabel.NewSmartLabelv1Decoder(
-			cmd.Context(),
-			nil,
+			ctx,
+			solver,
 			logger.Logger,
 			smartlabel.WithSkipValidation(SkipValidation),
 		)
@@ -39,7 +69,11 @@ var smartlabelCmd = &cobra.Command{
 			return
 		}
 
-		data, err := d.Decode(args[1], uint8(port))
+		ctx = context.WithValue(cmd.Context(), decoder.DEVEUI_CONTEXT_KEY, args[2])
+		ctx = context.WithValue(ctx, decoder.PORT_CONTEXT_KEY, port)
+		ctx = context.WithValue(ctx, decoder.FCNT_CONTEXT_KEY, 1) // Default frame count, can be adjusted as needed
+
+		data, err := d.Decode(ctx, args[1], uint8(port))
 		if err != nil {
 			if errors.Is(err, helpers.ErrValidationFailed) {
 				for _, err := range helpers.UnwrapError(err) {

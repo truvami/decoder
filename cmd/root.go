@@ -25,7 +25,9 @@ var banner = []string{
 var Debug bool
 var Json bool
 var SkipValidation bool
-var useAWS bool
+
+var Solver string
+var LoracloudAccessToken string
 
 func init() {
 	rootCmd.PersistentFlags().BoolVarP(&Debug, "debug", "d", false, "Display debugging output in the console. (default: \033[31mfalse\033[0m)")
@@ -46,8 +48,17 @@ func init() {
 		logger.Logger.Error("error while binding skip-validation flag", zap.Error(err))
 	}
 
-	rootCmd.Flags().StringVar(&accessToken, "token", "", "Access token for the loracloud API")
-	rootCmd.Flags().BoolVar(&useAWS, "use-aws", false, "Experimental: Use AWS IoT Wireless to decode payloads (requires AWS credentials)")
+	rootCmd.PersistentFlags().StringVarP(&Solver, "solver", "s", "aws", "Solver to use for decoding the payload. This can be aws or loracloud. (default: \033[31maws\033[0m)")
+	err = viper.BindPFlag("solver", rootCmd.PersistentFlags().Lookup("solver"))
+	if err != nil {
+		logger.Logger.Error("error while binding solver flag", zap.Error(err))
+	}
+
+	rootCmd.PersistentFlags().StringVarP(&LoracloudAccessToken, "loracloud-access-token", "", "", "Loracloud access token to use for decoding the payload. (default: \033[31mempty\033[0m)")
+	err = viper.BindPFlag("loracloud-access-token", rootCmd.PersistentFlags().Lookup("loracloud-access-token"))
+	if err != nil {
+		logger.Logger.Error("error while binding loracloud-access-token flag", zap.Error(err))
+	}
 }
 
 var rootCmd = &cobra.Command{

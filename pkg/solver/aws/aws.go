@@ -89,8 +89,8 @@ func NewAwsPositionEstimateClient(ctx context.Context, logger *zap.Logger) (*Pos
 // Returns:
 //   - error:      An error if the AWS config could not be loaded or the position
 //     estimate request fails; otherwise, nil.
-func (c PositionEstimateClient) Solve(payload string) (*decoder.DecodedUplink, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+func (c PositionEstimateClient) Solve(ctx context.Context, payload string) (*decoder.DecodedUplink, error) {
+	ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
 	defer cancel()
 
 	start := time.Now()

@@ -28,7 +28,7 @@ func main() {
 
 	// decode data
 	logger.Info("decoding data...")
-	data, err := d.Decode("05ab859590e78d0cc1805a9428b2de73d80cc9c9a3329a01a5e3cba3546b7454395747a1cd6effd2fdeebefe8fac39a60e", 192)
+	data, err := d.Decode(ctx, "05ab859590e78d0cc1805a9428b2de73d80cc9c9a3329a01a5e3cba3546b7454395747a1cd6effd2fdeebefe8fac39a60e", 192)
 	if err != nil {
 		panic(err)
 	}

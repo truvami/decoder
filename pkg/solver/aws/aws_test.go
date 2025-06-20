@@ -53,7 +53,7 @@ func TestSolve(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.Payload, func(t *testing.T) {
-			result, err := c.Solve(test.Payload)
+			result, err := c.Solve(context.TODO(), test.Payload)
 			assert.NoError(t, err, "expected no error during Solve")
 			assert.NotNil(t, result, "expected result to be non-nil")
 
@@ -139,7 +139,7 @@ func TestFeatures(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestFeaturesWithPayload%v", test.payload), func(t *testing.T) {
-			decodedPayload, err := s.Solve(test.payload)
+			decodedPayload, err := s.Solve(context.TODO(), test.payload)
 			if err != nil {
 				t.Fatalf("error %s", err)
 			}
@@ -262,7 +262,7 @@ func TestSolveWithMock(t *testing.T) {
 				logger: logger,
 			}
 
-			result, err := c.Solve(test.payload)
+			result, err := c.Solve(context.TODO(), test.payload)
 
 			if test.expectedError != nil {
 				assert.Error(t, err, "expected an error during Solve with mock client")

@@ -1,6 +1,7 @@
 package nomadxl
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"time"
@@ -73,7 +74,7 @@ func (t NomadXLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 	return common.PayloadConfig{}, fmt.Errorf("%w: port %v not supported", common.ErrPortNotSupported, port)
 }
 
-func (t NomadXLv1Decoder) Decode(data string, port uint8) (*decoder.DecodedUplink, error) {
+func (t NomadXLv1Decoder) Decode(ctx context.Context, data string, port uint8) (*decoder.DecodedUplink, error) {
 	config, err := t.getConfig(port)
 	if err != nil {
 		return nil, err

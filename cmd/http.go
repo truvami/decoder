@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/go-playground/validator"
@@ -25,7 +26,9 @@ import (
 	nomadxsEncoder "github.com/truvami/decoder/pkg/encoder/nomadxs/v1"
 	smartlabelEncoder "github.com/truvami/decoder/pkg/encoder/smartlabel/v1"
 	tagslEncoder "github.com/truvami/decoder/pkg/encoder/tagsl/v1"
+	"github.com/truvami/decoder/pkg/solver"
 	"github.com/truvami/decoder/pkg/solver/aws"
+	"github.com/truvami/decoder/pkg/solver/loracloud"
 	"go.uber.org/zap"
 )
 
@@ -52,10 +55,6 @@ var httpCmd = &cobra.Command{
 			defer logger.Sync()
 		}
 
-		if len(accessToken) == 0 {
-			logger.Logger.Warn("no access token provided for loracloud API")
-		}
-
 		router := http.NewServeMux()
 
 		// health endpoint
@@ -79,10 +78,22 @@ var httpCmd = &cobra.Command{
 			ctx = cmd.Context()
 		}
 
-		solver, err := aws.NewAwsPositionEstimateClient(ctx, logger.Logger)
-		if err != nil {
-			logger.Logger.Error("error while creating AWS position estimate client", zap.Error(err))
-			os.Exit(1)
+		var solver solver.SolverV1
+		var err error
+
+		switch strings.ToLower(Solver) {
+		case "aws":
+			solver, err = aws.NewAwsPositionEstimateClient(ctx, logger.Logger)
+			if err != nil {
+				logger.Logger.Error("error while creating AWS position estimate client", zap.Error(err))
+				os.Exit(1)
+			}
+		case "loracloud":
+			if LoracloudAccessToken == "" {
+				logger.Logger.Error("loracloud access token is required for loracloud solver")
+				os.Exit(1)
+			}
+			solver = loracloud.NewLoracloudMiddleware(ctx, LoracloudAccessToken, logger.Logger)
 		}
 
 		var decoders []decoderEndpoint = []decoderEndpoint{
@@ -95,7 +106,7 @@ var httpCmd = &cobra.Command{
 
 		// add the decoders
 		for _, d := range decoders {
-			addDecoder(router, d.path, d.decoder)
+			addDecoder(ctx, router, d.path, d.decoder)
 		}
 
 		// Define encoder endpoints
@@ -128,12 +139,12 @@ var httpCmd = &cobra.Command{
 	},
 }
 
-func addDecoder(router *http.ServeMux, path string, decoder decoder.Decoder) {
+func addDecoder(ctx context.Context, router *http.ServeMux, path string, decoder decoder.Decoder) {
 	logger.Logger.Debug("adding decoder", zap.String("path", path))
-	router.HandleFunc("POST /"+path, getHandler(decoder))
+	router.HandleFunc("POST /"+path, getHandler(ctx, decoder))
 }
 
-func getHandler(decoder decoder.Decoder) func(http.ResponseWriter, *http.Request) {
+func getHandler(ctx context.Context, targetDecoder decoder.Decoder) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		type request struct {
 			Port    uint8  `json:"port" validate:"required,gt=0,lte=255"`
@@ -165,10 +176,19 @@ func getHandler(decoder decoder.Decoder) func(http.ResponseWriter, *http.Request
 			return
 		}
 
+		logger.Logger.Debug("set context values",
+			zap.String("devEui", req.DevEUI),
+			zap.Uint8("port", req.Port),
+			zap.String("payload", req.Payload),
+		)
+		ctx = context.WithValue(ctx, decoder.DEVEUI_CONTEXT_KEY, req.DevEUI)
+		ctx = context.WithValue(ctx, decoder.PORT_CONTEXT_KEY, req.Port)
+		ctx = context.WithValue(ctx, decoder.FCNT_CONTEXT_KEY, 1) // Default frame count, can be adjusted as needed
+
 		logger.Logger.Debug("decoding payload")
 
 		var warnings []string = nil
-		data, err := decoder.Decode(req.Payload, req.Port)
+		data, err := targetDecoder.Decode(ctx, req.Payload, req.Port)
 		if err != nil {
 			if errors.Is(err, helpers.ErrValidationFailed) {
 				warnings = []string{}
