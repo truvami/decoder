@@ -85,7 +85,7 @@ var httpCmd = &cobra.Command{
 			{"tagxl/v1", tagxlDecoder.NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware(accessToken), logger.Logger, tagxlDecoder.WithUseAWS(useAWS), tagxlDecoder.WithSkipValidation(SkipValidation))},
 			{"nomadxs/v1", nomadxsDecoder.NewNomadXSv1Decoder(nomadxsDecoder.WithSkipValidation(SkipValidation))},
 			{"nomadxl/v1", nomadxlDecoder.NewNomadXLv1Decoder(nomadxlDecoder.WithSkipValidation(SkipValidation))},
-			{"smartlabel/v1", smartlabelDecoder.NewSmartLabelv1Decoder(loracloud.NewLoracloudMiddleware(accessToken), smartlabelDecoder.WithSkipValidation(SkipValidation))},
+			{"smartlabel/v1", smartlabelDecoder.NewSmartLabelv1Decoder(loracloud.NewLoracloudMiddleware(accessToken), logger.Logger, smartlabelDecoder.WithUseAWS(useAWS), smartlabelDecoder.WithSkipValidation(SkipValidation))},
 		}
 
 		// add the decoders

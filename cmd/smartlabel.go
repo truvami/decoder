@@ -13,6 +13,8 @@ import (
 )
 
 func init() {
+	smartlabelCmd.Flags().StringVar(&accessToken, "token", "", "Access token for the loracloud API")
+	smartlabelCmd.Flags().BoolVar(&useAWS, "use-aws", false, "Experimental: Use AWS IoT Wireless to decode payloads (requires AWS credentials)")
 	rootCmd.AddCommand(smartlabelCmd)
 }
 
@@ -22,7 +24,7 @@ var smartlabelCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		logger.Logger.Debug("initializing smartlabel decoder")
-		d := smartlabel.NewSmartLabelv1Decoder(loracloud.NewLoracloudMiddleware("appEui"), smartlabel.WithSkipValidation(SkipValidation))
+		d := smartlabel.NewSmartLabelv1Decoder(loracloud.NewLoracloudMiddleware("appEui"), logger.Logger, smartlabel.WithSkipValidation(SkipValidation))
 
 		port, err := strconv.Atoi(args[0])
 		if err != nil {
