@@ -23,7 +23,7 @@ func init() {
 }
 
 var tagxlCmd = &cobra.Command{
-	Use:   "tagxl [port] [payload] [devEui] --token [token]",
+	Use:   "tagxl [port] [payload] [devEui]",
 	Short: "decode tag XL payloads",
 	Args:  cobra.ExactArgs(3),
 	Run: func(cmd *cobra.Command, args []string) {
