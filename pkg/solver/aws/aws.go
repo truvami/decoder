@@ -18,24 +18,24 @@ import (
 )
 
 var (
-	awsPostionEstimatesTotalCounter = promauto.NewCounter(prometheus.CounterOpts{
+	awsPositionEstimatesTotalCounter = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "truvami_aws_position_estimates_total",
 		Help: "The total number of processed position estimate requests",
 	})
-	awsPostionEstimatesErrorsCounter = promauto.NewCounter(prometheus.CounterOpts{
+	awsPositionEstimatesErrorsCounter = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "truvami_aws_position_estimates_errors_total",
 		Help: "The total number of errors encountered while processing position estimate requests",
 	})
-	awsPostionEstimatesDurationHistogram = promauto.NewHistogram(prometheus.HistogramOpts{
+	awsPositionEstimatesDurationHistogram = promauto.NewHistogram(prometheus.HistogramOpts{
 		Name:    "truvami_aws_position_estimates_duration_seconds",
 		Help:    "The duration of position estimate requests in seconds",
 		Buckets: []float64{0.1, 0.2, 0.3, 0.5, 1, 2, 5, 10, 30, 60},
 	})
-	awsPostionEstimatesSuccessCounter = promauto.NewCounter(prometheus.CounterOpts{
+	awsPositionEstimatesSuccessCounter = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "truvami_aws_position_estimates_success_total",
 		Help: "The total number of successful position estimate requests",
 	})
-	awsPostionEstimatesFailureCounter = promauto.NewCounter(prometheus.CounterOpts{
+	awsPositionEstimatesFailureCounter = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "truvami_aws_position_estimates_failure_total",
 		Help: "The total number of failed position estimate requests",
 	})
