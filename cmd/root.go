@@ -48,7 +48,7 @@ func init() {
 		logger.Logger.Error("error while binding skip-validation flag", zap.Error(err))
 	}
 
-	rootCmd.PersistentFlags().StringVarP(&Solver, "solver", "s", "aws", "Solver to use for decoding the payload. This can be aws or loracloud. (default: \033[31maws\033[0m)")
+	rootCmd.PersistentFlags().StringVarP(&Solver, "solver", "s", "", "Solver to use for decoding the payload.\nThis can be aws or loracloud. (default: \033[31maws\033[0m)")
 	err = viper.BindPFlag("solver", rootCmd.PersistentFlags().Lookup("solver"))
 	if err != nil {
 		logger.Logger.Error("error while binding solver flag", zap.Error(err))
