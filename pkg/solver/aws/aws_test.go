@@ -212,7 +212,9 @@ func (m *mockAwsPositionEstimateClient) GetPositionEstimate(ctx context.Context,
 
 func TestSolveWithMock(t *testing.T) {
 	logger := zap.NewExample()
-	defer logger.Sync()
+	defer func() {
+		_ = logger.Sync() // Flushes buffer, if any
+	}()
 
 	tests := []struct {
 		payload       string
