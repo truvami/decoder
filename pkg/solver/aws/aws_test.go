@@ -2,6 +2,7 @@ package aws
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -111,6 +112,77 @@ func TestGetGPSTime(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got := getGPSTime(tt.captureTime)
 			assert.InDelta(t, tt.want, got, 1, "getGPSTime(%v) = %v, want %v", tt.captureTime, got, tt.want)
+		})
+	}
+}
+
+func TestFeatures(t *testing.T) {
+	tests := []struct {
+		payload         string
+		allowNoFeatures bool
+	}{
+		{
+			payload: "05ab859590e78d0cc1805a9428b2de73d80cc9c9a3329a01a5e3cba3546b7454395747a1cd6effd2fdeebefe8fac39a60e",
+		},
+	}
+
+	logger := zap.NewExample()
+	defer func() {
+		_ = logger.Sync() // Flushes buffer, if any
+	}()
+
+	s, err := NewAwsPositionEstimateClient(context.TODO(), logger)
+	if err != nil {
+		t.Fatalf("error creating AWS position estimate client: %s", err)
+	}
+
+	for _, test := range tests {
+		t.Run(fmt.Sprintf("TestFeaturesWithPayload%v", test.payload), func(t *testing.T) {
+			decodedPayload, err := s.Solve(test.payload)
+			if err != nil {
+				t.Fatalf("error %s", err)
+			}
+
+			// should be able to decode base feature
+			base, ok := decodedPayload.Data.(decoder.UplinkFeatureBase)
+			if !ok {
+				t.Fatalf("expected UplinkFeatureBase, got %T", decodedPayload)
+			}
+			// check if it panics
+			base.GetTimestamp()
+
+			if len(decodedPayload.GetFeatures()) == 0 && !test.allowNoFeatures {
+				t.Error("expected features, got none")
+			}
+
+			if decodedPayload.Is(decoder.FeatureGNSS) {
+				gnss, ok := decodedPayload.Data.(decoder.UplinkFeatureGNSS)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureGNSS, got %T", decodedPayload)
+				}
+				if gnss.GetLatitude() == 0 {
+					t.Fatalf("expected non zero latitude")
+				}
+				if gnss.GetLongitude() == 0 {
+					t.Fatalf("expected non zero longitude")
+				}
+				if gnss.GetAltitude() == 0 {
+					t.Fatalf("expected non zero altitude")
+				}
+				// call function to check if it panics
+				gnss.GetAltitude()
+				gnss.GetPDOP()
+				gnss.GetSatellites()
+				gnss.GetTTF()
+			}
+			if decodedPayload.Is(decoder.FeatureBuffered) {
+				buffered, ok := decodedPayload.Data.(decoder.UplinkFeatureBuffered)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureBuffered, got %T", decodedPayload)
+				}
+				// call function to check if it panics
+				buffered.GetBufferLevel()
+			}
 		})
 	}
 }
