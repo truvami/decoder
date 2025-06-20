@@ -18,10 +18,6 @@ type SmartLabelv1Decoder struct {
 	logger         *zap.Logger
 
 	solver solver.SolverV1
-
-	// This will be deprecated in the future.
-	fCount uint32
-	devEui string
 }
 
 func NewSmartLabelv1Decoder(ctx context.Context, solver solver.SolverV1, logger *zap.Logger, options ...Option) decoder.Decoder {
@@ -44,24 +40,6 @@ func NewSmartLabelv1Decoder(ctx context.Context, solver solver.SolverV1, logger 
 func WithSkipValidation(skipValidation bool) Option {
 	return func(t *SmartLabelv1Decoder) {
 		t.skipValidation = skipValidation
-	}
-}
-
-// WithFCount sets the frame counter for the decoder.
-// This is required for the loracloud middleware.
-// Will be deprecated in the future.
-func WithFCount(fCount uint32) Option {
-	return func(t *SmartLabelv1Decoder) {
-		t.fCount = fCount
-	}
-}
-
-// WithDevEui sets the DevEUI for the decoder.
-// This is required for the loracloud middleware.
-// Will be deprecated in the future.
-func WithDevEui(devEui string) Option {
-	return func(t *SmartLabelv1Decoder) {
-		t.devEui = devEui
 	}
 }
 

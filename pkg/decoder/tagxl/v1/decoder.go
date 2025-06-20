@@ -19,10 +19,6 @@ type TagXLv1Decoder struct {
 	logger         *zap.Logger
 
 	solver solver.SolverV1
-
-	// This will be deprecated in the future.
-	fCount uint32
-	devEui string
 }
 
 func NewTagXLv1Decoder(ctx context.Context, solver solver.SolverV1, logger *zap.Logger, options ...Option) decoder.Decoder {

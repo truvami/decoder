@@ -392,7 +392,7 @@ func TestDecode(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestPort%vWith%v", test.port, test.payload), func(t *testing.T) {
-			decoder := NewSmartLabelv1Decoder(context.TODO(), solver.MockSolverV1{}, logger, WithFCount(1), WithDevEui(test.devEui))
+			decoder := NewSmartLabelv1Decoder(context.TODO(), solver.MockSolverV1{}, logger)
 			got, err := decoder.Decode(context.TODO(), test.payload, test.port)
 			if err != nil && len(test.expectedErr) == 0 {
 				t.Fatalf("unexpected error: %v", err)
@@ -522,8 +522,6 @@ func TestFeatures(t *testing.T) {
 					Data: decoder.NewDecodedUplink([]decoder.Feature{decoder.FeatureWiFi}, Port197Payload{}),
 				},
 				logger,
-				WithFCount(42),
-				WithDevEui("927da4b72110927d"),
 			)
 			decodedPayload, err := d.Decode(context.TODO(), test.payload, test.port)
 			if err != nil {
@@ -716,21 +714,6 @@ func TestMarshal(t *testing.T) {
 				}
 			}
 		})
-	}
-}
-
-func TestWithFCount(t *testing.T) {
-	logger := zap.NewExample()
-	defer func() {
-		_ = logger.Sync() // Flushes buffer, if any
-	}()
-
-	decoder := NewSmartLabelv1Decoder(context.TODO(), solver.MockSolverV1{}, logger, WithFCount(123))
-
-	// cast to SmartLabelv1Decoder to access fCount
-	tagXLv1Decoder := decoder.(*SmartLabelv1Decoder)
-	if tagXLv1Decoder.fCount != 123 {
-		t.Fatalf("expected fCount to be 123, got %v", tagXLv1Decoder.fCount)
 	}
 }
 
