@@ -3,10 +3,26 @@ package smartlabel
 import (
 	"fmt"
 	"reflect"
+	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/truvami/decoder/pkg/aws"
 	"github.com/truvami/decoder/pkg/common"
 	"github.com/truvami/decoder/pkg/decoder"
 	"github.com/truvami/decoder/pkg/loracloud"
+	"go.uber.org/zap"
+)
+
+var (
+	awsLoracloudFallbackSuccess = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "truvami_aws_loracloud_fallback_success_total",
+		Help: "The total number of successful position estimate requests using Loracloud as a fallback",
+	})
+	awsLoracloudFallbackFailure = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "truvami_aws_loracloud_fallback_failure_total",
+		Help: "The total number of failed position estimate requests using Loracloud as a fallback",
+	})
 )
 
 type Option func(*SmartLabelv1Decoder)
@@ -15,11 +31,15 @@ type SmartLabelv1Decoder struct {
 	loracloudMiddleware loracloud.LoracloudMiddleware
 	skipValidation      bool
 	fCount              uint32
+	logger              *zap.Logger
+
+	useAWS bool
 }
 
-func NewSmartLabelv1Decoder(loracloudMiddleware loracloud.LoracloudMiddleware, options ...Option) decoder.Decoder {
+func NewSmartLabelv1Decoder(loracloudMiddleware loracloud.LoracloudMiddleware, logger *zap.Logger, options ...Option) decoder.Decoder {
 	smartLabelv1Decoder := &SmartLabelv1Decoder{
 		loracloudMiddleware: loracloudMiddleware,
+		logger:              logger,
 	}
 
 	for _, option := range options {
@@ -40,6 +60,12 @@ func WithSkipValidation(skipValidation bool) Option {
 func WithFCount(fCount uint32) Option {
 	return func(t *SmartLabelv1Decoder) {
 		t.fCount = fCount
+	}
+}
+
+func WithUseAWS(useAWS bool) Option {
+	return func(t *SmartLabelv1Decoder) {
+		t.useAWS = useAWS
 	}
 }
 
@@ -157,13 +183,43 @@ func (t SmartLabelv1Decoder) getConfig(port uint8, data string) (common.PayloadC
 func (t SmartLabelv1Decoder) Decode(data string, port uint8, devEui string) (*decoder.DecodedUplink, error) {
 	switch port {
 	case 192:
-		decodedData, err := t.loracloudMiddleware.DeliverUplinkMessage(devEui, loracloud.UplinkMsg{
-			MsgType: "updf",
-			Port:    port,
-			Payload: data,
-			FCount:  t.fCount,
-		})
-		return decoder.NewDecodedUplink([]decoder.Feature{decoder.FeatureGNSS}, decodedData), err
+		var position *aws.Position
+		var err error
+
+		if t.useAWS {
+			t.logger.Debug("solving position using AWS IoT Wireless")
+			position, err = aws.Solve(t.logger, data, time.Now())
+			if err != nil {
+				t.logger.Error("error solving position using AWS IoT Wireless, try with loracloud", zap.Error(err))
+			}
+		}
+
+		if position == nil {
+			decodedData, err := t.loracloudMiddleware.DeliverUplinkMessage(devEui, loracloud.UplinkMsg{
+				MsgType: "updf",
+				Port:    port,
+				Payload: data,
+				FCount:  t.fCount,
+			})
+
+			if t.useAWS {
+				t.logger.Info("solving position using loracloud middleware as fallback")
+				if err != nil {
+					t.logger.Error("there was an error solving position using loracloud middleware as fallback", zap.Error(err))
+				}
+			}
+
+			if decodedData.GetLatitude() != 0 {
+				awsLoracloudFallbackSuccess.Inc()
+			} else {
+				awsLoracloudFallbackFailure.Inc()
+			}
+
+			return decoder.NewDecodedUplink([]decoder.Feature{decoder.FeatureGNSS}, decodedData), err
+		}
+
+		t.logger.Info("position solved using AWS IoT Wireless", zap.String("devEui", devEui))
+		return decoder.NewDecodedUplink([]decoder.Feature{decoder.FeatureGNSS, decoder.FeatureBuffered}, position), err
 	default:
 		config, err := t.getConfig(port, data)
 		if err != nil {

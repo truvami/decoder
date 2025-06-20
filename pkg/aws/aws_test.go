@@ -42,6 +42,8 @@ func TestSolve(t *testing.T) {
 	}
 
 	logger := zap.NewExample()
+	defer logger.Sync() // flushes buffer, if any
+
 	for _, test := range tests {
 		t.Run(test.Payload, func(t *testing.T) {
 			result, err := Solve(logger, test.Payload, test.CaptureTime)

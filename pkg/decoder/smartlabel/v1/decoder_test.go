@@ -15,6 +15,7 @@ import (
 	helpers "github.com/truvami/decoder/pkg/common"
 	"github.com/truvami/decoder/pkg/decoder"
 	"github.com/truvami/decoder/pkg/loracloud"
+	"go.uber.org/zap"
 )
 
 func startMockServer(handler http.Handler) *httptest.Server {
@@ -382,9 +383,12 @@ func TestDecode(t *testing.T) {
 		},
 	}
 
+	logger := zap.NewExample()
+	defer logger.Sync() // flushes buffer, if any
+
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestPort%vWith%v", test.port, test.payload), func(t *testing.T) {
-			decoder := NewSmartLabelv1Decoder(middleware, WithFCount(1))
+			decoder := NewSmartLabelv1Decoder(middleware, logger, WithFCount(1))
 			got, err := decoder.Decode(test.payload, test.port, test.devEui)
 			if err != nil && len(test.expectedErr) == 0 {
 				t.Fatalf("unexpected error: %v", err)
@@ -404,7 +408,9 @@ func TestDecode(t *testing.T) {
 }
 
 func TestInvalidPort(t *testing.T) {
-	decoder := NewSmartLabelv1Decoder(loracloud.NewLoracloudMiddleware("appEui"))
+	logger := zap.NewExample()
+	defer logger.Sync() // flushes buffer, if any
+	decoder := NewSmartLabelv1Decoder(loracloud.NewLoracloudMiddleware("appEui"), logger)
 	_, err := decoder.Decode("00", 0, "")
 	if err == nil || !errors.Is(err, helpers.ErrPortNotSupported) {
 		t.Fatal("expected port not supported")
@@ -412,7 +418,9 @@ func TestInvalidPort(t *testing.T) {
 }
 
 func TestPayloadTooShort(t *testing.T) {
-	decoder := NewSmartLabelv1Decoder(loracloud.NewLoracloudMiddleware("appEui"))
+	logger := zap.NewExample()
+	defer logger.Sync() // flushes buffer, if any
+	decoder := NewSmartLabelv1Decoder(loracloud.NewLoracloudMiddleware("appEui"), logger)
 	_, err := decoder.Decode("0ff0", 1, "")
 
 	if err == nil || !errors.Is(err, helpers.ErrPayloadTooShort) {
@@ -421,7 +429,9 @@ func TestPayloadTooShort(t *testing.T) {
 }
 
 func TestPayloadTooLong(t *testing.T) {
-	decoder := NewSmartLabelv1Decoder(loracloud.NewLoracloudMiddleware("appEui"))
+	logger := zap.NewExample()
+	defer logger.Sync() // flushes buffer, if any
+	decoder := NewSmartLabelv1Decoder(loracloud.NewLoracloudMiddleware("appEui"), logger)
 	_, err := decoder.Decode("0ff00ff00ff0", 1, "")
 
 	if err == nil || !errors.Is(err, helpers.ErrPayloadTooLong) {
@@ -489,10 +499,13 @@ func TestFeatures(t *testing.T) {
 	middleware.BaseUrl = server.URL
 	defer server.Close()
 
+	logger := zap.NewExample()
+	defer logger.Sync() // flushes buffer, if any
+
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestFeaturesWithPort%vAndPayload%v", test.port, test.payload), func(t *testing.T) {
 			d := NewSmartLabelv1Decoder(
-				middleware,
+				middleware, logger,
 				WithFCount(42),
 			)
 			decodedPayload, err := d.Decode(test.payload, test.port, "927da4b72110927d")
@@ -658,9 +671,12 @@ func TestMarshal(t *testing.T) {
 		},
 	}
 
+	logger := zap.NewExample()
+	defer logger.Sync() // flushes buffer, if any
+
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestMarshalWithPort%vAndPayload%v", test.port, test.payload), func(t *testing.T) {
-			decoder := NewSmartLabelv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"))
+			decoder := NewSmartLabelv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"), logger)
 
 			data, _ := decoder.Decode(test.payload, test.port, "")
 
@@ -685,7 +701,10 @@ func TestMarshal(t *testing.T) {
 }
 
 func TestWithFCount(t *testing.T) {
-	decoder := NewSmartLabelv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"), WithFCount(123))
+	logger := zap.NewExample()
+	defer logger.Sync() // flushes buffer, if any
+
+	decoder := NewSmartLabelv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"), logger, WithFCount(123))
 
 	// cast to SmartLabelv1Decoder to access fCount
 	tagXLv1Decoder := decoder.(*SmartLabelv1Decoder)
