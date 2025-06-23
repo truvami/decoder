@@ -699,6 +699,7 @@ func TestFeatures(t *testing.T) {
 					t.Fatalf("expected UplinkFeatureBuffered, got %T", decodedPayload)
 				}
 				// call function to check if it panics
+				buffered.IsBuffered()
 				buffered.GetBufferLevel()
 			}
 			if decodedPayload.Is(decoder.FeatureBattery) {

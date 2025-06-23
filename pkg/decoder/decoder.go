@@ -91,8 +91,8 @@ type UplinkFeatureGNSS interface {
 }
 
 type UplinkFeatureBuffered interface {
-	// GetBufferLevel returns the buffer level of the device.
-	GetBufferLevel() uint16
+	IsBuffered() bool
+	GetBufferLevel() *uint16
 }
 
 type UplinkFeatureBattery interface {
