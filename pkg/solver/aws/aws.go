@@ -240,9 +240,10 @@ func (p Position) GetSatellites() *uint8 {
 	return nil
 }
 
-func (p Position) GetBufferLevel() uint16 {
-	if p.Buffered {
-		return 1
-	}
-	return 0
+func (p Position) GetBufferLevel() *uint16 {
+	return nil
+}
+
+func (p Position) IsBuffered() bool {
+	return p.Buffered
 }
