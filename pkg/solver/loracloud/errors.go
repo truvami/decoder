@@ -6,7 +6,7 @@ var (
 	ErrContextPortNotFound   = errors.New("context port not found")
 	ErrContextDevEuiNotFound = errors.New("context DevEUI not found")
 	ErrContextFCountNotFound = errors.New("context frame counter not found")
-	ErrContextInvalidPort    = errors.New("context port is invalid, must be a number between 1 and 255")
+	ErrContextInvalidPort    = errors.New("context port is invalid, must be a number between 0 and 255")
 	ErrContextInvalidDevEui  = errors.New("context DevEUI is invalid, must be a valid hex string of length 16")
 	ErrContextInvalidFCount  = errors.New("context frame counter is invalid, must be a positive integer")
 )
