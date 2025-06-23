@@ -66,7 +66,7 @@ func TestSolve(t *testing.T) {
 			gnssFeature, ok := result.Data.(decoder.UplinkFeatureGNSS)
 			assert.True(t, ok, "result should implement UplinkFeatureGNSS")
 
-			_, ok = result.Data.(decoder.UplinkFeatureBuffered)
+			bufferedFeature, ok := result.Data.(decoder.UplinkFeatureBuffered)
 			assert.True(t, ok, "result should implement UplinkFeatureBuffered")
 
 			// The assertions have been split to ensure each field is checked separately since the timestamp is not exact
@@ -74,9 +74,7 @@ func TestSolve(t *testing.T) {
 			assert.Equal(t, test.Expected.Longitude, gnssFeature.GetLongitude(), "longitude does not match expected value")
 			assert.Equal(t, *test.Expected.Altitude, gnssFeature.GetAltitude(), "altitude does not match expected value")
 			assert.Equal(t, *test.Expected.Accuracy, *gnssFeature.GetAccuracy(), "accuracy does not match expected value")
-
-			// TODO: Uncomment when the buffered feature is implemented
-			// assert.Equal(t, test.Expected.Buffered, bufferedFeature.IsBuffered(), "buffered status does not match expected value")
+			assert.Equal(t, test.Expected.Buffered, bufferedFeature.IsBuffered(), "buffered status does not match expected value")
 		})
 	}
 }
