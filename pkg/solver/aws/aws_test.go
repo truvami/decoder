@@ -181,6 +181,7 @@ func TestFeatures(t *testing.T) {
 				}
 				// call function to check if it panics
 				buffered.GetBufferLevel()
+				buffered.IsBuffered()
 			}
 		})
 	}
