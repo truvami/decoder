@@ -14,6 +14,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/truvami/decoder/internal/logger"
 	helpers "github.com/truvami/decoder/pkg/common"
 	"github.com/truvami/decoder/pkg/decoder"
@@ -828,4 +829,10 @@ func TestMarshal(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestNewTagXLv1DecoderWithNilSolver(t *testing.T) {
+	assert.Panics(t, func() {
+		NewTagXLv1Decoder(context.TODO(), nil, zap.NewExample())
+	}, "NewTagXLv1Decoder should panic when solver is nil")
 }

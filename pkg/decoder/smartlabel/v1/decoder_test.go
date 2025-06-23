@@ -13,6 +13,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	helpers "github.com/truvami/decoder/pkg/common"
 	"github.com/truvami/decoder/pkg/decoder"
 	"github.com/truvami/decoder/pkg/solver"
@@ -768,4 +769,10 @@ func TestDataRate(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestNewSmartLabelv1DecoderWithNilSolver(t *testing.T) {
+	assert.Panics(t, func() {
+		NewSmartLabelv1Decoder(context.TODO(), nil, zap.NewExample())
+	}, "NewSmartLabelv1Decoder should panic when solver is nil")
 }

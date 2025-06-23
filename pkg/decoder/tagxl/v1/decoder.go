@@ -23,7 +23,7 @@ type TagXLv1Decoder struct {
 
 func NewTagXLv1Decoder(ctx context.Context, solver solver.SolverV1, logger *zap.Logger, options ...Option) decoder.Decoder {
 	if solver == nil {
-		logger.Fatal("solver cannot be nil", zap.String("decoder", "TagXLv1Decoder"))
+		logger.Panic("solver cannot be nil", zap.String("decoder", "TagXLv1Decoder"))
 	}
 
 	tagXLv1Decoder := &TagXLv1Decoder{

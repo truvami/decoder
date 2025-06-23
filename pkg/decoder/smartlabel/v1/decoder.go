@@ -22,7 +22,7 @@ type SmartLabelv1Decoder struct {
 
 func NewSmartLabelv1Decoder(ctx context.Context, solver solver.SolverV1, logger *zap.Logger, options ...Option) decoder.Decoder {
 	if solver == nil {
-		logger.Fatal("solver cannot be nil", zap.String("decoder", "SmartLabelv1Decoder"))
+		logger.Panic("solver cannot be nil", zap.String("decoder", "SmartLabelv1Decoder"))
 	}
 
 	smartLabelv1Decoder := &SmartLabelv1Decoder{
