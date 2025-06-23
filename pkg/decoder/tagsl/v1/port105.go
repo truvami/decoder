@@ -51,7 +51,7 @@ type Port105Payload struct {
 	Rssi6        *int8     `json:"rssi6" validate:"gte=-120,lte=-20"`
 }
 
-var _ decoder.UplinkFeatureBase = &Port105Payload{}
+var _ decoder.UplinkFeatureTimestamp = &Port105Payload{}
 var _ decoder.UplinkFeatureWiFi = &Port105Payload{}
 var _ decoder.UplinkFeatureBuffered = &Port105Payload{}
 var _ decoder.UplinkFeatureMoving = &Port105Payload{}

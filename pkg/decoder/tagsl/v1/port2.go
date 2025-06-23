@@ -1,8 +1,6 @@
 package tagsl
 
 import (
-	"time"
-
 	"github.com/truvami/decoder/pkg/decoder"
 )
 
@@ -23,14 +21,9 @@ type Port2Payload struct {
 	Moving       bool  `json:"moving"`
 }
 
-var _ decoder.UplinkFeatureBase = &Port2Payload{}
 var _ decoder.UplinkFeatureMoving = &Port2Payload{}
 var _ decoder.UplinkFeatureDutyCycle = &Port2Payload{}
 var _ decoder.UplinkFeatureConfigChange = &Port2Payload{}
-
-func (p Port2Payload) GetTimestamp() *time.Time {
-	return nil
-}
 
 func (p Port2Payload) IsMoving() bool {
 	return p.Moving

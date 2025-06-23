@@ -22,12 +22,7 @@ type Port103Payload struct {
 	Altitude  float64 `json:"altitude"`
 }
 
-var _ decoder.UplinkFeatureBase = &Port103Payload{}
 var _ decoder.UplinkFeatureGNSS = &Port103Payload{}
-
-func (p Port103Payload) GetTimestamp() *time.Time {
-	return nil
-}
 
 func (p Port103Payload) GetAccuracy() *float64 {
 	return nil

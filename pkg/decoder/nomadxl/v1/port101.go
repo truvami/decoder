@@ -59,15 +59,10 @@ func (p Port101Payload) MarshalJSON() ([]byte, error) {
 	})
 }
 
-var _ decoder.UplinkFeatureBase = &Port101Payload{}
 var _ decoder.UplinkFeatureBattery = &Port101Payload{}
 var _ decoder.UplinkFeatureTemperature = &Port101Payload{}
 var _ decoder.UplinkFeaturePressure = &Port101Payload{}
 var _ decoder.UplinkFeatureBuffered = &Port101Payload{}
-
-func (p Port101Payload) GetTimestamp() *time.Time {
-	return nil
-}
 
 func (p Port101Payload) GetBatteryVoltage() float64 {
 	return p.Battery
