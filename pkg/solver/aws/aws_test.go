@@ -280,3 +280,42 @@ func TestSolveWithMock(t *testing.T) {
 		})
 	}
 }
+
+func TestPositionGetAltitude(t *testing.T) {
+	tests := []struct {
+		name     string
+		altitude *float64
+		want     float64
+	}{
+		{
+			name:     "Altitude is set",
+			altitude: aws.Float64(123.45),
+			want:     123.45,
+		},
+		{
+			name:     "Altitude is nil",
+			altitude: nil,
+			want:     0.0,
+		},
+		{
+			name:     "Altitude is zero",
+			altitude: aws.Float64(0.0),
+			want:     0.0,
+		},
+		{
+			name:     "Altitude is negative",
+			altitude: aws.Float64(-50.5),
+			want:     -50.5,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := Position{
+				Altitude: tt.altitude,
+			}
+			got := p.GetAltitude()
+			assert.Equal(t, tt.want, got, "GetAltitude() should return the correct value")
+		})
+	}
+}
