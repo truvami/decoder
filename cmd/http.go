@@ -258,6 +258,27 @@ func getEncoderHandler(encoder encoder.Encoder) func(http.ResponseWriter, *http.
 		// This is a simplified example - in a real implementation, you would have a more
 		// comprehensive mapping of device types and ports to struct types
 		switch r.URL.Path {
+		case "/encode/smartlabel/v1":
+			switch rawReq.Port {
+			case 128:
+				var payload smartlabelEncoder.Port128Payload
+				if err := json.Unmarshal(rawReq.Payload, &payload); err != nil {
+					logger.Logger.Error("error unmarshaling payload", zap.Error(err))
+					setBody(w, http.StatusBadRequest, map[string]any{
+						"error": fmt.Sprintf("Error unmarshaling payload: %v", err),
+						"docs":  "https://docs.truvami.com",
+					})
+					return
+				}
+				structPayload = payload
+			default:
+				logger.Logger.Error("unsupported port", zap.Uint8("port", rawReq.Port))
+				setBody(w, http.StatusBadRequest, map[string]any{
+					"error": fmt.Sprintf("Unsupported port: %d", rawReq.Port),
+					"docs":  "https://docs.truvami.com",
+				})
+				return
+			}
 		case "/encode/tagsl/v1":
 			switch rawReq.Port {
 			case 128:
