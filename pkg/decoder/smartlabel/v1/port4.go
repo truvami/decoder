@@ -20,8 +20,8 @@ import (
 // | 8    | 2    | acceleration delay                          | uint16, ms   |
 // | 10   | 2    | temperature sensor polling interval         | uint16, s    |
 // | 12   | 2    | temperature uplink hold interval            | uint16, s    |
-// | 14   | 1    | temperature lower threshold                 | int8, C      |
-// | 15   | 1    | temperature upper threshold                 | int8, C      |
+// | 14   | 1    | temperature upper threshold                 | int8, C      |
+// | 15   | 1    | temperature lower threshold                 | int8, C      |
 // | 16   | 1    | minimal number of access points             | uint8        |
 // | 17   | 3    | firmware version major minor patch          | uint8[3]     |
 // +------+------+---------------------------------------------+--------------+
@@ -38,9 +38,9 @@ type Port4Payload struct {
 	AccelerationDelay          uint16 `json:"accelerationDelay"`
 	TemperaturePollingInterval uint16 `json:"temperaturePollingInterval"`
 	TemperatureUplinkInterval  uint16 `json:"temperatureUplinkInterval"`
-	TemperatureLowerThreshold  int8   `json:"temperatureLowerThreshold"`
 	TemperatureUpperThreshold  int8   `json:"temperatureUpperThreshold"`
-	AccessPointsThreshold      uint8  `json:"accessPointsThreshold"`
+	TemperatureLowerThreshold  int8   `json:"temperatureLowerThreshold"`
+	AccessPointsThreshold      uint8  `json:"accessPointsThreshold" validate:"gte=1,lte=6"`
 	FirmwareVersionMajor       uint8  `json:"firmwareVersionMajor"`
 	FirmwareVersionMinor       uint8  `json:"firmwareVersionMinor"`
 	FirmwareVersionPatch       uint8  `json:"firmwareVersionPatch"`
