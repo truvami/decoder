@@ -1,26 +1,34 @@
 package tagxl
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"time"
 
 	"github.com/truvami/decoder/pkg/common"
 	"github.com/truvami/decoder/pkg/decoder"
-	"github.com/truvami/decoder/pkg/loracloud"
+	"github.com/truvami/decoder/pkg/solver"
+	"go.uber.org/zap"
 )
 
 type Option func(*TagXLv1Decoder)
 
 type TagXLv1Decoder struct {
-	loracloudMiddleware loracloud.LoracloudMiddleware
-	skipValidation      bool
-	fCount              uint32
+	skipValidation bool
+	logger         *zap.Logger
+
+	solver solver.SolverV1
 }
 
-func NewTagXLv1Decoder(loracloudMiddleware loracloud.LoracloudMiddleware, options ...Option) decoder.Decoder {
+func NewTagXLv1Decoder(ctx context.Context, solver solver.SolverV1, logger *zap.Logger, options ...Option) decoder.Decoder {
+	if solver == nil {
+		logger.Panic("solver cannot be nil", zap.String("decoder", "TagXLv1Decoder"))
+	}
+
 	tagXLv1Decoder := &TagXLv1Decoder{
-		loracloudMiddleware: loracloudMiddleware,
+		logger: logger,
+		solver: solver,
 	}
 
 	for _, option := range options {
@@ -33,14 +41,6 @@ func NewTagXLv1Decoder(loracloudMiddleware loracloud.LoracloudMiddleware, option
 func WithSkipValidation(skipValidation bool) Option {
 	return func(t *TagXLv1Decoder) {
 		t.skipValidation = skipValidation
-	}
-}
-
-// WithFCount sets the frame counter for the decoder.
-// This is required for the loracloud middleware.
-func WithFCount(fCount uint32) Option {
-	return func(t *TagXLv1Decoder) {
-		t.fCount = fCount
 	}
 }
 
@@ -194,24 +194,10 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 	return common.PayloadConfig{}, fmt.Errorf("%w: port %v not supported", common.ErrPortNotSupported, port)
 }
 
-func (t TagXLv1Decoder) Decode(data string, port uint8, devEui string) (*decoder.DecodedUplink, error) {
+func (t TagXLv1Decoder) Decode(ctx context.Context, data string, port uint8) (*decoder.DecodedUplink, error) {
 	switch port {
-	case 192:
-		decodedData, err := t.loracloudMiddleware.DeliverUplinkMessage(devEui, loracloud.UplinkMsg{
-			MsgType: "updf",
-			Port:    port,
-			Payload: data,
-			FCount:  t.fCount,
-		})
-		return decoder.NewDecodedUplink([]decoder.Feature{decoder.FeatureGNSS}, decodedData), err
-	case 199:
-		decodedData, err := t.loracloudMiddleware.DeliverUplinkMessage(devEui, loracloud.UplinkMsg{
-			MsgType: "updf",
-			Port:    port,
-			Payload: data,
-			FCount:  t.fCount,
-		})
-		return decoder.NewDecodedUplink([]decoder.Feature{}, decodedData), err
+	case 192, 199:
+		return t.solver.Solve(ctx, data)
 	default:
 		bytes, err := common.HexStringToBytes(data)
 		if err != nil {

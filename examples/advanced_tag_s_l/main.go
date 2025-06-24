@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 
 	"github.com/truvami/decoder/pkg/decoder"
@@ -13,7 +14,7 @@ func main() {
 
 	// decode data
 	log.Println("decoding data...")
-	data, err := d.Decode("0002c420ff005ed85a12b4180719142607", 1, "")
+	data, err := d.Decode(context.Background(), "0002c420ff005ed85a12b4180719142607", 1)
 	if err != nil {
 		panic(err)
 	}

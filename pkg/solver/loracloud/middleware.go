@@ -2,6 +2,8 @@ package loracloud
 
 import (
 	"bytes"
+	"context"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -10,15 +12,86 @@ import (
 
 	"github.com/go-playground/validator"
 	"github.com/truvami/decoder/pkg/decoder"
+	"github.com/truvami/decoder/pkg/solver"
+	"go.uber.org/zap"
 )
 
 type LoracloudMiddleware struct {
 	accessToken string
+	logger      *zap.Logger
 	BaseUrl     string
 }
 
-func NewLoracloudMiddleware(accessToken string) LoracloudMiddleware {
-	return LoracloudMiddleware{accessToken: accessToken, BaseUrl: "https://mgs.loracloud.com"}
+var _ solver.SolverV1 = &LoracloudMiddleware{}
+
+func NewLoracloudMiddleware(ctx context.Context, accessToken string, logger *zap.Logger) LoracloudMiddleware {
+	if time.Now().After(time.Date(2025, 7, 31, 0, 0, 0, 0, time.UTC)) {
+		logger.Fatal("LoRa Cloud is no longer available after 31.07.2025", zap.String("url", "https://www.semtech.com/loracloud-shutdown"))
+	}
+	logger.Warn("LoRa Cloud is Sunsetting on 31.07.2025", zap.String("url", "https://www.semtech.com/loracloud-shutdown"))
+
+	return LoracloudMiddleware{accessToken: accessToken, BaseUrl: "https://mgs.loracloud.com", logger: logger}
+}
+
+func validateContext(ctx context.Context) error {
+	port, ok := ctx.Value(decoder.PORT_CONTEXT_KEY).(int)
+	if !ok {
+		return ErrContextPortNotFound
+	}
+	devEui, ok := ctx.Value(decoder.DEVEUI_CONTEXT_KEY).(string)
+	if !ok {
+		return ErrContextDevEuiNotFound
+	}
+	fCount, ok := ctx.Value(decoder.FCNT_CONTEXT_KEY).(int)
+	if !ok {
+		return ErrContextFCountNotFound
+	}
+	if port < 0 || port > 255 {
+		return ErrContextInvalidPort
+	}
+	if len(devEui) != 16 {
+		return ErrContextInvalidDevEui
+	}
+	// check if devEui is a valid hex string
+	hexCheck, err := hex.DecodeString(devEui)
+	if err != nil || len(hexCheck) != 8 {
+		return ErrContextInvalidDevEui
+	}
+	if fCount < 0 {
+		return ErrContextInvalidFCount
+	}
+	return nil
+}
+
+func (m LoracloudMiddleware) Solve(ctx context.Context, payload string) (*decoder.DecodedUplink, error) {
+	if err := validateContext(ctx); err != nil {
+		return nil, fmt.Errorf("context validation failed: %v", err)
+	}
+
+	port, ok := ctx.Value(decoder.PORT_CONTEXT_KEY).(int)
+	if !ok {
+		return nil, fmt.Errorf("port not found in context")
+	}
+	devEui, ok := ctx.Value(decoder.DEVEUI_CONTEXT_KEY).(string)
+	if !ok {
+		return nil, fmt.Errorf("devEui not found in context")
+	}
+	fCount, ok := ctx.Value(decoder.FCNT_CONTEXT_KEY).(int)
+	if !ok {
+		return nil, fmt.Errorf("fCount not found in context")
+	}
+
+	decodedData, err := m.DeliverUplinkMessage(devEui, UplinkMsg{
+		MsgType: "updf",
+		Port:    uint8(port),
+		Payload: payload,
+		FCount:  uint32(fCount),
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("error delivering uplink message: %v", err)
+	}
+	return decoder.NewDecodedUplink([]decoder.Feature{decoder.FeatureGNSS}, decodedData), err
 }
 
 func (m LoracloudMiddleware) post(url string, body []byte) (*http.Response, error) {

@@ -1,6 +1,7 @@
 package tagxl
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -13,9 +14,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/truvami/decoder/internal/logger"
 	helpers "github.com/truvami/decoder/pkg/common"
 	"github.com/truvami/decoder/pkg/decoder"
-	"github.com/truvami/decoder/pkg/loracloud"
+	"github.com/truvami/decoder/pkg/solver"
+	"github.com/truvami/decoder/pkg/solver/loracloud"
+	"go.uber.org/zap"
 )
 
 func startMockServer(handler http.Handler) *httptest.Server {
@@ -53,7 +58,7 @@ func TestDecode(t *testing.T) {
 	})
 
 	server := startMockServer(nil)
-	middleware := loracloud.NewLoracloudMiddleware("access_token")
+	middleware := loracloud.NewLoracloudMiddleware(context.TODO(), "access_token", zap.NewExample())
 	middleware.BaseUrl = server.URL
 	defer server.Close()
 
@@ -442,10 +447,16 @@ func TestDecode(t *testing.T) {
 		},
 	}
 
+	if logger.Logger == nil {
+		logger.NewLogger()
+	}
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestPort%vWith%v", test.port, test.payload), func(t *testing.T) {
-			decoder := NewTagXLv1Decoder(middleware, WithFCount(1))
-			got, err := decoder.Decode(test.payload, test.port, test.devEui)
+			ctx := context.WithValue(context.Background(), decoder.DEVEUI_CONTEXT_KEY, test.devEui)
+			ctx = context.WithValue(ctx, decoder.FCNT_CONTEXT_KEY, 1)
+
+			decoder := NewTagXLv1Decoder(ctx, solver.MockSolverV1{}, logger.Logger)
+			got, err := decoder.Decode(ctx, test.payload, test.port)
 
 			if err == nil && len(test.expectedErr) != 0 {
 				t.Fatalf("expected error: %v, got %v", test.expectedErr, nil)
@@ -484,10 +495,17 @@ func TestValidationErrors(t *testing.T) {
 		expected error
 	}{}
 
+	if logger.Logger == nil {
+		logger.NewLogger()
+	}
+
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestPort%vValidationWith%v", test.port, test.payload), func(t *testing.T) {
-			decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"))
-			got, err := decoder.Decode(test.payload, test.port, "")
+			ctx := context.WithValue(context.Background(), decoder.DEVEUI_CONTEXT_KEY, "10CE45FFFE00C7ED")
+			ctx = context.WithValue(ctx, decoder.FCNT_CONTEXT_KEY, 1)
+
+			decoder := NewTagXLv1Decoder(ctx, solver.MockSolverV1{}, logger.Logger)
+			got, err := decoder.Decode(ctx, test.payload, test.port)
 
 			if err == nil && test.expected == nil {
 				return
@@ -503,8 +521,12 @@ func TestValidationErrors(t *testing.T) {
 }
 
 func TestInvalidPort(t *testing.T) {
-	decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"))
-	_, err := decoder.Decode("00", 0, "")
+	if logger.Logger == nil {
+		logger.NewLogger()
+	}
+
+	decoder := NewTagXLv1Decoder(context.TODO(), solver.MockSolverV1{}, logger.Logger)
+	_, err := decoder.Decode(context.TODO(), "00", 0)
 
 	if err == nil || !errors.Is(err, helpers.ErrPortNotSupported) {
 		t.Fatal("expected port not supported")
@@ -512,8 +534,12 @@ func TestInvalidPort(t *testing.T) {
 }
 
 func TestPayloadTooShort(t *testing.T) {
-	decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"))
-	_, err := decoder.Decode("01adbeef", 152, "")
+	if logger.Logger == nil {
+		logger.NewLogger()
+	}
+
+	decoder := NewTagXLv1Decoder(context.TODO(), solver.MockSolverV1{}, logger.Logger)
+	_, err := decoder.Decode(context.TODO(), "01adbeef", 152)
 
 	if err == nil || !errors.Is(err, helpers.ErrPayloadTooShort) {
 		t.Fatalf("expected error payload too short but got %v", err)
@@ -521,8 +547,12 @@ func TestPayloadTooShort(t *testing.T) {
 }
 
 func TestPayloadTooLong(t *testing.T) {
-	decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"))
-	_, err := decoder.Decode("01adbeef4242deadbeef4242deadbeef4242", 152, "")
+	if logger.Logger == nil {
+		logger.NewLogger()
+	}
+
+	decoder := NewTagXLv1Decoder(context.TODO(), solver.MockSolverV1{}, logger.Logger)
+	_, err := decoder.Decode(context.TODO(), "01adbeef4242deadbeef4242deadbeef4242", 152)
 
 	if err == nil || !errors.Is(err, helpers.ErrPayloadTooLong) {
 		t.Fatal("expected error payload too long")
@@ -614,14 +644,20 @@ func TestFeatures(t *testing.T) {
 	})
 
 	server := startMockServer(mux)
-	middleware := loracloud.NewLoracloudMiddleware("access_token")
+	middleware := loracloud.NewLoracloudMiddleware(context.TODO(), "access_token", zap.NewExample())
 	middleware.BaseUrl = server.URL
 	defer server.Close()
 
+	if logger.Logger == nil {
+		logger.NewLogger()
+	}
+
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestFeaturesWithPort%vAndPayload%v", test.port, test.payload), func(t *testing.T) {
-			d := NewTagXLv1Decoder(middleware, WithFCount(42))
-			decodedPayload, err := d.Decode(test.payload, test.port, "927da4b72110927d")
+			d := NewTagXLv1Decoder(context.TODO(), solver.MockSolverV1{
+				Data: decoder.NewDecodedUplink([]decoder.Feature{decoder.FeatureWiFi}, Port197Payload{}),
+			}, logger.Logger)
+			decodedPayload, err := d.Decode(context.TODO(), test.payload, test.port)
 			if err != nil {
 				t.Fatalf("error %s", err)
 			}
@@ -765,11 +801,15 @@ func TestMarshal(t *testing.T) {
 		},
 	}
 
+	if logger.Logger == nil {
+		logger.NewLogger()
+	}
+
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestMarshalWithPort%vAndPayload%v", test.port, test.payload), func(t *testing.T) {
-			decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"))
+			decoder := NewTagXLv1Decoder(context.TODO(), solver.MockSolverV1{}, logger.Logger)
 
-			data, _ := decoder.Decode(test.payload, test.port, "")
+			data, _ := decoder.Decode(context.TODO(), test.payload, test.port)
 
 			marshaled, err := json.MarshalIndent(map[string]any{
 				"data": data.Data,
@@ -791,12 +831,8 @@ func TestMarshal(t *testing.T) {
 	}
 }
 
-func TestWithFCount(t *testing.T) {
-	decoder := NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware("apiKey"), WithFCount(123))
-
-	// cast to TagXLv1Decoder to access fCount
-	tagXLv1Decoder := decoder.(*TagXLv1Decoder)
-	if tagXLv1Decoder.fCount != 123 {
-		t.Fatalf("expected fCount to be 123, got %v", tagXLv1Decoder.fCount)
-	}
+func TestNewTagXLv1DecoderWithNilSolver(t *testing.T) {
+	assert.Panics(t, func() {
+		NewTagXLv1Decoder(context.TODO(), nil, zap.NewExample())
+	}, "NewTagXLv1Decoder should panic when solver is nil")
 }

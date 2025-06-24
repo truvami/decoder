@@ -1,6 +1,7 @@
 package nomadxl
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -51,7 +52,7 @@ func TestDecode(t *testing.T) {
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestPort%vWith%v", test.port, test.payload), func(t *testing.T) {
 			decoder := NewNomadXLv1Decoder()
-			got, err := decoder.Decode(test.payload, test.port, "")
+			got, err := decoder.Decode(context.TODO(), test.payload, test.port)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
@@ -67,7 +68,7 @@ func TestDecode(t *testing.T) {
 
 func TestInvalidPort(t *testing.T) {
 	decoder := NewNomadXLv1Decoder()
-	_, err := decoder.Decode("00", 0, "")
+	_, err := decoder.Decode(context.TODO(), "00", 0)
 	if err == nil || !errors.Is(err, helpers.ErrPortNotSupported) {
 		t.Fatal("expected port not supported")
 	}
@@ -75,7 +76,7 @@ func TestInvalidPort(t *testing.T) {
 
 func TestPayloadTooShort(t *testing.T) {
 	decoder := NewNomadXLv1Decoder()
-	_, err := decoder.Decode("deadbeef", 101, "")
+	_, err := decoder.Decode(context.TODO(), "deadbeef", 101)
 
 	if err == nil || !errors.Is(err, helpers.ErrPayloadTooShort) {
 		t.Fatal("expected error payload too short")
@@ -84,7 +85,7 @@ func TestPayloadTooShort(t *testing.T) {
 
 func TestPayloadTooLong(t *testing.T) {
 	decoder := NewNomadXLv1Decoder()
-	_, err := decoder.Decode("deadbeef4242deadbeef4242deadbeef4242deadbeef4242deadbeef4242deadbeef4242deadbeef4242", 101, "")
+	_, err := decoder.Decode(context.TODO(), "deadbeef4242deadbeef4242deadbeef4242deadbeef4242deadbeef4242deadbeef4242deadbeef4242", 101)
 
 	if err == nil || !errors.Is(err, helpers.ErrPayloadTooLong) {
 		t.Fatal("expected error payload too long")
@@ -109,7 +110,7 @@ func TestFeatures(t *testing.T) {
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("TestFeaturesWithPort%vAndPayload%v", test.port, test.payload), func(t *testing.T) {
 			d := NewNomadXLv1Decoder()
-			decodedPayload, _ := d.Decode(test.payload, test.port, "")
+			decodedPayload, _ := d.Decode(context.TODO(), test.payload, test.port)
 
 			// should be able to decode base feature
 			base, ok := decodedPayload.Data.(decoder.UplinkFeatureBase)
@@ -225,7 +226,7 @@ func TestMarshal(t *testing.T) {
 		t.Run(fmt.Sprintf("TestMarshalWithPort%vAndPayload%v", test.port, test.payload), func(t *testing.T) {
 			decoder := NewNomadXLv1Decoder()
 
-			data, _ := decoder.Decode(test.payload, test.port, "")
+			data, _ := decoder.Decode(context.TODO(), test.payload, test.port)
 
 			marshaled, err := json.MarshalIndent(map[string]any{
 				"data": data.Data,

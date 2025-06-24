@@ -1,25 +1,33 @@
 package smartlabel
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 
 	"github.com/truvami/decoder/pkg/common"
 	"github.com/truvami/decoder/pkg/decoder"
-	"github.com/truvami/decoder/pkg/loracloud"
+	"github.com/truvami/decoder/pkg/solver"
+	"go.uber.org/zap"
 )
 
 type Option func(*SmartLabelv1Decoder)
 
 type SmartLabelv1Decoder struct {
-	loracloudMiddleware loracloud.LoracloudMiddleware
-	skipValidation      bool
-	fCount              uint32
+	skipValidation bool
+	logger         *zap.Logger
+
+	solver solver.SolverV1
 }
 
-func NewSmartLabelv1Decoder(loracloudMiddleware loracloud.LoracloudMiddleware, options ...Option) decoder.Decoder {
+func NewSmartLabelv1Decoder(ctx context.Context, solver solver.SolverV1, logger *zap.Logger, options ...Option) decoder.Decoder {
+	if solver == nil {
+		logger.Panic("solver cannot be nil", zap.String("decoder", "SmartLabelv1Decoder"))
+	}
+
 	smartLabelv1Decoder := &SmartLabelv1Decoder{
-		loracloudMiddleware: loracloudMiddleware,
+		logger: logger,
+		solver: solver,
 	}
 
 	for _, option := range options {
@@ -32,14 +40,6 @@ func NewSmartLabelv1Decoder(loracloudMiddleware loracloud.LoracloudMiddleware, o
 func WithSkipValidation(skipValidation bool) Option {
 	return func(t *SmartLabelv1Decoder) {
 		t.skipValidation = skipValidation
-	}
-}
-
-// WithFCount sets the frame counter for the decoder.
-// This is required for the loracloud middleware.
-func WithFCount(fCount uint32) Option {
-	return func(t *SmartLabelv1Decoder) {
-		t.fCount = fCount
 	}
 }
 
@@ -154,16 +154,10 @@ func (t SmartLabelv1Decoder) getConfig(port uint8, data string) (common.PayloadC
 	}
 }
 
-func (t SmartLabelv1Decoder) Decode(data string, port uint8, devEui string) (*decoder.DecodedUplink, error) {
+func (t SmartLabelv1Decoder) Decode(ctx context.Context, data string, port uint8) (*decoder.DecodedUplink, error) {
 	switch port {
 	case 192:
-		decodedData, err := t.loracloudMiddleware.DeliverUplinkMessage(devEui, loracloud.UplinkMsg{
-			MsgType: "updf",
-			Port:    port,
-			Payload: data,
-			FCount:  t.fCount,
-		})
-		return decoder.NewDecodedUplink([]decoder.Feature{decoder.FeatureGNSS}, decodedData), err
+		return t.solver.Solve(ctx, data)
 	default:
 		config, err := t.getConfig(port, data)
 		if err != nil {

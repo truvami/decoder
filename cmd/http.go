@@ -1,15 +1,18 @@
 package cmd
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/go-playground/validator"
 	"github.com/google/uuid"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
 	"github.com/truvami/decoder/internal/logger"
 	helpers "github.com/truvami/decoder/pkg/common"
@@ -23,25 +26,23 @@ import (
 	nomadxsEncoder "github.com/truvami/decoder/pkg/encoder/nomadxs/v1"
 	smartlabelEncoder "github.com/truvami/decoder/pkg/encoder/smartlabel/v1"
 	tagslEncoder "github.com/truvami/decoder/pkg/encoder/tagsl/v1"
-	"github.com/truvami/decoder/pkg/loracloud"
+	"github.com/truvami/decoder/pkg/solver"
+	"github.com/truvami/decoder/pkg/solver/aws"
+	"github.com/truvami/decoder/pkg/solver/loracloud"
 	"go.uber.org/zap"
 )
 
 var host string
 var port uint16
 var health bool
+var metrics bool
 
 func init() {
 	httpCmd.Flags().StringVar(&host, "host", "localhost", "Host to bind the HTTP server to")
 	httpCmd.Flags().Uint16Var(&port, "port", 8080, "Port to bind the HTTP server to")
-	httpCmd.Flags().StringVar(&accessToken, "token", "", "Access token for the loracloud API")
 	httpCmd.Flags().BoolVar(&health, "health", false, "Enable /health endpoint")
+	httpCmd.Flags().BoolVar(&metrics, "metrics", false, "Enable prometheus /metrics endpoint")
 	rootCmd.AddCommand(httpCmd)
-
-	// Add the generic encoder endpoint
-	httpCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
-		// This will run before the Run function
-	}
 }
 
 var httpCmd = &cobra.Command{
@@ -54,10 +55,6 @@ var httpCmd = &cobra.Command{
 			defer logger.Sync()
 		}
 
-		if len(accessToken) == 0 {
-			logger.Logger.Warn("no access token provided for loracloud API")
-		}
-
 		router := http.NewServeMux()
 
 		// health endpoint
@@ -65,22 +62,51 @@ var httpCmd = &cobra.Command{
 			router.HandleFunc("/health", healthHandler)
 		}
 
+		// metrics endpoint
+		if metrics {
+			logger.Logger.Debug("enabling prometheus metrics endpoint")
+			router.Handle("/metrics", promhttp.Handler())
+		}
+
 		type decoderEndpoint struct {
 			path    string
 			decoder decoder.Decoder
 		}
 
+		ctx := context.Background()
+		if cmd != nil {
+			ctx = cmd.Context()
+		}
+
+		var solver solver.SolverV1
+		var err error
+
+		switch strings.ToLower(Solver) {
+		case "aws":
+			solver, err = aws.NewAwsPositionEstimateClient(ctx, logger.Logger)
+			if err != nil {
+				logger.Logger.Error("error while creating AWS position estimate client", zap.Error(err))
+				os.Exit(1)
+			}
+		case "loracloud":
+			if LoracloudAccessToken == "" {
+				logger.Logger.Error("loracloud access token is required for loracloud solver")
+				os.Exit(1)
+			}
+			solver = loracloud.NewLoracloudMiddleware(ctx, LoracloudAccessToken, logger.Logger)
+		}
+
 		var decoders []decoderEndpoint = []decoderEndpoint{
 			{"tagsl/v1", tagslDecoder.NewTagSLv1Decoder(tagslDecoder.WithSkipValidation(SkipValidation))},
-			{"tagxl/v1", tagxlDecoder.NewTagXLv1Decoder(loracloud.NewLoracloudMiddleware(accessToken), tagxlDecoder.WithSkipValidation(SkipValidation))},
+			{"tagxl/v1", tagxlDecoder.NewTagXLv1Decoder(ctx, solver, logger.Logger, tagxlDecoder.WithSkipValidation(SkipValidation))},
 			{"nomadxs/v1", nomadxsDecoder.NewNomadXSv1Decoder(nomadxsDecoder.WithSkipValidation(SkipValidation))},
 			{"nomadxl/v1", nomadxlDecoder.NewNomadXLv1Decoder(nomadxlDecoder.WithSkipValidation(SkipValidation))},
-			{"smartlabel/v1", smartlabelDecoder.NewSmartLabelv1Decoder(loracloud.NewLoracloudMiddleware(accessToken), smartlabelDecoder.WithSkipValidation(SkipValidation))},
+			{"smartlabel/v1", smartlabelDecoder.NewSmartLabelv1Decoder(ctx, solver, logger.Logger, smartlabelDecoder.WithSkipValidation(SkipValidation))},
 		}
 
 		// add the decoders
 		for _, d := range decoders {
-			addDecoder(router, d.path, d.decoder)
+			addDecoder(ctx, router, d.path, d.decoder)
 		}
 
 		// Define encoder endpoints
@@ -104,7 +130,7 @@ var httpCmd = &cobra.Command{
 		handler := loggingMiddleware(logger.Logger, router)
 
 		logger.Logger.Info("starting HTTP server", zap.String("host", host), zap.Uint64("port", uint64(port)))
-		err := http.ListenAndServe(fmt.Sprintf("%v:%v", host, port), handler)
+		err = http.ListenAndServe(fmt.Sprintf("%v:%v", host, port), handler)
 
 		if err != nil {
 			logger.Logger.Error("error while starting HTTP server", zap.Error(err))
@@ -113,12 +139,12 @@ var httpCmd = &cobra.Command{
 	},
 }
 
-func addDecoder(router *http.ServeMux, path string, decoder decoder.Decoder) {
+func addDecoder(ctx context.Context, router *http.ServeMux, path string, decoder decoder.Decoder) {
 	logger.Logger.Debug("adding decoder", zap.String("path", path))
-	router.HandleFunc("POST /"+path, getHandler(decoder))
+	router.HandleFunc("POST /"+path, getHandler(ctx, decoder))
 }
 
-func getHandler(decoder decoder.Decoder) func(http.ResponseWriter, *http.Request) {
+func getHandler(ctx context.Context, targetDecoder decoder.Decoder) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		type request struct {
 			Port    uint8  `json:"port" validate:"required,gt=0,lte=255"`
@@ -150,10 +176,19 @@ func getHandler(decoder decoder.Decoder) func(http.ResponseWriter, *http.Request
 			return
 		}
 
+		logger.Logger.Debug("set context values",
+			zap.String("devEui", req.DevEUI),
+			zap.Uint8("port", req.Port),
+			zap.String("payload", req.Payload),
+		)
+		ctx = context.WithValue(ctx, decoder.DEVEUI_CONTEXT_KEY, req.DevEUI)
+		ctx = context.WithValue(ctx, decoder.PORT_CONTEXT_KEY, req.Port)
+		ctx = context.WithValue(ctx, decoder.FCNT_CONTEXT_KEY, 1) // Default frame count, can be adjusted as needed
+
 		logger.Logger.Debug("decoding payload")
 
 		var warnings []string = nil
-		data, err := decoder.Decode(req.Payload, req.Port, req.DevEUI)
+		data, err := targetDecoder.Decode(ctx, req.Payload, req.Port)
 		if err != nil {
 			if errors.Is(err, helpers.ErrValidationFailed) {
 				warnings = []string{}

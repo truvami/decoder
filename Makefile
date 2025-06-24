@@ -37,7 +37,7 @@ install:
 check-json-tags:
 	@echo "Checking JSON tags for camelCase format..."
 	@bash -c ' \
-		files=$$(find . -name "*.go" -not -path "./vendor/*"  -not -path "./pkg/loracloud/*"); \
+		files=$$(find . -name "*.go" -not -path "./vendor/*"  -not -path "./pkg/solver/loracloud/*"); \
 		camel_case_regex="^[a-z]+([A-Za-z0-9]+)*$$"; \
 		error_found=false; \
 		for file in $$files; do \
@@ -57,3 +57,15 @@ check-json-tags:
 		fi \
 	'
 
+check-metrics:
+	@echo "🔍 Checking Prometheus metrics for 'truvami_' prefix..."
+	@bad_metrics=$$(grep -r --include="*.go" -E 'prometheus\.(CounterOpts|GaugeOpts|HistogramOpts|SummaryOpts)' . | cut -d: -f1 | sort -u | xargs grep -n 'Name:' | grep -v -E 'Name:.*"truvami_'); \
+	if [ -n "$$bad_metrics" ]; then \
+		echo "❌ ERROR: Found Prometheus metrics without 'truvami_' prefix:"; \
+		echo "$$bad_metrics"; \
+		exit 1; \
+	else \
+		echo "✅ All Prometheus metrics are correctly prefixed."; \
+	fi
+
+.PHONY: check-coverage check-json-tags check-metrics

@@ -1,6 +1,7 @@
 package loracloud
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -8,7 +9,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/truvami/decoder/pkg/common"
+	"github.com/truvami/decoder/pkg/decoder"
+	"go.uber.org/zap"
 )
 
 func startMockServer(handler http.Handler) *httptest.Server {
@@ -27,7 +31,7 @@ func TestPost(t *testing.T) {
 	})
 
 	server := startMockServer(mux)
-	middleware := NewLoracloudMiddleware("access_token")
+	middleware := NewLoracloudMiddleware(context.TODO(), "access_token", zap.NewExample())
 	middleware.BaseUrl = server.URL
 	defer server.Close()
 
@@ -89,7 +93,7 @@ func TestDeliverUplinkMessage(t *testing.T) {
 		})
 
 		server := startMockServer(mux)
-		middleware := NewLoracloudMiddleware("access_token")
+		middleware := NewLoracloudMiddleware(context.TODO(), "access_token", zap.NewExample())
 		middleware.BaseUrl = server.URL
 		defer server.Close()
 
@@ -113,7 +117,7 @@ func TestDeliverUplinkMessage(t *testing.T) {
 
 	t.Run("Validation error", func(t *testing.T) {
 		server := startMockServer(nil)
-		middleware := NewLoracloudMiddleware("access_token")
+		middleware := NewLoracloudMiddleware(context.TODO(), "access_token", zap.NewExample())
 		middleware.BaseUrl = server.URL
 		defer server.Close()
 
@@ -140,7 +144,7 @@ func TestDeliverUplinkMessage(t *testing.T) {
 		})
 
 		server := startMockServer(mux)
-		middleware := NewLoracloudMiddleware("access_token")
+		middleware := NewLoracloudMiddleware(context.TODO(), "access_token", zap.NewExample())
 		middleware.BaseUrl = server.URL
 		defer server.Close()
 
@@ -167,7 +171,7 @@ func TestDeliverUplinkMessage(t *testing.T) {
 		})
 
 		server := startMockServer(mux)
-		middleware := NewLoracloudMiddleware("access_token")
+		middleware := NewLoracloudMiddleware(context.TODO(), "access_token", zap.NewExample())
 		middleware.BaseUrl = server.URL
 		defer server.Close()
 
@@ -296,7 +300,7 @@ func TestResponseVariants(t *testing.T) {
 			})
 
 			server := startMockServer(mux)
-			middleware := NewLoracloudMiddleware("token")
+			middleware := NewLoracloudMiddleware(context.TODO(), "access_token", zap.NewExample())
 			middleware.BaseUrl = server.URL
 			defer server.Close()
 
@@ -325,6 +329,110 @@ func TestResponseVariants(t *testing.T) {
 			if response.GetAltitude() != test.expected.altitude {
 				t.Fatalf("expected altitude %f got %f", test.expected.altitude, response.GetAltitude())
 			}
+		})
+	}
+}
+
+func TestValidateContext(t *testing.T) {
+	tests := []struct {
+		name    string
+		ctx     context.Context
+		wantErr error
+	}{
+		{
+			name:    "missing port",
+			ctx:     context.WithValue(context.Background(), decoder.DEVEUI_CONTEXT_KEY, "0123456789abcdef"),
+			wantErr: ErrContextPortNotFound,
+		},
+		{
+			name: "missing devEui",
+			ctx: func() context.Context {
+				ctx := context.WithValue(context.Background(), decoder.PORT_CONTEXT_KEY, 1)
+				return ctx
+			}(),
+			wantErr: ErrContextDevEuiNotFound,
+		},
+		{
+			name: "missing fCount",
+			ctx: func() context.Context {
+				ctx := context.WithValue(context.Background(), decoder.PORT_CONTEXT_KEY, 1)
+				ctx = context.WithValue(ctx, decoder.DEVEUI_CONTEXT_KEY, "0123456789abcdef")
+				return ctx
+			}(),
+			wantErr: ErrContextFCountNotFound,
+		},
+		{
+			name: "invalid port low",
+			ctx: func() context.Context {
+				ctx := context.WithValue(context.Background(), decoder.PORT_CONTEXT_KEY, -1)
+				ctx = context.WithValue(ctx, decoder.DEVEUI_CONTEXT_KEY, "0123456789abcdef")
+				ctx = context.WithValue(ctx, decoder.FCNT_CONTEXT_KEY, 0)
+				return ctx
+			}(),
+			wantErr: ErrContextInvalidPort,
+		},
+		{
+			name: "invalid port high",
+			ctx: func() context.Context {
+				ctx := context.WithValue(context.Background(), decoder.PORT_CONTEXT_KEY, 256)
+				ctx = context.WithValue(ctx, decoder.DEVEUI_CONTEXT_KEY, "0123456789abcdef")
+				ctx = context.WithValue(ctx, decoder.FCNT_CONTEXT_KEY, 0)
+				return ctx
+			}(),
+			wantErr: ErrContextInvalidPort,
+		},
+		{
+			name: "invalid devEui length",
+			ctx: func() context.Context {
+				ctx := context.WithValue(context.Background(), decoder.PORT_CONTEXT_KEY, 1)
+				ctx = context.WithValue(ctx, decoder.DEVEUI_CONTEXT_KEY, "0123456789abcde") // 15 chars
+				ctx = context.WithValue(ctx, decoder.FCNT_CONTEXT_KEY, 0)
+				return ctx
+			}(),
+			wantErr: ErrContextInvalidDevEui,
+		},
+		{
+			name: "invalid devEui non-hex",
+			ctx: func() context.Context {
+				ctx := context.WithValue(context.Background(), decoder.PORT_CONTEXT_KEY, 1)
+				ctx = context.WithValue(ctx, decoder.DEVEUI_CONTEXT_KEY, "0123456789abcdeg") // 'g' is not hex
+				ctx = context.WithValue(ctx, decoder.FCNT_CONTEXT_KEY, 0)
+				return ctx
+			}(),
+			wantErr: ErrContextInvalidDevEui,
+		},
+		{
+			name: "invalid fCount negative",
+			ctx: func() context.Context {
+				ctx := context.WithValue(context.Background(), decoder.PORT_CONTEXT_KEY, 1)
+				ctx = context.WithValue(ctx, decoder.DEVEUI_CONTEXT_KEY, "0123456789abcdef")
+				ctx = context.WithValue(ctx, decoder.FCNT_CONTEXT_KEY, -1)
+				return ctx
+			}(),
+			wantErr: ErrContextInvalidFCount,
+		},
+		{
+			name: "valid context",
+			ctx: func() context.Context {
+				ctx := context.WithValue(context.Background(), decoder.PORT_CONTEXT_KEY, 10)
+				ctx = context.WithValue(ctx, decoder.DEVEUI_CONTEXT_KEY, "0123456789abcdef")
+				ctx = context.WithValue(ctx, decoder.FCNT_CONTEXT_KEY, 42)
+				return ctx
+			}(),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := validateContext(tt.ctx)
+			if tt.wantErr == nil {
+				assert.NoError(t, err, "expected no error but got: %v", err)
+				return
+			}
+
+			assert.Error(t, err, "expected error but got none")
+			assert.ErrorIs(t, err, tt.wantErr, "expected error to match")
+
 		})
 	}
 }
