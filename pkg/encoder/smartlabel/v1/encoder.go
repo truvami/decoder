@@ -57,6 +57,23 @@ func (t Smartlabelv1Encoder) getConfig(port uint8) (common.PayloadConfig, error)
 			},
 			TargetType: reflect.TypeOf(smartlabel.Port11Payload{}),
 		}, nil
+	case 128:
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
+				{Name: "DataRate", Start: 0, Length: 1},
+				{Name: "SteadyInterval", Start: 1, Length: 2},
+				{Name: "MovingInterval", Start: 3, Length: 2},
+				{Name: "HeartbeatInterval", Start: 5, Length: 1},
+				{Name: "AccelerationThreshold", Start: 6, Length: 2},
+				{Name: "AccelerationDelay", Start: 8, Length: 2},
+				{Name: "TemperaturePollingInterval", Start: 10, Length: 2},
+				{Name: "TemperatureUplinkInterval", Start: 12, Length: 2},
+				{Name: "TemperatureUpperThreshold", Start: 14, Length: 1},
+				{Name: "TemperatureLowerThreshold", Start: 15, Length: 1},
+				{Name: "AccessPointsThreshold", Start: 16, Length: 1},
+			},
+			TargetType: reflect.TypeOf(Port128Payload{}),
+		}, nil
 	}
 
 	return common.PayloadConfig{}, fmt.Errorf("%w: port %v not supported", common.ErrPortNotSupported, port)
