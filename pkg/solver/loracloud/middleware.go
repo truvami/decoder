@@ -26,9 +26,9 @@ var _ solver.SolverV1 = &LoracloudMiddleware{}
 
 func NewLoracloudMiddleware(ctx context.Context, accessToken string, logger *zap.Logger) LoracloudMiddleware {
 	if time.Now().After(time.Date(2025, 7, 31, 0, 0, 0, 0, time.UTC)) {
-		logger.Fatal("LoRa Cloud is no longer available after July 31st 2025", zap.String("url", "https://www.semtech.com/loracloud-shutdown"))
+		logger.Fatal("LoRa Cloud is no longer available after 31.07.2025", zap.String("url", "https://www.semtech.com/loracloud-shutdown"))
 	}
-	logger.Warn("LoRa Cloud is Sunsetting on July 31st 2025", zap.String("url", "https://www.semtech.com/loracloud-shutdown"))
+	logger.Warn("LoRa Cloud is Sunsetting on 31.07.2025", zap.String("url", "https://www.semtech.com/loracloud-shutdown"))
 
 	return LoracloudMiddleware{accessToken: accessToken, BaseUrl: "https://mgs.loracloud.com", logger: logger}
 }

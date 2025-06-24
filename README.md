@@ -3,7 +3,7 @@
 # 🎉 truvami Decoder 🚀
 
 > [!WARNING]  
-> [LoRa Cloud is Sunsetting on July 31st 2025](https://www.semtech.com/loracloud-shutdown)
+> [LoRa Cloud is Sunsetting on 31.07.2025](https://www.semtech.com/loracloud-shutdown)
 
 **truvami Decoder** is a command-line interface (CLI) tool written in Go for decoding truvami payloads. This reference implementation supports various payload types, including Nomad XS and different Tag formats. 🛠️
 
