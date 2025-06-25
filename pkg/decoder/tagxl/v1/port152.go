@@ -47,13 +47,11 @@ var _ decoder.UplinkFeatureBase = &Port152Payload{}
 var _ decoder.UplinkFeatureRotationState = &Port152Payload{}
 var _ decoder.UplinkFeatureSequenceNumber = &Port152Payload{}
 
-// GetTimestamp implements decoder.UplinkFeatureBase.
 func (p Port152Payload) GetTimestamp() *time.Time {
 	return &p.Timestamp
 }
 
-// GetRotationState implements decoder.UplinkFeatureRotationState.
-func (p Port152Payload) GetRotationState() decoder.RotationState {
+func (p Port152Payload) GetNewRotationState() decoder.RotationState {
 	switch p.NewRotationState {
 	case 1:
 		return decoder.RotationStatePouring
@@ -66,7 +64,19 @@ func (p Port152Payload) GetRotationState() decoder.RotationState {
 	}
 }
 
-// GetSequenceNumber implements decoder.UplinkFeatureSequenceNumber.
+func (p Port152Payload) GetOldRotationState() decoder.RotationState {
+	switch p.OldRotationState {
+	case 1:
+		return decoder.RotationStatePouring
+	case 2:
+		return decoder.RotationStateMixing
+	case 3:
+		return decoder.RotationStateError
+	default:
+		return decoder.RotationStateUndefined
+	}
+}
+
 func (p Port152Payload) GetSequenceNumber() uint {
 	return uint(p.SequenceNumber)
 }
