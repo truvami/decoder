@@ -184,8 +184,8 @@ type UplinkFeatureResetReason interface {
 }
 
 type UplinkFeatureRotationState interface {
-	GetNewRotationState() RotationState
 	GetOldRotationState() RotationState
+	GetNewRotationState() RotationState
 }
 
 type UplinkFeatureSequenceNumber interface {
