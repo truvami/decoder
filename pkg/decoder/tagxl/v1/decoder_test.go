@@ -595,15 +595,15 @@ func TestFeatures(t *testing.T) {
 			port:    152,
 		},
 		{
-			payload: "010b0266acbcf0000000000756",
+			payload: "010b2266acbcf0000000000756",
 			port:    152,
 		},
 		{
-			payload: "020c62016822f120000d00000024",
+			payload: "020c62116822f120000d00000024",
 			port:    152,
 		},
 		{
-			payload: "020c09036823166a000000000109",
+			payload: "020c09336823166a000000000109",
 			port:    152,
 		},
 		{
