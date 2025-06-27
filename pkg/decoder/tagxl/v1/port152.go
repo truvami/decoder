@@ -1,6 +1,7 @@
 package tagxl
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/truvami/decoder/pkg/decoder"
@@ -41,6 +42,23 @@ type Port152Payload struct {
 	Timestamp         time.Time `json:"timestamp"`
 	NumberOfRotations float64   `json:"numberOfRotations" validate:"gte=0"`
 	ElapsedSeconds    uint32    `json:"elapsedSeconds"`
+}
+
+func (p Port152Payload) MarshalJSON() ([]byte, error) {
+	type Alias Port152Payload
+	return json.Marshal(&struct {
+		Version          uint8                 `json:"version"`
+		SequenceNumber   uint8                 `json:"sequenceNumber"`
+		OldRotationState decoder.RotationState `json:"oldRotationState"`
+		NewRotationState decoder.RotationState `json:"newRotationState"`
+		*Alias
+	}{
+		Version:          p.Version,
+		SequenceNumber:   p.SequenceNumber,
+		OldRotationState: p.GetOldRotationState(),
+		NewRotationState: p.GetNewRotationState(),
+		Alias:            (*Alias)(&p),
+	})
 }
 
 var _ decoder.UplinkFeatureBase = &Port152Payload{}

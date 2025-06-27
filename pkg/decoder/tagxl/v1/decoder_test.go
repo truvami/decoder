@@ -798,7 +798,7 @@ func TestMarshal(t *testing.T) {
 		{
 			payload:  "010b0266acbcf0000000000756",
 			port:     152,
-			expected: []string{"\"timestamp\": \"2024-08-02T11:03:12Z\"", "\"elapsedSeconds\": 1878"},
+			expected: []string{"\"oldRotationState\": \"undefined\"", "\"newRotationState\": \"mixing\"", "\"timestamp\": \"2024-08-02T11:03:12Z\"", "\"elapsedSeconds\": 1878"},
 		},
 	}
 
