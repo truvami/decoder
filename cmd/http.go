@@ -287,7 +287,7 @@ func getEncoderHandler(encoder encoder.Encoder) func(http.ResponseWriter, *http.
 					logger.Logger.Error("error unmarshaling payload", zap.Error(err))
 					setBody(w, http.StatusBadRequest, map[string]any{
 						"error": fmt.Sprintf("Error unmarshaling payload: %v", err),
-						"docs":  "https://docs.truvami.com",
+						"docs":  "https://docs.truvami.com/docs/payloads/tag%20S/v3.2.0/",
 					})
 					return
 				}
@@ -298,7 +298,7 @@ func getEncoderHandler(encoder encoder.Encoder) func(http.ResponseWriter, *http.
 					logger.Logger.Error("error unmarshaling payload", zap.Error(err))
 					setBody(w, http.StatusBadRequest, map[string]any{
 						"error": fmt.Sprintf("Error unmarshaling payload: %v", err),
-						"docs":  "https://docs.truvami.com",
+						"docs":  "https://docs.truvami.com/docs/payloads/tag%20S/v3.2.0/",
 					})
 					return
 				}
@@ -309,7 +309,7 @@ func getEncoderHandler(encoder encoder.Encoder) func(http.ResponseWriter, *http.
 					logger.Logger.Error("error unmarshaling payload", zap.Error(err))
 					setBody(w, http.StatusBadRequest, map[string]any{
 						"error": fmt.Sprintf("Error unmarshaling payload: %v", err),
-						"docs":  "https://docs.truvami.com",
+						"docs":  "https://docs.truvami.com/docs/payloads/tag%20S/v3.2.0/",
 					})
 					return
 				}
@@ -320,7 +320,7 @@ func getEncoderHandler(encoder encoder.Encoder) func(http.ResponseWriter, *http.
 					logger.Logger.Error("error unmarshaling payload", zap.Error(err))
 					setBody(w, http.StatusBadRequest, map[string]any{
 						"error": fmt.Sprintf("Error unmarshaling payload: %v", err),
-						"docs":  "https://docs.truvami.com",
+						"docs":  "https://docs.truvami.com/docs/payloads/tag%20S/v3.2.0/",
 					})
 					return
 				}
@@ -329,7 +329,7 @@ func getEncoderHandler(encoder encoder.Encoder) func(http.ResponseWriter, *http.
 				logger.Logger.Error("unsupported port", zap.Uint8("port", rawReq.Port))
 				setBody(w, http.StatusBadRequest, map[string]any{
 					"error": fmt.Sprintf("Unsupported port: %d", rawReq.Port),
-					"docs":  "https://docs.truvami.com",
+					"docs":  "https://docs.truvami.com/docs/payloads/tag%20S/v3.2.0/",
 				})
 				return
 			}
