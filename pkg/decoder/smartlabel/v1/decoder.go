@@ -86,8 +86,8 @@ func (t SmartLabelv1Decoder) getConfig(port uint8, data string) (common.PayloadC
 				{Name: "AccelerationDelay", Start: 8, Length: 2},
 				{Name: "TemperaturePollingInterval", Start: 10, Length: 2},
 				{Name: "TemperatureUplinkInterval", Start: 12, Length: 2},
-				{Name: "TemperatureLowerThreshold", Start: 14, Length: 1},
-				{Name: "TemperatureUpperThreshold", Start: 15, Length: 1},
+				{Name: "TemperatureUpperThreshold", Start: 14, Length: 1},
+				{Name: "TemperatureLowerThreshold", Start: 15, Length: 1},
 				{Name: "AccessPointsThreshold", Start: 16, Length: 1},
 				{Name: "FirmwareVersionMajor", Start: 17, Length: 1, Optional: true}, // FIXME: after firmware changes field will be required
 				{Name: "FirmwareVersionMinor", Start: 18, Length: 1, Optional: true}, // FIXME: after firmware changes field will be required

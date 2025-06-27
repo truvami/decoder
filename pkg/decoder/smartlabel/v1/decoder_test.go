@@ -140,7 +140,7 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload: "00012c00780f000a03e8003c0078f81c01000402",
+			payload: "00012c00780f000a03e8003c00781cf801000402",
 			port:    4,
 			expected: Port4Payload{
 				DataRate:                   0,
@@ -154,8 +154,8 @@ func TestDecode(t *testing.T) {
 				AccelerationDelay:          1000,
 				TemperaturePollingInterval: 60,
 				TemperatureUplinkInterval:  120,
-				TemperatureLowerThreshold:  -8,
 				TemperatureUpperThreshold:  +28,
+				TemperatureLowerThreshold:  -8,
 				AccessPointsThreshold:      1,
 				FirmwareVersionMajor:       0,
 				FirmwareVersionMinor:       4,
@@ -163,7 +163,7 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload: "2a0258012c1e006403e8003c012cf61e02010307",
+			payload: "2a0258012c1e006403e8003c012c1ef602010307",
 			port:    4,
 			expected: Port4Payload{
 				DataRate:                   2,
@@ -177,8 +177,8 @@ func TestDecode(t *testing.T) {
 				AccelerationDelay:          1000,
 				TemperaturePollingInterval: 60,
 				TemperatureUplinkInterval:  300,
-				TemperatureLowerThreshold:  -10,
 				TemperatureUpperThreshold:  +30,
+				TemperatureLowerThreshold:  -10,
 				AccessPointsThreshold:      2,
 				FirmwareVersionMajor:       1,
 				FirmwareVersionMinor:       3,
@@ -186,7 +186,7 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload: "1b04b002583c012c05dc003c0258f12304020400",
+			payload: "1b04b002583c012c05dc003c025823f104020400",
 			port:    4,
 			expected: Port4Payload{
 				DataRate:                   3,
@@ -200,8 +200,8 @@ func TestDecode(t *testing.T) {
 				AccelerationDelay:          1500,
 				TemperaturePollingInterval: 60,
 				TemperatureUplinkInterval:  600,
-				TemperatureLowerThreshold:  -15,
 				TemperatureUpperThreshold:  +35,
+				TemperatureLowerThreshold:  -15,
 				AccessPointsThreshold:      4,
 				FirmwareVersionMajor:       2,
 				FirmwareVersionMinor:       4,
@@ -209,7 +209,7 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			payload: "3f0e1007087801c207d0003c04b0ec280603020c",
+			payload: "3f0e1007087801c207d0003c04b028ec0603020c",
 			port:    4,
 			expected: Port4Payload{
 				DataRate:                   7,
@@ -223,8 +223,8 @@ func TestDecode(t *testing.T) {
 				AccelerationDelay:          2000,
 				TemperaturePollingInterval: 60,
 				TemperatureUplinkInterval:  1200,
-				TemperatureLowerThreshold:  -20,
 				TemperatureUpperThreshold:  +40,
+				TemperatureLowerThreshold:  -20,
 				AccessPointsThreshold:      6,
 				FirmwareVersionMajor:       3,
 				FirmwareVersionMinor:       2,
@@ -465,7 +465,7 @@ func TestFeatures(t *testing.T) {
 			port:    2,
 		},
 		{
-			payload: "3f0e1007087801c207d0003c04b0ec280603020c",
+			payload: "3f0e1007087801c207d0003c04b028ec0603020c",
 			port:    4,
 		},
 		{
@@ -666,9 +666,9 @@ func TestMarshal(t *testing.T) {
 			expected: []string{"\"temperature\": 12.42", "\"humidity\": 70.5"},
 		},
 		{
-			payload:  "3f0e1007087801c207d0003c04b0ec280603020c",
+			payload:  "3f0e1007087801c207d0003c04b028ec0603020c",
 			port:     4,
-			expected: []string{"\"dataRate\": \"automatic-wide\"", "\"gnss\": true", "\"temperatureLowerThreshold\": -20", "\"temperatureUpperThreshold\": 40"},
+			expected: []string{"\"dataRate\": \"automatic-wide\"", "\"gnss\": true", "\"temperatureUpperThreshold\": 40", "\"temperatureLowerThreshold\": -20"},
 		},
 		{
 			payload:  "0f50107904da8d",
