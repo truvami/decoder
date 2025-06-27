@@ -264,8 +264,8 @@ func TestDecode(t *testing.T) {
 			expected: Port152Payload{
 				Version:           2,
 				SequenceNumber:    98,
-				NewRotationState:  0,
 				OldRotationState:  2,
+				NewRotationState:  0,
 				Timestamp:         time.Date(2025, 5, 13, 7, 13, 36, 0, time.UTC),
 				NumberOfRotations: 1.3,
 				ElapsedSeconds:    36,
@@ -277,8 +277,8 @@ func TestDecode(t *testing.T) {
 			expected: Port152Payload{
 				Version:           2,
 				SequenceNumber:    9,
-				NewRotationState:  1,
 				OldRotationState:  0,
+				NewRotationState:  1,
 				Timestamp:         time.Date(2025, 5, 13, 9, 52, 42, 0, time.UTC),
 				NumberOfRotations: 0.0,
 				ElapsedSeconds:    265,
@@ -290,8 +290,8 @@ func TestDecode(t *testing.T) {
 			expected: Port152Payload{
 				Version:           2,
 				SequenceNumber:    234,
-				NewRotationState:  2,
 				OldRotationState:  0,
+				NewRotationState:  2,
 				Timestamp:         time.Date(2025, 5, 13, 9, 18, 24, 0, time.UTC),
 				NumberOfRotations: 0.0,
 				ElapsedSeconds:    21,
@@ -302,8 +302,8 @@ func TestDecode(t *testing.T) {
 			payload: "010b0266acbcf0000000000756",
 			expected: Port152Payload{
 				Version:           1,
-				NewRotationState:  2,
 				OldRotationState:  0,
+				NewRotationState:  2,
 				Timestamp:         time.Date(2024, 8, 2, 11, 3, 12, 0, time.UTC),
 				NumberOfRotations: 0,
 				ElapsedSeconds:    1878,
@@ -314,8 +314,8 @@ func TestDecode(t *testing.T) {
 			payload: "010b1066acbe0c00a200000087",
 			expected: Port152Payload{
 				Version:           1,
-				NewRotationState:  0,
 				OldRotationState:  1,
+				NewRotationState:  0,
 				Timestamp:         time.Date(2024, 8, 2, 11, 7, 56, 0, time.UTC),
 				NumberOfRotations: 16.2,
 				ElapsedSeconds:    135,
@@ -595,15 +595,15 @@ func TestFeatures(t *testing.T) {
 			port:    152,
 		},
 		{
-			payload: "010b0266acbcf0000000000756",
+			payload: "010b2266acbcf0000000000756",
 			port:    152,
 		},
 		{
-			payload: "020c62016822f120000d00000024",
+			payload: "020c62116822f120000d00000024",
 			port:    152,
 		},
 		{
-			payload: "020c09036823166a000000000109",
+			payload: "020c09336823166a000000000109",
 			port:    152,
 		},
 		{
@@ -774,7 +774,8 @@ func TestFeatures(t *testing.T) {
 					t.Fatalf("expected UplinkFeatureRotationState, got %T", decodedPayload)
 				}
 				// call function to check if it panics
-				rotationState.GetRotationState()
+				rotationState.GetOldRotationState()
+				rotationState.GetNewRotationState()
 			}
 			if decodedPayload.Is(decoder.FeatureSequenceNumber) {
 				sequenceNumber, ok := decodedPayload.Data.(decoder.UplinkFeatureSequenceNumber)
@@ -797,7 +798,7 @@ func TestMarshal(t *testing.T) {
 		{
 			payload:  "010b0266acbcf0000000000756",
 			port:     152,
-			expected: []string{"\"timestamp\": \"2024-08-02T11:03:12Z\"", "\"elapsedSeconds\": 1878"},
+			expected: []string{"\"oldRotationState\": \"undefined\"", "\"newRotationState\": \"mixing\"", "\"timestamp\": \"2024-08-02T11:03:12Z\"", "\"elapsedSeconds\": 1878"},
 		},
 	}
 
