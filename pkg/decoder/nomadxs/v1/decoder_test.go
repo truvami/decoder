@@ -352,16 +352,18 @@ func TestFeatures(t *testing.T) {
 			d := NewNomadXSv1Decoder()
 			decodedPayload, _ := d.Decode(context.TODO(), test.payload, test.port)
 
-			// should be able to decode base feature
-			base, ok := decodedPayload.Data.(decoder.UplinkFeatureBase)
-			if !ok {
-				t.Fatalf("expected UplinkFeatureBase, got %T", decodedPayload)
-			}
-			// check if it panics
-			base.GetTimestamp()
-
 			if len(decodedPayload.GetFeatures()) == 0 {
 				t.Error("expected features, got none")
+			}
+
+			if decodedPayload.Is(decoder.FeatureTimestamp) {
+				timestamp, ok := decodedPayload.Data.(decoder.UplinkFeatureTimestamp)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureTimestamp, got %T", decodedPayload)
+				}
+				if timestamp.GetTimestamp() == nil {
+					t.Fatalf("expected non nil timestamp")
+				}
 			}
 
 			if decodedPayload.Is(decoder.FeatureGNSS) {

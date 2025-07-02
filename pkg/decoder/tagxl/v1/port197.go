@@ -1,8 +1,6 @@
 package tagxl
 
 import (
-	"time"
-
 	"github.com/truvami/decoder/pkg/decoder"
 )
 
@@ -35,12 +33,7 @@ type Port197Payload struct {
 	Mac5  *string `json:"mac5"`
 }
 
-var _ decoder.UplinkFeatureBase = &Port197Payload{}
 var _ decoder.UplinkFeatureWiFi = &Port197Payload{}
-
-func (p Port197Payload) GetTimestamp() *time.Time {
-	return nil
-}
 
 func (p Port197Payload) GetAccessPoints() []decoder.AccessPoint {
 	accessPoints := []decoder.AccessPoint{}

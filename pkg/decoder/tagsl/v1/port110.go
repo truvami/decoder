@@ -73,7 +73,7 @@ func (p Port110Payload) MarshalJSON() ([]byte, error) {
 	})
 }
 
-var _ decoder.UplinkFeatureBase = &Port110Payload{}
+var _ decoder.UplinkFeatureTimestamp = &Port110Payload{}
 var _ decoder.UplinkFeatureGNSS = &Port110Payload{}
 var _ decoder.UplinkFeatureBattery = &Port110Payload{}
 var _ decoder.UplinkFeatureBuffered = &Port110Payload{}

@@ -3,7 +3,6 @@ package tagsl
 import (
 	"encoding/json"
 	"fmt"
-	"time"
 
 	"github.com/truvami/decoder/pkg/decoder"
 )
@@ -38,14 +37,9 @@ func (p Port15Payload) MarshalJSON() ([]byte, error) {
 	})
 }
 
-var _ decoder.UplinkFeatureBase = &Port15Payload{}
 var _ decoder.UplinkFeatureBattery = &Port15Payload{}
 var _ decoder.UplinkFeatureDutyCycle = &Port15Payload{}
 var _ decoder.UplinkFeatureConfigChange = &Port15Payload{}
-
-func (p Port15Payload) GetTimestamp() *time.Time {
-	return nil
-}
 
 func (p Port15Payload) GetBatteryVoltage() float64 {
 	return p.Battery

@@ -3,7 +3,6 @@ package smartlabel
 import (
 	"encoding/json"
 	"fmt"
-	"time"
 
 	"github.com/truvami/decoder/pkg/common"
 	"github.com/truvami/decoder/pkg/decoder"
@@ -57,13 +56,8 @@ func (p Port4Payload) MarshalJSON() ([]byte, error) {
 	})
 }
 
-var _ decoder.UplinkFeatureBase = &Port4Payload{}
 var _ decoder.UplinkFeatureConfig = &Port4Payload{}
 var _ decoder.UplinkFeatureFirmwareVersion = &Port4Payload{}
-
-func (p Port4Payload) GetTimestamp() *time.Time {
-	return nil
-}
 
 func (p Port4Payload) GetBle() *bool {
 	return nil

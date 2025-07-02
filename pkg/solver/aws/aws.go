@@ -165,6 +165,7 @@ func (c PositionEstimateClient) Solve(ctx context.Context, payload string) (*dec
 
 	return decoder.NewDecodedUplink([]decoder.Feature{
 		decoder.FeatureGNSS,
+		decoder.FeatureTimestamp,
 		decoder.FeatureBuffered,
 	}, Position{
 		Latitude:  *position.Coordinates[1],
@@ -201,7 +202,7 @@ type Position struct {
 	Buffered  bool       `json:"buffered"` // Indicates if the position is buffered
 }
 
-var _ decoder.UplinkFeatureBase = &Position{}
+var _ decoder.UplinkFeatureTimestamp = &Position{}
 var _ decoder.UplinkFeatureGNSS = &Position{}
 var _ decoder.UplinkFeatureBuffered = &Position{}
 
