@@ -2,7 +2,6 @@ package tagsl
 
 import (
 	"encoding/json"
-	"time"
 
 	"github.com/truvami/decoder/pkg/decoder"
 )
@@ -25,12 +24,7 @@ func (p Port198Payload) MarshalJSON() ([]byte, error) {
 	})
 }
 
-var _ decoder.UplinkFeatureBase = &Port198Payload{}
 var _ decoder.UplinkFeatureResetReason = &Port198Payload{}
-
-func (p Port198Payload) GetTimestamp() *time.Time {
-	return nil
-}
 
 func (p Port198Payload) GetResetReason() decoder.ResetReason {
 	var reasons = map[uint8]decoder.ResetReason{

@@ -61,7 +61,7 @@ func (p Port152Payload) MarshalJSON() ([]byte, error) {
 	})
 }
 
-var _ decoder.UplinkFeatureBase = &Port152Payload{}
+var _ decoder.UplinkFeatureTimestamp = &Port152Payload{}
 var _ decoder.UplinkFeatureRotationState = &Port152Payload{}
 var _ decoder.UplinkFeatureSequenceNumber = &Port152Payload{}
 

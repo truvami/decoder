@@ -82,15 +82,10 @@ func (p Port4Payload) MarshalJSON() ([]byte, error) {
 	})
 }
 
-var _ decoder.UplinkFeatureBase = &Port4Payload{}
 var _ decoder.UplinkFeatureMoving = &Port4Payload{}
 var _ decoder.UplinkFeatureConfig = &Port4Payload{}
 var _ decoder.UplinkFeatureFirmwareVersion = &Port4Payload{}
 var _ decoder.UplinkFeatureHardwareVersion = &Port4Payload{}
-
-func (p Port4Payload) GetTimestamp() *time.Time {
-	return nil
-}
 
 func (p Port4Payload) GetBle() *bool {
 	return nil

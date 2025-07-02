@@ -1,8 +1,6 @@
 package tagsl
 
 import (
-	"time"
-
 	"github.com/truvami/decoder/pkg/decoder"
 )
 
@@ -51,15 +49,10 @@ type Port5Payload struct {
 	Rssi7        *int8   `json:"rssi7" validate:"gte=-120,lte=-20"`
 }
 
-var _ decoder.UplinkFeatureBase = &Port5Payload{}
 var _ decoder.UplinkFeatureWiFi = &Port5Payload{}
 var _ decoder.UplinkFeatureMoving = &Port5Payload{}
 var _ decoder.UplinkFeatureDutyCycle = &Port5Payload{}
 var _ decoder.UplinkFeatureConfigChange = &Port5Payload{}
-
-func (p Port5Payload) GetTimestamp() *time.Time {
-	return nil
-}
 
 func (p Port5Payload) GetAccessPoints() []decoder.AccessPoint {
 	accessPoints := []decoder.AccessPoint{}

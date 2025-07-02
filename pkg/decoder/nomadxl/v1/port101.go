@@ -33,6 +33,7 @@ import (
 // | 46    | 1    | GPS satellite count Galileo                         | uint8               |
 // | 47    | 1    | GPS satellite count Beidou                          | uint8               |
 // | 48-49 | 2    | GPS dilution of precision                           | uint16, cm          |
+// |-------|------|-----------------------------------------------------|---------------------|
 
 type Port101Payload struct {
 	SystemTime         int64         `json:"systemTime"`
@@ -59,15 +60,10 @@ func (p Port101Payload) MarshalJSON() ([]byte, error) {
 	})
 }
 
-var _ decoder.UplinkFeatureBase = &Port101Payload{}
 var _ decoder.UplinkFeatureBattery = &Port101Payload{}
 var _ decoder.UplinkFeatureTemperature = &Port101Payload{}
 var _ decoder.UplinkFeaturePressure = &Port101Payload{}
 var _ decoder.UplinkFeatureBuffered = &Port101Payload{}
-
-func (p Port101Payload) GetTimestamp() *time.Time {
-	return nil
-}
 
 func (p Port101Payload) GetBatteryVoltage() float64 {
 	return p.Battery

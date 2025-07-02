@@ -49,7 +49,7 @@ type Port7Payload struct {
 	Rssi6        *int8     `json:"rssi6" validate:"gte=-120,lte=-20"`
 }
 
-var _ decoder.UplinkFeatureBase = &Port7Payload{}
+var _ decoder.UplinkFeatureTimestamp = &Port7Payload{}
 var _ decoder.UplinkFeatureWiFi = &Port7Payload{}
 var _ decoder.UplinkFeatureMoving = &Port7Payload{}
 var _ decoder.UplinkFeatureDutyCycle = &Port7Payload{}
