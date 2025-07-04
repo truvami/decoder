@@ -159,7 +159,7 @@ func (c PositionEstimateClient) Solve(ctx context.Context, payload string) (*dec
 
 	buffered := false
 	// add 10 seconds buffer to the timestamp
-	if position.Properties.Timestamp != nil && position.Properties.Timestamp.Before(time.Now().Add(30*time.Second)) {
+	if position.Properties.Timestamp != nil && position.Properties.Timestamp.Before(time.Now().Add(-1*time.Minute)) {
 		buffered = true
 	}
 

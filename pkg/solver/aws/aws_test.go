@@ -27,7 +27,7 @@ func TestSolve(t *testing.T) {
 				Altitude:  aws.Float64(486.05999755859375),
 				Timestamp: aws.Time(time.Date(2025, time.June, 19, 22, 19, 20, 652675294, time.UTC)),
 				Accuracy:  aws.Float64(33.6),
-				Buffered:  true,
+				Buffered:  false,
 			},
 		},
 		{
@@ -38,7 +38,7 @@ func TestSolve(t *testing.T) {
 				Altitude:  aws.Float64(471),
 				Timestamp: aws.Time(time.Date(2025, time.June, 19, 22, 31, 20, 652675294, time.UTC)),
 				Accuracy:  aws.Float64(22.4),
-				Buffered:  true,
+				Buffered:  false,
 			},
 		},
 	}
