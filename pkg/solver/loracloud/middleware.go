@@ -338,7 +338,7 @@ type UplinkMsgResponse struct {
 	} `json:"result"`
 }
 
-var _ decoder.UplinkFeatureBase = &UplinkMsgResponse{}
+var _ decoder.UplinkFeatureTimestamp = &UplinkMsgResponse{}
 var _ decoder.UplinkFeatureGNSS = &UplinkMsgResponse{}
 
 func (p UplinkMsgResponse) GetTimestamp() *time.Time {

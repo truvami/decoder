@@ -1,8 +1,6 @@
 package smartlabel
 
 import (
-	"time"
-
 	"github.com/truvami/decoder/pkg/decoder"
 )
 
@@ -40,12 +38,7 @@ type Port197Payload struct {
 	Rssi6 *int8   `json:"rssi6" validate:"gte=-120,lte=-20"`
 }
 
-var _ decoder.UplinkFeatureBase = &Port197Payload{}
 var _ decoder.UplinkFeatureWiFi = &Port197Payload{}
-
-func (p Port197Payload) GetTimestamp() *time.Time {
-	return nil
-}
 
 func (p Port197Payload) GetAccessPoints() []decoder.AccessPoint {
 	accessPoints := []decoder.AccessPoint{}

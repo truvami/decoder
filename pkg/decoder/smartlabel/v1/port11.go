@@ -1,8 +1,6 @@
 package smartlabel
 
 import (
-	"time"
-
 	"github.com/truvami/decoder/pkg/decoder"
 )
 
@@ -22,15 +20,10 @@ type Port11Payload struct {
 	Humidity            float32 `json:"humidity" validate:"gte=5,lte=95"`
 }
 
-var _ decoder.UplinkFeatureBase = &Port11Payload{}
 var _ decoder.UplinkFeatureBattery = &Port11Payload{}
 var _ decoder.UplinkFeaturePhotovoltaic = &Port11Payload{}
 var _ decoder.UplinkFeatureTemperature = &Port11Payload{}
 var _ decoder.UplinkFeatureHumidity = &Port11Payload{}
-
-func (p Port11Payload) GetTimestamp() *time.Time {
-	return nil
-}
 
 func (p Port11Payload) GetBatteryVoltage() float64 {
 	return float64(p.BatteryVoltage)

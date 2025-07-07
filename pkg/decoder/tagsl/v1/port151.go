@@ -81,7 +81,7 @@ func (p Port151Payload) MarshalJSON() ([]byte, error) {
 	})
 }
 
-var _ decoder.UplinkFeatureBase = &Port151Payload{}
+var _ decoder.UplinkFeatureTimestamp = &Port151Payload{}
 var _ decoder.UplinkFeatureGNSS = &Port151Payload{}
 var _ decoder.UplinkFeatureBattery = &Port151Payload{}
 var _ decoder.UplinkFeatureWiFi = &Port151Payload{}

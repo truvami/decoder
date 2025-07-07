@@ -66,7 +66,7 @@ func (t NomadXSv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 				{Name: "MagnetometerZAxis", Start: 40, Length: 2, Optional: true, Transform: magnetometer},
 			},
 			TargetType: reflect.TypeOf(Port1Payload{}),
-			Features:   []decoder.Feature{decoder.FeatureDutyCycle, decoder.FeatureConfigChange, decoder.FeatureMoving, decoder.FeatureGNSS, decoder.FeatureTemperature, decoder.FeaturePressure},
+			Features:   []decoder.Feature{decoder.FeatureDutyCycle, decoder.FeatureConfigChange, decoder.FeatureMoving, decoder.FeatureGNSS, decoder.FeatureTimestamp, decoder.FeatureTemperature, decoder.FeaturePressure},
 		}, nil
 	case 4:
 		return common.PayloadConfig{

@@ -1,11 +1,5 @@
 package smartlabel
 
-import (
-	"time"
-
-	"github.com/truvami/decoder/pkg/decoder"
-)
-
 // +------+------+---------------------------------------------+--------------+
 // | Byte | Size | Description                                 | Format       |
 // +------+------+---------------------------------------------+--------------+
@@ -22,10 +16,4 @@ type Port150Payload struct {
 	Battery60Voltage  float32 `json:"battery60Voltage" validate:"gte=3.4,lte=3.6"`
 	Battery40Voltage  float32 `json:"battery40Voltage" validate:"gte=3.1,lte=3.4"`
 	Battery20Voltage  float32 `json:"battery20Voltage" validate:"gte=2.7,lte=3.0"`
-}
-
-var _ decoder.UplinkFeatureBase = &Port150Payload{}
-
-func (p Port150Payload) GetTimestamp() *time.Time {
-	return nil
 }

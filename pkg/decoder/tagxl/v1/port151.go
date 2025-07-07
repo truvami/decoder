@@ -1,8 +1,6 @@
 package tagxl
 
 import (
-	"time"
-
 	"github.com/truvami/decoder/pkg/decoder"
 )
 
@@ -54,14 +52,9 @@ type Port151Payload struct {
 	WifiScans                            *uint16  `json:"wifiScans"`
 }
 
-var _ decoder.UplinkFeatureBase = &Port151Payload{}
 var _ decoder.UplinkFeatureBattery = &Port151Payload{}
 var _ decoder.UplinkFeatureConfig = &Port151Payload{}
 var _ decoder.UplinkFeatureFirmwareVersion = &Port151Payload{}
-
-func (p Port151Payload) GetTimestamp() *time.Time {
-	return nil
-}
 
 func (p Port151Payload) GetBatteryVoltage() float64 {
 	return float64(*p.Battery)
