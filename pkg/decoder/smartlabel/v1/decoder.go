@@ -157,7 +157,11 @@ func (t SmartLabelv1Decoder) getConfig(port uint8, data string) (common.PayloadC
 func (t SmartLabelv1Decoder) Decode(ctx context.Context, data string, port uint8) (*decoder.DecodedUplink, error) {
 	switch port {
 	case 192:
-		return t.solver.Solve(ctx, data)
+		uplink, err := t.solver.Solve(ctx, data)
+		if err != nil {
+			return nil, common.WrapError(err, common.ErrSolverFailed)
+		}
+		return uplink, nil
 	default:
 		config, err := t.getConfig(port, data)
 		if err != nil {

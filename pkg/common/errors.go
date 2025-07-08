@@ -13,6 +13,8 @@ var (
 	ErrPayloadTooLong       = errors.New("payload too long")
 
 	ErrValidationFailed = errors.New("validation failed")
+
+	ErrSolverFailed = errors.New("solver failed")
 )
 
 // WrapError wraps two errors into a single error, combining the parent and child errors.
