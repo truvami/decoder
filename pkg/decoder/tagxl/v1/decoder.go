@@ -197,7 +197,11 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 func (t TagXLv1Decoder) Decode(ctx context.Context, data string, port uint8) (*decoder.DecodedUplink, error) {
 	switch port {
 	case 192, 199:
-		return t.solver.Solve(ctx, data)
+		uplink, err := t.solver.Solve(ctx, data)
+		if err != nil {
+			return nil, common.WrapError(err, common.ErrSolverFailed)
+		}
+		return uplink, nil
 	default:
 		bytes, err := common.HexStringToBytes(data)
 		if err != nil {

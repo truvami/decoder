@@ -19,6 +19,7 @@ import (
 	helpers "github.com/truvami/decoder/pkg/common"
 	"github.com/truvami/decoder/pkg/decoder"
 	"github.com/truvami/decoder/pkg/solver"
+	"github.com/truvami/decoder/pkg/solver/aws"
 	"github.com/truvami/decoder/pkg/solver/loracloud"
 	"go.uber.org/zap"
 )
@@ -838,4 +839,36 @@ func TestNewTagXLv1DecoderWithNilSolver(t *testing.T) {
 	assert.Panics(t, func() {
 		NewTagXLv1Decoder(context.TODO(), nil, zap.NewExample())
 	}, "NewTagXLv1Decoder should panic when solver is nil")
+}
+
+func TestNewTagXLv1DecoderSolver(t *testing.T) {
+	tests := []struct {
+		port        uint8
+		payload     string
+		expected    any
+		expectedErr string
+	}{
+		{
+			port:        192,
+			payload:     "deadbeef",
+			expected:    nil,
+			expectedErr: "solver failed",
+		},
+	}
+	solver, err := aws.NewAwsPositionEstimateClient(context.TODO(), zap.NewExample())
+	if err != nil {
+		t.Fatalf("failed to create aws solver %v", err)
+	}
+	decoder := NewTagXLv1Decoder(context.TODO(), solver, zap.NewExample())
+	for _, test := range tests {
+		received, err := decoder.Decode(context.TODO(), test.payload, test.port)
+		if received != test.expected && received != nil && test.expected != nil {
+			t.Errorf("expected %v", test.expected)
+			t.Errorf("received %v", received)
+		}
+		if test.expectedErr != "" && (err == nil || !strings.Contains(err.Error(), test.expectedErr)) {
+			t.Errorf("expected %v", test.expectedErr)
+			t.Errorf("received %v", err)
+		}
+	}
 }
