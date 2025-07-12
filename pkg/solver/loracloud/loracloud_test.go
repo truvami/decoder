@@ -31,7 +31,7 @@ func TestPost(t *testing.T) {
 	})
 
 	server := startMockServer(mux)
-	middleware := NewLoracloudMiddleware(context.TODO(), "access_token", zap.NewExample())
+	middleware := NewLoracloudClient(context.TODO(), "access_token", zap.NewExample())
 	middleware.BaseUrl = server.URL
 	defer server.Close()
 
@@ -93,7 +93,7 @@ func TestDeliverUplinkMessage(t *testing.T) {
 		})
 
 		server := startMockServer(mux)
-		middleware := NewLoracloudMiddleware(context.TODO(), "access_token", zap.NewExample())
+		middleware := NewLoracloudClient(context.TODO(), "access_token", zap.NewExample())
 		middleware.BaseUrl = server.URL
 		defer server.Close()
 
@@ -117,7 +117,7 @@ func TestDeliverUplinkMessage(t *testing.T) {
 
 	t.Run("Validation error", func(t *testing.T) {
 		server := startMockServer(nil)
-		middleware := NewLoracloudMiddleware(context.TODO(), "access_token", zap.NewExample())
+		middleware := NewLoracloudClient(context.TODO(), "access_token", zap.NewExample())
 		middleware.BaseUrl = server.URL
 		defer server.Close()
 
@@ -144,7 +144,7 @@ func TestDeliverUplinkMessage(t *testing.T) {
 		})
 
 		server := startMockServer(mux)
-		middleware := NewLoracloudMiddleware(context.TODO(), "access_token", zap.NewExample())
+		middleware := NewLoracloudClient(context.TODO(), "access_token", zap.NewExample())
 		middleware.BaseUrl = server.URL
 		defer server.Close()
 
@@ -171,7 +171,7 @@ func TestDeliverUplinkMessage(t *testing.T) {
 		})
 
 		server := startMockServer(mux)
-		middleware := NewLoracloudMiddleware(context.TODO(), "access_token", zap.NewExample())
+		middleware := NewLoracloudClient(context.TODO(), "access_token", zap.NewExample())
 		middleware.BaseUrl = server.URL
 		defer server.Close()
 
@@ -300,7 +300,7 @@ func TestResponseVariants(t *testing.T) {
 			})
 
 			server := startMockServer(mux)
-			middleware := NewLoracloudMiddleware(context.TODO(), "access_token", zap.NewExample())
+			middleware := NewLoracloudClient(context.TODO(), "access_token", zap.NewExample())
 			middleware.BaseUrl = server.URL
 			defer server.Close()
 
@@ -434,5 +434,21 @@ func TestValidateContext(t *testing.T) {
 			assert.ErrorIs(t, err, tt.wantErr, "expected error to match")
 
 		})
+	}
+}
+
+func TestWithBaseUrl(t *testing.T) {
+	// Create a LoracloudClient with a default BaseUrl
+	client := LoracloudClient{
+		BaseUrl: "https://default.url",
+	}
+
+	// Use WithBaseUrl to set a new BaseUrl
+	newUrl := "https://custom.url"
+	option := WithBaseUrl(newUrl)
+	option(&client)
+
+	if client.BaseUrl != newUrl {
+		t.Errorf("expected BaseUrl to be %q, got %q", newUrl, client.BaseUrl)
 	}
 }
