@@ -50,7 +50,7 @@ var tagxlCmd = &cobra.Command{
 				logger.Logger.Error("loracloud access token is required for loracloud solver")
 				os.Exit(1)
 			}
-			solver = loracloud.NewLoracloudMiddleware(ctx, LoracloudAccessToken, logger.Logger)
+			solver = loracloud.NewLoracloudClient(ctx, LoracloudAccessToken, logger.Logger)
 		}
 
 		logger.Logger.Debug("initializing tagxl decoder")

@@ -59,7 +59,7 @@ func TestDecode(t *testing.T) {
 	})
 
 	server := startMockServer(nil)
-	middleware := loracloud.NewLoracloudMiddleware(context.TODO(), "access_token", zap.NewExample())
+	middleware := loracloud.NewLoracloudClient(context.TODO(), "access_token", zap.NewExample())
 	middleware.BaseUrl = server.URL
 	defer server.Close()
 
@@ -645,7 +645,7 @@ func TestFeatures(t *testing.T) {
 	})
 
 	server := startMockServer(mux)
-	middleware := loracloud.NewLoracloudMiddleware(context.TODO(), "access_token", zap.NewExample())
+	middleware := loracloud.NewLoracloudClient(context.TODO(), "access_token", zap.NewExample())
 	middleware.BaseUrl = server.URL
 	defer server.Close()
 
