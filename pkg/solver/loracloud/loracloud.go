@@ -16,21 +16,39 @@ import (
 	"go.uber.org/zap"
 )
 
-type LoracloudMiddleware struct {
+type LoracloudClient struct {
 	accessToken string
 	logger      *zap.Logger
 	BaseUrl     string
 }
 
-var _ solver.SolverV1 = &LoracloudMiddleware{}
+var _ solver.SolverV1 = &LoracloudClient{}
 
-func NewLoracloudMiddleware(ctx context.Context, accessToken string, logger *zap.Logger) LoracloudMiddleware {
+func NewLoracloudClient(ctx context.Context, accessToken string, logger *zap.Logger, options ...LoracloudClientOptions) LoracloudClient {
 	if time.Now().After(time.Date(2025, 7, 31, 0, 0, 0, 0, time.UTC)) {
 		logger.Fatal("LoRa Cloud is no longer available after 31.07.2025", zap.String("url", "https://www.semtech.com/loracloud-shutdown"))
 	}
 	logger.Warn("LoRa Cloud is Sunsetting on 31.07.2025", zap.String("url", "https://www.semtech.com/loracloud-shutdown"))
 
-	return LoracloudMiddleware{accessToken: accessToken, BaseUrl: "https://mgs.loracloud.com", logger: logger}
+	client := LoracloudClient{
+		accessToken: accessToken,
+		BaseUrl:     "https://mgs.loracloud.com",
+		logger:      logger,
+	}
+
+	for _, option := range options {
+		option(&client)
+	}
+
+	return client
+}
+
+type LoracloudClientOptions func(*LoracloudClient)
+
+func WithBaseUrl(baseUrl string) LoracloudClientOptions {
+	return func(c *LoracloudClient) {
+		c.BaseUrl = baseUrl
+	}
 }
 
 func validateContext(ctx context.Context) error {
@@ -63,7 +81,7 @@ func validateContext(ctx context.Context) error {
 	return nil
 }
 
-func (m LoracloudMiddleware) Solve(ctx context.Context, payload string) (*decoder.DecodedUplink, error) {
+func (m LoracloudClient) Solve(ctx context.Context, payload string) (*decoder.DecodedUplink, error) {
 	if err := validateContext(ctx); err != nil {
 		return nil, fmt.Errorf("context validation failed: %v", err)
 	}
@@ -94,7 +112,7 @@ func (m LoracloudMiddleware) Solve(ctx context.Context, payload string) (*decode
 	return decoder.NewDecodedUplink([]decoder.Feature{decoder.FeatureGNSS}, decodedData), err
 }
 
-func (m LoracloudMiddleware) post(url string, body []byte) (*http.Response, error) {
+func (m LoracloudClient) post(url string, body []byte) (*http.Response, error) {
 	request, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(body))
 	if err != nil {
 		return nil, fmt.Errorf("error creating loracloud request: %v", err)
@@ -152,7 +170,7 @@ func (m LoracloudMiddleware) post(url string, body []byte) (*http.Response, erro
 // result: UplinkResponse instance detailing device state including information such as completed requests, files, stream records, and pending downlink messages.
 //
 // errors: If set and non-empty, error message in case the operation did not succeed.
-func (m LoracloudMiddleware) DeliverUplinkMessage(devEui string, uplinkMsg UplinkMsg) (*UplinkMsgResponse, error) {
+func (m LoracloudClient) DeliverUplinkMessage(devEui string, uplinkMsg UplinkMsg) (*UplinkMsgResponse, error) {
 	// validate uplinkMsg
 	validate := validator.New()
 	err := validate.Struct(uplinkMsg)
