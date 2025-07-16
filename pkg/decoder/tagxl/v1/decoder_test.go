@@ -779,6 +779,8 @@ func TestFeatures(t *testing.T) {
 				// call function to check if it panics
 				rotationState.GetOldRotationState()
 				rotationState.GetNewRotationState()
+				rotationState.GetRotations()
+				rotationState.GetDuration()
 			}
 			if decodedPayload.Is(decoder.FeatureSequenceNumber) {
 				sequenceNumber, ok := decodedPayload.Data.(decoder.UplinkFeatureSequenceNumber)
