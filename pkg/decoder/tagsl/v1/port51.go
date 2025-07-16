@@ -124,15 +124,15 @@ func (p Port51Payload) GetAccuracy() *float64 {
 }
 
 func (p Port51Payload) GetTTF() *time.Duration {
-	return nil
+	return &p.TTF
 }
 
 func (p Port51Payload) GetPDOP() *float64 {
-	return nil
+	return &p.PDOP
 }
 
 func (p Port51Payload) GetSatellites() *uint8 {
-	return nil
+	return &p.Satellites
 }
 
 func (p Port51Payload) GetBatteryVoltage() float64 {
