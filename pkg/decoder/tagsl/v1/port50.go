@@ -116,7 +116,7 @@ func (p Port50Payload) GetAccuracy() *float64 {
 }
 
 func (p Port50Payload) GetTTF() *time.Duration {
-	return nil
+	return &p.TTF
 }
 
 func (p Port50Payload) GetPDOP() *float64 {
