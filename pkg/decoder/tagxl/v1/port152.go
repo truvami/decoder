@@ -95,6 +95,14 @@ func (p Port152Payload) GetNewRotationState() decoder.RotationState {
 	}
 }
 
+func (p Port152Payload) GetRotations() float64 {
+	return p.NumberOfRotations
+}
+
+func (p Port152Payload) GetDuration() time.Duration {
+	return time.Duration(int64(p.ElapsedSeconds)) * time.Second
+}
+
 func (p Port152Payload) GetSequenceNumber() uint {
 	return uint(p.SequenceNumber)
 }
