@@ -22,23 +22,36 @@ type LoracloudClient struct {
 	BaseUrl     string
 }
 
+const (
+	SemtechLoRaCloudBaseUrl  = "https://mgs.loracloud.com"
+	TraxmateLoRaCloudBaseUrl = "https://mgs.traxmate.com"
+)
+
 var _ solver.SolverV1 = &LoracloudClient{}
 
-func NewLoracloudClient(ctx context.Context, accessToken string, logger *zap.Logger, options ...LoracloudClientOptions) LoracloudClient {
-	if time.Now().After(time.Date(2025, 7, 31, 0, 0, 0, 0, time.UTC)) {
-		logger.Fatal("LoRa Cloud is no longer available after 31.07.2025", zap.String("url", "https://www.semtech.com/loracloud-shutdown"))
+func (m LoracloudClient) checkForSemtechLoRaCloudShutdown() {
+	if m.BaseUrl != SemtechLoRaCloudBaseUrl {
+		return
 	}
-	logger.Warn("LoRa Cloud is Sunsetting on 31.07.2025", zap.String("url", "https://www.semtech.com/loracloud-shutdown"))
 
+	if time.Now().After(time.Date(2025, 7, 31, 0, 0, 0, 0, time.UTC)) {
+		m.logger.Fatal("LoRa Cloud is no longer available after 31.07.2025", zap.String("url", "https://www.semtech.com/loracloud-shutdown"))
+	}
+	m.logger.Warn("LoRa Cloud is Sunsetting on 31.07.2025", zap.String("url", "https://www.semtech.com/loracloud-shutdown"))
+}
+
+func NewLoracloudClient(ctx context.Context, accessToken string, logger *zap.Logger, options ...LoracloudClientOptions) LoracloudClient {
 	client := LoracloudClient{
 		accessToken: accessToken,
-		BaseUrl:     "https://mgs.loracloud.com",
+		BaseUrl:     TraxmateLoRaCloudBaseUrl,
 		logger:      logger,
 	}
 
 	for _, option := range options {
 		option(&client)
 	}
+	// Check this after all options have been applied
+	client.checkForSemtechLoRaCloudShutdown()
 
 	return client
 }
