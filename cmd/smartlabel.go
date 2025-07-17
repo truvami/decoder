@@ -61,22 +61,23 @@ var smartlabelCmd = &cobra.Command{
 			smartlabel.WithSkipValidation(SkipValidation),
 		)
 
-		port, err := strconv.Atoi(args[0])
+		portInt, err := strconv.Atoi(args[0])
 		if err != nil {
 			logger.Logger.Error("error while parsing port", zap.Error(err), zap.String("port", args[0]))
 			return
 		}
-		logger.Logger.Debug("port parsed successfully", zap.Int("port", port))
-		if port < 0 || port > 255 {
-			logger.Logger.Error("port must be between 0 and 255", zap.Int("port", port))
+		logger.Logger.Debug("port parsed successfully", zap.Int("port", portInt))
+		if portInt < 0 || portInt > 255 {
+			logger.Logger.Error("port must be between 0 and 255", zap.Int("port", portInt))
 			return
 		}
+		port := uint8(portInt)
 
 		ctx = context.WithValue(ctx, decoder.DEVEUI_CONTEXT_KEY, smartlabelDevEui)
 		ctx = context.WithValue(ctx, decoder.PORT_CONTEXT_KEY, port)
 		ctx = context.WithValue(ctx, decoder.FCNT_CONTEXT_KEY, 1) // Default frame count, can be adjusted as needed
 
-		data, err := d.Decode(ctx, args[1], uint8(port))
+		data, err := d.Decode(ctx, args[1], port)
 		if err != nil {
 			if errors.Is(err, helpers.ErrValidationFailed) {
 				for _, err := range helpers.UnwrapError(err) {

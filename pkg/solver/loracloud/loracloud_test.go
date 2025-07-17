@@ -347,7 +347,7 @@ func TestValidateContext(t *testing.T) {
 		{
 			name: "missing devEui",
 			ctx: func() context.Context {
-				ctx := context.WithValue(context.Background(), decoder.PORT_CONTEXT_KEY, 1)
+				ctx := context.WithValue(context.Background(), decoder.PORT_CONTEXT_KEY, uint8(1))
 				return ctx
 			}(),
 			wantErr: ErrContextDevEuiNotFound,
@@ -355,36 +355,16 @@ func TestValidateContext(t *testing.T) {
 		{
 			name: "missing fCount",
 			ctx: func() context.Context {
-				ctx := context.WithValue(context.Background(), decoder.PORT_CONTEXT_KEY, 1)
+				ctx := context.WithValue(context.Background(), decoder.PORT_CONTEXT_KEY, uint8(1))
 				ctx = context.WithValue(ctx, decoder.DEVEUI_CONTEXT_KEY, "0123456789abcdef")
 				return ctx
 			}(),
 			wantErr: ErrContextFCountNotFound,
 		},
 		{
-			name: "invalid port low",
-			ctx: func() context.Context {
-				ctx := context.WithValue(context.Background(), decoder.PORT_CONTEXT_KEY, -1)
-				ctx = context.WithValue(ctx, decoder.DEVEUI_CONTEXT_KEY, "0123456789abcdef")
-				ctx = context.WithValue(ctx, decoder.FCNT_CONTEXT_KEY, 0)
-				return ctx
-			}(),
-			wantErr: ErrContextInvalidPort,
-		},
-		{
-			name: "invalid port high",
-			ctx: func() context.Context {
-				ctx := context.WithValue(context.Background(), decoder.PORT_CONTEXT_KEY, 256)
-				ctx = context.WithValue(ctx, decoder.DEVEUI_CONTEXT_KEY, "0123456789abcdef")
-				ctx = context.WithValue(ctx, decoder.FCNT_CONTEXT_KEY, 0)
-				return ctx
-			}(),
-			wantErr: ErrContextInvalidPort,
-		},
-		{
 			name: "invalid devEui length",
 			ctx: func() context.Context {
-				ctx := context.WithValue(context.Background(), decoder.PORT_CONTEXT_KEY, 1)
+				ctx := context.WithValue(context.Background(), decoder.PORT_CONTEXT_KEY, uint8(1))
 				ctx = context.WithValue(ctx, decoder.DEVEUI_CONTEXT_KEY, "0123456789abcde") // 15 chars
 				ctx = context.WithValue(ctx, decoder.FCNT_CONTEXT_KEY, 0)
 				return ctx
@@ -394,7 +374,7 @@ func TestValidateContext(t *testing.T) {
 		{
 			name: "invalid devEui non-hex",
 			ctx: func() context.Context {
-				ctx := context.WithValue(context.Background(), decoder.PORT_CONTEXT_KEY, 1)
+				ctx := context.WithValue(context.Background(), decoder.PORT_CONTEXT_KEY, uint8(1))
 				ctx = context.WithValue(ctx, decoder.DEVEUI_CONTEXT_KEY, "0123456789abcdeg") // 'g' is not hex
 				ctx = context.WithValue(ctx, decoder.FCNT_CONTEXT_KEY, 0)
 				return ctx
@@ -404,7 +384,7 @@ func TestValidateContext(t *testing.T) {
 		{
 			name: "invalid fCount negative",
 			ctx: func() context.Context {
-				ctx := context.WithValue(context.Background(), decoder.PORT_CONTEXT_KEY, 1)
+				ctx := context.WithValue(context.Background(), decoder.PORT_CONTEXT_KEY, uint8(1))
 				ctx = context.WithValue(ctx, decoder.DEVEUI_CONTEXT_KEY, "0123456789abcdef")
 				ctx = context.WithValue(ctx, decoder.FCNT_CONTEXT_KEY, -1)
 				return ctx
@@ -414,7 +394,7 @@ func TestValidateContext(t *testing.T) {
 		{
 			name: "valid context",
 			ctx: func() context.Context {
-				ctx := context.WithValue(context.Background(), decoder.PORT_CONTEXT_KEY, 10)
+				ctx := context.WithValue(context.Background(), decoder.PORT_CONTEXT_KEY, uint8(10))
 				ctx = context.WithValue(ctx, decoder.DEVEUI_CONTEXT_KEY, "0123456789abcdef")
 				ctx = context.WithValue(ctx, decoder.FCNT_CONTEXT_KEY, 42)
 				return ctx

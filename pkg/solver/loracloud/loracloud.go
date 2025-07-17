@@ -65,7 +65,7 @@ func WithBaseUrl(baseUrl string) LoracloudClientOptions {
 }
 
 func validateContext(ctx context.Context) error {
-	port, ok := ctx.Value(decoder.PORT_CONTEXT_KEY).(int)
+	port, ok := ctx.Value(decoder.PORT_CONTEXT_KEY).(uint8)
 	if !ok {
 		return ErrContextPortNotFound
 	}
@@ -99,7 +99,7 @@ func (m LoracloudClient) Solve(ctx context.Context, payload string) (*decoder.De
 		return nil, fmt.Errorf("context validation failed: %v", err)
 	}
 
-	port, ok := ctx.Value(decoder.PORT_CONTEXT_KEY).(int)
+	port, ok := ctx.Value(decoder.PORT_CONTEXT_KEY).(uint8)
 	if !ok {
 		return nil, fmt.Errorf("port not found in context")
 	}
