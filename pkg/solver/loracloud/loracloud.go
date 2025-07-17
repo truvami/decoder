@@ -65,7 +65,7 @@ func WithBaseUrl(baseUrl string) LoracloudClientOptions {
 }
 
 func validateContext(ctx context.Context) error {
-	port, ok := ctx.Value(decoder.PORT_CONTEXT_KEY).(uint8)
+	_, ok := ctx.Value(decoder.PORT_CONTEXT_KEY).(uint8)
 	if !ok {
 		return ErrContextPortNotFound
 	}
@@ -76,9 +76,6 @@ func validateContext(ctx context.Context) error {
 	fCount, ok := ctx.Value(decoder.FCNT_CONTEXT_KEY).(int)
 	if !ok {
 		return ErrContextFCountNotFound
-	}
-	if port < 0 || port > 255 {
-		return ErrContextInvalidPort
 	}
 	if len(devEui) != 16 {
 		return ErrContextInvalidDevEui
