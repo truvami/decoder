@@ -229,10 +229,41 @@ func (m LoracloudClient) DeliverUplinkMessage(devEui string, uplinkMsg UplinkMsg
 		return nil, fmt.Errorf("unexpected status code returned by loracloud: HTTP %v, %v", response.StatusCode, responseJson)
 	}
 
-	uplinkResponse := UplinkMsgResponse{}
-	err = json.NewDecoder(response.Body).Decode(&uplinkResponse)
-	if err != nil {
-		return nil, fmt.Errorf("error decoding loracloud response: %v", err)
+	var uplinkResponse UplinkMsgResponse
+
+	if m.BaseUrl == TraxmateLoRaCloudBaseUrl {
+		// NOTE: Traxmate LoRaCloud returns a nested response structure
+		// {
+		// 	"result": {
+		// 		"10-CE-45-FF-FE-01-CE-53": {
+		// 			UplinkMsgResponse
+		// 		}
+		// 	}
+		// }
+		var traxmateResponse struct {
+			Result map[string]UplinkMsgResponse `json:"result"`
+		}
+
+		err = json.NewDecoder(response.Body).Decode(&traxmateResponse)
+		if err != nil {
+			return nil, fmt.Errorf("error decoding Traxmate LoRaCloud response: %v", err)
+		}
+
+		if len(traxmateResponse.Result) != 1 {
+			return nil, fmt.Errorf("expected exactly one device EUI in the Traxmate LoRaCloud response, got %d", len(traxmateResponse.Result))
+		}
+
+		nestedUplinkResponse, ok := traxmateResponse.Result[devEui]
+		if !ok {
+			return nil, fmt.Errorf("device EUI %s not found in Traxmate LoRaCloud response", devEui)
+		}
+
+		uplinkResponse = nestedUplinkResponse
+	} else {
+		err = json.NewDecoder(response.Body).Decode(&uplinkResponse)
+		if err != nil {
+			return nil, fmt.Errorf("error decoding response: %v", err)
+		}
 	}
 
 	// remove the '-' from the devEui
