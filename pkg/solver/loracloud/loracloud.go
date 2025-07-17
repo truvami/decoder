@@ -24,7 +24,7 @@ type LoracloudClient struct {
 
 const (
 	SemtechLoRaCloudBaseUrl  = "https://mgs.loracloud.com"
-	TraxmateLoRaCloudBaseUrl = "https://mgs.traxmate.com"
+	TraxmateLoRaCloudBaseUrl = "https://lw.traxmate.io"
 )
 
 var _ solver.SolverV1 = &LoracloudClient{}
