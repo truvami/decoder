@@ -73,7 +73,7 @@ var smartlabelCmd = &cobra.Command{
 		}
 
 		ctx = context.WithValue(ctx, decoder.DEVEUI_CONTEXT_KEY, smartlabelDevEui)
-		ctx = context.WithValue(ctx, decoder.PORT_CONTEXT_KEY, port)
+		ctx = context.WithValue(ctx, decoder.PORT_CONTEXT_KEY, uint8(port))
 		ctx = context.WithValue(ctx, decoder.FCNT_CONTEXT_KEY, 1) // Default frame count, can be adjusted as needed
 
 		data, err := d.Decode(ctx, args[1], uint8(port))

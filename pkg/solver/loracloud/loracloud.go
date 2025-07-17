@@ -22,23 +22,36 @@ type LoracloudClient struct {
 	BaseUrl     string
 }
 
+const (
+	SemtechLoRaCloudBaseUrl  = "https://mgs.loracloud.com"
+	TraxmateLoRaCloudBaseUrl = "https://lw.traxmate.io"
+)
+
 var _ solver.SolverV1 = &LoracloudClient{}
 
-func NewLoracloudClient(ctx context.Context, accessToken string, logger *zap.Logger, options ...LoracloudClientOptions) LoracloudClient {
-	if time.Now().After(time.Date(2025, 7, 31, 0, 0, 0, 0, time.UTC)) {
-		logger.Fatal("LoRa Cloud is no longer available after 31.07.2025", zap.String("url", "https://www.semtech.com/loracloud-shutdown"))
+func (m LoracloudClient) checkForSemtechLoRaCloudShutdown() {
+	if m.BaseUrl != SemtechLoRaCloudBaseUrl {
+		return
 	}
-	logger.Warn("LoRa Cloud is Sunsetting on 31.07.2025", zap.String("url", "https://www.semtech.com/loracloud-shutdown"))
 
+	if time.Now().After(time.Date(2025, 7, 31, 0, 0, 0, 0, time.UTC)) {
+		m.logger.Fatal("LoRa Cloud is no longer available after 31.07.2025", zap.String("url", "https://www.semtech.com/loracloud-shutdown"))
+	}
+	m.logger.Warn("LoRa Cloud is Sunsetting on 31.07.2025", zap.String("url", "https://www.semtech.com/loracloud-shutdown"))
+}
+
+func NewLoracloudClient(ctx context.Context, accessToken string, logger *zap.Logger, options ...LoracloudClientOptions) LoracloudClient {
 	client := LoracloudClient{
 		accessToken: accessToken,
-		BaseUrl:     "https://mgs.loracloud.com",
+		BaseUrl:     TraxmateLoRaCloudBaseUrl,
 		logger:      logger,
 	}
 
 	for _, option := range options {
 		option(&client)
 	}
+	// Check this after all options have been applied
+	client.checkForSemtechLoRaCloudShutdown()
 
 	return client
 }
@@ -52,7 +65,7 @@ func WithBaseUrl(baseUrl string) LoracloudClientOptions {
 }
 
 func validateContext(ctx context.Context) error {
-	port, ok := ctx.Value(decoder.PORT_CONTEXT_KEY).(int)
+	_, ok := ctx.Value(decoder.PORT_CONTEXT_KEY).(uint8)
 	if !ok {
 		return ErrContextPortNotFound
 	}
@@ -63,9 +76,6 @@ func validateContext(ctx context.Context) error {
 	fCount, ok := ctx.Value(decoder.FCNT_CONTEXT_KEY).(int)
 	if !ok {
 		return ErrContextFCountNotFound
-	}
-	if port < 0 || port > 255 {
-		return ErrContextInvalidPort
 	}
 	if len(devEui) != 16 {
 		return ErrContextInvalidDevEui
@@ -86,7 +96,7 @@ func (m LoracloudClient) Solve(ctx context.Context, payload string) (*decoder.De
 		return nil, fmt.Errorf("context validation failed: %v", err)
 	}
 
-	port, ok := ctx.Value(decoder.PORT_CONTEXT_KEY).(int)
+	port, ok := ctx.Value(decoder.PORT_CONTEXT_KEY).(uint8)
 	if !ok {
 		return nil, fmt.Errorf("port not found in context")
 	}
@@ -219,10 +229,41 @@ func (m LoracloudClient) DeliverUplinkMessage(devEui string, uplinkMsg UplinkMsg
 		return nil, fmt.Errorf("unexpected status code returned by loracloud: HTTP %v, %v", response.StatusCode, responseJson)
 	}
 
-	uplinkResponse := UplinkMsgResponse{}
-	err = json.NewDecoder(response.Body).Decode(&uplinkResponse)
-	if err != nil {
-		return nil, fmt.Errorf("error decoding loracloud response: %v", err)
+	var uplinkResponse UplinkMsgResponse
+
+	if m.BaseUrl == TraxmateLoRaCloudBaseUrl {
+		// NOTE: Traxmate LoRaCloud returns a nested response structure
+		// {
+		// 	"result": {
+		// 		"10-CE-45-FF-FE-01-CE-53": {
+		// 			UplinkMsgResponse
+		// 		}
+		// 	}
+		// }
+		var traxmateResponse struct {
+			Result map[string]UplinkMsgResponse `json:"result"`
+		}
+
+		err = json.NewDecoder(response.Body).Decode(&traxmateResponse)
+		if err != nil {
+			return nil, fmt.Errorf("error decoding Traxmate LoRaCloud response: %v", err)
+		}
+
+		if len(traxmateResponse.Result) != 1 {
+			return nil, fmt.Errorf("expected exactly one device EUI in the Traxmate LoRaCloud response, got %d", len(traxmateResponse.Result))
+		}
+
+		nestedUplinkResponse, ok := traxmateResponse.Result[devEui]
+		if !ok {
+			return nil, fmt.Errorf("device EUI %s not found in Traxmate LoRaCloud response", devEui)
+		}
+
+		uplinkResponse = nestedUplinkResponse
+	} else {
+		err = json.NewDecoder(response.Body).Decode(&uplinkResponse)
+		if err != nil {
+			return nil, fmt.Errorf("error decoding response: %v", err)
+		}
 	}
 
 	// remove the '-' from the devEui
