@@ -29,18 +29,20 @@ const (
 
 var _ solver.SolverV1 = &LoracloudClient{}
 
-func (m LoracloudClient) checkForSemtechLoRaCloudShutdown() {
+func (m LoracloudClient) isSemtechLoRaCloudShutdown() error {
 	if m.BaseUrl != SemtechLoRaCloudBaseUrl {
-		return
+		return nil
 	}
 
 	if time.Now().After(time.Date(2025, 7, 31, 0, 0, 0, 0, time.UTC)) {
-		m.logger.Fatal("LoRa Cloud is no longer available after 31.07.2025", zap.String("url", "https://www.semtech.com/loracloud-shutdown"))
+		return ErrSemtechLoRaCloudShutdown
 	}
 	m.logger.Warn("LoRa Cloud is Sunsetting on 31.07.2025", zap.String("url", "https://www.semtech.com/loracloud-shutdown"))
+
+	return nil
 }
 
-func NewLoracloudClient(ctx context.Context, accessToken string, logger *zap.Logger, options ...LoracloudClientOptions) LoracloudClient {
+func NewLoracloudClient(ctx context.Context, accessToken string, logger *zap.Logger, options ...LoracloudClientOptions) (LoracloudClient, error) {
 	client := LoracloudClient{
 		accessToken: accessToken,
 		BaseUrl:     TraxmateLoRaCloudBaseUrl,
@@ -50,10 +52,12 @@ func NewLoracloudClient(ctx context.Context, accessToken string, logger *zap.Log
 	for _, option := range options {
 		option(&client)
 	}
-	// Check this after all options have been applied
-	client.checkForSemtechLoRaCloudShutdown()
+	// Check after all the options have been applied
+	if err := client.isSemtechLoRaCloudShutdown(); err != nil {
+		return LoracloudClient{}, err
+	}
 
-	return client
+	return client, nil
 }
 
 type LoracloudClientOptions func(*LoracloudClient)
