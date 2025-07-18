@@ -412,6 +412,7 @@ type UplinkMsgResponse struct {
 
 var _ decoder.UplinkFeatureTimestamp = &UplinkMsgResponse{}
 var _ decoder.UplinkFeatureGNSS = &UplinkMsgResponse{}
+var _ decoder.UplinkFeatureBuffered = &UplinkMsgResponse{}
 
 func (p UplinkMsgResponse) GetTimestamp() *time.Time {
 	var captureTs float64
@@ -466,4 +467,15 @@ func (p UplinkMsgResponse) GetPDOP() *float64 {
 
 func (p UplinkMsgResponse) GetSatellites() *uint8 {
 	return nil
+}
+
+func (p UplinkMsgResponse) GetBufferLevel() *uint16 {
+	return nil
+}
+
+func (p UplinkMsgResponse) IsBuffered() bool {
+	if p.GetTimestamp() != nil && p.GetTimestamp().Before(time.Now().Add(-1*time.Minute)) {
+		return true
+	}
+	return false
 }
