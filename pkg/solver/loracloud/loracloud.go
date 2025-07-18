@@ -109,11 +109,20 @@ func (m LoracloudClient) Solve(ctx context.Context, payload string) (*decoder.De
 		return nil, fmt.Errorf("fCount not found in context")
 	}
 
+	var timestamp *float64 = nil
+	if m.BaseUrl == TraxmateLoRaCloudBaseUrl {
+		// NOTE: Traxmate requires us to set the timestamp in order to solve the position,
+		// Semtech used to do this on its own.
+		unixTime := float64(time.Now().Unix())
+		timestamp = &unixTime
+	}
+
 	decodedData, err := m.DeliverUplinkMessage(devEui, UplinkMsg{
-		MsgType: "updf",
-		Port:    uint8(port),
-		Payload: payload,
-		FCount:  uint32(fCount),
+		MsgType:   "updf",
+		Port:      uint8(port),
+		Payload:   payload,
+		FCount:    uint32(fCount),
+		Timestamp: timestamp,
 	})
 
 	if err != nil {
