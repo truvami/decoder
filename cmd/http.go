@@ -93,7 +93,11 @@ var httpCmd = &cobra.Command{
 				logger.Logger.Error("loracloud access token is required for loracloud solver")
 				os.Exit(1)
 			}
-			solver = loracloud.NewLoracloudClient(ctx, LoracloudAccessToken, logger.Logger)
+			solver, err = loracloud.NewLoracloudClient(ctx, LoracloudAccessToken, logger.Logger)
+			if err != nil {
+				logger.Logger.Error("error while creating LoRa Cloud position estimate client", zap.Error(err))
+				os.Exit(1)
+			}
 		}
 
 		var decoders []decoderEndpoint = []decoderEndpoint{

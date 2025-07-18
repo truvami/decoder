@@ -59,14 +59,17 @@ func TestDecode(t *testing.T) {
 	})
 
 	server := startMockServer(nil)
-	middleware := loracloud.NewLoracloudClient(context.TODO(), "access_token", zap.NewExample())
+	middleware, err := loracloud.NewLoracloudClient(context.TODO(), "access_token", zap.NewExample())
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	middleware.BaseUrl = server.URL
 	defer server.Close()
 
 	f, _ := os.Open("./response.json")
 	var exampleResponse loracloud.UplinkMsgResponse
 	d, _ := io.ReadAll(f)
-	err := json.Unmarshal(d, &exampleResponse)
+	err = json.Unmarshal(d, &exampleResponse)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -645,7 +648,10 @@ func TestFeatures(t *testing.T) {
 	})
 
 	server := startMockServer(mux)
-	middleware := loracloud.NewLoracloudClient(context.TODO(), "access_token", zap.NewExample())
+	middleware, err := loracloud.NewLoracloudClient(context.TODO(), "access_token", zap.NewExample())
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	middleware.BaseUrl = server.URL
 	defer server.Close()
 

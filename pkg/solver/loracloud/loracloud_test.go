@@ -31,7 +31,10 @@ func TestPost(t *testing.T) {
 	})
 
 	server := startMockServer(mux)
-	middleware := NewLoracloudClient(context.TODO(), "access_token", zap.NewExample())
+	middleware, err := NewLoracloudClient(context.TODO(), "access_token", zap.NewExample())
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	middleware.BaseUrl = server.URL
 	defer server.Close()
 
@@ -93,7 +96,10 @@ func TestDeliverUplinkMessage(t *testing.T) {
 		})
 
 		server := startMockServer(mux)
-		middleware := NewLoracloudClient(context.TODO(), "access_token", zap.NewExample())
+		middleware, err := NewLoracloudClient(context.TODO(), "access_token", zap.NewExample())
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 		middleware.BaseUrl = server.URL
 		defer server.Close()
 
@@ -117,7 +123,10 @@ func TestDeliverUplinkMessage(t *testing.T) {
 
 	t.Run("Validation error", func(t *testing.T) {
 		server := startMockServer(nil)
-		middleware := NewLoracloudClient(context.TODO(), "access_token", zap.NewExample())
+		middleware, err := NewLoracloudClient(context.TODO(), "access_token", zap.NewExample())
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 		middleware.BaseUrl = server.URL
 		defer server.Close()
 
@@ -129,7 +138,7 @@ func TestDeliverUplinkMessage(t *testing.T) {
 			Payload: "0123456789abcdef",
 		}
 
-		_, err := middleware.DeliverUplinkMessage(devEui, uplinkMsg)
+		_, err = middleware.DeliverUplinkMessage(devEui, uplinkMsg)
 		if err == nil || !strings.Contains(err.Error(), "error validating uplink message") {
 			t.Errorf("expected validation error, got: %v", err)
 		}
@@ -144,7 +153,10 @@ func TestDeliverUplinkMessage(t *testing.T) {
 		})
 
 		server := startMockServer(mux)
-		middleware := NewLoracloudClient(context.TODO(), "access_token", zap.NewExample())
+		middleware, err := NewLoracloudClient(context.TODO(), "access_token", zap.NewExample())
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 		middleware.BaseUrl = server.URL
 		defer server.Close()
 
@@ -156,7 +168,7 @@ func TestDeliverUplinkMessage(t *testing.T) {
 			Payload: "0123456789abcdef",
 		}
 
-		_, err := middleware.DeliverUplinkMessage(devEui, uplinkMsg)
+		_, err = middleware.DeliverUplinkMessage(devEui, uplinkMsg)
 		if err == nil || !strings.Contains(err.Error(), "unexpected status code returned by loracloud") {
 			t.Errorf("expected status code error, got: %v", err)
 		}
@@ -171,7 +183,10 @@ func TestDeliverUplinkMessage(t *testing.T) {
 		})
 
 		server := startMockServer(mux)
-		middleware := NewLoracloudClient(context.TODO(), "access_token", zap.NewExample())
+		middleware, err := NewLoracloudClient(context.TODO(), "access_token", zap.NewExample())
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 		middleware.BaseUrl = server.URL
 		defer server.Close()
 
@@ -183,7 +198,7 @@ func TestDeliverUplinkMessage(t *testing.T) {
 			Payload: "0123456789abcdef",
 		}
 
-		_, err := middleware.DeliverUplinkMessage(devEui, uplinkMsg)
+		_, err = middleware.DeliverUplinkMessage(devEui, uplinkMsg)
 		if err == nil || !strings.Contains(err.Error(), "error decoding loracloud response") {
 			t.Errorf("expected decoding error, got: %v", err)
 		}
@@ -300,7 +315,10 @@ func TestResponseVariants(t *testing.T) {
 			})
 
 			server := startMockServer(mux)
-			middleware := NewLoracloudClient(context.TODO(), "access_token", zap.NewExample())
+			middleware, err := NewLoracloudClient(context.TODO(), "access_token", zap.NewExample())
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
 			middleware.BaseUrl = server.URL
 			defer server.Close()
 
