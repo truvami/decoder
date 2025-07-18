@@ -132,7 +132,7 @@ func (m LoracloudClient) Solve(ctx context.Context, payload string) (*decoder.De
 	if err != nil {
 		return nil, fmt.Errorf("error delivering uplink message: %v", err)
 	}
-	return decoder.NewDecodedUplink([]decoder.Feature{decoder.FeatureGNSS}, decodedData), err
+	return decoder.NewDecodedUplink([]decoder.Feature{decoder.FeatureTimestamp, decoder.FeatureGNSS}, decodedData), err
 }
 
 func (m LoracloudClient) post(url string, body []byte) (*http.Response, error) {
@@ -416,7 +416,7 @@ var _ decoder.UplinkFeatureGNSS = &UplinkMsgResponse{}
 func (p UplinkMsgResponse) GetTimestamp() *time.Time {
 	var captureTs float64
 	if p.Result.PositionSolution.AlgorithmType == "gnssng" {
-		if (p.Result.PositionSolution.CaptureTimeUtc != 0) {
+		if p.Result.PositionSolution.CaptureTimeUtc != 0 {
 			captureTs = p.Result.PositionSolution.CaptureTimeUtc
 		}
 	}
