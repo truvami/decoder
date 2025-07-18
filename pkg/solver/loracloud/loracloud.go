@@ -416,15 +416,9 @@ var _ decoder.UplinkFeatureGNSS = &UplinkMsgResponse{}
 func (p UplinkMsgResponse) GetTimestamp() *time.Time {
 	var captureTs float64
 	if p.Result.PositionSolution.AlgorithmType == "gnssng" {
-		// Use the last non-null element of capture_times_utc if available
-		for i := len(p.Result.PositionSolution.CaptureTimesUtc) - 1; i >= 0; i-- {
-			if p.Result.PositionSolution.CaptureTimesUtc[i] != 0 {
-				captureTs = p.Result.PositionSolution.CaptureTimesUtc[i]
-				break
-			}
+		if (p.Result.PositionSolution.CaptureTimeUtc != 0) {
+			captureTs = p.Result.PositionSolution.CaptureTimeUtc
 		}
-	} else {
-		captureTs = p.Result.PositionSolution.CaptureTimeUtc
 	}
 
 	if captureTs == 0 {
