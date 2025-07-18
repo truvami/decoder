@@ -132,7 +132,7 @@ func (m LoracloudClient) Solve(ctx context.Context, payload string) (*decoder.De
 	if err != nil {
 		return nil, fmt.Errorf("error delivering uplink message: %v", err)
 	}
-	return decoder.NewDecodedUplink([]decoder.Feature{decoder.FeatureTimestamp, decoder.FeatureGNSS}, decodedData), err
+	return decoder.NewDecodedUplink([]decoder.Feature{decoder.FeatureTimestamp, decoder.FeatureGNSS, decoder.FeatureBuffered}, decodedData), err
 }
 
 func (m LoracloudClient) post(url string, body []byte) (*http.Response, error) {
