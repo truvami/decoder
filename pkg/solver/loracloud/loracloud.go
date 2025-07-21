@@ -20,6 +20,7 @@ type LoracloudClient struct {
 	accessToken string
 	logger      *zap.Logger
 	BaseUrl     string
+	timeNow     func() time.Time
 }
 
 const (
@@ -34,7 +35,7 @@ func (m LoracloudClient) isSemtechLoRaCloudShutdown() error {
 		return nil
 	}
 
-	if time.Now().After(time.Date(2025, 7, 31, 0, 0, 0, 0, time.UTC)) {
+	if m.timeNow().After(time.Date(2025, 7, 31, 0, 0, 0, 0, time.UTC)) {
 		return ErrSemtechLoRaCloudShutdown
 	}
 	m.logger.Warn("LoRa Cloud is Sunsetting on 31.07.2025", zap.String("url", "https://www.semtech.com/loracloud-shutdown"))
@@ -47,6 +48,7 @@ func NewLoracloudClient(ctx context.Context, accessToken string, logger *zap.Log
 		accessToken: accessToken,
 		BaseUrl:     TraxmateLoRaCloudBaseUrl,
 		logger:      logger,
+		timeNow:     time.Now,
 	}
 
 	for _, option := range options {
@@ -65,6 +67,12 @@ type LoracloudClientOptions func(*LoracloudClient)
 func WithBaseUrl(baseUrl string) LoracloudClientOptions {
 	return func(c *LoracloudClient) {
 		c.BaseUrl = baseUrl
+	}
+}
+
+func WithTimeNow(timeNow func() time.Time) LoracloudClientOptions {
+	return func(c *LoracloudClient) {
+		c.timeNow = timeNow
 	}
 }
 
@@ -117,7 +125,7 @@ func (m LoracloudClient) Solve(ctx context.Context, payload string) (*decoder.De
 	if m.BaseUrl == TraxmateLoRaCloudBaseUrl {
 		// NOTE: Traxmate requires us to set the timestamp in order to solve the position,
 		// Semtech used to do this on its own.
-		unixTime := float64(time.Now().Unix())
+		unixTime := float64(m.timeNow().Unix())
 		timestamp = &unixTime
 	}
 

@@ -450,3 +450,78 @@ func TestWithBaseUrl(t *testing.T) {
 		t.Errorf("expected BaseUrl to be %q, got %q", newUrl, client.BaseUrl)
 	}
 }
+
+func TestIsSemtechLoRaCloudShutdown(t *testing.T) {
+	shutdownDate := time.Date(2025, 7, 31, 0, 0, 0, 0, time.UTC)
+
+	tests := []struct {
+		name        string
+		baseUrl     string
+		currentTime time.Time
+		err         error
+	}{
+		{
+			name:        "after Semtech shutdown date - non-Semtech base URL",
+			baseUrl:     TraxmateLoRaCloudBaseUrl,
+			currentTime: shutdownDate.Add(time.Hour),
+			err:         nil,
+		},
+		{
+			name:        "before Semtech shutdown date",
+			baseUrl:     SemtechLoRaCloudBaseUrl,
+			currentTime: shutdownDate.Add(-time.Hour),
+			err:         nil,
+		},
+		{
+			name:        "exactly at Semtech shutdown date",
+			baseUrl:     SemtechLoRaCloudBaseUrl,
+			currentTime: shutdownDate,
+			err:         nil,
+		},
+		{
+			name:        "after Semtech shutdown date",
+			baseUrl:     SemtechLoRaCloudBaseUrl,
+			currentTime: shutdownDate.Add(time.Hour),
+			err:         ErrSemtechLoRaCloudShutdown,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockTimeNow := func() time.Time {
+				return tt.currentTime
+			}
+
+			client, err := NewLoracloudClient(
+				context.Background(),
+				"access_token",
+				zap.NewNop(),
+				WithBaseUrl(tt.baseUrl),
+				WithTimeNow(mockTimeNow),
+			)
+
+			if tt.err != nil {
+				assert.Error(t, err)
+				assert.ErrorIs(t, err, tt.err)
+			} else {
+				assert.NoError(t, err)
+				err = client.isSemtechLoRaCloudShutdown()
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestWithTimeNow(t *testing.T) {
+	fixedTime := time.Date(2024, 1, 1, 12, 0, 0, 0, time.UTC)
+	mockTimeNow := func() time.Time {
+		return fixedTime
+	}
+
+	client := LoracloudClient{}
+	option := WithTimeNow(mockTimeNow)
+	option(&client)
+
+	// Test that the time function was set correctly
+	assert.Equal(t, fixedTime, client.timeNow())
+}
