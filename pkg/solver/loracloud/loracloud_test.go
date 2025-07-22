@@ -219,6 +219,7 @@ func TestResponseVariants(t *testing.T) {
 			"result": {
 				"deveui": "927da4b72110927d",
 				"position_solution": {
+						"algorithm_type": "gnssng",
 						"llh": [51.49278, 0.0212, 83.93],
 						"accuracy": 20.7,
 						"gdop": 2.48,
@@ -240,6 +241,7 @@ func TestResponseVariants(t *testing.T) {
 			"result": {
 				"deveui": "927da4b72110927d",
 				"position_solution": {
+						"algorithm_type": "gnssng",
 						"llh": [],
 						"accuracy": 20.7,
 						"gdop": 2.48,
@@ -282,12 +284,11 @@ func TestResponseVariants(t *testing.T) {
 			"result": {
 				"deveui": "927da4b72110927d",
 				"position_solution": {
+						"algorithm_type": "gnssng",
 						"llh": [51.49278, 0.0212, 83.93],
 						"accuracy": 20.7,
 						"gdop": 2.48,
-						"capture_time_utc": null,
-						"capture_times_utc": [1722433364.06164, 1722433373.18046],
-						"algorithm_type": "gnssng"
+						"capture_time_utc": 1722433373.18046
 				},
 				"operation": "gnss"
 			}
