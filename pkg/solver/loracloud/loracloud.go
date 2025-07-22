@@ -238,16 +238,16 @@ func (m LoracloudClient) DeliverUplinkMessage(devEui string, uplinkMsg UplinkMsg
 
 	response, err := m.post(url, jsonBody)
 	if err != nil {
-		return nil, fmt.Errorf("error sending request to loracloud: %v", err)
+		return nil, fmt.Errorf("%w: %v", ErrSendingRequest, err)
 	}
 
 	if response.StatusCode != http.StatusOK {
 		responseJson := map[string]any{}
 		err = json.NewDecoder(response.Body).Decode(&responseJson)
 		if err != nil {
-			return nil, fmt.Errorf("unexpected status code returned by loracloud: HTTP %v", response.StatusCode)
+			return nil, fmt.Errorf("%w: HTTP %v", ErrUnexpectedStatusCode, response.StatusCode)
 		}
-		return nil, fmt.Errorf("unexpected status code returned by loracloud: HTTP %v, %v", response.StatusCode, responseJson)
+		return nil, fmt.Errorf("%w: HTTP %v, %v", ErrUnexpectedStatusCode, response.StatusCode, responseJson)
 	}
 
 	var uplinkResponse UplinkMsgResponse
@@ -267,23 +267,23 @@ func (m LoracloudClient) DeliverUplinkMessage(devEui string, uplinkMsg UplinkMsg
 
 		err = json.NewDecoder(response.Body).Decode(&traxmateResponse)
 		if err != nil {
-			return nil, fmt.Errorf("error decoding Traxmate LoRaCloud response: %v", err)
+			return nil, fmt.Errorf("%w: %v", ErrDecodingResponse, err)
 		}
 
 		if len(traxmateResponse.Result) != 1 {
-			return nil, fmt.Errorf("expected exactly one device EUI in the Traxmate LoRaCloud response, got %d", len(traxmateResponse.Result))
+			return nil, fmt.Errorf("%w: expected exactly one device EUI in the Traxmate LoRaCloud response, got %d", ErrMultipleDevicesInResponse, len(traxmateResponse.Result))
 		}
 
 		nestedUplinkResponse, ok := traxmateResponse.Result[devEui]
 		if !ok {
-			return nil, fmt.Errorf("device EUI %s not found in Traxmate LoRaCloud response", devEui)
+			return nil, fmt.Errorf("%w: device EUI %s not found in Traxmate LoRaCloud response", ErrDeviceEuiNotInResponse, devEui)
 		}
 
 		uplinkResponse = nestedUplinkResponse
 	} else {
 		err = json.NewDecoder(response.Body).Decode(&uplinkResponse)
 		if err != nil {
-			return nil, fmt.Errorf("error decoding response: %v", err)
+			return nil, fmt.Errorf("%w: %v", ErrDecodingResponse, err)
 		}
 	}
 
