@@ -2,6 +2,7 @@ package loracloud
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -31,15 +32,14 @@ func TestPost(t *testing.T) {
 	})
 
 	server := startMockServer(mux)
-	middleware, err := NewLoracloudClient(context.TODO(), "access_token", zap.NewExample())
+	middleware, err := NewLoracloudClient(context.TODO(), "access_token", zap.NewExample(), WithBaseUrl(server.URL))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	middleware.BaseUrl = server.URL
 	defer server.Close()
 
 	// Test case 1: Successful request
-	url := fmt.Sprintf("%v/success", middleware.BaseUrl)
+	url := fmt.Sprintf("%v/success", server.URL)
 	body := []byte(`{"key": "value"}`)
 
 	response, err := middleware.post(url, body)
@@ -52,7 +52,7 @@ func TestPost(t *testing.T) {
 	}
 
 	// Test case 2: Request with error
-	url = fmt.Sprintf("%v/error", middleware.BaseUrl)
+	url = fmt.Sprintf("%v/error", server.URL)
 	body = []byte(`{"key": "value}`)
 
 	response, err = middleware.post(url, body)
@@ -96,11 +96,10 @@ func TestDeliverUplinkMessage(t *testing.T) {
 		})
 
 		server := startMockServer(mux)
-		middleware, err := NewLoracloudClient(context.TODO(), "access_token", zap.NewExample())
+		middleware, err := NewLoracloudClient(context.TODO(), "access_token", zap.NewExample(), WithBaseUrl(server.URL))
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
-		middleware.BaseUrl = server.URL
 		defer server.Close()
 
 		devEui := "0123456789ABCDEF"
@@ -123,11 +122,10 @@ func TestDeliverUplinkMessage(t *testing.T) {
 
 	t.Run("Validation error", func(t *testing.T) {
 		server := startMockServer(nil)
-		middleware, err := NewLoracloudClient(context.TODO(), "access_token", zap.NewExample())
+		middleware, err := NewLoracloudClient(context.TODO(), "access_token", zap.NewExample(), WithBaseUrl(server.URL))
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
-		middleware.BaseUrl = server.URL
 		defer server.Close()
 
 		devEui := "0123456789ABCDEF"
@@ -153,11 +151,10 @@ func TestDeliverUplinkMessage(t *testing.T) {
 		})
 
 		server := startMockServer(mux)
-		middleware, err := NewLoracloudClient(context.TODO(), "access_token", zap.NewExample())
+		middleware, err := NewLoracloudClient(context.TODO(), "access_token", zap.NewExample(), WithBaseUrl(server.URL))
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
-		middleware.BaseUrl = server.URL
 		defer server.Close()
 
 		devEui := "0123456789ABCDEF"
@@ -169,7 +166,7 @@ func TestDeliverUplinkMessage(t *testing.T) {
 		}
 
 		_, err = middleware.DeliverUplinkMessage(devEui, uplinkMsg)
-		if err == nil || !strings.Contains(err.Error(), "unexpected status code returned by loracloud") {
+		if err == nil || !errors.Is(err, ErrUnexpectedStatusCode) {
 			t.Errorf("expected status code error, got: %v", err)
 		}
 	})
@@ -183,11 +180,10 @@ func TestDeliverUplinkMessage(t *testing.T) {
 		})
 
 		server := startMockServer(mux)
-		middleware, err := NewLoracloudClient(context.TODO(), "access_token", zap.NewExample())
+		middleware, err := NewLoracloudClient(context.TODO(), "access_token", zap.NewExample(), WithBaseUrl(server.URL))
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
-		middleware.BaseUrl = server.URL
 		defer server.Close()
 
 		devEui := "0123456789ABCDEF"
@@ -199,7 +195,7 @@ func TestDeliverUplinkMessage(t *testing.T) {
 		}
 
 		_, err = middleware.DeliverUplinkMessage(devEui, uplinkMsg)
-		if err == nil || !strings.Contains(err.Error(), "error decoding loracloud response") {
+		if err == nil || !errors.Is(err, ErrDecodingResponse) {
 			t.Errorf("expected decoding error, got: %v", err)
 		}
 	})
@@ -223,6 +219,7 @@ func TestResponseVariants(t *testing.T) {
 			"result": {
 				"deveui": "927da4b72110927d",
 				"position_solution": {
+						"algorithm_type": "gnssng",
 						"llh": [51.49278, 0.0212, 83.93],
 						"accuracy": 20.7,
 						"gdop": 2.48,
@@ -244,6 +241,7 @@ func TestResponseVariants(t *testing.T) {
 			"result": {
 				"deveui": "927da4b72110927d",
 				"position_solution": {
+						"algorithm_type": "gnssng",
 						"llh": [],
 						"accuracy": 20.7,
 						"gdop": 2.48,
@@ -286,12 +284,11 @@ func TestResponseVariants(t *testing.T) {
 			"result": {
 				"deveui": "927da4b72110927d",
 				"position_solution": {
+						"algorithm_type": "gnssng",
 						"llh": [51.49278, 0.0212, 83.93],
 						"accuracy": 20.7,
 						"gdop": 2.48,
-						"capture_time_utc": null,
-						"capture_times_utc": [1722433364.06164, 1722433373.18046],
-						"algorithm_type": "gnssng"
+						"capture_time_utc": 1722433373.18046
 				},
 				"operation": "gnss"
 			}
@@ -315,11 +312,10 @@ func TestResponseVariants(t *testing.T) {
 			})
 
 			server := startMockServer(mux)
-			middleware, err := NewLoracloudClient(context.TODO(), "access_token", zap.NewExample())
+			middleware, err := NewLoracloudClient(context.TODO(), "access_token", zap.NewExample(), WithBaseUrl(server.URL))
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
-			middleware.BaseUrl = server.URL
 			defer server.Close()
 
 			devEui := "b2e6876e64be9692"
@@ -378,6 +374,16 @@ func TestValidateContext(t *testing.T) {
 				return ctx
 			}(),
 			wantErr: ErrContextFCountNotFound,
+		},
+		{
+			name: "invalid port type",
+			ctx: func() context.Context {
+				ctx := context.WithValue(context.Background(), decoder.PORT_CONTEXT_KEY, 1) // int instead of uint8
+				ctx = context.WithValue(ctx, decoder.DEVEUI_CONTEXT_KEY, "0123456789abcdef")
+				ctx = context.WithValue(ctx, decoder.FCNT_CONTEXT_KEY, 0)
+				return ctx
+			}(),
+			wantErr: ErrContextPortNotFound,
 		},
 		{
 			name: "invalid devEui length",
@@ -449,4 +455,79 @@ func TestWithBaseUrl(t *testing.T) {
 	if client.BaseUrl != newUrl {
 		t.Errorf("expected BaseUrl to be %q, got %q", newUrl, client.BaseUrl)
 	}
+}
+
+func TestIsSemtechLoRaCloudShutdown(t *testing.T) {
+	shutdownDate := time.Date(2025, 7, 31, 0, 0, 0, 0, time.UTC)
+
+	tests := []struct {
+		name        string
+		baseUrl     string
+		currentTime time.Time
+		err         error
+	}{
+		{
+			name:        "after Semtech shutdown date - non-Semtech base URL",
+			baseUrl:     TraxmateLoRaCloudBaseUrl,
+			currentTime: shutdownDate.Add(time.Hour),
+			err:         nil,
+		},
+		{
+			name:        "before Semtech shutdown date",
+			baseUrl:     SemtechLoRaCloudBaseUrl,
+			currentTime: shutdownDate.Add(-time.Hour),
+			err:         nil,
+		},
+		{
+			name:        "exactly at Semtech shutdown date",
+			baseUrl:     SemtechLoRaCloudBaseUrl,
+			currentTime: shutdownDate,
+			err:         nil,
+		},
+		{
+			name:        "after Semtech shutdown date",
+			baseUrl:     SemtechLoRaCloudBaseUrl,
+			currentTime: shutdownDate.Add(time.Hour),
+			err:         ErrSemtechLoRaCloudShutdown,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockTimeNow := func() time.Time {
+				return tt.currentTime
+			}
+
+			client, err := NewLoracloudClient(
+				context.Background(),
+				"access_token",
+				zap.NewNop(),
+				WithBaseUrl(tt.baseUrl),
+				WithTimeNow(mockTimeNow),
+			)
+
+			if tt.err != nil {
+				assert.Error(t, err)
+				assert.ErrorIs(t, err, tt.err)
+			} else {
+				assert.NoError(t, err)
+				err = client.isSemtechLoRaCloudShutdown()
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestWithTimeNow(t *testing.T) {
+	fixedTime := time.Date(2024, 1, 1, 12, 0, 0, 0, time.UTC)
+	mockTimeNow := func() time.Time {
+		return fixedTime
+	}
+
+	client := LoracloudClient{}
+	option := WithTimeNow(mockTimeNow)
+	option(&client)
+
+	// Test that the time function was set correctly
+	assert.Equal(t, fixedTime, client.timeNow())
 }
