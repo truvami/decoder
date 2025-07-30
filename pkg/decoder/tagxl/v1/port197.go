@@ -21,7 +21,7 @@ import (
 // +------+------+-----------------------------------------------+------------+
 
 type Port197Payload struct {
-	Rssi1 int8    `json:"rssi1" validate:"gte=-120,lte=-20"`
+	Rssi1 *int8   `json:"rssi1" validate:"gte=-120,lte=-20"`
 	Mac1  string  `json:"mac1"`
 	Rssi2 *int8   `json:"rssi2" validate:"gte=-120,lte=-20"`
 	Mac2  *string `json:"mac2"`
@@ -41,7 +41,7 @@ func (p Port197Payload) GetAccessPoints() []decoder.AccessPoint {
 	if p.Mac1 != "" {
 		accessPoints = append(accessPoints, decoder.AccessPoint{
 			MAC:  p.Mac1,
-			RSSI: &p.Rssi1,
+			RSSI: p.Rssi1,
 		})
 	}
 
