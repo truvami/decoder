@@ -300,6 +300,18 @@ func (m LoracloudClient) DeliverUplinkMessage(devEui string, uplinkMsg UplinkMsg
 		uplinkResponse.GetAltitude() == 0 {
 		loracloudPositionEstimateZeroCoordinatesSetCounter.WithLabelValues(metricDevEui).Inc()
 	}
+	if uplinkResponse.GetTimestamp() == nil &&
+		uplinkResponse.GetLatitude() == 0 &&
+		uplinkResponse.GetLongitude() == 0 &&
+		uplinkResponse.GetAltitude() == 0 {
+		loracloudPositionEstimateNoCapturedAtSetAndZeroCoordinatesSetCounter.WithLabelValues(metricDevEui).Inc()
+	}
+	if uplinkResponse.GetTimestamp() == nil &&
+		uplinkResponse.GetLatitude() != 0 &&
+		uplinkResponse.GetLongitude() != 0 &&
+		uplinkResponse.GetAltitude() != 0 {
+		loracloudPositionEstimateNoCapturedAtSetWithValidCoordinatesCounter.WithLabelValues(metricDevEui).Inc()
+	}
 
 	return &uplinkResponse, nil
 }

@@ -14,4 +14,12 @@ var (
 		Name: "truvami_loracloud_position_estimate_zero_coordinates_set_total",
 		Help: "The total number of position estimate responses where the coordinates are set to 0",
 	}, []string{"devEUI"})
+	loracloudPositionEstimateNoCapturedAtSetAndZeroCoordinatesSetCounter = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "truvami_loracloud_position_estimate_no_captured_at_set_and_zero_coordinates_set_total",
+		Help: "The total number of position estimate responses where the captured at (UTC) timestamp is not set and the coordinates are set to 0",
+	}, []string{"devEUI"})
+	loracloudPositionEstimateNoCapturedAtSetWithValidCoordinatesCounter = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "truvami_loracloud_position_estimate_no_captured_at_set_with_valid_coordinates_total",
+		Help: "The total number of position estimate responses where the captured at (UTC) timestamp is not set and the coordinates are valid",
+	}, []string{"devEUI"})
 )
