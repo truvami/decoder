@@ -290,6 +290,17 @@ func (m LoracloudClient) DeliverUplinkMessage(devEui string, uplinkMsg UplinkMsg
 	// remove the '-' from the devEui
 	uplinkResponse.Result.Deveui = strings.ReplaceAll(uplinkResponse.Result.Deveui, "-", "")
 
+	// Increment metrics
+	metricDevEui := uplinkResponse.Result.Deveui
+	if uplinkResponse.GetTimestamp() == nil {
+		loracloudPositionEstimateNoCapturedAtSetCounter.WithLabelValues(metricDevEui).Inc()
+	}
+	if uplinkResponse.GetLatitude() == 0 &&
+		uplinkResponse.GetLongitude() == 0 &&
+		uplinkResponse.GetAltitude() == 0 {
+		loracloudPositionEstimateZeroCoordinatesSetCounter.WithLabelValues(metricDevEui).Inc()
+	}
+
 	return &uplinkResponse, nil
 }
 
