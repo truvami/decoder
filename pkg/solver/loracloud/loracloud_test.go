@@ -301,6 +301,29 @@ func TestResponseVariants(t *testing.T) {
 				altitude:  83.93,
 			},
 		},
+		{
+			name: "captured at null and gnss ng algorithm type",
+			result: []byte(`{
+			"result": {
+				"deveui": "927da4b72110927d",
+				"position_solution": {
+						"algorithm_type": "gnssng",
+						"llh": [51.49278, 0.0212, 83.93],
+						"accuracy": 20.7,
+						"gdop": 2.48,
+						"capture_time_utc": 1722433364.06164,
+						"capture_times_utc": [1722433364.06164, 1722433373.18046, null]
+				},
+				"operation": "gnss"
+			}
+		}`),
+			expected: Expected{
+				timestamp: common.TimePointer(1722433373.18046),
+				latitude:  51.49278,
+				longitude: 0.0212,
+				altitude:  83.93,
+			},
+		},
 	}
 
 	for _, test := range tests {
