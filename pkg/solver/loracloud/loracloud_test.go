@@ -288,7 +288,8 @@ func TestResponseVariants(t *testing.T) {
 						"llh": [51.49278, 0.0212, 83.93],
 						"accuracy": 20.7,
 						"gdop": 2.48,
-						"capture_time_utc": 1722433373.18046
+						"capture_time_utc": null,
+						"capture_times_utc": [1722433364.06164, 1722433373.18046, null]
 				},
 				"operation": "gnss"
 			}
