@@ -17,7 +17,8 @@ type SmartLabelv1Decoder struct {
 	skipValidation bool
 	logger         *zap.Logger
 
-	solver solver.SolverV1
+	solver         solver.SolverV1
+	fallbackSolver solver.SolverV1
 }
 
 func NewSmartLabelv1Decoder(ctx context.Context, solver solver.SolverV1, logger *zap.Logger, options ...Option) decoder.Decoder {
@@ -26,8 +27,9 @@ func NewSmartLabelv1Decoder(ctx context.Context, solver solver.SolverV1, logger 
 	}
 
 	smartLabelv1Decoder := &SmartLabelv1Decoder{
-		logger: logger,
-		solver: solver,
+		logger:         logger,
+		solver:         solver,
+		fallbackSolver: nil,
 	}
 
 	for _, option := range options {
@@ -40,6 +42,12 @@ func NewSmartLabelv1Decoder(ctx context.Context, solver solver.SolverV1, logger 
 func WithSkipValidation(skipValidation bool) Option {
 	return func(t *SmartLabelv1Decoder) {
 		t.skipValidation = skipValidation
+	}
+}
+
+func WithFallbackSolver(fallbackSolver solver.SolverV1) Option {
+	return func(t *SmartLabelv1Decoder) {
+		t.fallbackSolver = fallbackSolver
 	}
 }
 
@@ -159,8 +167,19 @@ func (t SmartLabelv1Decoder) Decode(ctx context.Context, data string, port uint8
 	case 192:
 		uplink, err := t.solver.Solve(ctx, data)
 		if err != nil {
-			return nil, common.WrapError(err, common.ErrSolverFailed)
+			if t.fallbackSolver == nil {
+				smartLabelDecoderSolverFailedCounter.Inc()
+				return nil, common.WrapError(err, common.ErrSolverFailed)
+			}
+
+			uplink, err = t.fallbackSolver.Solve(ctx, data)
+			if err != nil {
+				smartLabelDecoderSolverFailedCounter.Inc()
+				return nil, common.WrapError(err, common.ErrSolverFailed)
+			}
+			smartLabelDecoderSuccessfullyUsedFallbackSolverCounter.Inc()
 		}
+
 		return uplink, nil
 	default:
 		config, err := t.getConfig(port, data)
