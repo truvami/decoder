@@ -22,4 +22,8 @@ var (
 		Name: "truvami_loracloud_position_estimate_no_captured_at_set_with_valid_coordinates_total",
 		Help: "The total number of position estimate responses where the captured at (UTC) timestamp is not set and the coordinates are valid",
 	}, []string{"devEUI"})
+	loracloudPositionEstimateValidCounter = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "truvami_loracloud_position_estimate_valid_total",
+		Help: "The total number of position estimate responses where the captured at (UTC) timestamp is set and the coordinates are valid",
+	}, []string{"devEUI"})
 )
