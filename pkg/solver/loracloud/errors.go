@@ -15,4 +15,5 @@ var (
 	ErrDecodingResponse          = errors.New("error decoding response")
 	ErrMultipleDevicesInResponse = errors.New("multiple devices found in response")
 	ErrDeviceEuiNotInResponse    = errors.New("device EUI not found in response")
+	ErrPositionResolutionIsEmpty = errors.New("position resolution is empty")
 )
