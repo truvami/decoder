@@ -309,6 +309,11 @@ func (m LoracloudClient) DeliverUplinkMessage(devEui string, uplinkMsg UplinkMsg
 		uplinkResponse.GetLongitude() != 0 {
 		loracloudPositionEstimateNoCapturedAtSetWithValidCoordinatesCounter.WithLabelValues(metricDevEui).Inc()
 	}
+	if uplinkResponse.GetTimestamp() != nil &&
+		uplinkResponse.GetLatitude() != 0 &&
+		uplinkResponse.GetLongitude() != 0 {
+		loracloudPositionEstimateValidCounter.WithLabelValues(metricDevEui).Inc()
+	}
 
 	return &uplinkResponse, nil
 }
