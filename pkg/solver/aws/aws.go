@@ -113,10 +113,6 @@ func (c PositionEstimateClient) Solve(ctx context.Context, payload string) (*dec
 		return nil, ErrInvalidGeoJSONCoordinates
 	}
 
-	// Log the position estimate success
-	awsPositionEstimatesSuccessCounter.Inc()
-	awsPositionEstimatesDurationHistogram.Observe(time.Since(start).Seconds())
-
 	var altitude *float64
 	if len(position.Coordinates) > 2 {
 		altitude = position.Coordinates[2]
@@ -128,18 +124,31 @@ func (c PositionEstimateClient) Solve(ctx context.Context, payload string) (*dec
 		buffered = true
 	}
 
-	return decoder.NewDecodedUplink([]decoder.Feature{
-		decoder.FeatureGNSS,
-		decoder.FeatureTimestamp,
-		decoder.FeatureBuffered,
-	}, Position{
+	pos := &Position{
 		Latitude:  *position.Coordinates[1],
 		Longitude: *position.Coordinates[0],
 		Altitude:  altitude,
 		Timestamp: position.Properties.Timestamp,
 		Accuracy:  position.Properties.HorizontalAccuracy,
 		Buffered:  buffered,
-	}), nil
+	}
+
+	if pos.GetTimestamp() == nil &&
+		pos.GetLatitude() == 0 &&
+		pos.GetLongitude() == 0 {
+		awsPositionEstimatesErrorsCounter.Inc()
+		return nil, ErrPositionResolutionIsEmpty
+	}
+
+	// Log the position estimate success
+	awsPositionEstimatesSuccessCounter.Inc()
+	awsPositionEstimatesDurationHistogram.Observe(time.Since(start).Seconds())
+
+	return decoder.NewDecodedUplink([]decoder.Feature{
+		decoder.FeatureGNSS,
+		decoder.FeatureTimestamp,
+		decoder.FeatureBuffered,
+	}, pos), nil
 }
 
 func getGPSTime(captureTime time.Time) float32 {

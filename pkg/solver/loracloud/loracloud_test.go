@@ -90,7 +90,14 @@ func TestDeliverUplinkMessage(t *testing.T) {
 						"streamport": 5,
 						"gnssngport": 6
 					},
-					"operation": "other"
+					"position_solution": {
+							"algorithm_type": "gnssng",
+							"llh": [51.49278, 53.0212, 0],
+							"accuracy": 20.7,
+							"gdop": 2.48,
+							"capture_time_utc": 1722433373.18046
+					},
+					"operation": "gnss"
 				}
 			}`))
 		})

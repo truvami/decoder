@@ -18,7 +18,8 @@ type TagXLv1Decoder struct {
 	skipValidation bool
 	logger         *zap.Logger
 
-	solver solver.SolverV1
+	solver         solver.SolverV1
+	fallbackSolver solver.SolverV1
 }
 
 func NewTagXLv1Decoder(ctx context.Context, solver solver.SolverV1, logger *zap.Logger, options ...Option) decoder.Decoder {
@@ -27,8 +28,9 @@ func NewTagXLv1Decoder(ctx context.Context, solver solver.SolverV1, logger *zap.
 	}
 
 	tagXLv1Decoder := &TagXLv1Decoder{
-		logger: logger,
-		solver: solver,
+		logger:         logger,
+		solver:         solver,
+		fallbackSolver: nil,
 	}
 
 	for _, option := range options {
@@ -41,6 +43,12 @@ func NewTagXLv1Decoder(ctx context.Context, solver solver.SolverV1, logger *zap.
 func WithSkipValidation(skipValidation bool) Option {
 	return func(t *TagXLv1Decoder) {
 		t.skipValidation = skipValidation
+	}
+}
+
+func WithFallbackSolver(fallbackSolver solver.SolverV1) Option {
+	return func(t *TagXLv1Decoder) {
+		t.fallbackSolver = fallbackSolver
 	}
 }
 
@@ -199,8 +207,19 @@ func (t TagXLv1Decoder) Decode(ctx context.Context, data string, port uint8) (*d
 	case 192, 199:
 		uplink, err := t.solver.Solve(ctx, data)
 		if err != nil {
-			return nil, common.WrapError(err, common.ErrSolverFailed)
+			if t.fallbackSolver == nil {
+				tagXlDecoderSolverFailedCounter.Inc()
+				return nil, common.WrapError(err, common.ErrSolverFailed)
+			}
+
+			uplink, err = t.fallbackSolver.Solve(ctx, data)
+			if err != nil {
+				tagXlDecoderSolverFailedCounter.Inc()
+				return nil, common.WrapError(err, common.ErrSolverFailed)
+			}
+			tagXlDecoderSuccessfullyUsedFallbackSolverCounter.Inc()
 		}
+
 		return uplink, nil
 	default:
 		bytes, err := common.HexStringToBytes(data)

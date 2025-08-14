@@ -300,11 +300,6 @@ func (m LoracloudClient) DeliverUplinkMessage(devEui string, uplinkMsg UplinkMsg
 		loracloudPositionEstimateZeroCoordinatesSetCounter.WithLabelValues(metricDevEui).Inc()
 	}
 	if uplinkResponse.GetTimestamp() == nil &&
-		uplinkResponse.GetLatitude() == 0 &&
-		uplinkResponse.GetLongitude() == 0 {
-		loracloudPositionEstimateNoCapturedAtSetAndZeroCoordinatesSetCounter.WithLabelValues(metricDevEui).Inc()
-	}
-	if uplinkResponse.GetTimestamp() == nil &&
 		uplinkResponse.GetLatitude() != 0 &&
 		uplinkResponse.GetLongitude() != 0 {
 		loracloudPositionEstimateNoCapturedAtSetWithValidCoordinatesCounter.WithLabelValues(metricDevEui).Inc()
@@ -313,6 +308,13 @@ func (m LoracloudClient) DeliverUplinkMessage(devEui string, uplinkMsg UplinkMsg
 		uplinkResponse.GetLatitude() != 0 &&
 		uplinkResponse.GetLongitude() != 0 {
 		loracloudPositionEstimateValidCounter.WithLabelValues(metricDevEui).Inc()
+	}
+
+	if uplinkResponse.GetTimestamp() == nil &&
+		uplinkResponse.GetLatitude() == 0 &&
+		uplinkResponse.GetLongitude() == 0 {
+		loracloudPositionEstimateNoCapturedAtSetAndZeroCoordinatesSetCounter.WithLabelValues(metricDevEui).Inc()
+		return nil, ErrPositionResolutionIsEmpty
 	}
 
 	return &uplinkResponse, nil
