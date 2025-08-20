@@ -15,6 +15,8 @@ var (
 	ErrValidationFailed = errors.New("validation failed")
 
 	ErrSolverFailed = errors.New("solver failed")
+
+	ErrGNSSNGHeaderByteMissing = errors.New("GNSS-NG header byte missing")
 )
 
 // WrapError wraps two errors into a single error, combining the parent and child errors.

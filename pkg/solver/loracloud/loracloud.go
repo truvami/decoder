@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/go-playground/validator"
+	"github.com/truvami/decoder/pkg/common"
 	"github.com/truvami/decoder/pkg/decoder"
 	"github.com/truvami/decoder/pkg/solver"
 	"go.uber.org/zap"
@@ -140,7 +141,17 @@ func (m LoracloudClient) Solve(ctx context.Context, payload string) (*decoder.De
 	if err != nil {
 		return nil, fmt.Errorf("error delivering uplink message: %v", err)
 	}
-	return decoder.NewDecodedUplink([]decoder.Feature{decoder.FeatureTimestamp, decoder.FeatureGNSS, decoder.FeatureBuffered}, decodedData), err
+
+	features := []decoder.Feature{}
+	if decodedData.HasValidPositionResolution() {
+		features = []decoder.Feature{
+			decoder.FeatureTimestamp,
+			decoder.FeatureGNSS,
+			decoder.FeatureBuffered,
+		}
+	}
+
+	return decoder.NewDecodedUplink(features, decodedData), err
 }
 
 func (m LoracloudClient) post(url string, body []byte) (*http.Response, error) {
@@ -207,6 +218,16 @@ func (m LoracloudClient) DeliverUplinkMessage(devEui string, uplinkMsg UplinkMsg
 	err := validate.Struct(uplinkMsg)
 	if err != nil {
 		return nil, fmt.Errorf("error validating uplink message: %v", err)
+	}
+
+	// Decode the GNSS-NG header
+	bytes, err := common.HexStringToBytes(uplinkMsg.Payload)
+	if err != nil {
+		return nil, err
+	}
+	header, err := common.DecodeGNSSNGHeader(bytes)
+	if err != nil {
+		return nil, err
 	}
 
 	url := fmt.Sprintf("%v/api/v1/device/send", m.BaseUrl)
@@ -290,31 +311,27 @@ func (m LoracloudClient) DeliverUplinkMessage(devEui string, uplinkMsg UplinkMsg
 	// remove the '-' from the devEui
 	uplinkResponse.Result.Deveui = strings.ReplaceAll(uplinkResponse.Result.Deveui, "-", "")
 
-	// Increment metrics
-	metricDevEui := uplinkResponse.Result.Deveui
-	if uplinkResponse.GetTimestamp() == nil {
-		loracloudPositionEstimateNoCapturedAtSetCounter.WithLabelValues(metricDevEui).Inc()
-	}
-	if uplinkResponse.GetLatitude() == 0 &&
-		uplinkResponse.GetLongitude() == 0 {
-		loracloudPositionEstimateZeroCoordinatesSetCounter.WithLabelValues(metricDevEui).Inc()
-	}
-	if uplinkResponse.GetTimestamp() == nil &&
-		uplinkResponse.GetLatitude() != 0 &&
-		uplinkResponse.GetLongitude() != 0 {
-		loracloudPositionEstimateNoCapturedAtSetWithValidCoordinatesCounter.WithLabelValues(metricDevEui).Inc()
-	}
-	if uplinkResponse.GetTimestamp() != nil &&
-		uplinkResponse.GetLatitude() != 0 &&
-		uplinkResponse.GetLongitude() != 0 {
-		loracloudPositionEstimateValidCounter.WithLabelValues(metricDevEui).Inc()
-	}
+	// We sent a position with the EndOfGroup GNSS-NG header flag set - we expect a position resolution
+	if header.EndOfGroup {
+		metricDevEui := uplinkResponse.Result.Deveui
 
-	if uplinkResponse.GetTimestamp() == nil &&
-		uplinkResponse.GetLatitude() == 0 &&
-		uplinkResponse.GetLongitude() == 0 {
-		loracloudPositionEstimateNoCapturedAtSetAndZeroCoordinatesSetCounter.WithLabelValues(metricDevEui).Inc()
-		return nil, ErrPositionResolutionIsEmpty
+		if uplinkResponse.GetTimestamp() == nil {
+			loracloudPositionEstimateNoCapturedAtSetCounter.WithLabelValues(metricDevEui).Inc()
+		}
+		if !uplinkResponse.HasValidCoordinates() {
+			loracloudPositionEstimateZeroCoordinatesSetCounter.WithLabelValues(metricDevEui).Inc()
+		}
+		if uplinkResponse.GetTimestamp() == nil &&
+			uplinkResponse.HasValidCoordinates() {
+			loracloudPositionEstimateNoCapturedAtSetWithValidCoordinatesCounter.WithLabelValues(metricDevEui).Inc()
+		}
+
+		if uplinkResponse.HasValidPositionResolution() {
+			loracloudPositionEstimateValidCounter.WithLabelValues(metricDevEui).Inc()
+		} else {
+			loracloudPositionEstimateInvalidCounter.WithLabelValues(metricDevEui).Inc()
+			return nil, ErrPositionResolutionIsEmpty
+		}
 	}
 
 	return &uplinkResponse, nil
@@ -495,6 +512,20 @@ func (p UplinkMsgResponse) GetAltitude() float64 {
 		return p.Result.PositionSolution.Llh[2]
 	}
 	return 0
+}
+
+func (p UplinkMsgResponse) HasValidCoordinates() bool {
+	if p.GetLatitude() == 0 && p.GetLongitude() == 0 {
+		return false
+	}
+	return true
+}
+
+func (p UplinkMsgResponse) HasValidPositionResolution() bool {
+	if p.GetTimestamp() != nil && p.HasValidCoordinates() {
+		return true
+	}
+	return false
 }
 
 func (p UplinkMsgResponse) GetAccuracy() *float64 {

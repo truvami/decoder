@@ -219,6 +219,7 @@ func TestResponseVariants(t *testing.T) {
 		name     string
 		result   []byte
 		expected Expected
+		err      error
 	}{
 		{
 			name: "normal response",
@@ -241,6 +242,7 @@ func TestResponseVariants(t *testing.T) {
 				longitude: 0.0212,
 				altitude:  83.93,
 			},
+			err: nil,
 		},
 		{
 			name: "llh empty array",
@@ -257,12 +259,8 @@ func TestResponseVariants(t *testing.T) {
 				"operation": "gnss"
 			}
 		}`),
-			expected: Expected{
-				timestamp: common.TimePointer(1722433373.18046),
-				latitude:  0,
-				longitude: 0,
-				altitude:  0,
-			},
+			expected: Expected{},
+			err:      ErrPositionResolutionIsEmpty,
 		},
 		{
 			name: "captured at null and no algorithm type",
@@ -278,12 +276,8 @@ func TestResponseVariants(t *testing.T) {
 				"operation": "gnss"
 			}
 		}`),
-			expected: Expected{
-				timestamp: nil,
-				latitude:  51.49278,
-				longitude: 0.0212,
-				altitude:  83.93,
-			},
+			expected: Expected{},
+			err:      ErrPositionResolutionIsEmpty,
 		},
 		{
 			name: "captured at null and gnss ng algorithm type",
@@ -358,21 +352,14 @@ func TestResponseVariants(t *testing.T) {
 			}
 
 			response, err := middleware.DeliverUplinkMessage(devEui, uplinkMsg)
-			if err != nil {
-				t.Fatalf("error %s", err)
-			}
-
-			if !common.TimePointerCompare(response.GetTimestamp(), test.expected.timestamp) {
-				t.Fatalf("expected timestamp %s got %s", test.expected.timestamp, response.GetTimestamp())
-			}
-			if response.GetLatitude() != test.expected.latitude {
-				t.Fatalf("expected latitude %f got %f", test.expected.latitude, response.GetLatitude())
-			}
-			if response.GetLongitude() != test.expected.longitude {
-				t.Fatalf("expected longitude %f got %f", test.expected.longitude, response.GetLongitude())
-			}
-			if response.GetAltitude() != test.expected.altitude {
-				t.Fatalf("expected altitude %f got %f", test.expected.altitude, response.GetAltitude())
+			if test.err != nil {
+				assert.ErrorIs(t, err, test.err)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, test.expected.timestamp, response.GetTimestamp())
+				assert.Equal(t, test.expected.latitude, response.GetLatitude())
+				assert.Equal(t, test.expected.longitude, response.GetLongitude())
+				assert.Equal(t, test.expected.altitude, response.GetAltitude())
 			}
 		})
 	}
