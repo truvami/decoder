@@ -70,29 +70,11 @@ func (p Port152Payload) GetTimestamp() *time.Time {
 }
 
 func (p Port152Payload) GetOldRotationState() decoder.RotationState {
-	switch p.OldRotationState {
-	case 1:
-		return decoder.RotationStatePouring
-	case 2:
-		return decoder.RotationStateMixing
-	case 3:
-		return decoder.RotationStateError
-	default:
-		return decoder.RotationStateUndefined
-	}
+	return byteToRotationState(p.OldRotationState)
 }
 
 func (p Port152Payload) GetNewRotationState() decoder.RotationState {
-	switch p.NewRotationState {
-	case 1:
-		return decoder.RotationStatePouring
-	case 2:
-		return decoder.RotationStateMixing
-	case 3:
-		return decoder.RotationStateError
-	default:
-		return decoder.RotationStateUndefined
-	}
+	return byteToRotationState(p.NewRotationState)
 }
 
 func (p Port152Payload) GetRotations() float64 {
@@ -105,4 +87,18 @@ func (p Port152Payload) GetDuration() time.Duration {
 
 func (p Port152Payload) GetSequenceNumber() uint {
 	return uint(p.SequenceNumber)
+}
+
+func byteToRotationState(b uint8) decoder.RotationState {
+	switch b {
+	case 0:
+		return decoder.RotationStateUndefined
+	case 1:
+		return decoder.RotationStateMixing
+	case 2:
+		return decoder.RotationStatePouring
+	case 3:
+		return decoder.RotationStateError
+	}
+	return decoder.RotationStateUndefined
 }
