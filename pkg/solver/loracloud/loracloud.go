@@ -330,6 +330,7 @@ func (m LoracloudClient) DeliverUplinkMessage(devEui string, uplinkMsg UplinkMsg
 			loracloudPositionEstimateValidCounter.WithLabelValues(metricDevEui).Inc()
 		} else {
 			loracloudPositionEstimateInvalidCounter.WithLabelValues(metricDevEui).Inc()
+			m.logger.Error("position resolution is invalid", zap.Any("uplinkResponse", uplinkResponse))
 			return nil, ErrPositionResolutionIsEmpty
 		}
 	}
