@@ -1,6 +1,8 @@
 package tagxl
 
 import (
+	"time"
+
 	"github.com/truvami/decoder/pkg/decoder"
 )
 
@@ -21,19 +23,35 @@ import (
 // +------+------+-----------------------------------------------+------------+
 
 type Port197Payload struct {
-	Rssi1 *int8   `json:"rssi1" validate:"gte=-120,lte=-20"`
-	Mac1  string  `json:"mac1"`
-	Rssi2 *int8   `json:"rssi2" validate:"gte=-120,lte=-20"`
-	Mac2  *string `json:"mac2"`
-	Rssi3 *int8   `json:"rssi3" validate:"gte=-120,lte=-20"`
-	Mac3  *string `json:"mac3"`
-	Rssi4 *int8   `json:"rssi4" validate:"gte=-120,lte=-20"`
-	Mac4  *string `json:"mac4"`
-	Rssi5 *int8   `json:"rssi5" validate:"gte=-120,lte=-20"`
-	Mac5  *string `json:"mac5"`
+	Rssi1     *int8     `json:"rssi1,omitempty"`
+	Mac1      string    `json:"mac1"`
+	Rssi2     *int8     `json:"rssi2,omitempty"`
+	Mac2      *string   `json:"mac2,omitempty"`
+	Rssi3     *int8     `json:"rssi3,omitempty"`
+	Mac3      *string   `json:"mac3,omitempty"`
+	Rssi4     *int8     `json:"rssi4,omitempty"`
+	Mac4      *string   `json:"mac4,omitempty"`
+	Rssi5     *int8     `json:"rssi5,omitempty"`
+	Mac5      *string   `json:"mac5,omitempty"`
+	Timestamp time.Time `json:"timestamp,omitempty"`
+	Version   uint8     `json:"tag,omitempty"`
+	Moving    bool      `json:"moving"`
 }
 
 var _ decoder.UplinkFeatureWiFi = &Port197Payload{}
+var _ decoder.UplinkFeatureTimestamp = &Port197Payload{}
+var _ decoder.UplinkFeatureMoving = &Port197Payload{}
+
+func (p Port197Payload) IsMoving() bool {
+	return p.Moving
+}
+
+func (p Port197Payload) GetTimestamp() *time.Time {
+	if p.Timestamp.IsZero() {
+		return nil
+	}
+	return &p.Timestamp
+}
 
 func (p Port197Payload) GetAccessPoints() []decoder.AccessPoint {
 	accessPoints := []decoder.AccessPoint{}
@@ -75,3 +93,8 @@ func (p Port197Payload) GetAccessPoints() []decoder.AccessPoint {
 
 	return accessPoints
 }
+
+const (
+	Port197Version1 = 0x00
+	Port197Version2 = 0x01
+)

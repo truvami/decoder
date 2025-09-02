@@ -121,7 +121,7 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 	case 152:
 		var version uint8 = payload[0]
 		switch version {
-		case 0x01:
+		case Port152Version1:
 			return common.PayloadConfig{
 				Fields: []common.FieldConfig{
 					{Name: "Version", Start: 0, Length: 1},
@@ -140,7 +140,7 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 				TargetType: reflect.TypeOf(Port152Payload{}),
 				Features:   []decoder.Feature{decoder.FeatureRotationState, decoder.FeatureTimestamp},
 			}, nil
-		case 0x02:
+		case Port152Version2:
 			return common.PayloadConfig{
 				Fields: []common.FieldConfig{
 					{Name: "Version", Start: 0, Length: 1},
@@ -166,7 +166,7 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 	case 197:
 		var version uint8 = payload[0]
 		switch version {
-		case 0x00:
+		case Port197Version1: // Legacy format: MACs only
 			return common.PayloadConfig{
 				Fields: []common.FieldConfig{
 					{Name: "Mac1", Start: 1, Length: 6, Hex: true},
@@ -178,7 +178,7 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 				TargetType: reflect.TypeOf(Port197Payload{}),
 				Features:   []decoder.Feature{decoder.FeatureWiFi},
 			}, nil
-		case 0x01:
+		case Port197Version2: // New format: RSSI + MAC pairs
 			return common.PayloadConfig{
 				Fields: []common.FieldConfig{
 					{Name: "Rssi1", Start: 1, Length: 1},
@@ -198,13 +198,98 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 		default:
 			return common.PayloadConfig{}, fmt.Errorf("%w: version %v for port %d not supported", common.ErrPortNotSupported, version, port)
 		}
+	case 198: // Moving Wi-Fi, TAG=0x01, RSSI + MAC pairs
+		var version uint8 = payload[0]
+		switch version {
+		case Port197Version1: // Legacy format: MACs only
+			return common.PayloadConfig{
+				Fields: []common.FieldConfig{
+					// This will always be true for port 198
+					{Name: "Moving", Start: 0, Length: 1, Transform: func(v any) any { return true }},
+					{Name: "Mac1", Start: 1, Length: 6, Hex: true},
+					{Name: "Mac2", Start: 7, Length: 6, Optional: true, Hex: true},
+					{Name: "Mac3", Start: 13, Length: 6, Optional: true, Hex: true},
+					{Name: "Mac4", Start: 19, Length: 6, Optional: true, Hex: true},
+					{Name: "Mac5", Start: 25, Length: 6, Optional: true, Hex: true},
+				},
+				TargetType: reflect.TypeOf(Port197Payload{}),
+				Features:   []decoder.Feature{decoder.FeatureWiFi, decoder.FeatureMoving},
+			}, nil
+		case Port197Version2: // New format: RSSI + MAC pairs
+			return common.PayloadConfig{
+				Fields: []common.FieldConfig{
+					// This will always be true for port 198
+					{Name: "Moving", Start: 0, Length: 1, Transform: func(v any) any { return true }},
+					{Name: "Rssi1", Start: 1, Length: 1},
+					{Name: "Mac1", Start: 2, Length: 6, Hex: true},
+					{Name: "Rssi2", Start: 8, Length: 1, Optional: true},
+					{Name: "Mac2", Start: 9, Length: 6, Optional: true, Hex: true},
+					{Name: "Rssi3", Start: 15, Length: 1, Optional: true},
+					{Name: "Mac3", Start: 16, Length: 6, Optional: true, Hex: true},
+					{Name: "Rssi4", Start: 22, Length: 1, Optional: true},
+					{Name: "Mac4", Start: 23, Length: 6, Optional: true, Hex: true},
+					{Name: "Rssi5", Start: 29, Length: 1, Optional: true},
+					{Name: "Mac5", Start: 30, Length: 6, Optional: true, Hex: true},
+				},
+				TargetType: reflect.TypeOf(Port197Payload{}),
+				Features:   []decoder.Feature{decoder.FeatureWiFi, decoder.FeatureMoving},
+			}, nil
+		default:
+			return common.PayloadConfig{}, fmt.Errorf("%w: version %v for port %d not supported", common.ErrPortNotSupported, version, port)
+		}
+	case 200: // Steady Wi-Fi with timestamp, TAG=0x01, RSSI + MAC pairs
+		var tag = payload[4]
+		if tag != 0x01 {
+			return common.PayloadConfig{}, fmt.Errorf("%w: tag %v for port %d not supported", common.ErrPortNotSupported, tag, port)
+		}
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
+				{Name: "Timestamp", Start: 0, Length: 4, Transform: timestamp},
+				{Name: "Version", Start: 4, Length: 1}, // Validate this equals 0x01
+				{Name: "Rssi1", Start: 5, Length: 1},
+				{Name: "Mac1", Start: 6, Length: 6, Hex: true},
+				{Name: "Rssi2", Start: 12, Length: 1, Optional: true},
+				{Name: "Mac2", Start: 13, Length: 6, Optional: true, Hex: true},
+				{Name: "Rssi3", Start: 19, Length: 1, Optional: true},
+				{Name: "Mac3", Start: 20, Length: 6, Optional: true, Hex: true},
+				{Name: "Rssi4", Start: 26, Length: 1, Optional: true},
+				{Name: "Mac4", Start: 27, Length: 6, Optional: true, Hex: true},
+				{Name: "Rssi5", Start: 33, Length: 1, Optional: true},
+				{Name: "Mac5", Start: 34, Length: 6, Optional: true, Hex: true},
+			},
+			TargetType: reflect.TypeOf(Port197Payload{}),
+			Features:   []decoder.Feature{decoder.FeatureWiFi, decoder.FeatureTimestamp},
+		}, nil
+	case 201: // Moving Wi-Fi with timestamp, TAG=0x01, RSSI + MAC pairs
+		var tag = payload[4]
+		if tag != 0x01 {
+			return common.PayloadConfig{}, fmt.Errorf("%w: tag %v for port %d not supported", common.ErrPortNotSupported, tag, port)
+		}
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
+				{Name: "Timestamp", Start: 0, Length: 4, Transform: timestamp},
+				{Name: "Version", Start: 4, Length: 1}, // Validate this equals 0x01
+				{Name: "Rssi1", Start: 5, Length: 1},
+				{Name: "Mac1", Start: 6, Length: 6, Hex: true},
+				{Name: "Rssi2", Start: 12, Length: 1, Optional: true},
+				{Name: "Mac2", Start: 13, Length: 6, Optional: true, Hex: true},
+				{Name: "Rssi3", Start: 19, Length: 1, Optional: true},
+				{Name: "Mac3", Start: 20, Length: 6, Optional: true, Hex: true},
+				{Name: "Rssi4", Start: 26, Length: 1, Optional: true},
+				{Name: "Mac4", Start: 27, Length: 6, Optional: true, Hex: true},
+				{Name: "Rssi5", Start: 33, Length: 1, Optional: true},
+				{Name: "Mac5", Start: 34, Length: 6, Optional: true, Hex: true},
+			},
+			TargetType: reflect.TypeOf(Port197Payload{}),
+			Features:   []decoder.Feature{decoder.FeatureWiFi, decoder.FeatureTimestamp, decoder.FeatureMoving},
+		}, nil
 	}
 	return common.PayloadConfig{}, fmt.Errorf("%w: port %v not supported", common.ErrPortNotSupported, port)
 }
 
 func (t TagXLv1Decoder) Decode(ctx context.Context, data string, port uint8) (*decoder.DecodedUplink, error) {
 	switch port {
-	case 192, 199:
+	case 192, 193, 194, 195, 199:
 		uplink, err := t.solver.Solve(ctx, data)
 		if err != nil {
 			if t.fallbackSolver == nil {

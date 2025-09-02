@@ -35,12 +35,12 @@ import (
 // +------+------+-----------------------------------------------+------------+
 
 type Port152Payload struct {
-	Version           uint8     `json:"version" validate:"gte=1,lte=2"`
-	SequenceNumber    uint8     `json:"sequenceNumber" validate:"lte=255"`
-	OldRotationState  uint8     `json:"oldRotationState" validate:"lte=3"`
-	NewRotationState  uint8     `json:"newRotationState" validate:"lte=3"`
+	Version           uint8     `json:"version"`
+	SequenceNumber    uint8     `json:"sequenceNumber,omitempty"`
+	OldRotationState  uint8     `json:"oldRotationState"`
+	NewRotationState  uint8     `json:"newRotationState"`
 	Timestamp         time.Time `json:"timestamp"`
-	NumberOfRotations float64   `json:"numberOfRotations" validate:"gte=0"`
+	NumberOfRotations float64   `json:"numberOfRotations"`
 	ElapsedSeconds    uint32    `json:"elapsedSeconds"`
 }
 
@@ -102,3 +102,8 @@ func byteToRotationState(b uint8) decoder.RotationState {
 	}
 	return decoder.RotationStateUndefined
 }
+
+const (
+	Port152Version1 = 0x01
+	Port152Version2 = 0x02
+)

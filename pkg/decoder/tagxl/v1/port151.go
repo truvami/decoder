@@ -30,26 +30,25 @@ import (
 // | 4b  | 4    | gnss scans since reset                         | uint16     |
 // |     |      | wifi scans since reset                         | uint16     |
 // +-----+------+------------------------------------------------+------------+
-
 type Port151Payload struct {
-	AccelerometerEnabled                 *bool    `json:"accelerometerEnabled"`
-	WifiEnabled                          *bool    `json:"wifiEnabled"`
-	GnssEnabled                          *bool    `json:"gnssEnabled"`
-	FirmwareUpgrade                      *bool    `json:"firmwareUpgrade"`
-	LocalizationIntervalWhileMoving      *uint16  `json:"movingInterval" validate:"gte=60,lte=86400"`
-	LocalizationIntervalWhileSteady      *uint16  `json:"steadyInterval" validate:"gte=120,lte=86400"`
-	AccelerometerWakeupThreshold         *uint16  `json:"accelerometerWakeupThreshold" validate:"gte=10,lte=8000"`
-	AccelerometerDelay                   *uint16  `json:"accelerometerDelay" validate:"gte=1000,lte=10000"`
-	HeartbeatInterval                    *uint8   `json:"heartbeatInterval" validate:"gte=0,lte=168"`
-	AdvertisementFirmwareUpgradeInterval *uint8   `json:"advertisementFirmwareUpgradeInterval" validate:"gte=1,lte=86400"`
-	Battery                              *float32 `json:"battery" validate:"gte=1,lte=5"`
-	FirmwareHash                         *string  `json:"firmwareHash"`
-	RotationInvert                       *bool    `json:"rotationInvert"`
-	RotationConfirmed                    *bool    `json:"rotationConfirmed"`
-	ResetCount                           *uint16  `json:"resetCount"`
-	ResetCause                           *uint32  `json:"resetCause"`
-	GnssScans                            *uint16  `json:"gnssScans"`
-	WifiScans                            *uint16  `json:"wifiScans"`
+	AccelerometerEnabled                 *bool    `json:"accelerometerEnabled,omitempty"`
+	WifiEnabled                          *bool    `json:"wifiEnabled,omitempty"`
+	GnssEnabled                          *bool    `json:"gnssEnabled,omitempty"`
+	FirmwareUpgrade                      *bool    `json:"firmwareUpgrade,omitempty"`
+	LocalizationIntervalWhileMoving      *uint16  `json:"localizationIntervalWhileMoving,omitempty"`
+	LocalizationIntervalWhileSteady      *uint16  `json:"localizationIntervalWhileSteady,omitempty"`
+	AccelerometerWakeupThreshold         *uint16  `json:"accelerometerWakeupThreshold,omitempty"`
+	AccelerometerDelay                   *uint16  `json:"accelerometerDelay,omitempty"`
+	HeartbeatInterval                    *uint8   `json:"heartbeatInterval,omitempty"`
+	AdvertisementFirmwareUpgradeInterval *uint8   `json:"advertisementFirmwareUpgradeInterval,omitempty"`
+	Battery                              *float32 `json:"battery,omitempty"`
+	FirmwareHash                         *string  `json:"firmwareHash,omitempty"`
+	RotationInvert                       *bool    `json:"rotationInvert,omitempty"`
+	RotationConfirmed                    *bool    `json:"rotationConfirmed,omitempty"`
+	ResetCount                           *uint16  `json:"resetCount,omitempty"`
+	ResetCause                           *uint32  `json:"resetCause,omitempty"`
+	GnssScans                            *uint16  `json:"gnssScans,omitempty"`
+	WifiScans                            *uint16  `json:"wifiScans,omitempty"`
 }
 
 var _ decoder.UplinkFeatureBattery = &Port151Payload{}
