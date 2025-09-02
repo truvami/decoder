@@ -36,7 +36,7 @@ import (
 
 type Port152Payload struct {
 	Version           uint8     `json:"version"`
-	SequenceNumber    uint8     `json:"sequenceNumber,omitempty"`
+	SequenceNumber    uint8     `json:"sequenceNumber"`
 	OldRotationState  uint8     `json:"oldRotationState"`
 	NewRotationState  uint8     `json:"newRotationState"`
 	Timestamp         time.Time `json:"timestamp"`
