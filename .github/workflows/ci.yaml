@@ -111,8 +111,6 @@ jobs:
           cache: true
 
       - name: Generate test coverage
-        # No explicit 'go mod download' needed if tests directly use modules,
-        # as the 'go test' command will use the cached modules.
         run: go test ./... -coverprofile=./cover.out -covermode=atomic -coverpkg=./...
 
       - name: Upload coverage reports to Codecov
