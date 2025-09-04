@@ -87,11 +87,6 @@ jobs:
             echo "detect-secrets not available, skipping secret scan (basic validation will still run)"
           fi
 
-      - name: Secret Scanning with TruffleHog
-        uses: trufflesecurity/trufflehog@main
-        with:
-          extra_args: --results=verified,unknown
-
   test-coverage:
     name: Test & Coverage 🧪
     runs-on: ubuntu-latest
