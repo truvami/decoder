@@ -18,11 +18,43 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: 1.22
-          # Enable caching for Go modules
+          go-version: 1.24
           cache: true
-          # Optional: Specify a cache-dependency path if your go.mod/go.sum are not at the root
-          # cache-dependency-path: go.sum
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          pip install detect-secrets yamllint
+
+      - name: go mod tidy check
+        run: |
+          cp go.mod go.mod.prev
+          cp go.sum go.sum.prev
+          go mod tidy
+          diff -u go.mod.prev go.mod || (echo "::error file=go.mod::Run 'go mod tidy' and commit changes."; exit 1)
+          diff -u go.sum.prev go.sum || (echo "::error file=go.sum::Run 'go mod tidy' and commit changes."; exit 1)
+
+      - name: go fmt (no diffs allowed)
+        run: |
+          CHANGED=$(gofmt -s -l . || true)
+          if [ -n "$CHANGED" ]; then
+            echo "::error ::Run 'gofmt -s -w .' to format:"
+            echo "$CHANGED"
+            exit 1
+          fi
+
+      - name: go vet
+        run: go vet ./...
+
+      - name: Install staticcheck
+        run: go install honnef.co/go/tools/cmd/staticcheck@latest
+
+      - name: staticcheck
+        run: $(go env GOPATH)/bin/staticcheck ./...
 
       - name: Lint
         uses: golangci/golangci-lint-action@v6
@@ -34,6 +66,30 @@ jobs:
 
       - name: Check Prometheus metrics
         run: make check-metrics
+
+      - name: Run yamllint
+        run: yamllint .
+
+      - name: Check for uncommitted changes
+        run: |
+          git diff --exit-code || (echo "::error::Generated code is not up to date. Run 'make generate' and commit changes."; exit 1)
+
+      - name: Detect secrets
+        run: |
+          echo "🔍 Scanning for secrets..."
+          if command -v detect-secrets >/dev/null 2>&1; then
+            detect-secrets scan --baseline .secrets.baseline --all-files || echo "Secret detection completed with findings"
+            if [ -f ".secrets.baseline" ]; then
+              detect-secrets audit .secrets.baseline --statistics || echo "Baseline audit completed"
+            fi
+          else
+            echo "detect-secrets not available, skipping secret scan (basic validation will still run)"
+          fi
+
+      - name: Secret Scanning with TruffleHog
+        uses: trufflesecurity/trufflehog@main
+        with:
+          extra_args: --results=verified,unknown
 
   test-coverage:
     name: Test & Coverage 🧪
@@ -50,11 +106,8 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: 1.22
-          # Enable caching for Go modules
+          go-version: 1.24
           cache: true
-          # Optional: Specify a cache-dependency path if your go.mod/go.sum are not at the root
-          # cache-dependency-path: go.sum
 
       - name: Generate test coverage
         # No explicit 'go mod download' needed if tests directly use modules,
