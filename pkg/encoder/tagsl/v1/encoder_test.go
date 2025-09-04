@@ -7,7 +7,7 @@ import (
 	"time"
 
 	helpers "github.com/truvami/decoder/pkg/common"
-	"github.com/truvami/decoder/pkg/decoder/tagsl/v1"
+	tagsl "github.com/truvami/decoder/pkg/decoder/tagsl/v1"
 )
 
 func TestEncode(t *testing.T) {
