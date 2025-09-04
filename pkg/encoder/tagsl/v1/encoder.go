@@ -5,7 +5,7 @@ import (
 	"reflect"
 
 	"github.com/truvami/decoder/pkg/common"
-	"github.com/truvami/decoder/pkg/decoder/tagsl/v1"
+	tagsl "github.com/truvami/decoder/pkg/decoder/tagsl/v1"
 	"github.com/truvami/decoder/pkg/encoder"
 )
 
