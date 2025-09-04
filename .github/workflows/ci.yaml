@@ -6,6 +6,7 @@ on:
       - "**.go"
       - "**.md"
       - "**.mod"
+      - ".github/workflows/**.yaml"
 
 jobs:
   lint-and-format:
