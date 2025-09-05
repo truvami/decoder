@@ -121,7 +121,7 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 	case 152:
 		var version uint8 = payload[0]
 		switch version {
-		case 0x01:
+		case Port152Version1:
 			return common.PayloadConfig{
 				Fields: []common.FieldConfig{
 					{Name: "Version", Start: 0, Length: 1},
@@ -140,7 +140,7 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 				TargetType: reflect.TypeOf(Port152Payload{}),
 				Features:   []decoder.Feature{decoder.FeatureRotationState, decoder.FeatureTimestamp},
 			}, nil
-		case 0x02:
+		case Port152Version2:
 			return common.PayloadConfig{
 				Fields: []common.FieldConfig{
 					{Name: "Version", Start: 0, Length: 1},

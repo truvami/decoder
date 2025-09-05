@@ -34,6 +34,11 @@ import (
 // | 10   | 4    | elapsed seconds since last rotation           | uint32     |
 // +------+------+-----------------------------------------------+------------+
 
+const (
+	Port152Version1 = 0x01
+	Port152Version2 = 0x02
+)
+
 type Port152Payload struct {
 	Version           uint8     `json:"version" validate:"gte=1,lte=2"`
 	SequenceNumber    uint8     `json:"sequenceNumber" validate:"lte=255"`
