@@ -1,0 +1,56 @@
+---
+extends: default
+
+ignore: |
+  .git/
+  openapi.patched.yaml
+  openapi.yaml
+
+rules:
+  # Allow longer lines for URLs and certain contexts
+  line-length:
+    max: 300
+    allow-non-breakable-words: true
+    allow-non-breakable-inline-mappings: true
+
+  # Be more flexible with indentation in some contexts
+  indentation:
+    spaces: 2
+    indent-sequences: consistent
+
+  # Allow truthy values like "on", "off" which are common in configs
+  truthy:
+    allowed-values: ['true', 'false', 'on', 'off']
+
+  # Don't require document start marker for every file
+  document-start: disable
+
+  # Allow empty values (common in Helm templates)
+  empty-values: disable
+
+  # Be more permissive with comments
+  comments:
+    min-spaces-from-content: 0
+  comments-indentation: disable
+
+  # Allow Helm template syntax with braces
+  braces:
+    max-spaces-inside: 1
+    min-spaces-inside: 0
+
+  # Allow different line endings (for templates)
+  new-line-at-end-of-file: disable
+
+  # Allow different line ending types (Windows/Unix)
+  new-lines: disable
+
+  # Allow empty lines at start of file
+  empty-lines:
+    max-start: 1
+    max: 2
+
+  # Be permissive with trailing spaces (common in editors)
+  trailing-spaces: disable
+
+  # Be permissive with comma spacing
+  commas: disable

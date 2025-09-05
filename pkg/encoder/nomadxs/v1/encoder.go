@@ -5,7 +5,7 @@ import (
 	"reflect"
 
 	"github.com/truvami/decoder/pkg/common"
-	"github.com/truvami/decoder/pkg/decoder/nomadxs/v1"
+	nomadxs "github.com/truvami/decoder/pkg/decoder/nomadxs/v1"
 	"github.com/truvami/decoder/pkg/encoder"
 )
 

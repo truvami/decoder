@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/truvami/decoder/pkg/common"
-	"github.com/truvami/decoder/pkg/decoder/smartlabel/v1"
+	smartlabel "github.com/truvami/decoder/pkg/decoder/smartlabel/v1"
 )
 
 func TestEncode(t *testing.T) {
