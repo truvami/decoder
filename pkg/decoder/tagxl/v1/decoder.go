@@ -166,9 +166,11 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 	case 197:
 		var version uint8 = payload[0]
 		switch version {
-		case 0x00:
+		case Port197Version1:
 			return common.PayloadConfig{
 				Fields: []common.FieldConfig{
+					{Name: "Version", Start: 0, Length: 1},
+					{Name: "Moving", Start: 0, Length: 1, Transform: alwaysFalse},
 					{Name: "Mac1", Start: 1, Length: 6, Hex: true},
 					{Name: "Mac2", Start: 7, Length: 6, Optional: true, Hex: true},
 					{Name: "Mac3", Start: 13, Length: 6, Optional: true, Hex: true},
@@ -176,11 +178,13 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 					{Name: "Mac5", Start: 25, Length: 6, Optional: true, Hex: true},
 				},
 				TargetType: reflect.TypeOf(Port197Payload{}),
-				Features:   []decoder.Feature{decoder.FeatureWiFi},
+				Features:   []decoder.Feature{decoder.FeatureWiFi, decoder.FeatureMoving},
 			}, nil
-		case 0x01:
+		case Port197Version2:
 			return common.PayloadConfig{
 				Fields: []common.FieldConfig{
+					{Name: "Version", Start: 0, Length: 1},
+					{Name: "Moving", Start: 0, Length: 1, Transform: alwaysFalse},
 					{Name: "Rssi1", Start: 1, Length: 1},
 					{Name: "Mac1", Start: 2, Length: 6, Hex: true},
 					{Name: "Rssi2", Start: 8, Length: 1, Optional: true},
@@ -193,11 +197,51 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 					{Name: "Mac5", Start: 30, Length: 6, Optional: true, Hex: true},
 				},
 				TargetType: reflect.TypeOf(Port197Payload{}),
-				Features:   []decoder.Feature{decoder.FeatureWiFi},
+				Features:   []decoder.Feature{decoder.FeatureWiFi, decoder.FeatureMoving},
 			}, nil
 		default:
 			return common.PayloadConfig{}, fmt.Errorf("%w: version %v for port %d not supported", common.ErrPortNotSupported, version, port)
 		}
+	case 198:
+		var version uint8 = payload[0]
+		switch version {
+		case Port198Version1:
+			return common.PayloadConfig{
+				Fields: []common.FieldConfig{
+					{Name: "Version", Start: 0, Length: 1},
+					{Name: "Moving", Start: 0, Length: 1, Transform: alwaysTrue},
+					{Name: "Mac1", Start: 1, Length: 6, Hex: true},
+					{Name: "Mac2", Start: 7, Length: 6, Optional: true, Hex: true},
+					{Name: "Mac3", Start: 13, Length: 6, Optional: true, Hex: true},
+					{Name: "Mac4", Start: 19, Length: 6, Optional: true, Hex: true},
+					{Name: "Mac5", Start: 25, Length: 6, Optional: true, Hex: true},
+				},
+				TargetType: reflect.TypeOf(Port198Payload{}),
+				Features:   []decoder.Feature{decoder.FeatureWiFi, decoder.FeatureMoving},
+			}, nil
+		case Port198Version2:
+			return common.PayloadConfig{
+				Fields: []common.FieldConfig{
+					{Name: "Version", Start: 0, Length: 1},
+					{Name: "Moving", Start: 0, Length: 1, Transform: alwaysTrue},
+					{Name: "Rssi1", Start: 1, Length: 1},
+					{Name: "Mac1", Start: 2, Length: 6, Hex: true},
+					{Name: "Rssi2", Start: 8, Length: 1, Optional: true},
+					{Name: "Mac2", Start: 9, Length: 6, Optional: true, Hex: true},
+					{Name: "Rssi3", Start: 15, Length: 1, Optional: true},
+					{Name: "Mac3", Start: 16, Length: 6, Optional: true, Hex: true},
+					{Name: "Rssi4", Start: 22, Length: 1, Optional: true},
+					{Name: "Mac4", Start: 23, Length: 6, Optional: true, Hex: true},
+					{Name: "Rssi5", Start: 29, Length: 1, Optional: true},
+					{Name: "Mac5", Start: 30, Length: 6, Optional: true, Hex: true},
+				},
+				TargetType: reflect.TypeOf(Port198Payload{}),
+				Features:   []decoder.Feature{decoder.FeatureWiFi, decoder.FeatureMoving},
+			}, nil
+		default:
+			return common.PayloadConfig{}, fmt.Errorf("%w: version %v for port %d not supported", common.ErrPortNotSupported, version, port)
+		}
+
 	}
 	return common.PayloadConfig{}, fmt.Errorf("%w: port %v not supported", common.ErrPortNotSupported, port)
 }
@@ -246,4 +290,12 @@ func (t TagXLv1Decoder) Decode(ctx context.Context, data string, port uint8) (*d
 
 func timestamp(v any) any {
 	return time.Unix(int64(common.BytesToUint32(v.([]byte))), 0).UTC()
+}
+
+func alwaysTrue(v any) any {
+	return true
+}
+
+func alwaysFalse(v any) any {
+	return false
 }
