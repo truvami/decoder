@@ -163,6 +163,21 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 		default:
 			return common.PayloadConfig{}, fmt.Errorf("%w: version %v for port %d not supported", common.ErrPortNotSupported, version, port)
 		}
+	case 193:
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
+				{Name: "Timestamp", Start: 0, Length: 4, Transform: timestamp},
+				{Name: "EndOfGroup", Start: 4, Length: 1, Transform: func(v any) any {
+					return (v.([]byte)[0] >> 7) != 0
+				}},
+				{Name: "GroupToken", Start: 4, Length: 1, Transform: func(v any) any {
+					return v.([]byte)[0] & 0x1f
+				}},
+				{Name: "NavMessage", Start: 5, Length: len(payload) - 5},
+			},
+			TargetType: reflect.TypeOf(Port193Payload{}),
+			Features:   []decoder.Feature{decoder.FeatureGNSS, decoder.FeatureTimestamp, decoder.FeatureMoving},
+		}, nil
 	case 197:
 		var version uint8 = payload[0]
 		switch version {
