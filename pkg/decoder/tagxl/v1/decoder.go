@@ -329,7 +329,7 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 
 func (t TagXLv1Decoder) Decode(ctx context.Context, data string, port uint8) (*decoder.DecodedUplink, error) {
 	switch port {
-	case 192, 199:
+	case 192, 193, 199:
 		uplink, err := t.solver.Solve(ctx, data)
 		if err != nil {
 			if t.fallbackSolver == nil {
