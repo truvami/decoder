@@ -416,6 +416,35 @@ func TestDecode(t *testing.T) {
 	}
 }
 
+func TestDecodeWithNoopSolver(t *testing.T) {
+	tests := []struct {
+		payload string
+		port    uint8
+		devEui  string
+	}{
+		{
+			payload: "87821f50490200b520fbe977844d222a3a14a89293956245cc75a9ca1bbc25ddf658542909",
+			port:    192,
+			devEui:  "10CE45FFFE00C7EC",
+		},
+		{
+			payload: "87821f50490200b520fbe977844d222a3a14a89293956245cc75a9ca1bbc25ddf658542909",
+			port:    192,
+			devEui:  "10CE45FFFE00C7ED",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(fmt.Sprintf("TestPort%vWith%v", test.port, test.payload), func(t *testing.T) {
+			decoder := NewSmartLabelv1Decoder(context.TODO(), solver.NoopSolver{}, zap.NewNop())
+			got, err := decoder.Decode(context.TODO(), test.payload, test.port)
+
+			assert.NotNil(t, got)
+			assert.NoError(t, err)
+		})
+	}
+}
+
 func TestInvalidPort(t *testing.T) {
 	logger := zap.NewExample()
 	defer func() {
