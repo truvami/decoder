@@ -2,6 +2,7 @@ package smartlabel
 
 import (
 	"fmt"
+	"math"
 	"reflect"
 
 	"github.com/truvami/decoder/pkg/common"
@@ -88,7 +89,11 @@ func photovoltaic(v any) any {
 }
 
 func temperature(v any) any {
-	return common.UintToBytes(uint64(common.BytesToFloat32(v.([]byte))*100), 2)
+	// Encode temperature as signed int16 with scale 100 (two's complement, big-endian).
+	// This matches expected payloads like -4.98°C -> 0xFE0E.
+	f := float64(common.BytesToFloat32(v.([]byte)))
+	scaled := int64(math.Round(f * 100.0))
+	return common.IntToBytes(scaled, 2)
 }
 
 func humidity(v any) any {
