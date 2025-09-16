@@ -107,7 +107,9 @@ func (p Port201Payload) GetAccessPoints() []decoder.AccessPoint {
 	return accessPoints
 }
 
-// Port 201 does not provide movement information, so we return false.
+/*
+Port 201 indicates movement (moving variant), so we return true.
+*/
 func (p Port201Payload) IsMoving() bool {
 	return true
 }

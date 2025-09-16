@@ -83,6 +83,9 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 			Features:   []decoder.Feature{decoder.FeatureTimestamp},
 		}, nil
 	case 151:
+		if len(payload) < 1 {
+			return common.PayloadConfig{}, common.ErrPayloadTooShort
+		}
 		var payloadType byte = payload[0]
 		if payloadType != 0x4c {
 			return common.PayloadConfig{}, fmt.Errorf("%w: port %d tag %x", common.ErrPortNotSupported, port, payloadType)
@@ -138,6 +141,9 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 			Features:   []decoder.Feature{},
 		}, nil
 	case 152:
+		if len(payload) < 1 {
+			return common.PayloadConfig{}, common.ErrPayloadTooShort
+		}
 		var version uint8 = payload[0]
 		switch version {
 		case Port152Version1:
@@ -182,22 +188,10 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 		default:
 			return common.PayloadConfig{}, fmt.Errorf("%w: version %v for port %d not supported", common.ErrPortNotSupported, version, port)
 		}
-	case 193:
-		return common.PayloadConfig{
-			Fields: []common.FieldConfig{
-				{Name: "Timestamp", Start: 0, Length: 4, Transform: timestamp},
-				{Name: "EndOfGroup", Start: 4, Length: 1, Transform: func(v any) any {
-					return (v.([]byte)[0] >> 7) != 0
-				}},
-				{Name: "GroupToken", Start: 4, Length: 1, Transform: func(v any) any {
-					return v.([]byte)[0] & 0x1f
-				}},
-				{Name: "NavMessage", Start: 5, Length: len(payload) - 5},
-			},
-			TargetType: reflect.TypeOf(Port193Payload{}),
-			Features:   []decoder.Feature{decoder.FeatureGNSS, decoder.FeatureTimestamp, decoder.FeatureMoving},
-		}, nil
 	case 197:
+		if len(payload) < 1 {
+			return common.PayloadConfig{}, common.ErrPayloadTooShort
+		}
 		var version uint8 = payload[0]
 		switch version {
 		case Port197Version1:
@@ -237,6 +231,9 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 			return common.PayloadConfig{}, fmt.Errorf("%w: version %v for port %d not supported", common.ErrPortNotSupported, version, port)
 		}
 	case 198:
+		if len(payload) < 1 {
+			return common.PayloadConfig{}, common.ErrPayloadTooShort
+		}
 		var version uint8 = payload[0]
 		switch version {
 		case Port198Version1:
@@ -276,6 +273,9 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 			return common.PayloadConfig{}, fmt.Errorf("%w: version %v for port %d not supported", common.ErrPortNotSupported, version, port)
 		}
 	case 200:
+		if len(payload) < 5 {
+			return common.PayloadConfig{}, common.ErrPayloadTooShort
+		}
 		var version uint8 = payload[4]
 		switch version {
 		case Port200Version1:
@@ -317,6 +317,9 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 			return common.PayloadConfig{}, fmt.Errorf("%w: version %v for port %d not supported", common.ErrPortNotSupported, version, port)
 		}
 	case 201:
+		if len(payload) < 5 {
+			return common.PayloadConfig{}, common.ErrPayloadTooShort
+		}
 		var version uint8 = payload[4]
 		switch version {
 		case Port201Version1:
@@ -361,6 +364,20 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 	return common.PayloadConfig{}, fmt.Errorf("%w: port %v not supported", common.ErrPortNotSupported, port)
 }
 
+/*
+GNSS solver routing and semantics:
+- Ports 192/193/194/195/199 are GNSS NAV grouping ports. When a v2 solver is configured, we prefer it.
+- Movement semantics by port:
+  - 192: steady (Moving=false)
+  - 193: moving (Moving=true)
+  - 194: steady (Moving=false), timestamped payload (first 4 bytes UNIX seconds) is stripped before solving
+  - 195: moving (Moving=true), timestamped payload (first 4 bytes UNIX seconds) is stripped before solving
+  - 199: unspecified; Moving and Timestamp left nil unless future protocol specifies otherwise
+
+- When no v2 solver is provided:
+  - Ports 194/195 are not supported (they require timestamp stripping and explicit options).
+  - Ports 192/193/199 fall back to the legacy v1 solver for backward compatibility.
+*/
 func (t TagXLv1Decoder) Decode(ctx context.Context, data string, port uint8) (*decoder.DecodedUplink, error) {
 	switch port {
 	// GNSS NAV grouping ports now use the v2 solver when available.

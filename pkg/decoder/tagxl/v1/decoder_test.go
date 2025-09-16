@@ -31,7 +31,8 @@ func startMockServer(handler http.Handler) *httptest.Server {
 
 func TestDecode(t *testing.T) {
 
-	http.HandleFunc("/api/v1/device/send", func(w http.ResponseWriter, r *http.Request) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/v1/device/send", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 
@@ -58,7 +59,7 @@ func TestDecode(t *testing.T) {
 		_, _ = w.Write(data)
 	})
 
-	server := startMockServer(nil)
+	server := startMockServer(mux)
 	middleware, err := loracloud.NewLoracloudClient(context.TODO(), "access_token", zap.NewExample())
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -978,9 +979,9 @@ func TestDecode(t *testing.T) {
 			expectedAny := test.expected
 			opts := []Option{}
 			switch test.port {
-			case 194, 195:
-				// For timestamped GNSS ports, use SolverV2 and return the same structure as port 192 expectation
-				// so that tests compare against exampleResponse.
+			case 192, 194, 195:
+				// For GNSS ports, use SolverV2 and return the same structure as port 192 expectation
+				// so that tests compare against exampleResponse. For 194/195, timestamp is handled by decoder.
 				v2Data := &exampleResponse
 				features := []decoder.Feature{decoder.FeatureGNSS}
 				if expectedAny == nil {

@@ -57,6 +57,9 @@ var _ decoder.UplinkFeatureConfig = &Port151Payload{}
 var _ decoder.UplinkFeatureFirmwareVersion = &Port151Payload{}
 
 func (p Port151Payload) GetBatteryVoltage() float64 {
+	if p.Battery == nil {
+		return 0
+	}
 	return float64(*p.Battery)
 }
 

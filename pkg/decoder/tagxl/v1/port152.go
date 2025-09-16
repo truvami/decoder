@@ -16,7 +16,7 @@ import (
 // | 2    | 1    | old rotation state                            | uint4      |
 // | 2    | 1    | new rotation state                            | uint4      |
 // | 3    | 4    | timestamp in seconds since epoch              | uint32     |
-// | 7    | 2    | number of rotations since last rotation       | uint32     |
+// | 7    | 2    | number of rotations since last rotation       | uint16     |
 // | 9    | 4    | elapsed seconds since last rotation           | uint32     |
 // +------+------+-----------------------------------------------+------------+
 //
@@ -30,7 +30,7 @@ import (
 // | 3    | 1    | old rotation state                            | uint4      |
 // | 3    | 1    | new rotation state                            | uint4      |
 // | 4    | 4    | timestamp in seconds since epoch              | uint32     |
-// | 8    | 2    | number of rotations since last rotation       | uint32     |
+// | 8    | 2    | number of rotations since last rotation       | uint16     |
 // | 10   | 4    | elapsed seconds since last rotation           | uint32     |
 // +------+------+-----------------------------------------------+------------+
 

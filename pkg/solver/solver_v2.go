@@ -12,13 +12,19 @@ type SolverV2 interface {
 }
 
 type SolverV2Options struct {
-	DevEui        string
-	UplinkCounter uint16
-	Port          uint8
+	DevEui string
 
-	// Optional captured at timestamp of the uplink, if available.
+	// UplinkCounter is the 16-bit device counter (FCntUp modulo 65536).
+	// If an upstream component provides a 32-bit frame counter, truncate to the
+	// lower 16 bits here and (optionally) carry the full 32-bit value via context
+	// or a separate field if your solver needs it.
+	UplinkCounter uint16
+
+	Port uint8
+
+	// Timestamp is the captured-at time of the uplink (UTC), when available.
 	Timestamp *time.Time
-	// Optional indicates if the device is in motion, if available.
+	// Moving, when set, indicates whether the device was in motion for this uplink.
 	Moving *bool
 }
 
