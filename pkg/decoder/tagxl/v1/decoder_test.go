@@ -338,26 +338,31 @@ func TestDecode(t *testing.T) {
 			expected:    &exampleResponse,
 			expectedErr: "",
 		},
-		// {
-		// 	port:    194,
-		// 	payload: "68b9b2318f2b157de4733aa4d27b5d3b3c6ecc9460a20a196b754655c98607",
-		// },
-		// {
-		// 	port:    194,
-		// 	payload: "68bad32509ab91418ae63a10b5004a0a3fef037ab2f06ce8e510820c1a0bdcecb49e1543fdd2f28f1c",
-		// },
-		// {
-		// 	port:    194,
-		// 	payload: "68bad32589b379e7ba0fb5006b9aaa8c8e25febf16f4e5c31d0cc8ca12a1cffdddf16c2cf82877f1edee4ecbc5ef54",
-		// },
-		// {
-		// 	port:    195,
-		// 	payload: "68bad3c50aabd56cb2e7ba0db5805a5ac9d4edd8de8a021b4ae2b78e8c0b8391566ab8d47d1d4c55ae794a2c2da7a637b49d32e44800",
-		// },
-		// {
-		// 	port:    195,
-		// 	payload: "68bad3c58aab4581b9e73a0eb580da120d7f85a75e770c6acad3dc2acdacbdcd576ab8147f5902557379b18d0f676a35fb9a6ae5ee03",
-		// },
+		{
+			port:     194,
+			payload:  "68b9b2318f2b157de4733aa4d27b5d3b3c6ecc9460a20a196b754655c98607",
+			expected: &exampleResponse,
+		},
+		{
+			port:     194,
+			payload:  "68bad32509ab91418ae63a10b5004a0a3fef037ab2f06ce8e510820c1a0bdcecb49e1543fdd2f28f1c",
+			expected: &exampleResponse,
+		},
+		{
+			port:     194,
+			payload:  "68bad32589b379e7ba0fb5006b9aaa8c8e25febf16f4e5c31d0cc8ca12a1cffdddf16c2cf82877f1edee4ecbc5ef54",
+			expected: &exampleResponse,
+		},
+		{
+			port:     195,
+			payload:  "68bad3c50aabd56cb2e7ba0db5805a5ac9d4edd8de8a021b4ae2b78e8c0b8391566ab8d47d1d4c55ae794a2c2da7a637b49d32e44800",
+			expected: &exampleResponse,
+		},
+		{
+			port:     195,
+			payload:  "68bad3c58aab4581b9e73a0eb580da120d7f85a75e770c6acad3dc2acdacbdcd576ab8147f5902557379b18d0f676a35fb9a6ae5ee03",
+			expected: &exampleResponse,
+		},
 		{
 			port:        197,
 			payload:     "ff",
@@ -969,8 +974,24 @@ func TestDecode(t *testing.T) {
 			ctx := context.WithValue(context.Background(), decoder.DEVEUI_CONTEXT_KEY, test.devEui)
 			ctx = context.WithValue(ctx, decoder.FCNT_CONTEXT_KEY, 1)
 
-			decoder := NewTagXLv1Decoder(ctx, solver.MockSolverV1{}, logger.Logger)
-			got, err := decoder.Decode(ctx, test.payload, test.port)
+			// Use SolverV2 for GNSS ports (192/193/194/195/199) so timestamped ports work without error and provide expected data.
+			expectedAny := test.expected
+			opts := []Option{}
+			switch test.port {
+			case 194, 195:
+				// For timestamped GNSS ports, use SolverV2 and return the same structure as port 192 expectation
+				// so that tests compare against exampleResponse.
+				v2Data := &exampleResponse
+				features := []decoder.Feature{decoder.FeatureGNSS}
+				if expectedAny == nil {
+					expectedAny = v2Data
+				}
+				opts = append(opts, WithSolverV2(solver.MockSolverV2{
+					Data: decoder.NewDecodedUplink(features, v2Data),
+				}))
+			}
+			dec := NewTagXLv1Decoder(ctx, solver.MockSolverV1{}, logger.Logger, opts...)
+			got, err := dec.Decode(ctx, test.payload, test.port)
 
 			if err == nil && len(test.expectedErr) != 0 {
 				t.Fatalf("expected error: %v, got %v", test.expectedErr, nil)
@@ -982,9 +1003,9 @@ func TestDecode(t *testing.T) {
 
 			t.Logf("got %v", got)
 
-			if got != nil && !reflect.DeepEqual(got.Data, test.expected) && len(test.expectedErr) == 0 {
+			if got != nil && !reflect.DeepEqual(got.Data, expectedAny) && len(test.expectedErr) == 0 {
 				// marshal the expected and got values to compare
-				expectedJSON, err := json.Marshal(test.expected)
+				expectedJSON, err := json.Marshal(expectedAny)
 				if err != nil {
 					t.Fatalf("failed to marshal expected value: %v", err)
 				}
