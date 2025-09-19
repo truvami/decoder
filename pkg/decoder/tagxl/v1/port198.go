@@ -34,13 +34,13 @@ import (
 // +------+------+-----------------------------------------------+------------+
 
 const (
-	Port197Version1 byte = 0x00
-	Port197Version2 byte = 0x01
+	Port198Version1 byte = 0x00
+	Port198Version2 byte = 0x01
 )
 
-type Port197Payload struct {
+type Port198Payload struct {
 	Version byte    `json:"version" validate:"gte=0,lte=1"`
-	Moving  bool    `json:"moving"` // Always false for Port 197
+	Moving  bool    `json:"moving"` // Always true for Port 198
 	Rssi1   *int8   `json:"rssi1" validate:"gte=-120,lte=-20"`
 	Mac1    string  `json:"mac1"`
 	Rssi2   *int8   `json:"rssi2" validate:"gte=-120,lte=-20"`
@@ -53,10 +53,10 @@ type Port197Payload struct {
 	Mac5    *string `json:"mac5"`
 }
 
-var _ decoder.UplinkFeatureWiFi = &Port197Payload{}
-var _ decoder.UplinkFeatureMoving = &Port197Payload{}
+var _ decoder.UplinkFeatureWiFi = &Port198Payload{}
+var _ decoder.UplinkFeatureMoving = &Port198Payload{}
 
-func (p Port197Payload) GetAccessPoints() []decoder.AccessPoint {
+func (p Port198Payload) GetAccessPoints() []decoder.AccessPoint {
 	accessPoints := []decoder.AccessPoint{}
 
 	if p.Mac1 != "" {
@@ -97,7 +97,7 @@ func (p Port197Payload) GetAccessPoints() []decoder.AccessPoint {
 	return accessPoints
 }
 
-// Port 197 does not provide movement information, so we return false.
-func (p Port197Payload) IsMoving() bool {
-	return false
+// Port 198 always indicates movement when WiFi is scanned.
+func (p Port198Payload) IsMoving() bool {
+	return true
 }

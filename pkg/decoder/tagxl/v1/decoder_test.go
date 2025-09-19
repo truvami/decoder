@@ -31,7 +31,8 @@ func startMockServer(handler http.Handler) *httptest.Server {
 
 func TestDecode(t *testing.T) {
 
-	http.HandleFunc("/api/v1/device/send", func(w http.ResponseWriter, r *http.Request) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/v1/device/send", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 
@@ -58,7 +59,7 @@ func TestDecode(t *testing.T) {
 		_, _ = w.Write(data)
 	})
 
-	server := startMockServer(nil)
+	server := startMockServer(mux)
 	middleware, err := loracloud.NewLoracloudClient(context.TODO(), "access_token", zap.NewExample())
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -339,6 +340,31 @@ func TestDecode(t *testing.T) {
 			expectedErr: "",
 		},
 		{
+			port:     194,
+			payload:  "68b9b2318f2b157de4733aa4d27b5d3b3c6ecc9460a20a196b754655c98607",
+			expected: &exampleResponse,
+		},
+		{
+			port:     194,
+			payload:  "68bad32509ab91418ae63a10b5004a0a3fef037ab2f06ce8e510820c1a0bdcecb49e1543fdd2f28f1c",
+			expected: &exampleResponse,
+		},
+		{
+			port:     194,
+			payload:  "68bad32589b379e7ba0fb5006b9aaa8c8e25febf16f4e5c31d0cc8ca12a1cffdddf16c2cf82877f1edee4ecbc5ef54",
+			expected: &exampleResponse,
+		},
+		{
+			port:     195,
+			payload:  "68bad3c50aabd56cb2e7ba0db5805a5ac9d4edd8de8a021b4ae2b78e8c0b8391566ab8d47d1d4c55ae794a2c2da7a637b49d32e44800",
+			expected: &exampleResponse,
+		},
+		{
+			port:     195,
+			payload:  "68bad3c58aab4581b9e73a0eb580da120d7f85a75e770c6acad3dc2acdacbdcd576ab8147f5902557379b18d0f676a35fb9a6ae5ee03",
+			expected: &exampleResponse,
+		},
+		{
 			port:        197,
 			payload:     "ff",
 			expected:    Port197Payload{},
@@ -348,110 +374,595 @@ func TestDecode(t *testing.T) {
 			port:    197,
 			payload: "003385f8ee30c2",
 			expected: Port197Payload{
-				Rssi1: nil,
-				Mac1:  "3385f8ee30c2",
+				Rssi1:   nil,
+				Mac1:    "3385f8ee30c2",
+				Moving:  false,
+				Version: Port197Version1,
 			},
 		},
 		{
 			port:    197,
 			payload: "003385f8ee30c2a0382c2601db",
 			expected: Port197Payload{
-				Rssi1: nil,
-				Mac1:  "3385f8ee30c2",
-				Mac2:  helpers.StringPtr("a0382c2601db"),
+				Rssi1:   nil,
+				Mac1:    "3385f8ee30c2",
+				Mac2:    helpers.StringPtr("a0382c2601db"),
+				Moving:  false,
+				Version: Port197Version1,
 			},
 		},
 		{
 			port:    197,
 			payload: "00b5eded55a313a0b8b5e86e3194a765f3ad40",
 			expected: Port197Payload{
-				Rssi1: nil,
-				Mac1:  "b5eded55a313",
-				Mac2:  helpers.StringPtr("a0b8b5e86e31"),
-				Mac3:  helpers.StringPtr("94a765f3ad40"),
+				Rssi1:   nil,
+				Mac1:    "b5eded55a313",
+				Mac2:    helpers.StringPtr("a0b8b5e86e31"),
+				Mac3:    helpers.StringPtr("94a765f3ad40"),
+				Moving:  false,
+				Version: Port197Version1,
 			},
 		},
 		{
 			port:    197,
 			payload: "006fbcfdd764347e7cbff22fc500dc0af60588010161302d9c",
 			expected: Port197Payload{
-				Rssi1: nil,
-				Mac1:  "6fbcfdd76434",
-				Mac2:  helpers.StringPtr("7e7cbff22fc5"),
-				Mac3:  helpers.StringPtr("00dc0af60588"),
-				Mac4:  helpers.StringPtr("010161302d9c"),
+				Rssi1:   nil,
+				Mac1:    "6fbcfdd76434",
+				Mac2:    helpers.StringPtr("7e7cbff22fc5"),
+				Mac3:    helpers.StringPtr("00dc0af60588"),
+				Mac4:    helpers.StringPtr("010161302d9c"),
+				Moving:  false,
+				Version: Port197Version1,
 			},
 		},
 		{
 			port:    197,
 			payload: "00218f6c166fad59ea3bdec77df72faac81784263386a455d33592a063900b",
 			expected: Port197Payload{
-				Rssi1: nil,
-				Mac1:  "218f6c166fad",
-				Mac2:  helpers.StringPtr("59ea3bdec77d"),
-				Mac3:  helpers.StringPtr("f72faac81784"),
-				Mac4:  helpers.StringPtr("263386a455d3"),
-				Mac5:  helpers.StringPtr("3592a063900b"),
+				Rssi1:   nil,
+				Mac1:    "218f6c166fad",
+				Mac2:    helpers.StringPtr("59ea3bdec77d"),
+				Mac3:    helpers.StringPtr("f72faac81784"),
+				Mac4:    helpers.StringPtr("263386a455d3"),
+				Mac5:    helpers.StringPtr("3592a063900b"),
+				Moving:  false,
+				Version: Port197Version1,
 			},
 		},
 		{
 			port:    197,
 			payload: "01d63385f8ee30c2",
 			expected: Port197Payload{
-				Rssi1: helpers.Int8Ptr(-42),
-				Mac1:  "3385f8ee30c2",
+				Rssi1:   helpers.Int8Ptr(-42),
+				Mac1:    "3385f8ee30c2",
+				Moving:  false,
+				Version: Port197Version2,
 			},
 		},
 		{
 			port:    197,
 			payload: "01d63385f8ee30c2d0a0382c2601db",
 			expected: Port197Payload{
-				Rssi1: helpers.Int8Ptr(-42),
-				Mac1:  "3385f8ee30c2",
-				Rssi2: helpers.Int8Ptr(-48),
-				Mac2:  helpers.StringPtr("a0382c2601db"),
+				Rssi1:   helpers.Int8Ptr(-42),
+				Mac1:    "3385f8ee30c2",
+				Rssi2:   helpers.Int8Ptr(-48),
+				Mac2:    helpers.StringPtr("a0382c2601db"),
+				Moving:  false,
+				Version: Port197Version2,
 			},
 		},
 		{
 			port:    197,
 			payload: "01c8b5eded55a313c0a0b8b5e86e31b894a765f3ad40",
 			expected: Port197Payload{
-				Rssi1: helpers.Int8Ptr(-56),
-				Mac1:  "b5eded55a313",
-				Rssi2: helpers.Int8Ptr(-64),
-				Mac2:  helpers.StringPtr("a0b8b5e86e31"),
-				Rssi3: helpers.Int8Ptr(-72),
-				Mac3:  helpers.StringPtr("94a765f3ad40"),
+				Rssi1:   helpers.Int8Ptr(-56),
+				Mac1:    "b5eded55a313",
+				Rssi2:   helpers.Int8Ptr(-64),
+				Mac2:    helpers.StringPtr("a0b8b5e86e31"),
+				Rssi3:   helpers.Int8Ptr(-72),
+				Mac3:    helpers.StringPtr("94a765f3ad40"),
+				Moving:  false,
+				Version: Port197Version2,
 			},
 		},
 		{
 			port:    197,
 			payload: "01bd6fbcfdd76434bb7e7cbff22fc5b900dc0af60588b7010161302d9c",
 			expected: Port197Payload{
-				Rssi1: helpers.Int8Ptr(-67),
-				Mac1:  "6fbcfdd76434",
-				Rssi2: helpers.Int8Ptr(-69),
-				Mac2:  helpers.StringPtr("7e7cbff22fc5"),
-				Rssi3: helpers.Int8Ptr(-71),
-				Mac3:  helpers.StringPtr("00dc0af60588"),
-				Rssi4: helpers.Int8Ptr(-73),
-				Mac4:  helpers.StringPtr("010161302d9c"),
+				Rssi1:   helpers.Int8Ptr(-67),
+				Mac1:    "6fbcfdd76434",
+				Rssi2:   helpers.Int8Ptr(-69),
+				Mac2:    helpers.StringPtr("7e7cbff22fc5"),
+				Rssi3:   helpers.Int8Ptr(-71),
+				Mac3:    helpers.StringPtr("00dc0af60588"),
+				Rssi4:   helpers.Int8Ptr(-73),
+				Mac4:    helpers.StringPtr("010161302d9c"),
+				Moving:  false,
+				Version: Port197Version2,
 			},
 		},
 		{
 			port:    197,
 			payload: "01b7218f6c166fadb359ea3bdec77daff72faac81784ab263386a455d3a73592a063900b",
 			expected: Port197Payload{
-				Rssi1: helpers.Int8Ptr(-73),
-				Mac1:  "218f6c166fad",
-				Rssi2: helpers.Int8Ptr(-77),
-				Mac2:  helpers.StringPtr("59ea3bdec77d"),
-				Rssi3: helpers.Int8Ptr(-81),
-				Mac3:  helpers.StringPtr("f72faac81784"),
-				Rssi4: helpers.Int8Ptr(-85),
-				Mac4:  helpers.StringPtr("263386a455d3"),
-				Rssi5: helpers.Int8Ptr(-89),
-				Mac5:  helpers.StringPtr("3592a063900b"),
+				Rssi1:   helpers.Int8Ptr(-73),
+				Mac1:    "218f6c166fad",
+				Rssi2:   helpers.Int8Ptr(-77),
+				Mac2:    helpers.StringPtr("59ea3bdec77d"),
+				Rssi3:   helpers.Int8Ptr(-81),
+				Mac3:    helpers.StringPtr("f72faac81784"),
+				Rssi4:   helpers.Int8Ptr(-85),
+				Mac4:    helpers.StringPtr("263386a455d3"),
+				Rssi5:   helpers.Int8Ptr(-89),
+				Mac5:    helpers.StringPtr("3592a063900b"),
+				Moving:  false,
+				Version: Port197Version2,
+			},
+		},
+		{
+			port:    197,
+			payload: "01cff0b0140c96bbcce4c32a622ea4c8e0286d8a9478b8e0286d8aabfcafa86e84e1a812",
+			expected: Port197Payload{
+				Mac1:    "f0b0140c96bb",
+				Rssi1:   helpers.Int8Ptr(-49),
+				Mac2:    helpers.StringPtr("e4c32a622ea4"),
+				Rssi2:   helpers.Int8Ptr(-52),
+				Mac3:    helpers.StringPtr("e0286d8a9478"),
+				Rssi3:   helpers.Int8Ptr(-56),
+				Mac4:    helpers.StringPtr("e0286d8aabfc"),
+				Rssi4:   helpers.Int8Ptr(-72),
+				Mac5:    helpers.StringPtr("a86e84e1a812"),
+				Rssi5:   helpers.Int8Ptr(-81),
+				Moving:  false,
+				Version: Port197Version2,
+			},
+		},
+		{
+			port:        198,
+			payload:     "ff",
+			expected:    Port198Payload{},
+			expectedErr: "port not supported: version 255 for port 198 not supported",
+		},
+		{
+			port:    198,
+			payload: "003385f8ee30c2",
+			expected: Port198Payload{
+				Rssi1:   nil,
+				Mac1:    "3385f8ee30c2",
+				Moving:  true,
+				Version: Port198Version1,
+			},
+		},
+		{
+			port:    198,
+			payload: "003385f8ee30c2a0382c2601db",
+			expected: Port198Payload{
+				Rssi1:   nil,
+				Mac1:    "3385f8ee30c2",
+				Mac2:    helpers.StringPtr("a0382c2601db"),
+				Moving:  true,
+				Version: Port198Version1,
+			},
+		},
+		{
+			port:    198,
+			payload: "00b5eded55a313a0b8b5e86e3194a765f3ad40",
+			expected: Port198Payload{
+				Rssi1:   nil,
+				Mac1:    "b5eded55a313",
+				Mac2:    helpers.StringPtr("a0b8b5e86e31"),
+				Mac3:    helpers.StringPtr("94a765f3ad40"),
+				Moving:  true,
+				Version: Port198Version1,
+			},
+		},
+		{
+			port:    198,
+			payload: "006fbcfdd764347e7cbff22fc500dc0af60588010161302d9c",
+			expected: Port198Payload{
+				Rssi1:   nil,
+				Mac1:    "6fbcfdd76434",
+				Mac2:    helpers.StringPtr("7e7cbff22fc5"),
+				Mac3:    helpers.StringPtr("00dc0af60588"),
+				Mac4:    helpers.StringPtr("010161302d9c"),
+				Moving:  true,
+				Version: Port198Version1,
+			},
+		},
+		{
+			port:    198,
+			payload: "00218f6c166fad59ea3bdec77df72faac81784263386a455d33592a063900b",
+			expected: Port198Payload{
+				Rssi1:   nil,
+				Mac1:    "218f6c166fad",
+				Mac2:    helpers.StringPtr("59ea3bdec77d"),
+				Mac3:    helpers.StringPtr("f72faac81784"),
+				Mac4:    helpers.StringPtr("263386a455d3"),
+				Mac5:    helpers.StringPtr("3592a063900b"),
+				Moving:  true,
+				Version: Port198Version1,
+			},
+		},
+		{
+			port:    198,
+			payload: "01d63385f8ee30c2",
+			expected: Port198Payload{
+				Rssi1:   helpers.Int8Ptr(-42),
+				Mac1:    "3385f8ee30c2",
+				Moving:  true,
+				Version: Port198Version2,
+			},
+		},
+		{
+			port:    198,
+			payload: "01d63385f8ee30c2d0a0382c2601db",
+			expected: Port198Payload{
+				Rssi1:   helpers.Int8Ptr(-42),
+				Mac1:    "3385f8ee30c2",
+				Rssi2:   helpers.Int8Ptr(-48),
+				Mac2:    helpers.StringPtr("a0382c2601db"),
+				Moving:  true,
+				Version: Port198Version2,
+			},
+		},
+		{
+			port:    198,
+			payload: "01c8b5eded55a313c0a0b8b5e86e31b894a765f3ad40",
+			expected: Port198Payload{
+				Rssi1:   helpers.Int8Ptr(-56),
+				Mac1:    "b5eded55a313",
+				Rssi2:   helpers.Int8Ptr(-64),
+				Mac2:    helpers.StringPtr("a0b8b5e86e31"),
+				Rssi3:   helpers.Int8Ptr(-72),
+				Mac3:    helpers.StringPtr("94a765f3ad40"),
+				Moving:  true,
+				Version: Port198Version2,
+			},
+		},
+		{
+			port:    198,
+			payload: "01bd6fbcfdd76434bb7e7cbff22fc5b900dc0af60588b7010161302d9c",
+			expected: Port198Payload{
+				Rssi1:   helpers.Int8Ptr(-67),
+				Mac1:    "6fbcfdd76434",
+				Rssi2:   helpers.Int8Ptr(-69),
+				Mac2:    helpers.StringPtr("7e7cbff22fc5"),
+				Rssi3:   helpers.Int8Ptr(-71),
+				Mac3:    helpers.StringPtr("00dc0af60588"),
+				Rssi4:   helpers.Int8Ptr(-73),
+				Mac4:    helpers.StringPtr("010161302d9c"),
+				Moving:  true,
+				Version: Port198Version2,
+			},
+		},
+		{
+			port:    198,
+			payload: "01b7218f6c166fadb359ea3bdec77daff72faac81784ab263386a455d3a73592a063900b",
+			expected: Port198Payload{
+				Rssi1:   helpers.Int8Ptr(-73),
+				Mac1:    "218f6c166fad",
+				Rssi2:   helpers.Int8Ptr(-77),
+				Mac2:    helpers.StringPtr("59ea3bdec77d"),
+				Rssi3:   helpers.Int8Ptr(-81),
+				Mac3:    helpers.StringPtr("f72faac81784"),
+				Rssi4:   helpers.Int8Ptr(-85),
+				Mac4:    helpers.StringPtr("263386a455d3"),
+				Rssi5:   helpers.Int8Ptr(-89),
+				Mac5:    helpers.StringPtr("3592a063900b"),
+				Moving:  true,
+				Version: Port198Version2,
+			},
+		},
+		{
+			port:        200,
+			payload:     "68b9ac21ff",
+			expected:    Port200Payload{},
+			expectedErr: "port not supported: version 255 for port 200 not supported",
+		},
+		{
+			port:    200,
+			payload: "68b9ac21003385f8ee30c2",
+			expected: Port200Payload{
+				Timestamp: time.Date(2025, 9, 4, 15, 11, 29, 0, time.UTC),
+				Rssi1:     nil,
+				Mac1:      "3385f8ee30c2",
+				Moving:    false,
+				Version:   Port200Version1,
+			},
+		},
+		{
+			port:    200,
+			payload: "68b9ac21003385f8ee30c2a0382c2601db",
+			expected: Port200Payload{
+				Timestamp: time.Date(2025, 9, 4, 15, 11, 29, 0, time.UTC),
+				Rssi1:     nil,
+				Mac1:      "3385f8ee30c2",
+				Mac2:      helpers.StringPtr("a0382c2601db"),
+				Moving:    false,
+				Version:   Port200Version1,
+			},
+		},
+		{
+			port:    200,
+			payload: "68b9ac2100b5eded55a313a0b8b5e86e3194a765f3ad40",
+			expected: Port200Payload{
+				Timestamp: time.Date(2025, 9, 4, 15, 11, 29, 0, time.UTC),
+				Rssi1:     nil,
+				Mac1:      "b5eded55a313",
+				Mac2:      helpers.StringPtr("a0b8b5e86e31"),
+				Mac3:      helpers.StringPtr("94a765f3ad40"),
+				Moving:    false,
+				Version:   Port200Version1,
+			},
+		},
+		{
+			port:    200,
+			payload: "68b9ac21006fbcfdd764347e7cbff22fc500dc0af60588010161302d9c",
+			expected: Port200Payload{
+				Timestamp: time.Date(2025, 9, 4, 15, 11, 29, 0, time.UTC),
+				Rssi1:     nil,
+				Mac1:      "6fbcfdd76434",
+				Mac2:      helpers.StringPtr("7e7cbff22fc5"),
+				Mac3:      helpers.StringPtr("00dc0af60588"),
+				Mac4:      helpers.StringPtr("010161302d9c"),
+				Moving:    false,
+				Version:   Port200Version1,
+			},
+		},
+		{
+			port:    200,
+			payload: "68b9ac2100218f6c166fad59ea3bdec77df72faac81784263386a455d33592a063900b",
+			expected: Port200Payload{
+				Timestamp: time.Date(2025, 9, 4, 15, 11, 29, 0, time.UTC),
+				Rssi1:     nil,
+				Mac1:      "218f6c166fad",
+				Mac2:      helpers.StringPtr("59ea3bdec77d"),
+				Mac3:      helpers.StringPtr("f72faac81784"),
+				Mac4:      helpers.StringPtr("263386a455d3"),
+				Mac5:      helpers.StringPtr("3592a063900b"),
+				Moving:    false,
+				Version:   Port200Version1,
+			},
+		},
+		{
+			port:    200,
+			payload: "68b9ac2101d63385f8ee30c2",
+			expected: Port200Payload{
+				Timestamp: time.Date(2025, 9, 4, 15, 11, 29, 0, time.UTC),
+				Rssi1:     helpers.Int8Ptr(-42),
+				Mac1:      "3385f8ee30c2",
+				Moving:    false,
+				Version:   Port200Version2,
+			},
+		},
+		{
+			port:    200,
+			payload: "68b9ac2101d63385f8ee30c2d0a0382c2601db",
+			expected: Port200Payload{
+				Timestamp: time.Date(2025, 9, 4, 15, 11, 29, 0, time.UTC),
+				Rssi1:     helpers.Int8Ptr(-42),
+				Mac1:      "3385f8ee30c2",
+				Rssi2:     helpers.Int8Ptr(-48),
+				Mac2:      helpers.StringPtr("a0382c2601db"),
+				Moving:    false,
+				Version:   Port200Version2,
+			},
+		},
+		{
+			port:    200,
+			payload: "68b9ac2101c8b5eded55a313c0a0b8b5e86e31b894a765f3ad40",
+			expected: Port200Payload{
+				Timestamp: time.Date(2025, 9, 4, 15, 11, 29, 0, time.UTC),
+				Rssi1:     helpers.Int8Ptr(-56),
+				Mac1:      "b5eded55a313",
+				Rssi2:     helpers.Int8Ptr(-64),
+				Mac2:      helpers.StringPtr("a0b8b5e86e31"),
+				Rssi3:     helpers.Int8Ptr(-72),
+				Mac3:      helpers.StringPtr("94a765f3ad40"),
+				Moving:    false,
+				Version:   Port200Version2,
+			},
+		},
+		{
+			port:    200,
+			payload: "68b9ac2101bd6fbcfdd76434bb7e7cbff22fc5b900dc0af60588b7010161302d9c",
+			expected: Port200Payload{
+				Timestamp: time.Date(2025, 9, 4, 15, 11, 29, 0, time.UTC),
+				Rssi1:     helpers.Int8Ptr(-67),
+				Mac1:      "6fbcfdd76434",
+				Rssi2:     helpers.Int8Ptr(-69),
+				Mac2:      helpers.StringPtr("7e7cbff22fc5"),
+				Rssi3:     helpers.Int8Ptr(-71),
+				Mac3:      helpers.StringPtr("00dc0af60588"),
+				Rssi4:     helpers.Int8Ptr(-73),
+				Mac4:      helpers.StringPtr("010161302d9c"),
+				Moving:    false,
+				Version:   Port200Version2,
+			},
+		},
+		{
+			port:    200,
+			payload: "68b9ac2101b7218f6c166fadb359ea3bdec77daff72faac81784ab263386a455d3a73592a063900b",
+			expected: Port200Payload{
+				Timestamp: time.Date(2025, 9, 4, 15, 11, 29, 0, time.UTC),
+				Rssi1:     helpers.Int8Ptr(-73),
+				Mac1:      "218f6c166fad",
+				Rssi2:     helpers.Int8Ptr(-77),
+				Mac2:      helpers.StringPtr("59ea3bdec77d"),
+				Rssi3:     helpers.Int8Ptr(-81),
+				Mac3:      helpers.StringPtr("f72faac81784"),
+				Rssi4:     helpers.Int8Ptr(-85),
+				Mac4:      helpers.StringPtr("263386a455d3"),
+				Rssi5:     helpers.Int8Ptr(-89),
+				Mac5:      helpers.StringPtr("3592a063900b"),
+				Moving:    false,
+				Version:   Port200Version2,
+			},
+		},
+		{
+			port:        201,
+			payload:     "68b9ac21ff",
+			expected:    Port201Payload{},
+			expectedErr: "port not supported: version 255 for port 201 not supported",
+		},
+		{
+			port:    201,
+			payload: "68bae3ab01d3f0b0140c96bbc7e4c32a622ea4c5e0286d8a9478b4e0286d8aabfcada86e84e1a812",
+			expected: Port201Payload{
+				Timestamp: time.Date(2025, 9, 5, 13, 20, 43, 0, time.UTC),
+				Mac1:      "f0b0140c96bb",
+				Rssi1:     helpers.Int8Ptr(-45),
+				Mac2:      helpers.StringPtr("e4c32a622ea4"),
+				Rssi2:     helpers.Int8Ptr(-57),
+				Mac3:      helpers.StringPtr("e0286d8a9478"),
+				Rssi3:     helpers.Int8Ptr(-59),
+				Mac4:      helpers.StringPtr("e0286d8aabfc"),
+				Rssi4:     helpers.Int8Ptr(-76),
+				Mac5:      helpers.StringPtr("a86e84e1a812"),
+				Rssi5:     helpers.Int8Ptr(-83),
+				Moving:    true,
+				Version:   Port201Version2,
+			},
+		},
+		{
+			port:    201,
+			payload: "68b9ac21003385f8ee30c2",
+			expected: Port201Payload{
+				Timestamp: time.Date(2025, 9, 4, 15, 11, 29, 0, time.UTC),
+				Rssi1:     nil,
+				Mac1:      "3385f8ee30c2",
+				Moving:    true,
+				Version:   Port201Version1,
+			},
+		},
+		{
+			port:    201,
+			payload: "68b9ac21003385f8ee30c2a0382c2601db",
+			expected: Port201Payload{
+				Timestamp: time.Date(2025, 9, 4, 15, 11, 29, 0, time.UTC),
+				Rssi1:     nil,
+				Mac1:      "3385f8ee30c2",
+				Mac2:      helpers.StringPtr("a0382c2601db"),
+				Moving:    true,
+				Version:   Port201Version1,
+			},
+		},
+		{
+			port:    201,
+			payload: "68b9ac2100b5eded55a313a0b8b5e86e3194a765f3ad40",
+			expected: Port201Payload{
+				Timestamp: time.Date(2025, 9, 4, 15, 11, 29, 0, time.UTC),
+				Rssi1:     nil,
+				Mac1:      "b5eded55a313",
+				Mac2:      helpers.StringPtr("a0b8b5e86e31"),
+				Mac3:      helpers.StringPtr("94a765f3ad40"),
+				Moving:    true,
+				Version:   Port201Version1,
+			},
+		},
+		{
+			port:    201,
+			payload: "68b9ac21006fbcfdd764347e7cbff22fc500dc0af60588010161302d9c",
+			expected: Port201Payload{
+				Timestamp: time.Date(2025, 9, 4, 15, 11, 29, 0, time.UTC),
+				Rssi1:     nil,
+				Mac1:      "6fbcfdd76434",
+				Mac2:      helpers.StringPtr("7e7cbff22fc5"),
+				Mac3:      helpers.StringPtr("00dc0af60588"),
+				Mac4:      helpers.StringPtr("010161302d9c"),
+				Moving:    true,
+				Version:   Port201Version1,
+			},
+		},
+		{
+			port:    201,
+			payload: "68b9ac2100218f6c166fad59ea3bdec77df72faac81784263386a455d33592a063900b",
+			expected: Port201Payload{
+				Timestamp: time.Date(2025, 9, 4, 15, 11, 29, 0, time.UTC),
+				Rssi1:     nil,
+				Mac1:      "218f6c166fad",
+				Mac2:      helpers.StringPtr("59ea3bdec77d"),
+				Mac3:      helpers.StringPtr("f72faac81784"),
+				Mac4:      helpers.StringPtr("263386a455d3"),
+				Mac5:      helpers.StringPtr("3592a063900b"),
+				Moving:    true,
+				Version:   Port201Version1,
+			},
+		},
+		{
+			port:    201,
+			payload: "68b9ac2101d63385f8ee30c2",
+			expected: Port201Payload{
+				Timestamp: time.Date(2025, 9, 4, 15, 11, 29, 0, time.UTC),
+				Rssi1:     helpers.Int8Ptr(-42),
+				Mac1:      "3385f8ee30c2",
+				Moving:    true,
+				Version:   Port201Version2,
+			},
+		},
+		{
+			port:    201,
+			payload: "68b9ac2101d63385f8ee30c2d0a0382c2601db",
+			expected: Port201Payload{
+				Timestamp: time.Date(2025, 9, 4, 15, 11, 29, 0, time.UTC),
+				Rssi1:     helpers.Int8Ptr(-42),
+				Mac1:      "3385f8ee30c2",
+				Rssi2:     helpers.Int8Ptr(-48),
+				Mac2:      helpers.StringPtr("a0382c2601db"),
+				Moving:    true,
+				Version:   Port201Version2,
+			},
+		},
+		{
+			port:    201,
+			payload: "68b9ac2101c8b5eded55a313c0a0b8b5e86e31b894a765f3ad40",
+			expected: Port201Payload{
+				Timestamp: time.Date(2025, 9, 4, 15, 11, 29, 0, time.UTC),
+				Rssi1:     helpers.Int8Ptr(-56),
+				Mac1:      "b5eded55a313",
+				Rssi2:     helpers.Int8Ptr(-64),
+				Mac2:      helpers.StringPtr("a0b8b5e86e31"),
+				Rssi3:     helpers.Int8Ptr(-72),
+				Mac3:      helpers.StringPtr("94a765f3ad40"),
+				Moving:    true,
+				Version:   Port201Version2,
+			},
+		},
+		{
+			port:    201,
+			payload: "68b9ac2101bd6fbcfdd76434bb7e7cbff22fc5b900dc0af60588b7010161302d9c",
+			expected: Port201Payload{
+				Timestamp: time.Date(2025, 9, 4, 15, 11, 29, 0, time.UTC),
+				Rssi1:     helpers.Int8Ptr(-67),
+				Mac1:      "6fbcfdd76434",
+				Rssi2:     helpers.Int8Ptr(-69),
+				Mac2:      helpers.StringPtr("7e7cbff22fc5"),
+				Rssi3:     helpers.Int8Ptr(-71),
+				Mac3:      helpers.StringPtr("00dc0af60588"),
+				Rssi4:     helpers.Int8Ptr(-73),
+				Mac4:      helpers.StringPtr("010161302d9c"),
+				Moving:    true,
+				Version:   Port201Version2,
+			},
+		},
+		{
+			port:    201,
+			payload: "68b9ac2101b7218f6c166fadb359ea3bdec77daff72faac81784ab263386a455d3a73592a063900b",
+			expected: Port201Payload{
+				Timestamp: time.Date(2025, 9, 4, 15, 11, 29, 0, time.UTC),
+				Rssi1:     helpers.Int8Ptr(-73),
+				Mac1:      "218f6c166fad",
+				Rssi2:     helpers.Int8Ptr(-77),
+				Mac2:      helpers.StringPtr("59ea3bdec77d"),
+				Rssi3:     helpers.Int8Ptr(-81),
+				Mac3:      helpers.StringPtr("f72faac81784"),
+				Rssi4:     helpers.Int8Ptr(-85),
+				Mac4:      helpers.StringPtr("263386a455d3"),
+				Rssi5:     helpers.Int8Ptr(-89),
+				Mac5:      helpers.StringPtr("3592a063900b"),
+				Moving:    true,
+				Version:   Port201Version2,
 			},
 		},
 	}
@@ -464,8 +975,24 @@ func TestDecode(t *testing.T) {
 			ctx := context.WithValue(context.Background(), decoder.DEVEUI_CONTEXT_KEY, test.devEui)
 			ctx = context.WithValue(ctx, decoder.FCNT_CONTEXT_KEY, 1)
 
-			decoder := NewTagXLv1Decoder(ctx, solver.MockSolverV1{}, logger.Logger)
-			got, err := decoder.Decode(ctx, test.payload, test.port)
+			// Use SolverV2 for GNSS ports (192/193/194/195/199) so timestamped ports work without error and provide expected data.
+			expectedAny := test.expected
+			opts := []Option{}
+			switch test.port {
+			case 192, 194, 195:
+				// For GNSS ports, use SolverV2 and return the same structure as port 192 expectation
+				// so that tests compare against exampleResponse. For 194/195, timestamp is handled by decoder.
+				v2Data := &exampleResponse
+				features := []decoder.Feature{decoder.FeatureGNSS}
+				if expectedAny == nil {
+					expectedAny = v2Data
+				}
+				opts = append(opts, WithSolverV2(solver.MockSolverV2{
+					Data: decoder.NewDecodedUplink(features, v2Data),
+				}))
+			}
+			dec := NewTagXLv1Decoder(ctx, solver.MockSolverV1{}, logger.Logger, opts...)
+			got, err := dec.Decode(ctx, test.payload, test.port)
 
 			if err == nil && len(test.expectedErr) != 0 {
 				t.Fatalf("expected error: %v, got %v", test.expectedErr, nil)
@@ -477,9 +1004,9 @@ func TestDecode(t *testing.T) {
 
 			t.Logf("got %v", got)
 
-			if got != nil && !reflect.DeepEqual(got.Data, test.expected) && len(test.expectedErr) == 0 {
+			if got != nil && !reflect.DeepEqual(got.Data, expectedAny) && len(test.expectedErr) == 0 {
 				// marshal the expected and got values to compare
-				expectedJSON, err := json.Marshal(test.expected)
+				expectedJSON, err := json.Marshal(expectedAny)
 				if err != nil {
 					t.Fatalf("failed to marshal expected value: %v", err)
 				}
@@ -662,9 +1189,33 @@ func TestFeatures(t *testing.T) {
 			port:    197,
 		},
 		{
+			payload: "00218f6c166fad59ea3bdec77df72faac81784263386a455d33592a063900b",
+			port:    198,
+		},
+		{
+			payload: "01b7218f6c166fadb359ea3bdec77daff72faac81784ab263386a455d3a73592a063900b",
+			port:    198,
+		},
+		{
 			payload:         "86b5277140484a89b8f63ccf67affbfeb519b854f9d447808a50785bdfe86a77",
 			port:            199,
 			allowNoFeatures: true,
+		},
+		{
+			payload: "68b9ac2100218f6c166fad59ea3bdec77df72faac81784263386a455d33592a063900b",
+			port:    200,
+		},
+		{
+			payload: "68b9ac2101b7218f6c166fadb359ea3bdec77daff72faac81784ab263386a455d3a73592a063900b",
+			port:    200,
+		},
+		{
+			payload: "68b9ac2100218f6c166fad59ea3bdec77df72faac81784263386a455d33592a063900b",
+			port:    201,
+		},
+		{
+			payload: "68b9ac2101b7218f6c166fadb359ea3bdec77daff72faac81784ab263386a455d3a73592a063900b",
+			port:    201,
 		},
 	}
 

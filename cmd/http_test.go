@@ -155,15 +155,36 @@ func TestHTTPCmd(t *testing.T) {
 	if httpCmd.Flags().Set("host", "127.0.0.1") != nil {
 		t.Fatalf("failed to set host flag")
 	}
+	// Enable health endpoint so we can wait for readiness
+	if httpCmd.Flags().Set("health", "true") != nil {
+		t.Fatalf("failed to set health flag")
+	}
 
 	go func() {
 		// call the command handler function
 		httpCmd.Run(nil, []string{})
 	}()
 
+	// Wait for server readiness using health endpoint
+	ready := false
+	for i := 0; i < 100; i++ { // up to ~2s with 20ms sleep
+		resp, err := http.Get("http://127.0.0.1:38888/health")
+		if err == nil {
+			_ = resp.Body.Close()
+			if resp.StatusCode == http.StatusOK {
+				ready = true
+				break
+			}
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	if !ready {
+		t.Fatalf("server not ready on /health")
+	}
+
 	// create a new HTTP request to simulate the command execution
 	reqBody := `{"port": 105, "payload": "0028672658500172a741b1e238b572a741b1e08bb03498b5c583e2b172a741b1e0cda772a741beed4cc472a741beef53b7"}`
-	req, err := http.NewRequest("POST", "http://localhost:38888/tagsl/v1", strings.NewReader(reqBody))
+	req, err := http.NewRequest("POST", "http://127.0.0.1:38888/tagsl/v1", strings.NewReader(reqBody))
 	if err != nil {
 		t.Fatalf("failed to create request: %v", err)
 	}
