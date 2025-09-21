@@ -2,7 +2,7 @@
 
 # 🎉 truvami Decoder 🚀
 
-> [!WARNING]  
+> [!WARNING]
 > [LoRa Cloud is Sunsetting on 31.07.2025](https://www.semtech.com/loracloud-shutdown)
 
 **truvami Decoder** is a command-line interface (CLI) tool written in Go for decoding truvami payloads. This reference implementation supports various payload types, including Nomad XS and different Tag formats. 🛠️
@@ -102,16 +102,16 @@ curl -XPOST -H "Content-type: application/json" -d '{
 curl -XPOST -H "Content-type: application/json" -d '{
     "port": 128,
     "payload": {
-        "ble": 1,
-        "gps": 1,
-        "wifi": 1,
-        "localizationIntervalWhileMoving": 3600,
-        "localizationIntervalWhileSteady": 7200,
-        "heartbeatInterval": 86400,
-        "gpsTimeoutWhileWaitingForFix": 120,
-        "accelerometerWakeupThreshold": 300,
+        "ble": false,
+        "gnss": true,
+        "wifi": true,
+        "movingInterval": 3600,
+        "steadyInterval": 7200,
+        "configInterval": 86400,
+        "gnssTimeout": 120,
+        "accelerometerThreshold": 300,
         "accelerometerDelay": 1500,
-        "batteryKeepAliveMessageInterval": 21600,
+        "batteryInterval": 21600,
         "batchSize": 10,
         "bufferSize": 4096
     },
@@ -145,7 +145,7 @@ curl -XPOST -H "Content-type: application/json" -d '{
         "maxBeacons": 8,
         "minRssi": -24,
         "advertisingName": "deadbeef",
-        "accelerometerTriggerHoldTimer": 2000,
+        "accelerometerDelay": 2000,
         "acceleratorThreshold": 1000,
         "scanMode": 0,
         "bleConfigUplinkInterval": 21600
