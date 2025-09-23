@@ -424,7 +424,7 @@ func (t TagXLv1Decoder) Decode(ctx context.Context, data string, port uint8) (*d
 			opts := solver.SolverV2Options{
 				DevEui:        devEui,
 				UplinkCounter: uint16(fcnt),
-				Port:          port,
+				Port:          192, // always 192 for GNSS NAV grouping
 				Timestamp:     tsPtr,
 				Moving:        movingPtr,
 			}

@@ -102,8 +102,8 @@ func TestGNSS_SolverV2_192_193_NoTimestamp(t *testing.T) {
 	if cap.lastPayload != payload {
 		t.Fatalf("expected payload forwarded unchanged for port 193, got %q", cap.lastPayload)
 	}
-	if cap.lastOptions.Port != 193 {
-		t.Fatalf("expected port 193, got %d", cap.lastOptions.Port)
+	if cap.lastOptions.Port != 192 {
+		t.Fatalf("expected port 192, got %d", cap.lastOptions.Port)
 	}
 	if cap.lastOptions.Moving == nil || *cap.lastOptions.Moving != true {
 		t.Fatalf("expected Moving=true for port 193, got %+v", cap.lastOptions.Moving)
@@ -159,8 +159,8 @@ func TestGNSS_SolverV2_194_195_TimestampStrippedAndPassed(t *testing.T) {
 	if cap.lastPayload != expectedForwarded {
 		t.Fatalf("expected forwarded payload %q, got %q", expectedForwarded, cap.lastPayload)
 	}
-	if cap.lastOptions.Port != 194 {
-		t.Fatalf("expected port 194, got %d", cap.lastOptions.Port)
+	if cap.lastOptions.Port != 192 {
+		t.Fatalf("expected port 192, got %d", cap.lastOptions.Port)
 	}
 	if cap.lastOptions.Moving == nil || *cap.lastOptions.Moving != false {
 		t.Fatalf("expected Moving=false for port 194, got %+v", cap.lastOptions.Moving)
@@ -180,8 +180,8 @@ func TestGNSS_SolverV2_194_195_TimestampStrippedAndPassed(t *testing.T) {
 	if cap.lastPayload != expectedForwarded {
 		t.Fatalf("expected forwarded payload %q, got %q", expectedForwarded, cap.lastPayload)
 	}
-	if cap.lastOptions.Port != 195 {
-		t.Fatalf("expected port 195, got %d", cap.lastOptions.Port)
+	if cap.lastOptions.Port != 192 {
+		t.Fatalf("expected port 192, got %d", cap.lastOptions.Port)
 	}
 	if cap.lastOptions.Moving == nil || *cap.lastOptions.Moving != true {
 		t.Fatalf("expected Moving=true for port 195, got %+v", cap.lastOptions.Moving)
