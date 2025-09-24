@@ -15,6 +15,11 @@ builds:
   - binary: decoder
     env:
       - CGO_ENABLED=0
+    ldflags:
+      - -s -w
+      - -X github.com/truvami/decoder/cmd.Version={{.Version}}
+      - -X github.com/truvami/decoder/cmd.Commit={{.FullCommit}}
+      - -X github.com/truvami/decoder/cmd.Date={{.Date}}
     goos:
       # Focus on the most common desktop/server operating systems
       - linux
