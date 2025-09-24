@@ -1,0 +1,106 @@
+name: Release Candidate
+
+on:
+  push:
+    tags:
+      - 'v*.*.*-rc*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+  attestations: write
+
+concurrency:
+  group: rc-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  goreleaser-rc:
+    name: GoReleaser (RC publish)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.x'
+          cache: true
+
+      - name: Install git-cliff
+        uses: taiki-e/install-action@v2
+        with:
+          tool: git-cliff
+
+      - name: Compute last stable tag (exclude RCs)
+        id: base
+        shell: bash
+        run: |
+          BASE_TAG=$(git tag --list 'v*' --sort=-v:refname | grep -v -- '-rc' | head -n1 || true)
+          if [ -z "$BASE_TAG" ]; then
+            echo "tag=" >> $GITHUB_OUTPUT
+          else
+            echo "tag=$BASE_TAG" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate release notes (temp file to keep repo clean)
+        id: notes
+        shell: bash
+        run: |
+          NOTES_FILE="${RUNNER_TEMP}/RELEASE_NOTES.md"
+          TARGET_TAG="${GITHUB_REF_NAME}"
+          BASE_TAG="${{ steps.base.outputs.tag }}"
+          if [ -n "$BASE_TAG" ]; then
+            git-cliff $BASE_TAG..$TARGET_TAG > "$NOTES_FILE"
+          else
+            git-cliff --tag "$TARGET_TAG" > "$NOTES_FILE"
+          fi
+          echo "file=$NOTES_FILE" >> "$GITHUB_OUTPUT"
+          echo "==== RELEASE NOTES PREVIEW ===="
+          head -n 60 "$NOTES_FILE" || true
+
+      - name: Ensure go.mod/go.sum are tidy
+        shell: bash
+        run: |
+          go mod tidy
+          if ! git diff --quiet -- go.mod go.sum; then
+            echo "::error ::go.mod/go.sum changed after 'go mod tidy'. Commit these changes."
+            git --no-pager diff -- go.mod go.sum
+            exit 1
+          fi
+
+      - name: Fail if git tree is dirty (pre-release)
+        shell: bash
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "::error ::Working tree is dirty just before GoReleaser:"
+            git status --porcelain
+            exit 1
+          fi
+
+      - uses: docker/setup-buildx-action@v3
+        with:
+          install: true
+
+      - name: Log into GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: GoReleaser (publish RC)
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          version: "~> v2"
+          args: release --clean --release-notes="${{ steps.notes.outputs.file }}"
+        env:
+          # Prevent Go from modifying go.mod/go.sum during the build
+          GOFLAGS: -mod=readonly
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

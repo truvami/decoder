@@ -1,0 +1,35 @@
+version: 2
+updates:
+  - package-ecosystem: "gomod"
+    directory: "/"               # Path containing go.mod
+    schedule:
+      interval: "weekly"
+    # Conventional Commits for Dependabot PRs
+    commit-message:
+      prefix: "chore"
+      prefix-development: "chore"
+      include: "scope"
+    # Keep visible but not overwhelming
+    open-pull-requests-limit: 10
+    # Label PRs so they’re easy to filter
+    labels:
+      - "dependencies"
+    assignees:
+      - michaelbeutler
+
+    # Grouping rules
+    groups:
+      # Single weekly rollup for all safe (minor/patch) updates
+      minor-and-patch:
+        patterns:
+          - "*"                  # match all deps
+        update-types:
+          - "minor"
+          - "patch"
+
+      # Keep majors separate so breaking changes get proper review
+      each-major-separately:
+        patterns:
+          - "*"                  # (tip: Dependabot will still open 1 PR per dep for majors)
+        update-types:
+          - "major"
