@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -10,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/truvami/decoder/internal/logger"
+	"github.com/truvami/decoder/internal/selfupdate"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -62,8 +64,9 @@ func init() {
 }
 
 var rootCmd = &cobra.Command{
-	Use:   "decoder",
-	Short: "truvami payload decoder cli helper",
+	Use:     "decoder",
+	Short:   "truvami payload decoder cli helper",
+	Version: Version,
 	Long: getBanner() + `
 
 A CLI tool to help decode @truvami payloads.`,
@@ -93,6 +96,24 @@ A CLI tool to help decode @truvami payloads.`,
 		}
 
 		logger.NewLogger(options...)
+
+		// Non-blocking update check (ignore network errors).
+		go func() {
+			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+			defer cancel()
+			latest, has, err := selfupdate.CheckForUpdate(ctx, Version, false)
+			if err != nil {
+				return
+			}
+			if has {
+				logger.Logger.Info("a new version is available",
+					zap.String("current", Version),
+					zap.String("latest", latest),
+					zap.String("hint", "run 'decoder update' to upgrade"),
+				)
+			}
+		}()
+
 		defer logger.Sync()
 	},
 }

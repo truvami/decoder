@@ -60,3 +60,5 @@ require (
 	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/spf13/viper v1.21.0
 )
+
+require golang.org/x/mod v0.26.0
