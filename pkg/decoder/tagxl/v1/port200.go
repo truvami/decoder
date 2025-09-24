@@ -68,7 +68,7 @@ func (p Port200Payload) GetBufferLevel() *uint16 {
 }
 
 func (p Port200Payload) IsBuffered() bool {
-	return time.Since(p.Timestamp) > 5*time.Minute
+	return time.Since(p.Timestamp) > bufferedAgeThreshold
 }
 
 func (p Port200Payload) GetTimestamp() *time.Time {
