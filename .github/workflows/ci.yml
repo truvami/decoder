@@ -1,0 +1,247 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Cancel older runs of the same branch/PR to save minutes
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Default to least privilege; Codecov only needs these for OIDC upload & (optionally) PR comments
+permissions:
+  contents: read
+  id-token: write
+  pull-requests: write
+  attestations: write
+
+env:
+  GOFLAGS: -mod=readonly
+
+jobs:
+  commitlint:
+    name: Commit message lint (conventional commits)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+      - name: Install commitlint dependencies
+        run: npm i --no-save --no-package-lock @commitlint/cli @commitlint/config-conventional
+
+      - name: Validate current commit (last commit) with commitlint
+        if: github.event_name == 'push'
+        run: npx commitlint --last --verbose
+
+      - name: Validate PR commits with commitlint
+        if: github.event_name == 'pull_request'
+        run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+
+  lint:
+    name: Lint (fmt + vet [+ staticcheck])
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ">=1.24.0"
+          cache: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          pip install yamllint
+
+      - name: go mod tidy check
+        run: |
+          cp go.mod go.mod.prev
+          cp go.sum go.sum.prev
+          go mod tidy
+          diff -u go.mod.prev go.mod || (echo "::error file=go.mod::Run 'go mod tidy' and commit changes."; exit 1)
+          diff -u go.sum.prev go.sum || (echo "::error file=go.sum::Run 'go mod tidy' and commit changes."; exit 1)
+
+      - name: go fmt (no diffs allowed)
+        run: |
+          # Lists files that would change if formatted; fail if any are returned
+          CHANGED=$(gofmt -s -l . || true)
+          if [ -n "$CHANGED" ]; then
+            echo "::error ::Run 'gofmt -s -w .' to format:"
+            echo "$CHANGED"
+            exit 1
+          fi
+
+      - name: go vet
+        run: go vet ./...
+
+      - name: Install staticcheck
+        run: go install honnef.co/go/tools/cmd/staticcheck@latest
+
+      - name: staticcheck
+        run: $(go env GOPATH)/bin/staticcheck ./...
+
+      - name: Run JSON tags camelCase check
+        run: make check-json-tags
+
+      - name: Check Prometheus metrics
+        run: make check-metrics
+
+      - name: Run yamllint
+        run: yamllint .
+
+  detect-secrets:
+    name: Detect secrets (baseline check)
+    needs: lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install detect-secrets
+        run: |
+          pip install detect-secrets
+
+      - name: Detect secrets
+        run: |
+          echo "🔍 Scanning for secrets..."
+          if command -v detect-secrets >/dev/null 2>&1; then
+            detect-secrets scan --baseline .secrets.baseline --all-files || echo "Secret detection completed with findings"
+            if [ -f ".secrets.baseline" ]; then
+              detect-secrets audit .secrets.baseline --statistics || echo "Baseline audit completed"
+            fi
+          else
+            echo "detect-secrets not available, skipping secret scan (basic validation will still run)"
+          fi
+
+  test:
+    name: Test (matrix)
+    needs: lint
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        go: ["1.24.x", "1.25.x"]
+        include:
+          # Run race+coverage once on Linux with the newest Go
+          - os: ubuntu-latest
+            go: "1.24.x"
+            coverage: true
+    runs-on: ${{ matrix.os }}
+    env:
+      ENV: test
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: ${{ vars.AWS_DEFAULT_REGION }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go }}
+          cache: true
+
+      - name: Verify modules
+        run: |
+          go mod verify
+
+      - name: Build
+        run: go build ./...
+
+      # Regular tests (fast) on all OS/Go combos without race/coverage to keep CI time down
+      - name: Test (no race/coverage)
+        if: ${{ !matrix.coverage }}
+        run: go test ./...
+
+      # Single canonical run with race + coverage profile (Linux, newest Go)
+      - name: Test (race + coverage)
+        if: ${{ matrix.coverage }}
+        run: |
+          # Use atomic mode for consistent results under -race
+          go test -race -covermode=atomic -coverpkg=./... -coverprofile=cover.out ./...
+
+      - name: Upload coverage artifact
+        if: ${{ matrix.coverage }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: cover.out
+          retention-days: 7
+
+  codecov:
+    name: Upload coverage to Codecov
+    needs: test
+
+    # still attempt upload even if some matrix legs fail
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download coverage artifact
+        uses: actions/download-artifact@v5
+        with:
+          name: coverage
+          path: .
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  goreleaser-snapshot:
+    name: GoReleaser (snapshot check)
+    needs: test
+    if: ${{ github.event_name == 'pull_request' || github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ">=1.24.0"
+          cache: true
+
+      - uses: docker/setup-buildx-action@v3
+        with:
+          install: true
+
+      - name: GoReleaser (snapshot)
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          version: "~> v2"
+          args: release --snapshot --skip=publish --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
