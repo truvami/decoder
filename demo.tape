@@ -68,11 +68,11 @@ Set Height 600
 
 Type "decoder help" Sleep 500ms  Enter
 
-Sleep 5s 
+Sleep 5s
 
 Type "decoder tagsl 1 8002cdcd1300744f5e166018040b14341a" Sleep 500ms  Enter
 
-Sleep 5s 
+Sleep 5s
 
 Type "decoder tagsl 4 0000003c0000012c000151800078012c05dc02020100010200005460 --json | jq" Sleep 500ms  Enter
 
