@@ -58,27 +58,12 @@ func TestNormalizeVersion(t *testing.T) {
 }
 
 func TestLatestTag_FilteringStableVsRC(t *testing.T) {
-
-	origAPI := ghAPIReleasesURL
-	defer func() { ghAPIReleasesURL = origAPI }()
-
-	// Make template accept owner/repo segments
-	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if !strings.Contains(r.URL.Path, "/releases") {
-			http.NotFound(w, r)
-			return
-		}
-		// Return in "newest first" order
-		resp := []map[string]any{
-			{"tag_name": "v2.0.0-rc1", "prerelease": true, "draft": false},
-			{"tag_name": "v1.5.0", "prerelease": false, "draft": false},
-			{"tag_name": "v1.4.0", "prerelease": false, "draft": true}, // draft: excluded
-		}
-		_ = json.NewEncoder(w).Encode(resp)
-	}))
-	defer s.Close()
-
-	ghAPIReleasesURL = s.URL + "/%s/%s/releases?per_page=20"
+	teardown := setupReleasesJSON(t, []map[string]any{
+		{"tag_name": "v2.0.0-rc1", "prerelease": true, "draft": false},
+		{"tag_name": "v1.5.0", "prerelease": false, "draft": false},
+		{"tag_name": "v1.4.0", "prerelease": false, "draft": true}, // draft: excluded
+	})
+	defer teardown()
 
 	ctx := context.Background()
 	tag, pre, err := LatestTag(ctx, false) // stable only
@@ -99,23 +84,10 @@ func TestLatestTag_FilteringStableVsRC(t *testing.T) {
 }
 
 func TestCheckForUpdate(t *testing.T) {
-
-	origAPI := ghAPIReleasesURL
-	defer func() { ghAPIReleasesURL = origAPI }()
-
-	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if !strings.Contains(r.URL.Path, "/releases") {
-			http.NotFound(w, r)
-			return
-		}
-		resp := []map[string]any{
-			{"tag_name": "v1.1.0", "prerelease": false, "draft": false},
-		}
-		_ = json.NewEncoder(w).Encode(resp)
-	}))
-	defer s.Close()
-
-	ghAPIReleasesURL = s.URL + "/%s/%s/releases?per_page=20"
+	teardown := setupReleasesJSON(t, []map[string]any{
+		{"tag_name": "v1.1.0", "prerelease": false, "draft": false},
+	})
+	defer teardown()
 
 	latest, has, err := CheckForUpdate(context.Background(), "v1.0.0", false)
 	if err != nil {
@@ -139,10 +111,8 @@ func TestDownloadAndReplace_TarGz(t *testing.T) {
 		t.Skip("tar.gz replacement test targets POSIX flow")
 	}
 
-	origBase := ghDownloadBaseURL
 	origExec := execPathFunc
 	defer func() {
-		ghDownloadBaseURL = origBase
 		execPathFunc = origExec
 	}()
 
@@ -169,24 +139,11 @@ func TestDownloadAndReplace_TarGz(t *testing.T) {
 	checksum := hex.EncodeToString(sha[:]) + "  " + archiveName + "\n"
 
 	// Test server for both checksum and archive
-	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		switch {
-		case strings.HasSuffix(r.URL.Path, "/"+archiveName):
-			_, _ = w.Write(archiveBytes)
-			return
-		case strings.HasSuffix(r.URL.Path, "/"+checksumName):
-			_, _ = io.WriteString(w, checksum)
-			return
-		default:
-			http.NotFound(w, r)
-		}
-	}))
-	defer s.Close()
-
-	ghDownloadBaseURL = s.URL + "/%s/%s/%s"
+	teardown := setupDownloadServer(t, archiveName, checksumName, archiveBytes, checksum)
+	defer teardown()
 
 	// Execute replacement
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := ctxTimeout(t, 10*time.Second)
 	defer cancel()
 	if err := downloadAndReplace(ctx, tag); err != nil {
 		t.Fatalf("downloadAndReplace error: %v", err)
@@ -284,24 +241,11 @@ func mustBuildTarGz(t *testing.T, binName string, content []byte) []byte {
 }
 
 func TestLatestTag_NoSuitableRelease(t *testing.T) {
-	origAPI := ghAPIReleasesURL
-	defer func() { ghAPIReleasesURL = origAPI }()
-
-	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if !strings.Contains(r.URL.Path, "/releases") {
-			http.NotFound(w, r)
-			return
-		}
-		// Only draft and rc while includePrerelease=false should both be skipped.
-		resp := []map[string]any{
-			{"tag_name": "v2.0.0-rc1", "prerelease": true, "draft": false},
-			{"tag_name": "v1.5.0", "prerelease": false, "draft": true},
-		}
-		_ = json.NewEncoder(w).Encode(resp)
-	}))
-	defer s.Close()
-
-	ghAPIReleasesURL = s.URL + "/%s/%s/releases?per_page=20"
+	teardown := setupReleasesJSON(t, []map[string]any{
+		{"tag_name": "v2.0.0-rc1", "prerelease": true, "draft": false},
+		{"tag_name": "v1.5.0", "prerelease": false, "draft": true},
+	})
+	defer teardown()
 
 	if _, _, err := LatestTag(context.Background(), false); err == nil {
 		t.Fatalf("expected error when no suitable release is found")
@@ -309,22 +253,10 @@ func TestLatestTag_NoSuitableRelease(t *testing.T) {
 }
 
 func TestUpdateToLatest_AlreadyUpToDate(t *testing.T) {
-	origAPI := ghAPIReleasesURL
-	defer func() { ghAPIReleasesURL = origAPI }()
-
-	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if !strings.Contains(r.URL.Path, "/releases") {
-			http.NotFound(w, r)
-			return
-		}
-		resp := []map[string]any{
-			{"tag_name": "v1.1.0", "prerelease": false, "draft": false},
-		}
-		_ = json.NewEncoder(w).Encode(resp)
-	}))
-	defer s.Close()
-
-	ghAPIReleasesURL = s.URL + "/%s/%s/releases?per_page=20"
+	teardown := setupReleasesJSON(t, []map[string]any{
+		{"tag_name": "v1.1.0", "prerelease": false, "draft": false},
+	})
+	defer teardown()
 
 	if _, err := UpdateToLatest(context.Background(), "v1.1.0", false); err == nil {
 		t.Fatalf("expected already up to date error")
@@ -340,7 +272,7 @@ func TestHttpDownload_Non200(t *testing.T) {
 	}))
 	defer s.Close()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	ctx, cancel := ctxTimeout(t, 2*time.Second)
 	defer cancel()
 	if err := httpDownload(ctx, s.URL+"/x", dest); err == nil {
 		t.Fatalf("expected error on non-200 response")
@@ -368,16 +300,12 @@ func TestUpdateToLatest_Success_Posix(t *testing.T) {
 		t.Skip("POSIX-specific atomic rename path")
 	}
 
-	origAPI := ghAPIReleasesURL
-	origBase := ghDownloadBaseURL
 	origExec := execPathFunc
 	defer func() {
-		ghAPIReleasesURL = origAPI
-		ghDownloadBaseURL = origBase
 		execPathFunc = origExec
 	}()
 
-	// Prepare temp &#34;current executable&#34;.
+	// Prepare temp "current executable".
 	tmpDir := t.TempDir()
 	destPath := filepath.Join(tmpDir, "decoder")
 	if err := os.WriteFile(destPath, []byte("OLD"), 0o755); err != nil {
@@ -400,34 +328,16 @@ func TestUpdateToLatest_Success_Posix(t *testing.T) {
 	checksum := hex.EncodeToString(sha[:]) + "  " + archiveName + "\n"
 
 	// API server for LatestTag
-	api := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if !strings.Contains(r.URL.Path, "/releases") {
-			http.NotFound(w, r)
-			return
-		}
-		resp := []map[string]any{
-			{"tag_name": tag, "prerelease": false, "draft": false},
-		}
-		_ = json.NewEncoder(w).Encode(resp)
-	}))
-	defer api.Close()
-	ghAPIReleasesURL = api.URL + "/%s/%s/releases?per_page=20"
+	apiTeardown := setupReleasesJSON(t, []map[string]any{
+		{"tag_name": tag, "prerelease": false, "draft": false},
+	})
+	defer apiTeardown()
 
 	// Download server for archive and checksum
-	dl := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		switch {
-		case strings.HasSuffix(r.URL.Path, "/"+archiveName):
-			_, _ = w.Write(archiveBytes)
-		case strings.HasSuffix(r.URL.Path, "/"+checksumName):
-			_, _ = io.WriteString(w, checksum)
-		default:
-			http.NotFound(w, r)
-		}
-	}))
-	defer dl.Close()
-	ghDownloadBaseURL = dl.URL + "/%s/%s/%s"
+	dlTeardown := setupDownloadServer(t, archiveName, checksumName, archiveBytes, checksum)
+	defer dlTeardown()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := ctxTimeout(t, 10*time.Second)
 	defer cancel()
 
 	newTag, err := UpdateToLatest(ctx, "v1.0.0", false)
@@ -470,15 +380,8 @@ func TestNormalizeVersion_TrimsSpaces(t *testing.T) {
 }
 
 func TestLatestTag_Non2xx(t *testing.T) {
-	orig := ghAPIReleasesURL
-	defer func() { ghAPIReleasesURL = orig }()
-
-	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		http.Error(w, "boom", http.StatusInternalServerError)
-	}))
-	defer s.Close()
-
-	ghAPIReleasesURL = s.URL + "/%s/%s/releases?per_page=20"
+	teardown := setupReleasesBody(t, http.StatusInternalServerError, "boom")
+	defer teardown()
 
 	_, _, err := LatestTag(context.Background(), false)
 	if err == nil {
@@ -487,15 +390,8 @@ func TestLatestTag_Non2xx(t *testing.T) {
 }
 
 func TestLatestTag_InvalidJSON(t *testing.T) {
-	orig := ghAPIReleasesURL
-	defer func() { ghAPIReleasesURL = orig }()
-
-	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, _ = io.WriteString(w, "{not json")
-	}))
-	defer s.Close()
-
-	ghAPIReleasesURL = s.URL + "/%s/%s/releases?per_page=20"
+	teardown := setupReleasesBody(t, http.StatusOK, "{not json")
+	defer teardown()
 
 	_, _, err := LatestTag(context.Background(), false)
 	if err == nil {
@@ -504,18 +400,10 @@ func TestLatestTag_InvalidJSON(t *testing.T) {
 }
 
 func TestCheckForUpdate_NoUpdate(t *testing.T) {
-	orig := ghAPIReleasesURL
-	defer func() { ghAPIReleasesURL = orig }()
-
-	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		resp := []map[string]any{
-			{"tag_name": "v1.2.3", "prerelease": false, "draft": false},
-		}
-		_ = jsonResponse(w, resp)
-	}))
-	defer s.Close()
-
-	ghAPIReleasesURL = s.URL + "/%s/%s/releases?per_page=20"
+	teardown := setupReleasesJSON(t, []map[string]any{
+		{"tag_name": "v1.2.3", "prerelease": false, "draft": false},
+	})
+	defer teardown()
 
 	latest, has, err := CheckForUpdate(context.Background(), "v1.2.3", false)
 	if err != nil {
@@ -531,20 +419,18 @@ func TestDownloadAndReplace_RenameFallback_Posix(t *testing.T) {
 		t.Skip("fallback rename branch is POSIX-specific")
 	}
 
-	origBase := ghDownloadBaseURL
 	origExec := execPathFunc
 	defer func() {
-		ghDownloadBaseURL = origBase
 		execPathFunc = origExec
 	}()
 
-	// Prepare a destination where &#34;dest&#34; is a DIRECTORY to force os.Rename failure.
+	// Prepare a destination where "dest" is a DIRECTORY to force os.Rename failure.
 	tmp := t.TempDir()
 	destDir := filepath.Join(tmp, "bindir")
 	if err := os.MkdirAll(destDir, 0o755); err != nil {
 		t.Fatalf("mkdir: %v", err)
 	}
-	// Make dest path a directory named &#34;decoder&#34;
+	// Make dest path a directory named "decoder"
 	dirDest := filepath.Join(destDir, "decoder")
 	if err := os.MkdirAll(dirDest, 0o755); err != nil {
 		t.Fatalf("mkdir dest-as-dir: %v", err)
@@ -566,23 +452,10 @@ func TestDownloadAndReplace_RenameFallback_Posix(t *testing.T) {
 	checksum := hex.EncodeToString(sha[:]) + "  " + archiveName + "\n"
 
 	// Test server
-	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		switch {
-		case strings.HasSuffix(r.URL.Path, "/"+archiveName):
-			_, _ = w.Write(archiveBytes)
-			return
-		case strings.HasSuffix(r.URL.Path, "/"+checksumName):
-			_, _ = io.WriteString(w, checksum)
-			return
-		default:
-			http.NotFound(w, r)
-		}
-	}))
-	defer s.Close()
+	teardown := setupDownloadServer(t, archiveName, checksumName, archiveBytes, checksum)
+	defer teardown()
 
-	ghDownloadBaseURL = s.URL + "/%s/%s/%s"
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := ctxTimeout(t, 10*time.Second)
 	defer cancel()
 	err := downloadAndReplace(ctx, tag)
 	if err == nil {
@@ -642,39 +515,18 @@ func TestUntarGzSingleBinary_NotFound(t *testing.T) {
 }
 
 func TestUpdateToLatest_PropagatesDownloadError(t *testing.T) {
-	origAPI := ghAPIReleasesURL
-	origBase := ghDownloadBaseURL
-	defer func() {
-		ghAPIReleasesURL = origAPI
-		ghDownloadBaseURL = origBase
-	}()
+	apiTeardown := setupReleasesJSON(t, []map[string]any{
+		{"tag_name": "v3.2.1", "prerelease": false, "draft": false},
+	})
+	defer apiTeardown()
 
-	// API returns a valid latest tag
-	api := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		resp := []map[string]any{
-			{"tag_name": "v3.2.1", "prerelease": false, "draft": false},
-		}
-		_ = jsonResponse(w, resp)
-	}))
-	defer api.Close()
-	ghAPIReleasesURL = api.URL + "/%s/%s/releases?per_page=20"
-
-	// Downloads return 404
-	dl := httptest.NewServer(http.NotFoundHandler())
-	defer dl.Close()
-	ghDownloadBaseURL = dl.URL + "/%s/%s/%s"
+	dlTeardown := setupDownloadNotFound(t)
+	defer dlTeardown()
 
 	_, err := UpdateToLatest(context.Background(), "v1.0.0", false)
 	if err == nil {
 		t.Fatalf("expected error due to download failure")
 	}
-}
-
-// jsonResponse is a tiny helper to keep test code concise.
-func jsonResponse(w http.ResponseWriter, v any) error {
-	w.Header().Set("Content-Type", "application/json")
-	enc := json.NewEncoder(w)
-	return enc.Encode(v)
 }
 
 func TestSetClientTimeout(t *testing.T) {
@@ -695,7 +547,7 @@ func TestHttpDownload_Success(t *testing.T) {
 
 	tmp := t.TempDir()
 	dest := filepath.Join(tmp, "x.bin")
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	ctx, cancel := ctxTimeout(t, 2*time.Second)
 	defer cancel()
 
 	if err := httpDownload(ctx, s.URL+"/asset", dest); err != nil {
@@ -750,4 +602,80 @@ func TestCopyFile(t *testing.T) {
 	if string(got) != "CONTENT" {
 		t.Fatalf("unexpected dst content %q", string(got))
 	}
+}
+
+// ===== Test helpers to reduce duplication =====
+
+func setupReleasesJSON(t *testing.T, resp any) func() {
+	t.Helper()
+	orig := ghAPIReleasesURL
+	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !strings.Contains(r.URL.Path, "/releases") {
+			http.NotFound(w, r)
+			return
+		}
+		_ = json.NewEncoder(w).Encode(resp)
+	}))
+	ghAPIReleasesURL = s.URL + "/%s/%s/releases?per_page=20"
+	return func() {
+		ghAPIReleasesURL = orig
+		s.Close()
+	}
+}
+
+func setupReleasesBody(t *testing.T, status int, body string) func() {
+	t.Helper()
+	orig := ghAPIReleasesURL
+	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !strings.Contains(r.URL.Path, "/releases") {
+			http.NotFound(w, r)
+			return
+		}
+		if status == http.StatusOK {
+			_, _ = io.WriteString(w, body)
+		} else {
+			http.Error(w, body, status)
+		}
+	}))
+	ghAPIReleasesURL = s.URL + "/%s/%s/releases?per_page=20"
+	return func() {
+		ghAPIReleasesURL = orig
+		s.Close()
+	}
+}
+
+func setupDownloadServer(t *testing.T, archiveName, checksumName string, archiveBytes []byte, checksum string) func() {
+	t.Helper()
+	orig := ghDownloadBaseURL
+	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case strings.HasSuffix(r.URL.Path, "/"+archiveName):
+			_, _ = w.Write(archiveBytes)
+		case strings.HasSuffix(r.URL.Path, "/"+checksumName):
+			_, _ = io.WriteString(w, checksum)
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	ghDownloadBaseURL = s.URL + "/%s/%s/%s"
+	return func() {
+		ghDownloadBaseURL = orig
+		s.Close()
+	}
+}
+
+func setupDownloadNotFound(t *testing.T) func() {
+	t.Helper()
+	orig := ghDownloadBaseURL
+	s := httptest.NewServer(http.NotFoundHandler())
+	ghDownloadBaseURL = s.URL + "/%s/%s/%s"
+	return func() {
+		ghDownloadBaseURL = orig
+		s.Close()
+	}
+}
+
+func ctxTimeout(t *testing.T, d time.Duration) (context.Context, context.CancelFunc) {
+	t.Helper()
+	return context.WithTimeout(context.Background(), d)
 }
