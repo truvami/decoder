@@ -52,7 +52,7 @@ func NewLoracloudClient(ctx context.Context, accessToken string, logger *zap.Log
 		accessToken:       accessToken,
 		logger:            logger,
 		BaseUrl:           TraxmateLoRaCloudBaseUrl,
-		bufferedThreshold: time.Minute,
+		bufferedThreshold: 5 * time.Minute, // Default threshold for buffered detection
 	}
 	for _, opt := range options {
 		opt(&client)

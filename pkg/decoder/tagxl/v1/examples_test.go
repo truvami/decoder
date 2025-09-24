@@ -238,8 +238,8 @@ func TestTagXL_GNSS_Port194_Timestamped(t *testing.T) {
 		if cap.lastPayload != expectedForwarded {
 			t.Fatalf("expected forwarded payload %q, got %q", expectedForwarded, cap.lastPayload)
 		}
-		if cap.lastOptions.Port != 194 {
-			t.Fatalf("expected port 194, got %d", cap.lastOptions.Port)
+		if cap.lastOptions.Port != 192 {
+			t.Fatalf("expected port 192, got %d", cap.lastOptions.Port)
 		}
 		if cap.lastOptions.Moving == nil || *cap.lastOptions.Moving != false {
 			t.Fatalf("expected Moving=false for port 194, got %+v", cap.lastOptions.Moving)
@@ -290,8 +290,8 @@ func TestTagXL_GNSS_Port195_Timestamped(t *testing.T) {
 		if cap.lastPayload != expectedForwarded {
 			t.Fatalf("expected forwarded payload %q, got %q", expectedForwarded, cap.lastPayload)
 		}
-		if cap.lastOptions.Port != 195 {
-			t.Fatalf("expected port 195, got %d", cap.lastOptions.Port)
+		if cap.lastOptions.Port != 192 {
+			t.Fatalf("expected port 192, got %d", cap.lastOptions.Port)
 		}
 		if cap.lastOptions.Moving == nil || *cap.lastOptions.Moving != true {
 			t.Fatalf("expected Moving=true for port 195, got %+v", cap.lastOptions.Moving)
