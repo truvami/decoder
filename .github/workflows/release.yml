@@ -61,7 +61,7 @@ jobs:
           TARGET_TAG="${GITHUB_REF_NAME}"
           BASE_TAG="${{ steps.base.outputs.tag }}"
           if [ -n "$BASE_TAG" ]; then
-            git-cliff --tag "$TARGET_TAG" --since-tag "$BASE_TAG" > "$NOTES_FILE"
+            git-cliff $BASE_TAG..$TARGET_TAG > "$NOTES_FILE"
           else
             git-cliff --tag "$TARGET_TAG" > "$NOTES_FILE"
           fi
