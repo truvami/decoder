@@ -146,42 +146,42 @@ dockers:
 changelog:
   sort: asc
 
-winget:
-  - name: decoder
-    publisher: Truvami
-    short_description: "Truvami decoder reference implementation."
-    license: "MIT"
-    publisher_url: https://truvami.com
-    publisher_support_url: "https://github.com/truvami/decoder/issues"
-    # Explicit for clarity; default would be Publisher.ProjectName
-    package_identifier: Truvami.Decoder
+# winget:
+#   - name: decoder
+#     publisher: Truvami
+#     short_description: "Truvami decoder reference implementation."
+#     license: "MIT"
+#     publisher_url: https://truvami.com
+#     publisher_support_url: "https://github.com/truvami/decoder/issues"
+#     # Explicit for clarity; default would be Publisher.ProjectName
+#     package_identifier: Truvami.Decoder
 
-    # URL to your GitHub release assets (Windows ZIPs)
-    url_template: "https://github.com/truvami/decoder/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
+#     # URL to your GitHub release assets (Windows ZIPs)
+#     url_template: "https://github.com/truvami/decoder/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
 
-    # Commit message used if/when uploads/PRs are enabled
-    commit_msg_template: "{{ .PackageIdentifier }}: {{ .Tag }}"
+#     # Commit message used if/when uploads/PRs are enabled
+#     commit_msg_template: "{{ .PackageIdentifier }}: {{ .Tag }}"
 
-    repository:
-      owner: truvami
-      name: winget-pkgs
-      branch: master
-      pull_request:
-        enabled: false
+#     repository:
+#       owner: microsoft
+#       name: wiinget-pkgs
+#       branch: master
+#       pull_request:
+#         enabled: true
 
-    homepage: "https://github.com/truvami/decoder"
-    description: "Reference implementation of the Truvami decoder CLI for decoding and encoding payloads."
-    license_url: "https://github.com/truvami/decoder/blob/main/LICENSE"
+#     homepage: "https://github.com/truvami/decoder"
+#     description: "Reference implementation of the Truvami decoder CLI for decoding and encoding payloads."
+#     license_url: "https://github.com/truvami/decoder/blob/main/LICENSE"
 
-    # Generate manifests locally only (no commits/PRs). Change to 'auto' or configure repository to enable PRs.
-    skip_upload: auto
+#     # Generate manifests locally only (no commits/PRs). Change to 'auto' or configure repository to enable PRs.
+#     skip_upload: auto
 
-    # Release notes
-    release_notes: "{{ .Changelog }}"
-    release_notes_url: "https://github.com/truvami/decoder/releases/tag/{{ .Tag }}"
+#     # Release notes
+#     release_notes: "{{ .Changelog }}"
+#     release_notes_url: "https://github.com/truvami/decoder/releases/tag/{{ .Tag }}"
 
-    # Optional tags for winget
-    tags:
-      - golang
-      - cli
-      - decoder
+#     # Optional tags for winget
+#     tags:
+#       - golang
+#       - cli
+#       - decoder
