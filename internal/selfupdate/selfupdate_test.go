@@ -9,6 +9,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -359,5 +360,394 @@ func TestVerifyChecksum_NotFound(t *testing.T) {
 	}
 	if err := verifyChecksum(archive, sum, "file.tar.gz"); err == nil {
 		t.Fatalf("expected error when checksum entry is missing")
+	}
+}
+
+func TestUpdateToLatest_Success_Posix(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("POSIX-specific atomic rename path")
+	}
+
+	origAPI := ghAPIReleasesURL
+	origBase := ghDownloadBaseURL
+	origExec := execPathFunc
+	defer func() {
+		ghAPIReleasesURL = origAPI
+		ghDownloadBaseURL = origBase
+		execPathFunc = origExec
+	}()
+
+	// Prepare temp &#34;current executable&#34;.
+	tmpDir := t.TempDir()
+	destPath := filepath.Join(tmpDir, "decoder")
+	if err := os.WriteFile(destPath, []byte("OLD"), 0o755); err != nil {
+		t.Fatalf("write dest: %v", err)
+	}
+	execPathFunc = func() (string, error) { return destPath, nil }
+
+	// Build release artifacts (tar.gz expected on POSIX).
+	osName, archName, format := inferPlatform()
+	if format != "tar.gz" {
+		t.Skip("runtime format not tar.gz; skipping")
+	}
+	tag := "v1.2.3"
+	archiveName := repo + "-1.2.3-" + osName + "-" + archName + ".tar.gz"
+	checksumName := repo + "-1.2.3-checksums.txt"
+
+	content := []byte("NEW_BIN_UTL")
+	archiveBytes := mustBuildTarGz(t, "decoder", content)
+	sha := sha256.Sum256(archiveBytes)
+	checksum := hex.EncodeToString(sha[:]) + "  " + archiveName + "\n"
+
+	// API server for LatestTag
+	api := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !strings.Contains(r.URL.Path, "/releases") {
+			http.NotFound(w, r)
+			return
+		}
+		resp := []map[string]any{
+			{"tag_name": tag, "prerelease": false, "draft": false},
+		}
+		_ = json.NewEncoder(w).Encode(resp)
+	}))
+	defer api.Close()
+	ghAPIReleasesURL = api.URL + "/%s/%s/releases?per_page=20"
+
+	// Download server for archive and checksum
+	dl := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case strings.HasSuffix(r.URL.Path, "/"+archiveName):
+			_, _ = w.Write(archiveBytes)
+		case strings.HasSuffix(r.URL.Path, "/"+checksumName):
+			_, _ = io.WriteString(w, checksum)
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer dl.Close()
+	ghDownloadBaseURL = dl.URL + "/%s/%s/%s"
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	newTag, err := UpdateToLatest(ctx, "v1.0.0", false)
+	if err != nil {
+		t.Fatalf("UpdateToLatest error: %v", err)
+	}
+	if newTag != tag {
+		t.Fatalf("expected tag %s, got %s", tag, newTag)
+	}
+	// Verify binary replaced
+	got, err := os.ReadFile(destPath)
+	if err != nil {
+		t.Fatalf("read dest: %v", err)
+	}
+	if string(got) != string(content) {
+		t.Fatalf("unexpected content %q", string(got))
+	}
+}
+
+func TestInferPlatform_Posix(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("test targets non-windows expectations")
+	}
+	osName, archName, format := inferPlatform()
+	if osName != runtime.GOOS || archName != runtime.GOARCH {
+		t.Fatalf("unexpected os/arch %s/%s", osName, archName)
+	}
+	if format != "tar.gz" {
+		t.Fatalf("expected tar.gz on non-windows, got %s", format)
+	}
+}
+
+func TestNormalizeVersion_TrimsSpaces(t *testing.T) {
+	if got := normalizeVersion(" v1.2.3 "); got != "v1.2.3" {
+		t.Fatalf("normalizeVersion with spaces failed, got %q", got)
+	}
+	if got := normalizeVersion(" 1.2.3 "); got != "v1.2.3" {
+		t.Fatalf("normalizeVersion without leading v but with spaces failed, got %q", got)
+	}
+}
+
+func TestLatestTag_Non2xx(t *testing.T) {
+	orig := ghAPIReleasesURL
+	defer func() { ghAPIReleasesURL = orig }()
+
+	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, "boom", http.StatusInternalServerError)
+	}))
+	defer s.Close()
+
+	ghAPIReleasesURL = s.URL + "/%s/%s/releases?per_page=20"
+
+	_, _, err := LatestTag(context.Background(), false)
+	if err == nil {
+		t.Fatalf("expected error on non-2xx status")
+	}
+}
+
+func TestLatestTag_InvalidJSON(t *testing.T) {
+	orig := ghAPIReleasesURL
+	defer func() { ghAPIReleasesURL = orig }()
+
+	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = io.WriteString(w, "{not json")
+	}))
+	defer s.Close()
+
+	ghAPIReleasesURL = s.URL + "/%s/%s/releases?per_page=20"
+
+	_, _, err := LatestTag(context.Background(), false)
+	if err == nil {
+		t.Fatalf("expected error on invalid JSON")
+	}
+}
+
+func TestCheckForUpdate_NoUpdate(t *testing.T) {
+	orig := ghAPIReleasesURL
+	defer func() { ghAPIReleasesURL = orig }()
+
+	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		resp := []map[string]any{
+			{"tag_name": "v1.2.3", "prerelease": false, "draft": false},
+		}
+		_ = jsonResponse(w, resp)
+	}))
+	defer s.Close()
+
+	ghAPIReleasesURL = s.URL + "/%s/%s/releases?per_page=20"
+
+	latest, has, err := CheckForUpdate(context.Background(), "v1.2.3", false)
+	if err != nil {
+		t.Fatalf("CheckForUpdate error: %v", err)
+	}
+	if latest != "v1.2.3" || has {
+		t.Fatalf("expected no update; latest=%s has=%v", latest, has)
+	}
+}
+
+func TestDownloadAndReplace_RenameFallback_Posix(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("fallback rename branch is POSIX-specific")
+	}
+
+	origBase := ghDownloadBaseURL
+	origExec := execPathFunc
+	defer func() {
+		ghDownloadBaseURL = origBase
+		execPathFunc = origExec
+	}()
+
+	// Prepare a destination where &#34;dest&#34; is a DIRECTORY to force os.Rename failure.
+	tmp := t.TempDir()
+	destDir := filepath.Join(tmp, "bindir")
+	if err := os.MkdirAll(destDir, 0o755); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+	// Make dest path a directory named &#34;decoder&#34;
+	dirDest := filepath.Join(destDir, "decoder")
+	if err := os.MkdirAll(dirDest, 0o755); err != nil {
+		t.Fatalf("mkdir dest-as-dir: %v", err)
+	}
+	execPathFunc = func() (string, error) { return dirDest, nil }
+
+	// Build archive/metadata
+	osName, archName, format := inferPlatform()
+	if format != "tar.gz" {
+		t.Skip("runtime format not tar.gz; skipping")
+	}
+	tag := "v9.9.9"
+	archiveName := repo + "-9.9.9-" + osName + "-" + archName + ".tar.gz"
+	checksumName := repo + "-9.9.9-checksums.txt"
+
+	content := []byte("NEW_BIN_FALLBACK")
+	archiveBytes := mustBuildTarGz(t, "decoder", content)
+	sha := sha256.Sum256(archiveBytes)
+	checksum := hex.EncodeToString(sha[:]) + "  " + archiveName + "\n"
+
+	// Test server
+	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case strings.HasSuffix(r.URL.Path, "/"+archiveName):
+			_, _ = w.Write(archiveBytes)
+			return
+		case strings.HasSuffix(r.URL.Path, "/"+checksumName):
+			_, _ = io.WriteString(w, checksum)
+			return
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer s.Close()
+
+	ghDownloadBaseURL = s.URL + "/%s/%s/%s"
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	err := downloadAndReplace(ctx, tag)
+	if err == nil {
+		t.Fatalf("expected error because rename to directory should fail")
+	}
+	// Should mention placement of .new in the parent dir and file should exist with new content.
+	if !strings.Contains(err.Error(), "placed new binary at") {
+		t.Fatalf("expected fallback placement message, got: %v", err)
+	}
+	newPath := filepath.Join(destDir, "decoder.new")
+	b, readErr := os.ReadFile(newPath)
+	if readErr != nil {
+		t.Fatalf("expected .new binary at %s: %v", newPath, readErr)
+	}
+	if string(b) != string(content) {
+		t.Fatalf("unexpected new binary content %q", string(b))
+	}
+}
+
+func TestUnzipSingleBinary_NotFound(t *testing.T) {
+	tmp := t.TempDir()
+	zipPath := filepath.Join(tmp, "a.zip")
+	outPath := filepath.Join(tmp, "decoder")
+
+	var buf bytes.Buffer
+	zw := zip.NewWriter(&buf)
+	w, err := zw.Create("nested/dir/othername")
+	if err != nil {
+		t.Fatalf("create zip entry: %v", err)
+	}
+	if _, err := w.Write([]byte("DATA")); err != nil {
+		t.Fatalf("write zip entry: %v", err)
+	}
+	if err := zw.Close(); err != nil {
+		t.Fatalf("close zip: %v", err)
+	}
+	if err := os.WriteFile(zipPath, buf.Bytes(), 0o644); err != nil {
+		t.Fatalf("write zip: %v", err)
+	}
+
+	if err := unzipSingleBinary(zipPath, "decoder", outPath); err == nil {
+		t.Fatalf("expected error when binary not found in zip")
+	}
+}
+
+func TestUntarGzSingleBinary_NotFound(t *testing.T) {
+	tmp := t.TempDir()
+	tgzPath := filepath.Join(tmp, "a.tgz")
+	// Build archive that contains a different file name
+	archiveBytes := mustBuildTarGz(t, "othername", []byte("DATA"))
+	if err := os.WriteFile(tgzPath, archiveBytes, 0o644); err != nil {
+		t.Fatalf("write tgz: %v", err)
+	}
+	if err := untarGzSingleBinary(tgzPath, "decoder", filepath.Join(tmp, "out")); err == nil {
+		t.Fatalf("expected error when binary not found in tgz")
+	}
+}
+
+func TestUpdateToLatest_PropagatesDownloadError(t *testing.T) {
+	origAPI := ghAPIReleasesURL
+	origBase := ghDownloadBaseURL
+	defer func() {
+		ghAPIReleasesURL = origAPI
+		ghDownloadBaseURL = origBase
+	}()
+
+	// API returns a valid latest tag
+	api := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		resp := []map[string]any{
+			{"tag_name": "v3.2.1", "prerelease": false, "draft": false},
+		}
+		_ = jsonResponse(w, resp)
+	}))
+	defer api.Close()
+	ghAPIReleasesURL = api.URL + "/%s/%s/releases?per_page=20"
+
+	// Downloads return 404
+	dl := httptest.NewServer(http.NotFoundHandler())
+	defer dl.Close()
+	ghDownloadBaseURL = dl.URL + "/%s/%s/%s"
+
+	_, err := UpdateToLatest(context.Background(), "v1.0.0", false)
+	if err == nil {
+		t.Fatalf("expected error due to download failure")
+	}
+}
+
+// jsonResponse is a tiny helper to keep test code concise.
+func jsonResponse(w http.ResponseWriter, v any) error {
+	w.Header().Set("Content-Type", "application/json")
+	enc := json.NewEncoder(w)
+	return enc.Encode(v)
+}
+
+func TestSetClientTimeout(t *testing.T) {
+	old := httpClient.Timeout
+	defer func() { httpClient.Timeout = old }()
+
+	SetClientTimeout(123 * time.Millisecond)
+	if httpClient.Timeout != 123*time.Millisecond {
+		t.Fatalf("timeout not applied: got %v", httpClient.Timeout)
+	}
+}
+
+func TestHttpDownload_Success(t *testing.T) {
+	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = io.WriteString(w, "OK")
+	}))
+	defer s.Close()
+
+	tmp := t.TempDir()
+	dest := filepath.Join(tmp, "x.bin")
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	if err := httpDownload(ctx, s.URL+"/asset", dest); err != nil {
+		t.Fatalf("httpDownload error: %v", err)
+	}
+	b, err := os.ReadFile(dest)
+	if err != nil {
+		t.Fatalf("read dest: %v", err)
+	}
+	if string(b) != "OK" {
+		t.Fatalf("unexpected content %q", string(b))
+	}
+}
+
+func TestVerifyChecksum_Success(t *testing.T) {
+	tmp := t.TempDir()
+	archive := filepath.Join(tmp, "file.tar.gz")
+	if err := os.WriteFile(archive, []byte("ABC"), 0o644); err != nil {
+		t.Fatalf("write archive: %v", err)
+	}
+	sum := sha256.Sum256([]byte("ABC"))
+	chk := filepath.Join(tmp, "checksums.txt")
+	if err := os.WriteFile(chk, []byte(fmt.Sprintf("%x  %s\n", sum[:], filepath.Base(archive))), 0o644); err != nil {
+		t.Fatalf("write checksum: %v", err)
+	}
+	if err := verifyChecksum(archive, chk, filepath.Base(archive)); err != nil {
+		t.Fatalf("verifyChecksum unexpected error: %v", err)
+	}
+}
+
+func TestWinPendingReplaceErrorString(t *testing.T) {
+	w := &winPendingReplace{NewPath: "/tmp/decoder.new"}
+	if msg := w.Error(); !strings.Contains(msg, "/tmp/decoder.new") {
+		t.Fatalf("error string does not contain path: %q", msg)
+	}
+}
+
+func TestCopyFile(t *testing.T) {
+	tmp := t.TempDir()
+	src := filepath.Join(tmp, "src.bin")
+	dst := filepath.Join(tmp, "dst.bin")
+	if err := os.WriteFile(src, []byte("CONTENT"), 0o600); err != nil {
+		t.Fatalf("write src: %v", err)
+	}
+	if err := copyFile(src, dst, 0o644); err != nil {
+		t.Fatalf("copyFile error: %v", err)
+	}
+	got, err := os.ReadFile(dst)
+	if err != nil {
+		t.Fatalf("read dst: %v", err)
+	}
+	if string(got) != "CONTENT" {
+		t.Fatalf("unexpected dst content %q", string(got))
 	}
 }
