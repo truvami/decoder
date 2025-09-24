@@ -2,6 +2,10 @@ version: 2
 
 project_name: decoder
 
+release:
+  draft: false
+  prerelease: "auto"
+
 before:
   hooks:
     - go mod tidy
