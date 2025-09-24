@@ -62,6 +62,14 @@ var _ decoder.UplinkFeatureWiFi = &Port201Payload{}
 var _ decoder.UplinkFeatureMoving = &Port201Payload{}
 var _ decoder.UplinkFeatureTimestamp = &Port201Payload{}
 
+func (p Port201Payload) GetBufferLevel() *uint16 {
+	return nil
+}
+
+func (p Port201Payload) IsBuffered() bool {
+	return time.Since(p.Timestamp) > 5*time.Minute
+}
+
 func (p Port201Payload) GetTimestamp() *time.Time {
 	return &p.Timestamp
 }

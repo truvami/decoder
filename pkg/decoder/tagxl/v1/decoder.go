@@ -291,7 +291,7 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 					{Name: "Mac5", Start: 29, Length: 6, Optional: true, Hex: true},
 				},
 				TargetType: reflect.TypeOf(Port200Payload{}),
-				Features:   []decoder.Feature{decoder.FeatureWiFi, decoder.FeatureMoving, decoder.FeatureTimestamp},
+				Features:   []decoder.Feature{decoder.FeatureWiFi, decoder.FeatureMoving, decoder.FeatureTimestamp, decoder.FeatureBuffered},
 			}, nil
 		case Port200Version2:
 			return common.PayloadConfig{
@@ -311,7 +311,7 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 					{Name: "Mac5", Start: 34, Length: 6, Optional: true, Hex: true},
 				},
 				TargetType: reflect.TypeOf(Port200Payload{}),
-				Features:   []decoder.Feature{decoder.FeatureWiFi, decoder.FeatureMoving, decoder.FeatureTimestamp},
+				Features:   []decoder.Feature{decoder.FeatureWiFi, decoder.FeatureMoving, decoder.FeatureTimestamp, decoder.FeatureBuffered},
 			}, nil
 		default:
 			return common.PayloadConfig{}, fmt.Errorf("%w: version %v for port %d not supported", common.ErrPortNotSupported, version, port)
@@ -335,7 +335,7 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 					{Name: "Mac5", Start: 29, Length: 6, Optional: true, Hex: true},
 				},
 				TargetType: reflect.TypeOf(Port201Payload{}),
-				Features:   []decoder.Feature{decoder.FeatureWiFi, decoder.FeatureMoving, decoder.FeatureTimestamp},
+				Features:   []decoder.Feature{decoder.FeatureWiFi, decoder.FeatureMoving, decoder.FeatureTimestamp, decoder.FeatureBuffered},
 			}, nil
 		case Port201Version2:
 			return common.PayloadConfig{
@@ -355,7 +355,7 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 					{Name: "Mac5", Start: 34, Length: 6, Optional: true, Hex: true},
 				},
 				TargetType: reflect.TypeOf(Port201Payload{}),
-				Features:   []decoder.Feature{decoder.FeatureWiFi, decoder.FeatureMoving, decoder.FeatureTimestamp},
+				Features:   []decoder.Feature{decoder.FeatureWiFi, decoder.FeatureMoving, decoder.FeatureTimestamp, decoder.FeatureBuffered},
 			}, nil
 		default:
 			return common.PayloadConfig{}, fmt.Errorf("%w: version %v for port %d not supported", common.ErrPortNotSupported, version, port)

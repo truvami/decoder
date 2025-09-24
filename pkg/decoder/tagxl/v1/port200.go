@@ -61,6 +61,15 @@ type Port200Payload struct {
 var _ decoder.UplinkFeatureWiFi = &Port200Payload{}
 var _ decoder.UplinkFeatureMoving = &Port200Payload{}
 var _ decoder.UplinkFeatureTimestamp = &Port200Payload{}
+var _ decoder.UplinkFeatureBuffered = &Port200Payload{}
+
+func (p Port200Payload) GetBufferLevel() *uint16 {
+	return nil
+}
+
+func (p Port200Payload) IsBuffered() bool {
+	return time.Since(p.Timestamp) > 5*time.Minute
+}
 
 func (p Port200Payload) GetTimestamp() *time.Time {
 	return &p.Timestamp
