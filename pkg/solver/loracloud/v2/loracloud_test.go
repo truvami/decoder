@@ -158,8 +158,8 @@ func TestSolve_WithTimestampBuffered(t *testing.T) {
 	// EndOfGroup
 	payload := "80"
 
-	// 2 minutes ago, default threshold is 1 minute => buffered
-	ts := time.Now().Add(-2 * time.Minute)
+	// 6 minutes ago, default threshold is 5 minute => buffered
+	ts := time.Now().Add(-6 * time.Minute)
 
 	out, err := runSolve(t, srv, solver.SolverV2Options{
 		DevEui:        "0011223344556677",
