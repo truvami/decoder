@@ -7,12 +7,14 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/truvami/decoder/pkg/decoder"
 	"github.com/truvami/decoder/pkg/solver"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 // mockNonNestedServer returns an httptest server that emulates the non-Traxmate LoRaCloud response:
@@ -94,6 +96,68 @@ func mockNonNestedServer(t *testing.T, positionValid bool, lat, lon float64, cap
 	}))
 }
 
+// mockServerNoTimestamp returns a server that has valid position but no timestamp
+func mockServerNoTimestamp(t *testing.T) *httptest.Server {
+	t.Helper()
+
+	type resultStruct struct {
+		Deveui          string `json:"deveui"`
+		PendingRequests struct {
+			Requests []any `json:"requests"`
+			ID       int   `json:"id"`
+			Updelay  int   `json:"updelay"`
+			Upcount  int   `json:"upcount"`
+		} `json:"pending_requests"`
+		InfoFields  struct{} `json:"info_fields"`
+		LogMessages []any    `json:"log_messages"`
+		Fports      struct {
+			Dmport     int `json:"dmport"`
+			Gnssport   int `json:"gnssport"`
+			Wifiport   int `json:"wifiport"`
+			Fragport   int `json:"fragport"`
+			Streamport int `json:"streamport"`
+			Gnssngport int `json:"gnssngport"`
+		} `json:"fports"`
+		Dnlink            any   `json:"dnlink"`
+		FulfilledRequests []any `json:"fulfilled_requests"`
+		CancelledRequests []any `json:"cancelled_requests"`
+		File              any   `json:"file"`
+		StreamRecords     any   `json:"stream_records"`
+		PositionSolution  struct {
+			Llh           []float64 `json:"llh"`
+			Accuracy      float64   `json:"accuracy"`
+			Ecef          []float64 `json:"ecef"`
+			Gdop          float64   `json:"gdop"`
+			AlgorithmType string    `json:"algorithm_type"`
+			// Note: no capture_time_utc or timestamp fields
+		} `json:"position_solution"`
+		Operation string `json:"operation"`
+	}
+
+	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/api/v1/device/send" {
+			http.NotFound(w, r)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+
+		resp := struct {
+			Result resultStruct `json:"result"`
+		}{}
+
+		// Valid position but no timestamp
+		resp.Result.Deveui = "00-11-22-33-44-55-66-77"
+		resp.Result.Operation = "gnss"
+		resp.Result.PositionSolution.Llh = []float64{47.0, 8.0, 10}
+		resp.Result.PositionSolution.Accuracy = 5
+		resp.Result.PositionSolution.Gdop = 1.2
+		resp.Result.PositionSolution.AlgorithmType = "gnss"
+
+		_ = json.NewEncoder(w).Encode(resp)
+	}))
+}
+
 func newLogger(t *testing.T) *zap.Logger {
 	t.Helper()
 	logger, _ := zap.NewDevelopment()
@@ -116,7 +180,8 @@ func runSolve(t *testing.T, srv *httptest.Server, opts solver.SolverV2Options, p
 	return c.Solve(ctx, payload, opts)
 }
 
-func TestSolve_Valid_NoOptionalFeatures(t *testing.T) {
+func TestSolve_Valid_ServerTimestampOnly(t *testing.T) {
+	// Server returns timestamp, user doesn't provide one -> should get GNSS + Timestamp features
 	srv := mockNonNestedServer(t, true, 47.0, 8.0, float64(time.Now().UTC().Unix()), http.StatusOK)
 	defer srv.Close()
 
@@ -127,21 +192,24 @@ func TestSolve_Valid_NoOptionalFeatures(t *testing.T) {
 		DevEui:        "0011223344556677",
 		UplinkCounter: 10,
 		Port:          150,
-		// No timestamp, no moving
+		// No timestamp, no moving - server will provide timestamp
 	}, payload)
 	if err != nil {
 		t.Fatalf("Solve returned error: %v", err)
 	}
 
-	// Expect GNSS feature only
+	// Expect GNSS + Timestamp features (server provided timestamp)
 	if !out.Is(decoder.FeatureGNSS) {
 		t.Fatalf("expected FeatureGNSS to be set")
 	}
-	if out.Is(decoder.FeatureTimestamp) || out.Is(decoder.FeatureMoving) || out.Is(decoder.FeatureBuffered) {
-		t.Fatalf("unexpected optional features set")
+	if !out.Is(decoder.FeatureTimestamp) {
+		t.Fatalf("expected FeatureTimestamp to be set when server returns timestamp")
+	}
+	if out.Is(decoder.FeatureMoving) || out.Is(decoder.FeatureBuffered) {
+		t.Fatalf("unexpected Moving or Buffered features set")
 	}
 
-	// Data should implement GNSS interface
+	// Data should implement GNSS and Timestamp interfaces
 	gnss, ok := out.Data.(decoder.UplinkFeatureGNSS)
 	if !ok {
 		t.Fatalf("data does not implement UplinkFeatureGNSS")
@@ -447,7 +515,7 @@ func TestSolve_MovingAndTimestampBuffered_BothInterfaces(t *testing.T) {
 		t.Fatalf("Solve returned error: %v", err)
 	}
 
-	if !(out.Is(decoder.FeatureGNSS) && out.Is(decoder.FeatureTimestamp) && out.Is(decoder.FeatureMoving) && out.Is(decoder.FeatureBuffered)) {
+	if !out.Is(decoder.FeatureGNSS) || !out.Is(decoder.FeatureTimestamp) || !out.Is(decoder.FeatureMoving) || !out.Is(decoder.FeatureBuffered) {
 		t.Fatalf("expected GNSS, Timestamp, Moving, Buffered features")
 	}
 
@@ -576,5 +644,177 @@ func TestSolve_InvalidDevEui_NonHex(t *testing.T) {
 	}
 	if !errors.Is(err, ErrInvalidOptions) || !errors.Is(err, ErrInvalidDevEui) {
 		t.Fatalf("expected ErrInvalidOptions and ErrInvalidDevEui, got %v", err)
+	}
+}
+
+// Test the buffered threshold logic specifically - comprehensive coverage of the selected code block
+func TestSolve_BufferedThresholdLogic(t *testing.T) {
+	// Custom threshold for this test
+	customThreshold := 3 * time.Minute
+
+	tests := []struct {
+		name                     string
+		timestampOption          *time.Time // nil means no timestamp provided
+		serverReturnsTimestamp   bool
+		expectedTimestampFeature bool
+		expectedBufferedFeature  bool
+		expectedLogMessage       bool // whether we expect the "no timestamp provided" log
+	}{
+		{
+			name:                     "WithTimestamp_BeforeThreshold_ShouldBeBuffered",
+			timestampOption:          func() *time.Time { t := time.Now().Add(-4 * time.Minute); return &t }(),
+			serverReturnsTimestamp:   true,
+			expectedTimestampFeature: true,
+			expectedBufferedFeature:  true,
+			expectedLogMessage:       false,
+		},
+		{
+			name:                     "WithTimestamp_AfterThreshold_ShouldNotBeBuffered",
+			timestampOption:          func() *time.Time { t := time.Now().Add(-2 * time.Minute); return &t }(),
+			serverReturnsTimestamp:   true,
+			expectedTimestampFeature: true,
+			expectedBufferedFeature:  false,
+			expectedLogMessage:       false,
+		},
+		{
+			name:                     "WithTimestamp_ExactlyAtThreshold_ShouldBeBuffered", // Before() is strict, so exactly at threshold = buffered
+			timestampOption:          func() *time.Time { t := time.Now().Add(-3 * time.Minute); return &t }(),
+			serverReturnsTimestamp:   true,
+			expectedTimestampFeature: true,
+			expectedBufferedFeature:  true,
+			expectedLogMessage:       false,
+		},
+		{
+			name:                     "NoTimestamp_ServerReturnsTimestamp_ShouldAddFeature",
+			timestampOption:          nil,
+			serverReturnsTimestamp:   true,
+			expectedTimestampFeature: true,
+			expectedBufferedFeature:  false,
+			expectedLogMessage:       true,
+		},
+		{
+			name:                     "NoTimestamp_ServerDoesntReturnTimestamp_NoFeature",
+			timestampOption:          nil,
+			serverReturnsTimestamp:   false,
+			expectedTimestampFeature: false,
+			expectedBufferedFeature:  false,
+			expectedLogMessage:       false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Create server that returns timestamp based on test case
+			var captureUTC float64
+			if tt.serverReturnsTimestamp {
+				captureUTC = float64(time.Now().UTC().Unix())
+			} else {
+				captureUTC = 0 // No timestamp from server
+			}
+
+			// For the case where server doesn't return timestamp, we need to create a custom server
+			// that returns valid position but no timestamp to avoid position validation errors
+			var srv *httptest.Server
+			if !tt.serverReturnsTimestamp {
+				srv = mockServerNoTimestamp(t)
+			} else {
+				srv = mockNonNestedServer(t, true, 47.0, 8.0, captureUTC, http.StatusOK)
+			}
+			defer srv.Close()
+
+			// Use different payloads based on test case
+			// "80" = EndOfGroup true (enforces position validation)
+			// "00" = EndOfGroup false (no position validation)
+			payload := "80"
+			if !tt.serverReturnsTimestamp && tt.timestampOption == nil {
+				payload = "00" // Avoid EndOfGroup enforcement for no-timestamp case
+			}
+
+			// Capture logs to verify the "no timestamp provided" message
+			var logBuffer bytes.Buffer
+			logger := zap.New(
+				zapcore.NewCore(
+					zapcore.NewJSONEncoder(zap.NewDevelopmentEncoderConfig()),
+					zapcore.AddSync(&logBuffer),
+					zapcore.InfoLevel,
+				),
+			)
+
+			ctx := context.Background()
+			clientOpts := []LoracloudClientOptions{
+				WithBaseUrl(srv.URL),
+				WithBufferedThreshold(customThreshold),
+			}
+
+			c, err := NewLoracloudClient(ctx, "Bearer test-token", logger, clientOpts...)
+			if err != nil {
+				t.Fatalf("failed to create client: %v", err)
+			}
+
+			out, err := c.Solve(ctx, payload, solver.SolverV2Options{
+				DevEui:        "0011223344556677",
+				UplinkCounter: 100,
+				Port:          150,
+				Timestamp:     tt.timestampOption,
+			})
+			if err != nil {
+				t.Fatalf("Solve returned error: %v", err)
+			}
+
+			// Verify FeatureTimestamp
+			if tt.expectedTimestampFeature && !out.Is(decoder.FeatureTimestamp) {
+				t.Errorf("expected FeatureTimestamp to be set")
+			}
+			if !tt.expectedTimestampFeature && out.Is(decoder.FeatureTimestamp) {
+				t.Errorf("did not expect FeatureTimestamp to be set")
+			}
+
+			// Verify FeatureBuffered
+			if tt.expectedBufferedFeature && !out.Is(decoder.FeatureBuffered) {
+				t.Errorf("expected FeatureBuffered to be set")
+			}
+			if !tt.expectedBufferedFeature && out.Is(decoder.FeatureBuffered) {
+				t.Errorf("did not expect FeatureBuffered to be set")
+			}
+
+			// Verify buffered interface implementation when expected
+			if tt.expectedBufferedFeature {
+				bufIF, ok := out.Data.(decoder.UplinkFeatureBuffered)
+				if !ok {
+					t.Errorf("expected UplinkFeatureBuffered interface to be implemented")
+				} else if !bufIF.IsBuffered() {
+					t.Errorf("expected IsBuffered() to return true")
+				}
+			}
+
+			// Verify timestamp interface implementation when expected
+			if tt.expectedTimestampFeature {
+				tsIF, ok := out.Data.(decoder.UplinkFeatureTimestamp)
+				if !ok {
+					t.Errorf("expected UplinkFeatureTimestamp interface to be implemented")
+				} else {
+					ts := tsIF.GetTimestamp()
+					if tt.timestampOption != nil {
+						// Should return the provided timestamp
+						if ts == nil || !ts.Equal(*tt.timestampOption) {
+							t.Errorf("expected timestamp to match provided option, got %v, want %v", ts, tt.timestampOption)
+						}
+					} else {
+						// Should return server timestamp when no option provided but server returns one
+						if tt.serverReturnsTimestamp && ts == nil {
+							t.Errorf("expected timestamp from server response")
+						}
+					}
+				}
+			}
+
+			// Verify log message when expected
+			if tt.expectedLogMessage {
+				logOutput := logBuffer.String()
+				if !strings.Contains(logOutput, "no timestamp provided, but LoRaCloud / Traxmate returned one") {
+					t.Errorf("expected log message about server returning timestamp when none provided, got log: %s", logOutput)
+				}
+			}
+		})
 	}
 }

@@ -100,7 +100,7 @@ var httpCmd = &cobra.Command{
 			}
 		}
 
-		var decoders []decoderEndpoint = []decoderEndpoint{
+		var decoders = []decoderEndpoint{
 			{"tagsl/v1", tagslDecoder.NewTagSLv1Decoder(tagslDecoder.WithSkipValidation(SkipValidation))},
 			{"tagxl/v1", tagxlDecoder.NewTagXLv1Decoder(ctx, solver, logger.Logger, tagxlDecoder.WithSkipValidation(SkipValidation))},
 			{"nomadxs/v1", nomadxsDecoder.NewNomadXSv1Decoder(nomadxsDecoder.WithSkipValidation(SkipValidation))},
@@ -119,7 +119,7 @@ var httpCmd = &cobra.Command{
 			encoder encoder.Encoder
 		}
 
-		var encoders []encoderEndpoint = []encoderEndpoint{
+		var encoders = []encoderEndpoint{
 			{"encode/tagsl/v1", tagslEncoder.NewTagSLv1Encoder()},
 			{"encode/nomadxs/v1", nomadxsEncoder.NewNomadXSv1Encoder()},
 			{"encode/smartlabel/v1", smartlabelEncoder.NewSmartlabelv1Encoder()},

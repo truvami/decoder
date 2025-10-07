@@ -86,7 +86,7 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 		if len(payload) < 1 {
 			return common.PayloadConfig{}, common.ErrPayloadTooShort
 		}
-		var payloadType byte = payload[0]
+		var payloadType = payload[0]
 		if payloadType != 0x4c {
 			return common.PayloadConfig{}, fmt.Errorf("%w: port %d tag %x", common.ErrPortNotSupported, port, payloadType)
 		}
@@ -144,7 +144,7 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 		if len(payload) < 1 {
 			return common.PayloadConfig{}, common.ErrPayloadTooShort
 		}
-		var version uint8 = payload[0]
+		var version = payload[0]
 		switch version {
 		case Port152Version1:
 			return common.PayloadConfig{
@@ -192,7 +192,7 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 		if len(payload) < 1 {
 			return common.PayloadConfig{}, common.ErrPayloadTooShort
 		}
-		var version uint8 = payload[0]
+		var version = payload[0]
 		switch version {
 		case Port197Version1:
 			return common.PayloadConfig{
@@ -234,7 +234,7 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 		if len(payload) < 1 {
 			return common.PayloadConfig{}, common.ErrPayloadTooShort
 		}
-		var version uint8 = payload[0]
+		var version = payload[0]
 		switch version {
 		case Port198Version1:
 			return common.PayloadConfig{
@@ -276,7 +276,7 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 		if len(payload) < 5 {
 			return common.PayloadConfig{}, common.ErrPayloadTooShort
 		}
-		var version uint8 = payload[4]
+		var version = payload[4]
 		switch version {
 		case Port200Version1:
 			return common.PayloadConfig{
@@ -320,7 +320,7 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 		if len(payload) < 5 {
 			return common.PayloadConfig{}, common.ErrPayloadTooShort
 		}
-		var version uint8 = payload[4]
+		var version = payload[4]
 		switch version {
 		case Port201Version1:
 			return common.PayloadConfig{

@@ -118,11 +118,8 @@ func (c PositionEstimateClient) Solve(ctx context.Context, payload string) (*dec
 		altitude = position.Coordinates[2]
 	}
 
-	buffered := false
 	// add 10 seconds buffer to the timestamp
-	if position.Properties.Timestamp != nil && position.Properties.Timestamp.Before(time.Now().Add(-1*time.Minute)) {
-		buffered = true
-	}
+	buffered := position.Properties.Timestamp != nil && position.Properties.Timestamp.Before(time.Now().Add(-1*time.Minute))
 
 	pos := &Position{
 		Latitude:  *position.Coordinates[1],

@@ -69,10 +69,10 @@ func TestBoolToBytesAndBytesToBool(t *testing.T) {
 }
 
 func TestUintAndIntToBytes(t *testing.T) {
-	if got := UintToBytes(0x1234, 2); !(len(got) == 2 && got[0] == 0x12 && got[1] == 0x34) {
+	if got := UintToBytes(0x1234, 2); len(got) != 2 || got[0] != 0x12 || got[1] != 0x34 {
 		t.Fatalf("UintToBytes(0x1234,2)=%x want 12 34", got)
 	}
-	if got := IntToBytes(0x0102, 2); !(len(got) == 2 && got[0] == 0x01 && got[1] == 0x02) {
+	if got := IntToBytes(0x0102, 2); len(got) != 2 || got[0] != 0x01 || got[1] != 0x02 {
 		t.Fatalf("IntToBytes(0x0102,2)=%x want 01 02", got)
 	}
 }

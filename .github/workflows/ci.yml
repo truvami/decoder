@@ -95,6 +95,11 @@ jobs:
       - name: staticcheck
         run: $(go env GOPATH)/bin/staticcheck ./...
 
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: v2.1
+
       - name: Run JSON tags camelCase check
         run: make check-json-tags
 

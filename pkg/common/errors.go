@@ -50,7 +50,7 @@ func WrapErrorWithMessage(parent error, child error, message string) error {
 }
 
 func UnwrapError(err error) []error {
-	var errs []error = []error{}
+	var errs = []error{}
 	if err, ok := err.(interface{ Unwrap() []error }); ok {
 		errs = append(errs, err.Unwrap()...)
 	}

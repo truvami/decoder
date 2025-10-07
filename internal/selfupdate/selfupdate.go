@@ -101,7 +101,7 @@ func LatestTag(ctx context.Context, includePrerelease bool) (string, bool, error
 	if err != nil {
 		return "", false, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return "", false, fmt.Errorf("github releases http status %d", resp.StatusCode)
@@ -190,7 +190,7 @@ func downloadAndReplace(ctx context.Context, tag string) error {
 	if err != nil {
 		return err
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	archivePath := filepath.Join(tmpDir, name)
 	checksumPath := filepath.Join(tmpDir, chk)
@@ -296,7 +296,7 @@ func httpDownload(ctx context.Context, url, dest string) error {
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return fmt.Errorf("http status %d for %s", resp.StatusCode, url)
@@ -306,7 +306,7 @@ func httpDownload(ctx context.Context, url, dest string) error {
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	_, err = io.Copy(f, resp.Body)
 	return err
@@ -317,7 +317,7 @@ func verifyChecksum(archivePath, checksumPath, archiveName string) error {
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	var want string
 	sc := bufio.NewScanner(f)
@@ -355,7 +355,7 @@ func fileSHA256(path string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	h := sha256.New()
 	if _, err := io.Copy(h, f); err != nil {
@@ -369,7 +369,7 @@ func unzipSingleBinary(zipPath, binName, outPath string) error {
 	if err != nil {
 		return err
 	}
-	defer r.Close()
+	defer func() { _ = r.Close() }()
 
 	for _, f := range r.File {
 		// artifacts are wrapped in a directory, so match by leaf name
@@ -380,13 +380,13 @@ func unzipSingleBinary(zipPath, binName, outPath string) error {
 		if err != nil {
 			return err
 		}
-		defer rc.Close()
+		defer func() { _ = rc.Close() }()
 
 		out, err := os.Create(outPath)
 		if err != nil {
 			return err
 		}
-		defer out.Close()
+		defer func() { _ = out.Close() }()
 
 		if _, err := io.Copy(out, rc); err != nil {
 			return err
@@ -401,13 +401,13 @@ func untarGzSingleBinary(tgzPath, binName, outPath string) error {
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	gzr, err := gzip.NewReader(f)
 	if err != nil {
 		return err
 	}
-	defer gzr.Close()
+	defer func() { _ = gzr.Close() }()
 
 	tr := tar.NewReader(gzr)
 	for {
@@ -428,7 +428,7 @@ func untarGzSingleBinary(tgzPath, binName, outPath string) error {
 		if err != nil {
 			return err
 		}
-		defer out.Close()
+		defer func() { _ = out.Close() }()
 
 		if _, err := io.Copy(out, tr); err != nil {
 			return err
@@ -443,7 +443,7 @@ func copyFile(src, dst string, mode os.FileMode) error {
 	if err != nil {
 		return err
 	}
-	defer in.Close()
+	defer func() { _ = in.Close() }()
 
 	out, err := os.Create(dst)
 	if err != nil {

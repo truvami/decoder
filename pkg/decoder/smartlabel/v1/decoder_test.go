@@ -46,7 +46,7 @@ func TestDecode(t *testing.T) {
 			t.Fatalf("unexpected error: %v", err)
 		}
 
-		defer file.Close()
+		defer func() { _ = file.Close() }()
 
 		data, err := io.ReadAll(file)
 		if err != nil {

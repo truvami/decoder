@@ -165,6 +165,11 @@ func (l LoracloudClient) Solve(ctx context.Context, payload string, options solv
 			features = append(features, decoder.FeatureBuffered)
 			loracloudV2BufferedDetectedTotal.WithLabelValues(devEui, l.bufferedThreshold.String()).Inc()
 		}
+	} else {
+		if resp.GetTimestamp() != nil {
+			l.logger.Info("no timestamp provided, but LoRaCloud / Traxmate returned one", zap.String("devEui", devEui), zap.Time("timestamp", *resp.GetTimestamp()))
+			features = append(features, decoder.FeatureTimestamp)
+		}
 	}
 
 	if withMoving {
@@ -238,13 +243,14 @@ type dataBase struct {
 // GNSS delegates
 var _ decoder.UplinkFeatureGNSS = &dataBase{}
 
-func (d dataBase) GetLatitude() float64   { return d.resp.GetLatitude() }
-func (d dataBase) GetLongitude() float64  { return d.resp.GetLongitude() }
-func (d dataBase) GetAltitude() float64   { return d.resp.GetAltitude() }
-func (d dataBase) GetAccuracy() *float64  { return d.resp.GetAccuracy() }
-func (d dataBase) GetTTF() *time.Duration { return d.resp.GetTTF() }
-func (d dataBase) GetPDOP() *float64      { return d.resp.GetPDOP() }
-func (d dataBase) GetSatellites() *uint8  { return d.resp.GetSatellites() }
+func (d dataBase) GetLatitude() float64     { return d.resp.GetLatitude() }
+func (d dataBase) GetLongitude() float64    { return d.resp.GetLongitude() }
+func (d dataBase) GetAltitude() float64     { return d.resp.GetAltitude() }
+func (d dataBase) GetAccuracy() *float64    { return d.resp.GetAccuracy() }
+func (d dataBase) GetTTF() *time.Duration   { return d.resp.GetTTF() }
+func (d dataBase) GetPDOP() *float64        { return d.resp.GetPDOP() }
+func (d dataBase) GetSatellites() *uint8    { return d.resp.GetSatellites() }
+func (d dataBase) GetTimestamp() *time.Time { return d.resp.GetTimestamp() }
 
 // Timestamp only when provided
 type dataTS struct {

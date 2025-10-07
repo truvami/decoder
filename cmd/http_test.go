@@ -55,7 +55,7 @@ func TestGetHandler(t *testing.T) {
 	handler(recorder, req)
 
 	resp := recorder.Result()
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		t.Errorf("expected status code %d, got %d", http.StatusOK, resp.StatusCode)
@@ -90,7 +90,7 @@ func TestGetHandler(t *testing.T) {
 	handler(recorder, req)
 
 	resp = recorder.Result()
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusBadRequest {
 		t.Errorf("expected status code %d, got %d", http.StatusBadRequest, resp.StatusCode)
@@ -107,7 +107,7 @@ func TestGetHandler(t *testing.T) {
 	handler(recorder, req)
 
 	resp = recorder.Result()
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusBadRequest {
 		t.Errorf("expected status code %d, got %d", http.StatusBadRequest, resp.StatusCode)
@@ -255,7 +255,7 @@ func TestHealthHandler(t *testing.T) {
 	healthHandler(recorder, req)
 
 	resp := recorder.Result()
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		t.Errorf("expected status code %d, got %d", http.StatusOK, resp.StatusCode)
@@ -335,7 +335,7 @@ func TestGetEncoderHandler(t *testing.T) {
 	handler(recorder, req)
 
 	resp := recorder.Result()
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		t.Errorf("expected status code %d, got %d", http.StatusOK, resp.StatusCode)
@@ -358,7 +358,7 @@ func TestGetEncoderHandler(t *testing.T) {
 	handler(recorder, req)
 
 	resp = recorder.Result()
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusBadRequest {
 		t.Errorf("expected status code %d, got %d", http.StatusBadRequest, resp.StatusCode)
@@ -383,7 +383,7 @@ func TestGetEncoderHandler(t *testing.T) {
 	handler(recorder, req)
 
 	resp = recorder.Result()
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusBadRequest {
 		t.Errorf("expected status code %d, got %d", http.StatusBadRequest, resp.StatusCode)
@@ -417,7 +417,7 @@ func TestMetricsEndpoint(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to GET /metrics: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		t.Errorf("expected status code %d, got %d", http.StatusOK, resp.StatusCode)

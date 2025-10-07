@@ -88,7 +88,7 @@ func extractFieldValue(payloadBytes []byte, start int, length int, optional bool
 }
 
 func convertFieldValue(rawValue any, fieldType reflect.Type, transform func(v any) any) (any, error) {
-	var ptr bool = false
+	var ptr = false
 	var value any = nil
 	var err error = nil
 
@@ -155,12 +155,12 @@ func Decode(payloadHex *string, config *PayloadConfig) (any, error) {
 
 	if len(config.Tags) != 0 {
 		var index uint8 = 3
-		var payloadLength uint8 = uint8(len(payloadBytes))
+		var payloadLength = uint8(len(payloadBytes))
 		for index+2 < payloadLength {
-			var found bool = false
-			var tag uint8 = payloadBytes[index]
+			var found = false
+			var tag = payloadBytes[index]
 			index++
-			var length uint8 = payloadBytes[index]
+			var length = payloadBytes[index]
 			index++
 
 			for _, tagConfig := range config.Tags {
@@ -243,8 +243,8 @@ func Decode(payloadHex *string, config *PayloadConfig) (any, error) {
 }
 
 func insertFieldBytes(fieldValue reflect.Value, length int, transform func(v any) any) (bool, []byte, error) {
-	var null bool = false
-	var set bool = false
+	var null = false
+	var set = false
 	var bytes []byte
 	var err error = nil
 
