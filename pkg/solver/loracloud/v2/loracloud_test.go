@@ -700,6 +700,14 @@ func TestSolve_BufferedThresholdLogic(t *testing.T) {
 			expectedBufferedFeature:  false,
 			expectedLogMessage:       false,
 		},
+		{
+			name:                     "NoTimestamp_ServerReturnsOldTimestamp_ShouldBeBuffered",
+			timestampOption:          nil,
+			serverReturnsTimestamp:   true,
+			expectedTimestampFeature: true,
+			expectedBufferedFeature:  true, // NEW: Server timestamp should be checked for buffered status
+			expectedLogMessage:       true,
+		},
 	}
 
 	for _, tt := range tests {
@@ -717,6 +725,11 @@ func TestSolve_BufferedThresholdLogic(t *testing.T) {
 			var srv *httptest.Server
 			if !tt.serverReturnsTimestamp {
 				srv = mockServerNoTimestamp(t)
+			} else if tt.name == "NoTimestamp_ServerReturnsOldTimestamp_ShouldBeBuffered" {
+				// Special case: server returns an old timestamp that should be buffered
+				oldTime := time.Now().Add(-5 * time.Minute) // Older than 3-minute threshold
+				captureUTC = float64(oldTime.UTC().Unix())
+				srv = mockNonNestedServer(t, true, 47.0, 8.0, captureUTC, http.StatusOK)
 			} else {
 				srv = mockNonNestedServer(t, true, 47.0, 8.0, captureUTC, http.StatusOK)
 			}
@@ -804,6 +817,13 @@ func TestSolve_BufferedThresholdLogic(t *testing.T) {
 						if tt.serverReturnsTimestamp && ts == nil {
 							t.Errorf("expected timestamp from server response")
 						}
+						// For the new buffered case, verify the timestamp is old enough
+						if tt.name == "NoTimestamp_ServerReturnsOldTimestamp_ShouldBeBuffered" && ts != nil {
+							thresholdAgo := time.Now().Add(-customThreshold)
+							if !ts.Before(thresholdAgo) {
+								t.Errorf("expected server timestamp to be older than threshold for buffered test")
+							}
+						}
 					}
 				}
 			}
@@ -813,6 +833,259 @@ func TestSolve_BufferedThresholdLogic(t *testing.T) {
 				logOutput := logBuffer.String()
 				if !strings.Contains(logOutput, "no timestamp provided, but LoRaCloud / Traxmate returned one") {
 					t.Errorf("expected log message about server returning timestamp when none provided, got log: %s", logOutput)
+				}
+			}
+		})
+	}
+}
+
+// TestServerTimestampBufferedLogic tests the new refactored logic where
+// server timestamps are also checked for buffered status
+func TestServerTimestampBufferedLogic(t *testing.T) {
+	customThreshold := 2 * time.Minute
+
+	tests := []struct {
+		name                    string
+		serverTimestampAge      time.Duration // How old the server timestamp should be
+		optionsTimestamp        *time.Time    // Timestamp in options (nil = not provided)
+		expectedBuffered        bool
+		expectedTimestampSource string // "options" or "server"
+	}{
+		{
+			name:                    "ServerTimestampOld_NoOptionsTimestamp_ShouldBeBuffered",
+			serverTimestampAge:      5 * time.Minute, // Older than 2-minute threshold
+			optionsTimestamp:        nil,
+			expectedBuffered:        true,
+			expectedTimestampSource: "server",
+		},
+		{
+			name:                    "ServerTimestampRecent_NoOptionsTimestamp_ShouldNotBeBuffered",
+			serverTimestampAge:      1 * time.Minute, // Newer than 2-minute threshold
+			optionsTimestamp:        nil,
+			expectedBuffered:        false,
+			expectedTimestampSource: "server",
+		},
+		{
+			name:                    "OptionsTimestampOld_ServerTimestampRecent_ShouldUseOptions",
+			serverTimestampAge:      30 * time.Second,                                                         // Recent server timestamp
+			optionsTimestamp:        func() *time.Time { t := time.Now().Add(-4 * time.Minute); return &t }(), // Old options timestamp
+			expectedBuffered:        true,
+			expectedTimestampSource: "options",
+		},
+		{
+			name:                    "OptionsTimestampRecent_ServerTimestampOld_ShouldUseOptions",
+			serverTimestampAge:      10 * time.Minute,                                                         // Old server timestamp
+			optionsTimestamp:        func() *time.Time { t := time.Now().Add(-1 * time.Minute); return &t }(), // Recent options timestamp
+			expectedBuffered:        false,
+			expectedTimestampSource: "options",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Create server with timestamp of specified age
+			serverTime := time.Now().Add(-tt.serverTimestampAge)
+			captureUTC := float64(serverTime.UTC().Unix())
+			srv := mockNonNestedServer(t, true, 47.0, 8.0, captureUTC, http.StatusOK)
+			defer srv.Close()
+
+			// Capture logs
+			var logBuffer bytes.Buffer
+			logger := zap.New(
+				zapcore.NewCore(
+					zapcore.NewJSONEncoder(zap.NewDevelopmentEncoderConfig()),
+					zapcore.AddSync(&logBuffer),
+					zapcore.InfoLevel,
+				),
+			)
+
+			ctx := context.Background()
+			c, err := NewLoracloudClient(ctx, "Bearer test-token", logger,
+				WithBaseUrl(srv.URL),
+				WithBufferedThreshold(customThreshold),
+			)
+			if err != nil {
+				t.Fatalf("failed to create client: %v", err)
+			}
+
+			out, err := c.Solve(ctx, "80", solver.SolverV2Options{
+				DevEui:        "0011223344556677",
+				UplinkCounter: 100,
+				Port:          150,
+				Timestamp:     tt.optionsTimestamp,
+			})
+			if err != nil {
+				t.Fatalf("Solve returned error: %v", err)
+			}
+
+			// Verify timestamp feature is always present when we have any timestamp
+			if !out.Is(decoder.FeatureTimestamp) {
+				t.Errorf("expected FeatureTimestamp to be set")
+			}
+
+			// Verify buffered feature matches expectation
+			if tt.expectedBuffered && !out.Is(decoder.FeatureBuffered) {
+				t.Errorf("expected FeatureBuffered to be set")
+			}
+			if !tt.expectedBuffered && out.Is(decoder.FeatureBuffered) {
+				t.Errorf("did not expect FeatureBuffered to be set")
+			}
+
+			// Verify the correct timestamp is used
+			tsIF, ok := out.Data.(decoder.UplinkFeatureTimestamp)
+			if !ok {
+				t.Errorf("expected UplinkFeatureTimestamp interface")
+			} else {
+				ts := tsIF.GetTimestamp()
+				if ts == nil {
+					t.Errorf("expected timestamp to be set")
+				} else {
+					if tt.expectedTimestampSource == "options" && tt.optionsTimestamp != nil {
+						if !ts.Equal(*tt.optionsTimestamp) {
+							t.Errorf("expected options timestamp to be used, got %v, want %v", ts, *tt.optionsTimestamp)
+						}
+					} else if tt.expectedTimestampSource == "server" {
+						// Allow some tolerance for server timestamp (within a few seconds)
+						diff := ts.Sub(serverTime).Abs()
+						if diff > 5*time.Second {
+							t.Errorf("expected server timestamp to be used, got %v, server time was %v", ts, serverTime)
+						}
+					}
+				}
+			}
+
+			// Verify buffered interface when expected
+			if tt.expectedBuffered {
+				bufIF, ok := out.Data.(decoder.UplinkFeatureBuffered)
+				if !ok {
+					t.Errorf("expected UplinkFeatureBuffered interface")
+				} else if !bufIF.IsBuffered() {
+					t.Errorf("expected IsBuffered() to return true")
+				}
+			}
+
+			// Verify log message when server timestamp is used
+			if tt.optionsTimestamp == nil {
+				logOutput := logBuffer.String()
+				if !strings.Contains(logOutput, "no timestamp provided, but LoRaCloud / Traxmate returned one") {
+					t.Errorf("expected log message about server timestamp when no options timestamp provided")
+				}
+			}
+		})
+	}
+}
+
+// TestDataStructureSelection tests that the correct data structure is selected
+// based on the combination of timestamp source, moving, and buffered status
+func TestDataStructureSelection(t *testing.T) {
+	customThreshold := 1 * time.Minute
+
+	tests := []struct {
+		name               string
+		timestampOption    *time.Time
+		movingOption       *bool
+		serverTimestampAge time.Duration
+		expectedInterfaces []string // Which interfaces should be implemented
+	}{
+		{
+			name:               "ServerTimestampOnly_NotBuffered",
+			timestampOption:    nil,
+			movingOption:       nil,
+			serverTimestampAge: 30 * time.Second, // Recent
+			expectedInterfaces: []string{"timestamp"},
+		},
+		{
+			name:               "ServerTimestampOnly_Buffered",
+			timestampOption:    nil,
+			movingOption:       nil,
+			serverTimestampAge: 2 * time.Minute, // Old
+			expectedInterfaces: []string{"timestamp", "buffered"},
+		},
+		{
+			name:               "ServerTimestamp_WithMoving_NotBuffered",
+			timestampOption:    nil,
+			movingOption:       func() *bool { b := true; return &b }(),
+			serverTimestampAge: 30 * time.Second, // Recent
+			expectedInterfaces: []string{"timestamp", "moving"},
+		},
+		{
+			name:               "ServerTimestamp_WithMoving_Buffered",
+			timestampOption:    nil,
+			movingOption:       func() *bool { b := false; return &b }(),
+			serverTimestampAge: 2 * time.Minute, // Old
+			expectedInterfaces: []string{"timestamp", "moving", "buffered"},
+		},
+		{
+			name:               "OptionsTimestamp_WithMoving_Buffered",
+			timestampOption:    func() *time.Time { t := time.Now().Add(-2 * time.Minute); return &t }(),
+			movingOption:       func() *bool { b := true; return &b }(),
+			serverTimestampAge: 30 * time.Second, // Server timestamp is recent, but options timestamp is old
+			expectedInterfaces: []string{"timestamp", "moving", "buffered"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Create server with timestamp of specified age
+			serverTime := time.Now().Add(-tt.serverTimestampAge)
+			captureUTC := float64(serverTime.UTC().Unix())
+			srv := mockNonNestedServer(t, true, 47.0, 8.0, captureUTC, http.StatusOK)
+			defer srv.Close()
+
+			logger, _ := zap.NewDevelopment()
+			ctx := context.Background()
+			c, err := NewLoracloudClient(ctx, "Bearer test-token", logger,
+				WithBaseUrl(srv.URL),
+				WithBufferedThreshold(customThreshold),
+			)
+			if err != nil {
+				t.Fatalf("failed to create client: %v", err)
+			}
+
+			out, err := c.Solve(ctx, "80", solver.SolverV2Options{
+				DevEui:        "0011223344556677",
+				UplinkCounter: 100,
+				Port:          150,
+				Timestamp:     tt.timestampOption,
+				Moving:        tt.movingOption,
+			})
+			if err != nil {
+				t.Fatalf("Solve returned error: %v", err)
+			}
+
+			// Check which interfaces are implemented
+			for _, iface := range tt.expectedInterfaces {
+				switch iface {
+				case "timestamp":
+					if _, ok := out.Data.(decoder.UplinkFeatureTimestamp); !ok {
+						t.Errorf("expected UplinkFeatureTimestamp interface")
+					}
+				case "moving":
+					if _, ok := out.Data.(decoder.UplinkFeatureMoving); !ok {
+						t.Errorf("expected UplinkFeatureMoving interface")
+					}
+				case "buffered":
+					if _, ok := out.Data.(decoder.UplinkFeatureBuffered); !ok {
+						t.Errorf("expected UplinkFeatureBuffered interface")
+					}
+				}
+			}
+
+			// Also verify the features are set correctly
+			for _, iface := range tt.expectedInterfaces {
+				switch iface {
+				case "timestamp":
+					if !out.Is(decoder.FeatureTimestamp) {
+						t.Errorf("expected FeatureTimestamp to be set")
+					}
+				case "moving":
+					if !out.Is(decoder.FeatureMoving) {
+						t.Errorf("expected FeatureMoving to be set")
+					}
+				case "buffered":
+					if !out.Is(decoder.FeatureBuffered) {
+						t.Errorf("expected FeatureBuffered to be set")
+					}
 				}
 			}
 		})

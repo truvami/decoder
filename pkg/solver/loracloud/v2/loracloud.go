@@ -156,19 +156,25 @@ func (l LoracloudClient) Solve(ctx context.Context, payload string, options solv
 	withMoving := options.Moving != nil
 	buffered := false
 
+	// Determine which timestamp to use for buffered detection
+	var timestampForBufferedCheck *time.Time
+
 	if withTimestamp {
 		features = append(features, decoder.FeatureTimestamp)
+		timestampForBufferedCheck = options.Timestamp
+	} else if resp.GetTimestamp() != nil {
+		l.logger.Info("no timestamp provided, but LoRaCloud / Traxmate returned one", zap.String("devEui", devEui), zap.Time("timestamp", *resp.GetTimestamp()))
+		features = append(features, decoder.FeatureTimestamp)
+		timestampForBufferedCheck = resp.GetTimestamp()
+	}
 
+	// Apply buffer threshold logic to any timestamp we have
+	if timestampForBufferedCheck != nil {
 		thresholdAgo := time.Now().Add(-1 * l.bufferedThreshold)
-		if options.Timestamp.Before(thresholdAgo) {
+		if timestampForBufferedCheck.Before(thresholdAgo) {
 			buffered = true
 			features = append(features, decoder.FeatureBuffered)
 			loracloudV2BufferedDetectedTotal.WithLabelValues(devEui, l.bufferedThreshold.String()).Inc()
-		}
-	} else {
-		if resp.GetTimestamp() != nil {
-			l.logger.Info("no timestamp provided, but LoRaCloud / Traxmate returned one", zap.String("devEui", devEui), zap.Time("timestamp", *resp.GetTimestamp()))
-			features = append(features, decoder.FeatureTimestamp)
 		}
 	}
 
@@ -177,35 +183,38 @@ func (l LoracloudClient) Solve(ctx context.Context, payload string, options solv
 	}
 
 	// Build Data that implements only the requested feature interfaces
+	// Use timestampForBufferedCheck to determine if we have any timestamp (from options or response)
+	hasAnyTimestamp := timestampForBufferedCheck != nil
+
 	var data any
 	switch {
-	case withTimestamp && withMoving && buffered:
+	case hasAnyTimestamp && withMoving && buffered:
 		data = &dataTSMovingBuffered{
 			dataTSMoving: dataTSMoving{
 				dataBase: dataBase{resp: resp},
-				ts:       options.Timestamp,
+				ts:       timestampForBufferedCheck,
 				moving:   *options.Moving,
 			},
 		}
-	case withTimestamp && withMoving && !buffered:
+	case hasAnyTimestamp && withMoving && !buffered:
 		data = &dataTSMoving{
 			dataBase: dataBase{resp: resp},
-			ts:       options.Timestamp,
+			ts:       timestampForBufferedCheck,
 			moving:   *options.Moving,
 		}
-	case withTimestamp && !withMoving && buffered:
+	case hasAnyTimestamp && !withMoving && buffered:
 		data = &dataTSBuffered{
 			dataTS: dataTS{
 				dataBase: dataBase{resp: resp},
-				ts:       options.Timestamp,
+				ts:       timestampForBufferedCheck,
 			},
 		}
-	case withTimestamp && !withMoving && !buffered:
+	case hasAnyTimestamp && !withMoving && !buffered:
 		data = &dataTS{
 			dataBase: dataBase{resp: resp},
-			ts:       options.Timestamp,
+			ts:       timestampForBufferedCheck,
 		}
-	case !withTimestamp && withMoving:
+	case !hasAnyTimestamp && withMoving:
 		data = &dataMoving{
 			dataBase: dataBase{resp: resp},
 			moving:   *options.Moving,
