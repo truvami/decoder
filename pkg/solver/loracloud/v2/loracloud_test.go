@@ -839,9 +839,9 @@ func TestSolve_BufferedThresholdLogic(t *testing.T) {
 	}
 }
 
-// TestSolve_ServerTimestampBufferedLogic tests the new refactored logic where
+// TestServerTimestampBufferedLogic tests the new refactored logic where
 // server timestamps are also checked for buffered status
-func TestSolve_ServerTimestampBufferedLogic(t *testing.T) {
+func TestServerTimestampBufferedLogic(t *testing.T) {
 	customThreshold := 2 * time.Minute
 
 	tests := []struct {
@@ -975,9 +975,9 @@ func TestSolve_ServerTimestampBufferedLogic(t *testing.T) {
 	}
 }
 
-// TestSolve_DataStructureSelection tests that the correct data structure is selected
+// TestDataStructureSelection tests that the correct data structure is selected
 // based on the combination of timestamp source, moving, and buffered status
-func TestSolve_DataStructureSelection(t *testing.T) {
+func TestDataStructureSelection(t *testing.T) {
 	customThreshold := 1 * time.Minute
 
 	tests := []struct {
