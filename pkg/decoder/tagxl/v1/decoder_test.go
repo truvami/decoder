@@ -258,6 +258,13 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
+			port:    151,
+			payload: "4c04014e0107",
+			expected: Port151Payload{
+				DataRate: helpers.Uint8Ptr(7),
+			},
+		},
+		{
 			port:        152,
 			payload:     "ff",
 			expected:    Port152Payload{},

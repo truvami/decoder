@@ -29,6 +29,7 @@ import (
 // | 4a  | 4    | reset cause register value                     | uint32     |
 // | 4b  | 4    | gnss scans since reset                         | uint16     |
 // |     |      | wifi scans since reset                         | uint16     |
+// | 4e  | 1    | Data rate setting                              | uint8      |
 // +-----+------+------------------------------------------------+------------+
 
 type Port151Payload struct {
@@ -50,6 +51,7 @@ type Port151Payload struct {
 	ResetCause                           *uint32  `json:"resetCause"`
 	GnssScans                            *uint16  `json:"gnssScans"`
 	WifiScans                            *uint16  `json:"wifiScans"`
+	DataRate                             *uint8   `json:"dataRate"`
 }
 
 var _ decoder.UplinkFeatureBattery = &Port151Payload{}
