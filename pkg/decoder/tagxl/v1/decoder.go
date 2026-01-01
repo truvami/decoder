@@ -136,9 +136,15 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 				{Name: "WifiScans", Tag: 0x4b, Optional: true, Transform: func(v any) any {
 					return uint16(common.BytesToUint32(v.([]byte)) & 0xffff)
 				}},
+				{Name: "DataRate", Tag: 0x4e, Optional: true, Transform: func(v any) any {
+					if b, ok := v.([]byte); ok && len(b) > 0 {
+						return DataRateFromUint8(b[0])
+					}
+					return nil
+				}},
 			},
 			TargetType: reflect.TypeOf(Port151Payload{}),
-			Features:   []decoder.Feature{},
+			Features:   []decoder.Feature{decoder.FeatureDataRate},
 		}, nil
 	case 152:
 		if len(payload) < 1 {

@@ -32,6 +32,7 @@ const (
 	FeatureHardwareVersion Feature = "hardwareVersion"
 	FeatureRotationState   Feature = "rotationState"
 	FeatureSequenceNumber  Feature = "sequenceNumber"
+	FeatureDataRate        Feature = "dataRate"
 )
 
 type DecodedUplink struct {
