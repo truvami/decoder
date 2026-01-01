@@ -70,9 +70,10 @@ func TestSolve(t *testing.T) {
 			assert.True(t, ok, "result should implement UplinkFeatureBuffered")
 
 			// The assertions have been split to ensure each field is checked separately since the timestamp is not exact
-			assert.Equal(t, test.Expected.Latitude, gnssFeature.GetLatitude(), "latitude does not match expected value")
-			assert.Equal(t, test.Expected.Longitude, gnssFeature.GetLongitude(), "longitude does not match expected value")
-			assert.Equal(t, *test.Expected.Altitude, gnssFeature.GetAltitude(), "altitude does not match expected value")
+			// Using InDelta for floating-point comparisons to account for precision differences in API responses
+			assert.InDelta(t, test.Expected.Latitude, gnssFeature.GetLatitude(), 0.00001, "latitude does not match expected value")
+			assert.InDelta(t, test.Expected.Longitude, gnssFeature.GetLongitude(), 0.00001, "longitude does not match expected value")
+			assert.InDelta(t, *test.Expected.Altitude, gnssFeature.GetAltitude(), 0.01, "altitude does not match expected value")
 			assert.Equal(t, *test.Expected.Accuracy, *gnssFeature.GetAccuracy(), "accuracy does not match expected value")
 			assert.Equal(t, test.Expected.Buffered, bufferedFeature.IsBuffered(), "buffered status does not match expected value")
 		})
