@@ -261,7 +261,35 @@ func TestDecode(t *testing.T) {
 			port:    151,
 			payload: "4c04014e0107",
 			expected: Port151Payload{
-				DataRate: helpers.Uint8Ptr(7),
+				DataRate: helpers.DataRatePtr(decoder.DataRateTagXLADR).(*decoder.DataRate), // 7: ADR (SF7-12) for EU868
+			},
+		},
+		{
+			port:    151,
+			payload: "4c04014e0100",
+			expected: Port151Payload{
+				DataRate: helpers.DataRatePtr(decoder.DataRateTagXLDR5).(*decoder.DataRate), // 0: DR5 (EU868 SF7)
+			},
+		},
+		{
+			port:    151,
+			payload: "4c04014e0103",
+			expected: Port151Payload{
+				DataRate: helpers.DataRatePtr(decoder.DataRateTagXLDR2).(*decoder.DataRate), // 3: DR2 (EU868 SF10, US915 SF8)
+			},
+		},
+		{
+			port:    151,
+			payload: "4c04014e0105",
+			expected: Port151Payload{
+				DataRate: helpers.DataRatePtr(decoder.DataRateTagXLDR0).(*decoder.DataRate), // 5: DR0 (EU868 SF12)
+			},
+		},
+		{
+			port:    151,
+			payload: "4c0401", // No DataRate field
+			expected: Port151Payload{
+				DataRate: nil,
 			},
 		},
 		{

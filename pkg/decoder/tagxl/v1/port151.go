@@ -29,29 +29,38 @@ import (
 // | 4a  | 4    | reset cause register value                     | uint32     |
 // | 4b  | 4    | gnss scans since reset                         | uint16     |
 // |     |      | wifi scans since reset                         | uint16     |
-// | 4e  | 1    | Data rate setting                              | uint8      |
+// | 4e  | 1    | Data rate setting (0-7)                        | uint8      |
+// |     |      |   0: DR5 (EU868 SF7)                           |            |
+// |     |      |   1: DR4 (EU868 SF8)                           |            |
+// |     |      |   2: DR3 (EU868 SF9, US915 SF7)                |            |
+// |     |      |   3: DR2 (EU868 SF10, US915 SF8)               |            |
+// |     |      |   4: DR1 (EU868 SF11, US915 SF9)               |            |
+// |     |      |   5: DR0 (EU868 SF12)                          |            |
+// |     |      |   6: DR1-3 array (EU868 SF9-11, US915 SF7-9)   |            |
+// |     |      |   7: ADR (SF7-12) for EU868                    |            |
+// |     |      | See: https://docs.truvami.com/docs/Devices/tag%20XL%20/Payload%20Format%20%20tag%20XL/#settings-downlink
 // +-----+------+------------------------------------------------+------------+
 
 type Port151Payload struct {
-	AccelerometerEnabled                 *bool    `json:"accelerometerEnabled"`
-	WifiEnabled                          *bool    `json:"wifiEnabled"`
-	GnssEnabled                          *bool    `json:"gnssEnabled"`
-	FirmwareUpgrade                      *bool    `json:"firmwareUpgrade"`
-	LocalizationIntervalWhileMoving      *uint16  `json:"movingInterval" validate:"gte=60,lte=86400"`
-	LocalizationIntervalWhileSteady      *uint16  `json:"steadyInterval" validate:"gte=120,lte=86400"`
-	AccelerometerWakeupThreshold         *uint16  `json:"accelerometerWakeupThreshold" validate:"gte=10,lte=8000"`
-	AccelerometerDelay                   *uint16  `json:"accelerometerDelay" validate:"gte=1000,lte=10000"`
-	HeartbeatInterval                    *uint8   `json:"heartbeatInterval" validate:"gte=0,lte=168"`
-	AdvertisementFirmwareUpgradeInterval *uint8   `json:"advertisementFirmwareUpgradeInterval" validate:"gte=1,lte=86400"`
-	Battery                              *float32 `json:"battery" validate:"gte=1,lte=5"`
-	FirmwareHash                         *string  `json:"firmwareHash"`
-	RotationInvert                       *bool    `json:"rotationInvert"`
-	RotationConfirmed                    *bool    `json:"rotationConfirmed"`
-	ResetCount                           *uint16  `json:"resetCount"`
-	ResetCause                           *uint32  `json:"resetCause"`
-	GnssScans                            *uint16  `json:"gnssScans"`
-	WifiScans                            *uint16  `json:"wifiScans"`
-	DataRate                             *uint8   `json:"dataRate"`
+	AccelerometerEnabled                 *bool             `json:"accelerometerEnabled"`
+	WifiEnabled                          *bool             `json:"wifiEnabled"`
+	GnssEnabled                          *bool             `json:"gnssEnabled"`
+	FirmwareUpgrade                      *bool             `json:"firmwareUpgrade"`
+	LocalizationIntervalWhileMoving      *uint16           `json:"movingInterval" validate:"gte=60,lte=86400"`
+	LocalizationIntervalWhileSteady      *uint16           `json:"steadyInterval" validate:"gte=120,lte=86400"`
+	AccelerometerWakeupThreshold         *uint16           `json:"accelerometerWakeupThreshold" validate:"gte=10,lte=8000"`
+	AccelerometerDelay                   *uint16           `json:"accelerometerDelay" validate:"gte=1000,lte=10000"`
+	HeartbeatInterval                    *uint8            `json:"heartbeatInterval" validate:"gte=0,lte=168"`
+	AdvertisementFirmwareUpgradeInterval *uint8            `json:"advertisementFirmwareUpgradeInterval" validate:"gte=1,lte=86400"`
+	Battery                              *float32          `json:"battery" validate:"gte=1,lte=5"`
+	FirmwareHash                         *string           `json:"firmwareHash"`
+	RotationInvert                       *bool             `json:"rotationInvert"`
+	RotationConfirmed                    *bool             `json:"rotationConfirmed"`
+	ResetCount                           *uint16           `json:"resetCount"`
+	ResetCause                           *uint32           `json:"resetCause"`
+	GnssScans                            *uint16           `json:"gnssScans"`
+	WifiScans                            *uint16           `json:"wifiScans"`
+	DataRate                             *decoder.DataRate `json:"dataRate"`
 }
 
 var _ decoder.UplinkFeatureBattery = &Port151Payload{}
@@ -158,7 +167,7 @@ func (p Port151Payload) GetBufferSize() *uint16 {
 }
 
 func (p Port151Payload) GetDataRate() *decoder.DataRate {
-	return nil
+	return p.DataRate
 }
 
 func (p Port151Payload) GetFirmwareHash() *string {
@@ -167,4 +176,28 @@ func (p Port151Payload) GetFirmwareHash() *string {
 
 func (p Port151Payload) GetFirmwareVersion() *string {
 	return nil
+}
+
+// DataRateFromUint8 converts a uint8 data rate value to the corresponding TagXL DataRate enum.
+func DataRateFromUint8(value uint8) decoder.DataRate {
+	switch value {
+	case 0:
+		return decoder.DataRateTagXLDR5
+	case 1:
+		return decoder.DataRateTagXLDR4
+	case 2:
+		return decoder.DataRateTagXLDR3
+	case 3:
+		return decoder.DataRateTagXLDR2
+	case 4:
+		return decoder.DataRateTagXLDR1
+	case 5:
+		return decoder.DataRateTagXLDR0
+	case 6:
+		return decoder.DataRateTagXLDR1To3
+	case 7:
+		return decoder.DataRateTagXLADR
+	default:
+		return decoder.DataRate("unknown")
+	}
 }
