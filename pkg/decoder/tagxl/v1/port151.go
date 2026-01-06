@@ -198,6 +198,6 @@ func DataRateFromUint8(value uint8) decoder.DataRate {
 	case 7:
 		return decoder.DataRateTagXLADR
 	default:
-		return decoder.DataRate("unknown")
+		return decoder.DataRateUnknown
 	}
 }

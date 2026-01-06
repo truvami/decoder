@@ -12,6 +12,8 @@ const DataRateGlacial DataRate = "glacial"
 const DataRateAutomaticNarrow DataRate = "automatic-narrow"
 const DataRateAutomaticWide DataRate = "automatic-wide"
 
+const DataRateUnknown DataRate = "unknown"
+
 // TagXL specific data rates
 const DataRateTagXLDR5 DataRate = "dr5-sf7"        // 0: DR5 (EU868 SF7)
 const DataRateTagXLDR4 DataRate = "dr4-sf8"        // 1: DR4 (EU868 SF8)
