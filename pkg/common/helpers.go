@@ -459,6 +459,11 @@ func TimePointer(timestamp float64) *time.Time {
 	return &time
 }
 
+// DataRatePtr is a generic helper to create a pointer to any DataRate value.
+func DataRatePtr[T any](value T) *T {
+	return &value
+}
+
 func TimePointerCompare(alpha *time.Time, bravo *time.Time) bool {
 	if alpha == nil && bravo == nil {
 		return true
