@@ -68,4 +68,7 @@ check-metrics:
 		echo "✅ All Prometheus metrics are correctly prefixed."; \
 	fi
 
-.PHONY: check-coverage check-json-tags check-metrics
+test:
+	go test ./...
+
+.PHONY: check-coverage check-json-tags check-metrics test
