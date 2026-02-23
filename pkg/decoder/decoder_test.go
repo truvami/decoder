@@ -55,6 +55,7 @@ func TestNewDecodedUplink_IsAndGetFeatures(t *testing.T) {
 	var _ UplinkFeatureHumidity = (*dummyHumidity)(nil)
 	var _ UplinkFeaturePressure = (*dummyPressure)(nil)
 	var _ UplinkFeatureWiFi = (*dummyWiFi)(nil)
+	var _ UplinkFeatureBle = (*dummyBle)(nil)
 	var _ UplinkFeatureMoving = (*dummyMoving)(nil)
 	var _ UplinkFeatureDutyCycle = (*dummyDutyCycle)(nil)
 	var _ UplinkFeatureConfig = (*dummyConfig)(nil)
@@ -112,6 +113,10 @@ func (*dummyPressure) GetPressure() float32 { return 0 }
 type dummyWiFi struct{}
 
 func (*dummyWiFi) GetAccessPoints() []AccessPoint { return nil }
+
+type dummyBle struct{}
+
+func (*dummyBle) GetBeacons() []Beacon { return nil }
 
 type dummyMoving struct{}
 

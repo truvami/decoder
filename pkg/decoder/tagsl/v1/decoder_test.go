@@ -2194,6 +2194,15 @@ func TestFeatures(t *testing.T) {
 					t.Fatalf("expected non nil access points")
 				}
 			}
+			if decodedPayload.Is(decoder.FeatureBle) {
+				ble, ok := decodedPayload.Data.(decoder.UplinkFeatureBle)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureBle, got %T", decodedPayload)
+				}
+				if ble.GetBeacons() == nil {
+					t.Fatalf("expected non nil beacons")
+				}
+			}
 			if decodedPayload.Is(decoder.FeatureMoving) {
 				moving, ok := decodedPayload.Data.(decoder.UplinkFeatureMoving)
 				if !ok {
