@@ -88,7 +88,7 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 				{Name: "Rssi6", Start: 45, Length: 1, Optional: true},
 			},
 			TargetType: reflect.TypeOf(Port3Payload{}),
-			Features:   []decoder.Feature{decoder.FeatureWiFi},
+			Features:   []decoder.Feature{decoder.FeatureBle},
 		}, nil
 	case 4:
 		return common.PayloadConfig{

@@ -42,52 +42,52 @@ type Port3Payload struct {
 	Rssi6          *int8   `json:"rssi6" validate:"gte=-120,lte=-20"`
 }
 
-var _ decoder.UplinkFeatureWiFi = &Port3Payload{}
+var _ decoder.UplinkFeatureBle = &Port3Payload{}
 
-func (p Port3Payload) GetAccessPoints() []decoder.AccessPoint {
-	accessPoints := []decoder.AccessPoint{}
+func (p Port3Payload) GetBeacons() []decoder.Beacon {
+	beacons := []decoder.Beacon{}
 
 	if p.Mac1 != "" && p.Rssi1 != 0 {
-		accessPoints = append(accessPoints, decoder.AccessPoint{
+		beacons = append(beacons, decoder.Beacon{
 			MAC:  p.Mac1,
 			RSSI: &p.Rssi1,
 		})
 	}
 
 	if p.Mac2 != nil && p.Rssi2 != nil {
-		accessPoints = append(accessPoints, decoder.AccessPoint{
+		beacons = append(beacons, decoder.Beacon{
 			MAC:  *p.Mac2,
 			RSSI: p.Rssi2,
 		})
 	}
 
 	if p.Mac3 != nil && p.Rssi3 != nil {
-		accessPoints = append(accessPoints, decoder.AccessPoint{
+		beacons = append(beacons, decoder.Beacon{
 			MAC:  *p.Mac3,
 			RSSI: p.Rssi3,
 		})
 	}
 
 	if p.Mac4 != nil && p.Rssi4 != nil {
-		accessPoints = append(accessPoints, decoder.AccessPoint{
+		beacons = append(beacons, decoder.Beacon{
 			MAC:  *p.Mac4,
 			RSSI: p.Rssi4,
 		})
 	}
 
 	if p.Mac5 != nil && p.Rssi5 != nil {
-		accessPoints = append(accessPoints, decoder.AccessPoint{
+		beacons = append(beacons, decoder.Beacon{
 			MAC:  *p.Mac5,
 			RSSI: p.Rssi5,
 		})
 	}
 
 	if p.Mac6 != nil && p.Rssi6 != nil {
-		accessPoints = append(accessPoints, decoder.AccessPoint{
+		beacons = append(beacons, decoder.Beacon{
 			MAC:  *p.Mac6,
 			RSSI: p.Rssi6,
 		})
 	}
 
-	return accessPoints
+	return beacons
 }

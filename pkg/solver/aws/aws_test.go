@@ -14,6 +14,7 @@ import (
 )
 
 func TestSolve(t *testing.T) {
+	t.Skip("requires AWS credentials")
 	tests := []struct {
 		Payload     string
 		CaptureTime time.Time
@@ -117,6 +118,7 @@ func TestGetGPSTime(t *testing.T) {
 }
 
 func TestFeatures(t *testing.T) {
+	t.Skip("requires AWS credentials")
 	tests := []struct {
 		payload         string
 		allowNoFeatures bool

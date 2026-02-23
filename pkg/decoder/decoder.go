@@ -127,6 +127,15 @@ type UplinkFeatureWiFi interface {
 	GetAccessPoints() []AccessPoint
 }
 
+type Beacon struct {
+	MAC  string `json:"mac"`
+	RSSI *int8  `json:"rssi"`
+}
+
+type UplinkFeatureBle interface {
+	GetBeacons() []Beacon
+}
+
 type UplinkFeatureMoving interface {
 	// IsMoving returns true if the device is moving, otherwise it returns false.
 	IsMoving() bool
