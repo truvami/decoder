@@ -201,6 +201,176 @@ func TestTagXL_GNSS_Port193_Moving_NoTimestamp(t *testing.T) {
 	}
 }
 
+// GNSS timestamped, not moving, rotation-triggered (port 210) — same format as 194
+func TestTagXL_GNSS_Port210_Timestamped_RotationTriggered(t *testing.T) {
+	if logger.Logger == nil {
+		logger.NewLogger()
+	}
+	log := logger.Logger
+	devEui := "0011223344556677"
+	fcnt := 42
+
+	// Timestamp 0x68BAD325 => 1757074213
+	secs := uint32(1757074213)
+	ts := time.Unix(int64(secs), 0).UTC()
+
+	payloads := []string{
+		"68bad32509ab91418ae63a10b5004a0a3fef037ab2f06ce8e510820c1a0bdcecb49e1543fdd2f28f1c",
+		"68bad32589b379e7ba0fb5006b9aaa8c8e25febf16f4e5c31d0cc8ca12a1cffdddf16c2cf82877f1edee4ecbc5ef54",
+	}
+	for _, payload := range payloads {
+		cap := &captureSolverV2{
+			resp: decoder.NewDecodedUplink(
+				[]decoder.Feature{decoder.FeatureGNSS, decoder.FeatureTimestamp},
+				&fakeGNSSData{lat: 47.0, lon: 8.0, alt: 10.0, ts: &ts},
+			),
+		}
+		dec := NewTagXLv1Decoder(context.TODO(), solver.MockSolverV1{}, log, WithSolverV2(cap))
+
+		ctx := context.WithValue(context.Background(), decoder.DEVEUI_CONTEXT_KEY, devEui)
+		ctx = context.WithValue(ctx, decoder.FCNT_CONTEXT_KEY, fcnt)
+
+		out, err := dec.Decode(ctx, payload, 210)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		expectedForwarded := payload[8:] // strip 4B timestamp (8 hex chars)
+		if cap.lastPayload != expectedForwarded {
+			t.Fatalf("expected forwarded payload %q, got %q", expectedForwarded, cap.lastPayload)
+		}
+		if cap.lastOptions.Port != 192 {
+			t.Fatalf("expected port 192, got %d", cap.lastOptions.Port)
+		}
+		if cap.lastOptions.Moving == nil || *cap.lastOptions.Moving != false {
+			t.Fatalf("expected Moving=false for port 210, got %+v", cap.lastOptions.Moving)
+		}
+		if !out.Is(decoder.FeatureGNSS) || !out.Is(decoder.FeatureTimestamp) {
+			t.Fatalf("expected GNSS and Timestamp features in result")
+		}
+	}
+}
+
+// GNSS timestamped, moving, rotation-triggered (port 211) — same format as 195
+func TestTagXL_GNSS_Port211_Timestamped_RotationTriggered(t *testing.T) {
+	if logger.Logger == nil {
+		logger.NewLogger()
+	}
+	log := logger.Logger
+	devEui := "0011223344556677"
+	fcnt := 43
+
+	// Timestamp 0x68BAD3C5 => 1757074373
+	secs := uint32(1757074373)
+	ts := time.Unix(int64(secs), 0).UTC()
+
+	payloads := []string{
+		"68bad3c50aabd56cb2e7ba0db5805a5ac9d4edd8de8a021b4ae2b78e8c0b8391566ab8d47d1d4c55ae794a2c2da7a637b49d32e44800",
+		"68bad3c58aab4581b9e73a0eb580da120d7f85a75e770c6acad3dc2acdacbdcd576ab8147f5902557379b18d0f676a35fb9a6ae5ee03",
+	}
+	for _, payload := range payloads {
+		cap := &captureSolverV2{
+			resp: decoder.NewDecodedUplink(
+				[]decoder.Feature{decoder.FeatureGNSS, decoder.FeatureTimestamp},
+				&fakeGNSSData{lat: 47.0, lon: 8.0, alt: 10.0, ts: &ts},
+			),
+		}
+		dec := NewTagXLv1Decoder(context.TODO(), solver.MockSolverV1{}, log, WithSolverV2(cap))
+
+		ctx := context.WithValue(context.Background(), decoder.DEVEUI_CONTEXT_KEY, devEui)
+		ctx = context.WithValue(ctx, decoder.FCNT_CONTEXT_KEY, fcnt)
+
+		out, err := dec.Decode(ctx, payload, 211)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		expectedForwarded := payload[8:] // strip 4B timestamp (8 hex chars)
+		if cap.lastPayload != expectedForwarded {
+			t.Fatalf("expected forwarded payload %q, got %q", expectedForwarded, cap.lastPayload)
+		}
+		if cap.lastOptions.Port != 192 {
+			t.Fatalf("expected port 192, got %d", cap.lastOptions.Port)
+		}
+		if cap.lastOptions.Moving == nil || *cap.lastOptions.Moving != true {
+			t.Fatalf("expected Moving=true for port 211, got %+v", cap.lastOptions.Moving)
+		}
+		if !out.Is(decoder.FeatureGNSS) || !out.Is(decoder.FeatureTimestamp) {
+			t.Fatalf("expected GNSS and Timestamp features in result")
+		}
+	}
+}
+
+// WiFi non-moving, timestamped, rotation-triggered (port 212) — same format as 200 but no Buffered
+func TestTagXL_WiFi_Port212_Timestamped_RotationTriggered(t *testing.T) {
+	if logger.Logger == nil {
+		logger.NewLogger()
+	}
+	dec := NewTagXLv1Decoder(context.TODO(), solver.MockSolverV1{}, logger.Logger)
+	// 0x68BAE3AB timestamp (1757078443) + v2 + [RSSI,MAC] tuples
+	payload := "68bae3ab01d3f0b0140c96bbc7e4c32a622ea4c5e0286d8a9478b4e0286d8aabfcada86e84e1a812"
+
+	out, err := dec.Decode(context.TODO(), payload, 212)
+	if err != nil {
+		t.Fatalf("decode error: %v", err)
+	}
+	// Features: WiFi + Timestamp + Moving, but NOT Buffered
+	if !out.Is(decoder.FeatureWiFi) || !out.Is(decoder.FeatureTimestamp) || !out.Is(decoder.FeatureMoving) {
+		t.Fatalf("expected WiFi + Timestamp + Moving features")
+	}
+	if out.Is(decoder.FeatureBuffered) {
+		t.Fatalf("port 212 should NOT have Buffered feature")
+	}
+
+	ts := out.Data.(decoder.UplinkFeatureTimestamp).GetTimestamp()
+	if ts == nil || ts.Unix() != 1757078443 {
+		t.Fatalf("expected timestamp 1757078443, got %v", ts)
+	}
+	wifi := out.Data.(decoder.UplinkFeatureWiFi)
+	aps := wifi.GetAccessPoints()
+	if len(aps) != 5 {
+		t.Fatalf("expected 5 APs, got %d", len(aps))
+	}
+	moving := out.Data.(decoder.UplinkFeatureMoving)
+	if moving.IsMoving() {
+		t.Fatalf("expected IsMoving=false for port 212")
+	}
+}
+
+// WiFi moving, timestamped, rotation-triggered (port 213) — same format as 201 but no Buffered
+func TestTagXL_WiFi_Port213_Timestamped_RotationTriggered(t *testing.T) {
+	if logger.Logger == nil {
+		logger.NewLogger()
+	}
+	dec := NewTagXLv1Decoder(context.TODO(), solver.MockSolverV1{}, logger.Logger)
+	// 0x68BAE3AB timestamp (1757078443) + v2 + [RSSI,MAC] tuples
+	payload := "68bae3ab01d3f0b0140c96bbc7e4c32a622ea4c5e0286d8a9478b4e0286d8aabfcada86e84e1a812"
+
+	out, err := dec.Decode(context.TODO(), payload, 213)
+	if err != nil {
+		t.Fatalf("decode error: %v", err)
+	}
+	// Features: WiFi + Timestamp + Moving, but NOT Buffered
+	if !out.Is(decoder.FeatureWiFi) || !out.Is(decoder.FeatureTimestamp) || !out.Is(decoder.FeatureMoving) {
+		t.Fatalf("expected WiFi + Timestamp + Moving features")
+	}
+	if out.Is(decoder.FeatureBuffered) {
+		t.Fatalf("port 213 should NOT have Buffered feature")
+	}
+
+	ts := out.Data.(decoder.UplinkFeatureTimestamp).GetTimestamp()
+	if ts == nil || ts.Unix() != 1757078443 {
+		t.Fatalf("expected timestamp 1757078443, got %v", ts)
+	}
+	wifi := out.Data.(decoder.UplinkFeatureWiFi)
+	aps := wifi.GetAccessPoints()
+	if len(aps) != 5 {
+		t.Fatalf("expected 5 APs, got %d", len(aps))
+	}
+	moving := out.Data.(decoder.UplinkFeatureMoving)
+	if !moving.IsMoving() {
+		t.Fatalf("expected IsMoving=true for port 213")
+	}
+}
+
 // GNSS timestamped, not moving, two-frame NAV (port 194) from logs
 func TestTagXL_GNSS_Port194_Timestamped(t *testing.T) {
 	if logger.Logger == nil {

@@ -399,6 +399,28 @@ func TestDecode(t *testing.T) {
 			payload:  "68bad3c58aab4581b9e73a0eb580da120d7f85a75e770c6acad3dc2acdacbdcd576ab8147f5902557379b18d0f676a35fb9a6ae5ee03",
 			expected: &exampleResponse,
 		},
+		// Port 210: GNSS, steady, timestamped, rotation-triggered (same format as 194)
+		{
+			port:     210,
+			payload:  "68b9b2318f2b157de4733aa4d27b5d3b3c6ecc9460a20a196b754655c98607",
+			expected: &exampleResponse,
+		},
+		{
+			port:     210,
+			payload:  "68bad32509ab91418ae63a10b5004a0a3fef037ab2f06ce8e510820c1a0bdcecb49e1543fdd2f28f1c",
+			expected: &exampleResponse,
+		},
+		// Port 211: GNSS, moving, timestamped, rotation-triggered (same format as 195)
+		{
+			port:     211,
+			payload:  "68bad3c50aabd56cb2e7ba0db5805a5ac9d4edd8de8a021b4ae2b78e8c0b8391566ab8d47d1d4c55ae794a2c2da7a637b49d32e44800",
+			expected: &exampleResponse,
+		},
+		{
+			port:     211,
+			payload:  "68bad3c58aab4581b9e73a0eb580da120d7f85a75e770c6acad3dc2acdacbdcd576ab8147f5902557379b18d0f676a35fb9a6ae5ee03",
+			expected: &exampleResponse,
+		},
 		{
 			port:        197,
 			payload:     "ff",
@@ -1000,6 +1022,102 @@ func TestDecode(t *testing.T) {
 				Version:   Port201Version2,
 			},
 		},
+		// Port 212: WiFi, non-moving, timestamped, rotation-triggered (same format as 200, no Buffered)
+		{
+			port:        212,
+			payload:     "68b9ac21ff",
+			expected:    Port212Payload{},
+			expectedErr: "port not supported: version 255 for port 212 not supported",
+		},
+		{
+			port:    212,
+			payload: "68b9ac21003385f8ee30c2",
+			expected: Port212Payload{
+				Timestamp: time.Date(2025, 9, 4, 15, 11, 29, 0, time.UTC),
+				Rssi1:     nil,
+				Mac1:      "3385f8ee30c2",
+				Moving:    false,
+				Version:   Port212Version1,
+			},
+		},
+		{
+			port:    212,
+			payload: "68b9ac2101d63385f8ee30c2",
+			expected: Port212Payload{
+				Timestamp: time.Date(2025, 9, 4, 15, 11, 29, 0, time.UTC),
+				Rssi1:     helpers.Int8Ptr(-42),
+				Mac1:      "3385f8ee30c2",
+				Moving:    false,
+				Version:   Port212Version2,
+			},
+		},
+		{
+			port:    212,
+			payload: "68b9ac2101b7218f6c166fadb359ea3bdec77daff72faac81784ab263386a455d3a73592a063900b",
+			expected: Port212Payload{
+				Timestamp: time.Date(2025, 9, 4, 15, 11, 29, 0, time.UTC),
+				Rssi1:     helpers.Int8Ptr(-73),
+				Mac1:      "218f6c166fad",
+				Rssi2:     helpers.Int8Ptr(-77),
+				Mac2:      helpers.StringPtr("59ea3bdec77d"),
+				Rssi3:     helpers.Int8Ptr(-81),
+				Mac3:      helpers.StringPtr("f72faac81784"),
+				Rssi4:     helpers.Int8Ptr(-85),
+				Mac4:      helpers.StringPtr("263386a455d3"),
+				Rssi5:     helpers.Int8Ptr(-89),
+				Mac5:      helpers.StringPtr("3592a063900b"),
+				Moving:    false,
+				Version:   Port212Version2,
+			},
+		},
+		// Port 213: WiFi, moving, timestamped, rotation-triggered (same format as 201, no Buffered)
+		{
+			port:        213,
+			payload:     "68b9ac21ff",
+			expected:    Port213Payload{},
+			expectedErr: "port not supported: version 255 for port 213 not supported",
+		},
+		{
+			port:    213,
+			payload: "68b9ac21003385f8ee30c2",
+			expected: Port213Payload{
+				Timestamp: time.Date(2025, 9, 4, 15, 11, 29, 0, time.UTC),
+				Rssi1:     nil,
+				Mac1:      "3385f8ee30c2",
+				Moving:    true,
+				Version:   Port213Version1,
+			},
+		},
+		{
+			port:    213,
+			payload: "68b9ac2101d63385f8ee30c2",
+			expected: Port213Payload{
+				Timestamp: time.Date(2025, 9, 4, 15, 11, 29, 0, time.UTC),
+				Rssi1:     helpers.Int8Ptr(-42),
+				Mac1:      "3385f8ee30c2",
+				Moving:    true,
+				Version:   Port213Version2,
+			},
+		},
+		{
+			port:    213,
+			payload: "68bae3ab01d3f0b0140c96bbc7e4c32a622ea4c5e0286d8a9478b4e0286d8aabfcada86e84e1a812",
+			expected: Port213Payload{
+				Timestamp: time.Date(2025, 9, 5, 13, 20, 43, 0, time.UTC),
+				Mac1:      "f0b0140c96bb",
+				Rssi1:     helpers.Int8Ptr(-45),
+				Mac2:      helpers.StringPtr("e4c32a622ea4"),
+				Rssi2:     helpers.Int8Ptr(-57),
+				Mac3:      helpers.StringPtr("e0286d8a9478"),
+				Rssi3:     helpers.Int8Ptr(-59),
+				Mac4:      helpers.StringPtr("e0286d8aabfc"),
+				Rssi4:     helpers.Int8Ptr(-76),
+				Mac5:      helpers.StringPtr("a86e84e1a812"),
+				Rssi5:     helpers.Int8Ptr(-83),
+				Moving:    true,
+				Version:   Port213Version2,
+			},
+		},
 	}
 
 	if logger.Logger == nil {
@@ -1010,11 +1128,11 @@ func TestDecode(t *testing.T) {
 			ctx := context.WithValue(context.Background(), decoder.DEVEUI_CONTEXT_KEY, test.devEui)
 			ctx = context.WithValue(ctx, decoder.FCNT_CONTEXT_KEY, 1)
 
-			// Use SolverV2 for GNSS ports (192/193/194/195/199) so timestamped ports work without error and provide expected data.
+			// Use SolverV2 for GNSS ports (192/193/194/195/199/210/211) so timestamped ports work without error and provide expected data.
 			expectedAny := test.expected
 			opts := []Option{}
 			switch test.port {
-			case 192, 194, 195:
+			case 192, 194, 195, 210, 211:
 				// For GNSS ports, use SolverV2 and return the same structure as port 192 expectation
 				// so that tests compare against exampleResponse. For 194/195, timestamp is handled by decoder.
 				v2Data := &exampleResponse
@@ -1251,6 +1369,22 @@ func TestFeatures(t *testing.T) {
 		{
 			payload: "68b9ac2101b7218f6c166fadb359ea3bdec77daff72faac81784ab263386a455d3a73592a063900b",
 			port:    201,
+		},
+		{
+			payload: "68b9ac2100218f6c166fad59ea3bdec77df72faac81784263386a455d33592a063900b",
+			port:    212,
+		},
+		{
+			payload: "68b9ac2101b7218f6c166fadb359ea3bdec77daff72faac81784ab263386a455d3a73592a063900b",
+			port:    212,
+		},
+		{
+			payload: "68b9ac2100218f6c166fad59ea3bdec77df72faac81784263386a455d33592a063900b",
+			port:    213,
+		},
+		{
+			payload: "68b9ac2101b7218f6c166fadb359ea3bdec77daff72faac81784ab263386a455d3a73592a063900b",
+			port:    213,
 		},
 	}
 

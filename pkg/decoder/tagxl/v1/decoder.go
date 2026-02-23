@@ -22,7 +22,7 @@ type TagXLv1Decoder struct {
 	solver         solver.SolverV1
 	fallbackSolver solver.SolverV1
 
-	// Preferred v2 solver (used for GNSS NAV grouping ports 192/193/194/195/199 when available)
+	// Preferred v2 solver (used for GNSS NAV grouping ports 192/193/194/195/199/210/211 when available)
 	v2Solver         solver.SolverV2
 	fallbackV2Solver solver.SolverV2
 }
@@ -366,37 +366,127 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 		default:
 			return common.PayloadConfig{}, fmt.Errorf("%w: version %v for port %d not supported", common.ErrPortNotSupported, version, port)
 		}
+	case 212:
+		if len(payload) < 5 {
+			return common.PayloadConfig{}, common.ErrPayloadTooShort
+		}
+		var version = payload[4]
+		switch version {
+		case Port212Version1:
+			return common.PayloadConfig{
+				Fields: []common.FieldConfig{
+					{Name: "Timestamp", Start: 0, Length: 4, Transform: timestamp},
+					{Name: "Version", Start: 4, Length: 1},
+					{Name: "Moving", Start: 4, Length: 1, Transform: alwaysFalse},
+					{Name: "Mac1", Start: 5, Length: 6, Hex: true},
+					{Name: "Mac2", Start: 11, Length: 6, Optional: true, Hex: true},
+					{Name: "Mac3", Start: 17, Length: 6, Optional: true, Hex: true},
+					{Name: "Mac4", Start: 23, Length: 6, Optional: true, Hex: true},
+					{Name: "Mac5", Start: 29, Length: 6, Optional: true, Hex: true},
+				},
+				TargetType: reflect.TypeOf(Port212Payload{}),
+				Features:   []decoder.Feature{decoder.FeatureWiFi, decoder.FeatureMoving, decoder.FeatureTimestamp},
+			}, nil
+		case Port212Version2:
+			return common.PayloadConfig{
+				Fields: []common.FieldConfig{
+					{Name: "Timestamp", Start: 0, Length: 4, Transform: timestamp},
+					{Name: "Version", Start: 4, Length: 1},
+					{Name: "Moving", Start: 4, Length: 1, Transform: alwaysFalse},
+					{Name: "Rssi1", Start: 5, Length: 1},
+					{Name: "Mac1", Start: 6, Length: 6, Hex: true},
+					{Name: "Rssi2", Start: 12, Length: 1, Optional: true},
+					{Name: "Mac2", Start: 13, Length: 6, Optional: true, Hex: true},
+					{Name: "Rssi3", Start: 19, Length: 1, Optional: true},
+					{Name: "Mac3", Start: 20, Length: 6, Optional: true, Hex: true},
+					{Name: "Rssi4", Start: 26, Length: 1, Optional: true},
+					{Name: "Mac4", Start: 27, Length: 6, Optional: true, Hex: true},
+					{Name: "Rssi5", Start: 33, Length: 1, Optional: true},
+					{Name: "Mac5", Start: 34, Length: 6, Optional: true, Hex: true},
+				},
+				TargetType: reflect.TypeOf(Port212Payload{}),
+				Features:   []decoder.Feature{decoder.FeatureWiFi, decoder.FeatureMoving, decoder.FeatureTimestamp},
+			}, nil
+		default:
+			return common.PayloadConfig{}, fmt.Errorf("%w: version %v for port %d not supported", common.ErrPortNotSupported, version, port)
+		}
+	case 213:
+		if len(payload) < 5 {
+			return common.PayloadConfig{}, common.ErrPayloadTooShort
+		}
+		var version = payload[4]
+		switch version {
+		case Port213Version1:
+			return common.PayloadConfig{
+				Fields: []common.FieldConfig{
+					{Name: "Timestamp", Start: 0, Length: 4, Transform: timestamp},
+					{Name: "Version", Start: 4, Length: 1},
+					{Name: "Moving", Start: 4, Length: 1, Transform: alwaysTrue},
+					{Name: "Mac1", Start: 5, Length: 6, Hex: true},
+					{Name: "Mac2", Start: 11, Length: 6, Optional: true, Hex: true},
+					{Name: "Mac3", Start: 17, Length: 6, Optional: true, Hex: true},
+					{Name: "Mac4", Start: 23, Length: 6, Optional: true, Hex: true},
+					{Name: "Mac5", Start: 29, Length: 6, Optional: true, Hex: true},
+				},
+				TargetType: reflect.TypeOf(Port213Payload{}),
+				Features:   []decoder.Feature{decoder.FeatureWiFi, decoder.FeatureMoving, decoder.FeatureTimestamp},
+			}, nil
+		case Port213Version2:
+			return common.PayloadConfig{
+				Fields: []common.FieldConfig{
+					{Name: "Timestamp", Start: 0, Length: 4, Transform: timestamp},
+					{Name: "Version", Start: 4, Length: 1},
+					{Name: "Moving", Start: 4, Length: 1, Transform: alwaysTrue},
+					{Name: "Rssi1", Start: 5, Length: 1},
+					{Name: "Mac1", Start: 6, Length: 6, Hex: true},
+					{Name: "Rssi2", Start: 12, Length: 1, Optional: true},
+					{Name: "Mac2", Start: 13, Length: 6, Optional: true, Hex: true},
+					{Name: "Rssi3", Start: 19, Length: 1, Optional: true},
+					{Name: "Mac3", Start: 20, Length: 6, Optional: true, Hex: true},
+					{Name: "Rssi4", Start: 26, Length: 1, Optional: true},
+					{Name: "Mac4", Start: 27, Length: 6, Optional: true, Hex: true},
+					{Name: "Rssi5", Start: 33, Length: 1, Optional: true},
+					{Name: "Mac5", Start: 34, Length: 6, Optional: true, Hex: true},
+				},
+				TargetType: reflect.TypeOf(Port213Payload{}),
+				Features:   []decoder.Feature{decoder.FeatureWiFi, decoder.FeatureMoving, decoder.FeatureTimestamp},
+			}, nil
+		default:
+			return common.PayloadConfig{}, fmt.Errorf("%w: version %v for port %d not supported", common.ErrPortNotSupported, version, port)
+		}
 	}
 	return common.PayloadConfig{}, fmt.Errorf("%w: port %v not supported", common.ErrPortNotSupported, port)
 }
 
 /*
 GNSS solver routing and semantics:
-- Ports 192/193/194/195/199 are GNSS NAV grouping ports. When a v2 solver is configured, we prefer it.
+- Ports 192/193/194/195/199/210/211 are GNSS NAV grouping ports. When a v2 solver is configured, we prefer it.
 - Movement semantics by port:
   - 192: steady (Moving=false)
   - 193: moving (Moving=true)
   - 194: steady (Moving=false), timestamped payload (first 4 bytes UNIX seconds) is stripped before solving
   - 195: moving (Moving=true), timestamped payload (first 4 bytes UNIX seconds) is stripped before solving
   - 199: unspecified; Moving and Timestamp left nil unless future protocol specifies otherwise
+  - 210: steady (Moving=false), timestamped payload (first 4 bytes UNIX seconds), rotation-triggered
+  - 211: moving (Moving=true), timestamped payload (first 4 bytes UNIX seconds), rotation-triggered
 
 - When no v2 solver is provided:
-  - Ports 194/195 are not supported (they require timestamp stripping and explicit options).
+  - Ports 194/195/210/211 are not supported (they require timestamp stripping and explicit options).
   - Ports 192/193/199 fall back to the legacy v1 solver for backward compatibility.
 */
 func (t TagXLv1Decoder) Decode(ctx context.Context, data string, port uint8) (*decoder.DecodedUplink, error) {
 	switch port {
 	// GNSS NAV grouping ports now use the v2 solver when available.
-	case 192, 193, 194, 195, 199:
+	case 192, 193, 194, 195, 199, 210, 211:
 		if t.v2Solver != nil {
 			devEui, _ := ctx.Value(decoder.DEVEUI_CONTEXT_KEY).(string)
 			fcnt, _ := ctx.Value(decoder.FCNT_CONTEXT_KEY).(int)
 			var movingPtr *bool
 			switch port {
-			case 192, 194:
+			case 192, 194, 210:
 				mv := false
 				movingPtr = &mv
-			case 193, 195:
+			case 193, 195, 211:
 				mv := true
 				movingPtr = &mv
 			default:
@@ -407,8 +497,8 @@ func (t TagXLv1Decoder) Decode(ctx context.Context, data string, port uint8) (*d
 			var tsPtr *time.Time
 			payloadForSolve := data
 
-			// For timestamped GNSS ports (194, 195), strip the leading 4-byte timestamp (big-endian)
-			if port == 194 || port == 195 {
+			// For timestamped GNSS ports (194, 195, 210, 211), strip the leading 4-byte timestamp (big-endian)
+			if port == 194 || port == 195 || port == 210 || port == 211 {
 				bytes, err := common.HexStringToBytes(data)
 				if err != nil {
 					return nil, err
@@ -452,8 +542,8 @@ func (t TagXLv1Decoder) Decode(ctx context.Context, data string, port uint8) (*d
 		}
 
 		// Fallback to legacy v1 solver when v2 is not provided (keeps backward compatibility).
-		// Note: legacy path does not support 194/195 since v1 solver expects header as first byte.
-		if port == 194 || port == 195 {
+		// Note: legacy path does not support 194/195/210/211 since v1 solver expects header as first byte.
+		if port == 194 || port == 195 || port == 210 || port == 211 {
 			return nil, fmt.Errorf("%w: port %v not supported without v2 solver", common.ErrPortNotSupported, port)
 		}
 		uplink, err := t.solver.Solve(ctx, data)
