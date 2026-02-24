@@ -41,8 +41,10 @@ import (
 // +------+------+-----------------------------------------------+------------+
 
 const (
-	Port213Version1 byte = 0x00
-	Port213Version2 byte = 0x01
+	Port213HeaderLength      = 5 // minimum payload bytes (4B timestamp + 1B version)
+	Port213VersionIndex      = 4 // byte offset of the version field
+	Port213Version1     byte = 0x00
+	Port213Version2     byte = 0x01
 )
 
 type Port213Payload struct {

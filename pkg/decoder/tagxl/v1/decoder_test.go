@@ -1128,7 +1128,7 @@ func TestDecode(t *testing.T) {
 			ctx := context.WithValue(context.Background(), decoder.DEVEUI_CONTEXT_KEY, test.devEui)
 			ctx = context.WithValue(ctx, decoder.FCNT_CONTEXT_KEY, 1)
 
-			// Use SolverV2 for GNSS ports (192/193/194/195/199/210/211) so timestamped ports work without error and provide expected data.
+			// Use SolverV2 for GNSS ports (192/194/195/199/210/211) so timestamped ports work without error and provide expected data.
 			expectedAny := test.expected
 			opts := []Option{}
 			switch test.port {

@@ -367,10 +367,10 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 			return common.PayloadConfig{}, fmt.Errorf("%w: version %v for port %d not supported", common.ErrPortNotSupported, version, port)
 		}
 	case 212:
-		if len(payload) < 5 {
+		if len(payload) < Port212HeaderLength {
 			return common.PayloadConfig{}, common.ErrPayloadTooShort
 		}
-		var version = payload[4]
+		var version = payload[Port212VersionIndex]
 		switch version {
 		case Port212Version1:
 			return common.PayloadConfig{
@@ -411,10 +411,10 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 			return common.PayloadConfig{}, fmt.Errorf("%w: version %v for port %d not supported", common.ErrPortNotSupported, version, port)
 		}
 	case 213:
-		if len(payload) < 5 {
+		if len(payload) < Port213HeaderLength {
 			return common.PayloadConfig{}, common.ErrPayloadTooShort
 		}
-		var version = payload[4]
+		var version = payload[Port213VersionIndex]
 		switch version {
 		case Port213Version1:
 			return common.PayloadConfig{
