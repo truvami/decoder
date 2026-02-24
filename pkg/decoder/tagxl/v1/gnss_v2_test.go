@@ -116,6 +116,84 @@ func TestGNSS_SolverV2_192_193_NoTimestamp(t *testing.T) {
 	}
 }
 
+func TestGNSS_SolverV2_210_211_TimestampStrippedAndPassed(t *testing.T) {
+	log := newLogger()
+
+	// Build a payload with 4B timestamp prefix + header 0x80 after
+	secs := uint32(1750000000) // some fixed time
+	ts := time.Unix(int64(secs), 0).UTC()
+	tsBytes := make([]byte, 4)
+	// big-endian
+	tsBytes[0] = byte((secs >> 24) & 0xff)
+	tsBytes[1] = byte((secs >> 16) & 0xff)
+	tsBytes[2] = byte((secs >> 8) & 0xff)
+	tsBytes[3] = byte(secs & 0xff)
+
+	tsHex := hex.EncodeToString(tsBytes)
+	headerHex := "80"
+	payloadWithTS := tsHex + headerHex + "abcd" // ts + GHDR + rest
+
+	devEui := "0011223344556677"
+	fcnt := 321
+
+	// Response includes GNSS + Timestamp feature
+	resp := decoder.NewDecodedUplink([]decoder.Feature{decoder.FeatureGNSS, decoder.FeatureTimestamp}, &fakeGNSSData{
+		lat: 47.1, lon: 8.1, alt: 12.0, ts: &ts,
+	})
+
+	cap := &captureSolverV2{resp: resp}
+
+	dec := NewTagXLv1Decoder(context.TODO(), solver.MockSolverV1{}, log,
+		WithSolverV2(cap),
+	)
+
+	ctx := context.WithValue(context.Background(), decoder.DEVEUI_CONTEXT_KEY, devEui)
+	ctx = context.WithValue(ctx, decoder.FCNT_CONTEXT_KEY, fcnt)
+
+	// Port 210 -> steady, timestamp present and should be stripped before solve
+	out, err := dec.Decode(ctx, payloadWithTS, 210)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	expectedForwarded := headerHex + "abcd"
+	if cap.lastPayload != expectedForwarded {
+		t.Fatalf("expected forwarded payload %q, got %q", expectedForwarded, cap.lastPayload)
+	}
+	if cap.lastOptions.Port != 192 {
+		t.Fatalf("expected port 192, got %d", cap.lastOptions.Port)
+	}
+	if cap.lastOptions.Moving == nil || *cap.lastOptions.Moving != false {
+		t.Fatalf("expected Moving=false for port 210, got %+v", cap.lastOptions.Moving)
+	}
+	if cap.lastOptions.Timestamp == nil || !cap.lastOptions.Timestamp.Equal(ts) {
+		t.Fatalf("expected Timestamp=%v for port 210, got %+v", ts, cap.lastOptions.Timestamp)
+	}
+	if !out.Is(decoder.FeatureGNSS) || !out.Is(decoder.FeatureTimestamp) {
+		t.Fatalf("expected GNSS and Timestamp features in result")
+	}
+
+	// Port 211 -> moving, timestamp present and should be stripped before solve
+	out, err = dec.Decode(ctx, payloadWithTS, 211)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cap.lastPayload != expectedForwarded {
+		t.Fatalf("expected forwarded payload %q, got %q", expectedForwarded, cap.lastPayload)
+	}
+	if cap.lastOptions.Port != 192 {
+		t.Fatalf("expected port 192, got %d", cap.lastOptions.Port)
+	}
+	if cap.lastOptions.Moving == nil || *cap.lastOptions.Moving != true {
+		t.Fatalf("expected Moving=true for port 211, got %+v", cap.lastOptions.Moving)
+	}
+	if cap.lastOptions.Timestamp == nil || !cap.lastOptions.Timestamp.Equal(ts) {
+		t.Fatalf("expected Timestamp=%v for port 211, got %+v", ts, cap.lastOptions.Timestamp)
+	}
+	if !out.Is(decoder.FeatureGNSS) || !out.Is(decoder.FeatureTimestamp) {
+		t.Fatalf("expected GNSS and Timestamp features in result")
+	}
+}
+
 func TestGNSS_SolverV2_194_195_TimestampStrippedAndPassed(t *testing.T) {
 	log := newLogger()
 
