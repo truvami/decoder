@@ -180,4 +180,4 @@ func (*dummyRotationState) GetDuration() time.Duration         { return 0 }
 
 type dummySequenceNumber struct{}
 
-func (*dummySequenceNumber) GetSequenceNumber() uint { return 0 }
+func (*dummySequenceNumber) GetSequenceNumber() *uint16 { return nil }
