@@ -153,7 +153,7 @@ func TestDecode(t *testing.T) {
 			payload:     "ffffff010200",
 			config:      tagConfig,
 			expected:    nil,
-			expectedErr: "field out of bounds",
+			expectedErr: "TLV tag",
 		},
 		{
 			payload:     "ffffff030100",
