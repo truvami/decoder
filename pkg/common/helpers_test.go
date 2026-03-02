@@ -141,10 +141,13 @@ func TestDecode(t *testing.T) {
 			expectedErr: "validation failed for Time",
 		},
 		{
-			payload:     "ffffff040100",
-			config:      tagConfig,
-			expected:    nil,
-			expectedErr: "unknown tag 4",
+			payload: "ffffff040100",
+			config:  tagConfig,
+			expected: Port2Payload{
+				Time:   nil,
+				Power:  nil,
+				Sensor: nil,
+			},
 		},
 		{
 			payload:     "ffffff010200",

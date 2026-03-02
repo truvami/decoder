@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"log/slog"
 	"math"
 	"unsafe"
 
@@ -201,7 +202,8 @@ func Decode(payloadHex *string, config *PayloadConfig) (any, error) {
 			if found {
 				index += length
 			} else {
-				return nil, fmt.Errorf("unknown tag %x", tag)
+				slog.Warn("skipping unknown tag", "tag", fmt.Sprintf("%x", tag), "length", length)
+				index += length
 			}
 		}
 
