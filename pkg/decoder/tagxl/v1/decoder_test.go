@@ -123,6 +123,14 @@ func TestDecode(t *testing.T) {
 		},
 		{
 			port:    151,
+			payload: "4c0d0345020a92ff03aabbcc4e0107",
+			expected: Port151Payload{
+				Battery:  helpers.Float32Ptr(2.706),
+				DataRate: helpers.DataRatePtr(decoder.DataRateTagXLADR),
+			},
+		},
+		{
+			port:    151,
 			payload: "4c040140010a",
 			expected: Port151Payload{
 				AccelerometerEnabled: helpers.BoolPtr(true),
