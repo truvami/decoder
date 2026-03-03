@@ -156,7 +156,7 @@ func Decode(payloadHex *string, config *PayloadConfig) (any, error) {
 	errs := []error{}
 
 	if len(config.Tags) != 0 {
-		var index int = 3
+		var index = 3
 		var payloadLength = len(payloadBytes)
 		for index+2 < payloadLength {
 			var tag = payloadBytes[index]
