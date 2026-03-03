@@ -125,10 +125,11 @@ func TestDecode(t *testing.T) {
 			payload: "ffffff0000",
 			config:  tagConfig,
 			expected: Port2Payload{
-				Time:   nil,
+				Time:   Uint32Ptr(0),
 				Power:  nil,
 				Sensor: nil,
 			},
+			expectedErr: "validation failed for Time",
 		},
 		{
 			payload: "ffffff000400000000",
@@ -141,16 +142,19 @@ func TestDecode(t *testing.T) {
 			expectedErr: "validation failed for Time",
 		},
 		{
-			payload:     "ffffff040100",
-			config:      tagConfig,
-			expected:    nil,
-			expectedErr: "unknown tag 4",
+			payload: "ffffff040100",
+			config:  tagConfig,
+			expected: Port2Payload{
+				Time:   nil,
+				Power:  nil,
+				Sensor: nil,
+			},
 		},
 		{
 			payload:     "ffffff010200",
 			config:      tagConfig,
 			expected:    nil,
-			expectedErr: "field out of bounds",
+			expectedErr: "TLV tag",
 		},
 		{
 			payload:     "ffffff030100",
@@ -163,8 +167,15 @@ func TestDecode(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.payload, func(t *testing.T) {
 			decodedData, err := Decode(StringPtr(test.payload), &test.config)
-			if err != nil && !strings.Contains(err.Error(), test.expectedErr) {
-				t.Fatalf("expected %s received %s", test.expectedErr, err)
+			if test.expectedErr != "" {
+				if err == nil {
+					t.Fatalf("expected error containing %q but got nil", test.expectedErr)
+				}
+				if !strings.Contains(err.Error(), test.expectedErr) {
+					t.Fatalf("expected error containing %q received %s", test.expectedErr, err)
+				}
+			} else if err != nil {
+				t.Fatalf("unexpected error: %s", err)
 			}
 			if !reflect.DeepEqual(decodedData, test.expected) {
 				t.Fatalf("expected: %+v received: %+v", test.expected, decodedData)
@@ -239,8 +250,15 @@ func TestExtractFieldValue(t *testing.T) {
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("%v_%v_%v", test.payload, test.start, test.length), func(t *testing.T) {
 			result, err := extractFieldValue(test.payload, test.start, test.length, test.optional, test.hexadecimal)
-			if err != nil && err.Error() != test.expectedErr {
-				t.Fatalf("expected: %s received: %s", test.expectedErr, err.Error())
+			if test.expectedErr != "" {
+				if err == nil {
+					t.Fatalf("expected error %q but got nil", test.expectedErr)
+				}
+				if err.Error() != test.expectedErr {
+					t.Fatalf("expected: %s received: %s", test.expectedErr, err.Error())
+				}
+			} else if err != nil {
+				t.Fatalf("unexpected error: %s", err)
 			}
 			if !reflect.DeepEqual(result, test.expected) {
 				t.Fatalf("expected: %v received: %v", test.expected, result)
@@ -373,8 +391,15 @@ func TestConvertFieldValue(t *testing.T) {
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("%v_%v", test.value, test.fieldType), func(t *testing.T) {
 			result, err := convertFieldValue(test.value, test.fieldType, nil)
-			if err != nil && err.Error() != test.expectedErr {
-				t.Fatalf("expected: %s received: %s", test.expectedErr, err.Error())
+			if test.expectedErr != "" {
+				if err == nil {
+					t.Fatalf("expected error %q but got nil", test.expectedErr)
+				}
+				if err.Error() != test.expectedErr {
+					t.Fatalf("expected: %s received: %s", test.expectedErr, err.Error())
+				}
+			} else if err != nil {
+				t.Fatalf("unexpected error: %s", err)
 			}
 			if !reflect.DeepEqual(result, test.expected) {
 				t.Fatalf("expected: %v received: %v", test.expected, result)
@@ -450,8 +475,15 @@ func TestInsertFieldBytes(t *testing.T) {
 
 	for _, test := range tests {
 		set, bytes, err := insertFieldBytes(test.value, test.length, test.transform)
-		if err != nil && err.Error() != test.expectedErr {
-			t.Fatalf("expected: %s received: %s", test.expectedErr, err.Error())
+		if test.expectedErr != "" {
+			if err == nil {
+				t.Fatalf("expected error %q but got nil", test.expectedErr)
+			}
+			if err.Error() != test.expectedErr {
+				t.Fatalf("expected: %s received: %s", test.expectedErr, err.Error())
+			}
+		} else if err != nil {
+			t.Fatalf("unexpected error: %s", err)
 		}
 		if !set && err == nil {
 			t.Fatalf("expected set to be true when error is nil")

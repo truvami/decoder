@@ -117,10 +117,17 @@ func TestDecode(t *testing.T) {
 			expectedErr: "port not supported: port 151 tag ff",
 		},
 		{
-			port:        151,
-			payload:     "4c0501ff020000",
-			expected:    Port151Payload{},
-			expectedErr: "unknown tag ff",
+			port:     151,
+			payload:  "4c0501ff020000",
+			expected: Port151Payload{},
+		},
+		{
+			port:    151,
+			payload: "4c0d0345020a92ff03aabbcc4e0107",
+			expected: Port151Payload{
+				Battery:  helpers.Float32Ptr(2.706),
+				DataRate: helpers.DataRatePtr(decoder.DataRateTagXLADR),
+			},
 		},
 		{
 			port:    151,

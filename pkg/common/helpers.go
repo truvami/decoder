@@ -11,6 +11,8 @@ import (
 	"time"
 
 	"github.com/go-playground/validator"
+	"github.com/truvami/decoder/internal/logger"
+	"go.uber.org/zap"
 )
 
 func HexStringToBytes(hexString string) ([]byte, error) {
@@ -154,21 +156,28 @@ func Decode(payloadHex *string, config *PayloadConfig) (any, error) {
 	errs := []error{}
 
 	if len(config.Tags) != 0 {
-		var index uint8 = 3
-		var payloadLength = uint8(len(payloadBytes))
-		for index+2 < payloadLength {
-			var found = false
-			var tag = payloadBytes[index]
-			index++
-			var length = payloadBytes[index]
-			index++
+		var index = 3
+		var payloadLength = len(payloadBytes)
+		for index < payloadLength {
+			if payloadLength-index < 2 {
+				return nil, fmt.Errorf("incomplete TLV header at offset %d: need 2 bytes but only %d remain", index, payloadLength-index)
+			}
 
+			var tag = payloadBytes[index]
+			var length = int(payloadBytes[index+1])
+			index += 2
+
+			if index+length > payloadLength {
+				return nil, fmt.Errorf("TLV tag 0x%02x at offset %d declares length %d, but only %d bytes remain", tag, index-2, length, payloadLength-index)
+			}
+
+			var found bool
 			for _, tagConfig := range config.Tags {
 				if tagConfig.Tag == tag {
 					found = true
 					config.Features = append(config.Features, tagConfig.Feature)
 
-					value, err := extractFieldValue(payloadBytes, int(index), int(length), false, tagConfig.Hex)
+					value, err := extractFieldValue(payloadBytes, index, length, false, tagConfig.Hex)
 					if err != nil {
 						return nil, err
 					}
@@ -198,11 +207,14 @@ func Decode(payloadHex *string, config *PayloadConfig) (any, error) {
 					}
 				}
 			}
-			if found {
-				index += length
-			} else {
-				return nil, fmt.Errorf("unknown tag %x", tag)
+			if !found {
+				tagHex := fmt.Sprintf("0x%02x", tag)
+				unknownTLVTagsTotal.WithLabelValues(tagHex).Inc()
+				if logger.Logger != nil {
+					logger.Logger.Warn("skipping unknown tag", zap.String("tag", tagHex), zap.Int("length", length))
+				}
 			}
+			index += length
 		}
 
 		return targetValue.Interface(), errors.Join(errs...)
