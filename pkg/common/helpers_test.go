@@ -162,6 +162,12 @@ func TestDecode(t *testing.T) {
 			expected:    nil,
 			expectedErr: "unsupported field type: time.Time",
 		},
+		{
+			payload:     "ffffffaa",
+			config:      tagConfig,
+			expected:    nil,
+			expectedErr: "incomplete TLV header",
+		},
 	}
 
 	for _, test := range tests {
