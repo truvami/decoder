@@ -90,8 +90,9 @@ func (p Port152Payload) GetDuration() time.Duration {
 	return time.Duration(int64(p.ElapsedSeconds)) * time.Second
 }
 
-func (p Port152Payload) GetSequenceNumber() uint {
-	return uint(p.SequenceNumber)
+func (p Port152Payload) GetSequenceNumber() *uint16 {
+	v := uint16(p.SequenceNumber)
+	return &v
 }
 
 func byteToRotationState(b uint8) decoder.RotationState {
