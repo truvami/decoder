@@ -1562,6 +1562,14 @@ func TestFeatures(t *testing.T) {
 				// call function to check if it panics
 				sequenceNumber.GetSequenceNumber()
 			}
+			if decodedPayload.Is(decoder.FeatureResetReason) {
+				resetReason, ok := decodedPayload.Data.(decoder.UplinkFeatureResetReason)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureResetReason, got %T", decodedPayload)
+				}
+				// call function to check if it panics
+				resetReason.GetResetReason()
+			}
 		})
 	}
 }
@@ -1644,5 +1652,62 @@ func TestNewTagXLv1DecoderSolver(t *testing.T) {
 			t.Errorf("expected %v", test.expectedErr)
 			t.Errorf("received %v", err)
 		}
+	}
+}
+
+func TestPort151ResetReason(t *testing.T) {
+	tests := []struct {
+		name     string
+		cause    *uint32
+		expected decoder.ResetReason
+	}{
+		{name: "nil", cause: nil, expected: decoder.ResetReasonUnknown},
+		{name: "zero", cause: helpers.Uint32Ptr(0x00000000), expected: decoder.ResetReasonUnknown},
+		{name: "VREGIN-only filtered", cause: helpers.Uint32Ptr(0x80000000), expected: decoder.ResetReasonUnknown},
+		{name: "POR", cause: helpers.Uint32Ptr(0x00000001), expected: decoder.ResetReasonPowerReset},
+		{name: "PIN", cause: helpers.Uint32Ptr(0x00000002), expected: decoder.ResetReasonPinReset},
+		{name: "WDOG0", cause: helpers.Uint32Ptr(0x00000008), expected: decoder.ResetReasonWatchdog},
+		{name: "SYSREQ", cause: helpers.Uint32Ptr(0x00000040), expected: decoder.ResetReasonSystemReset},
+		{name: "LOCKUP unmapped bit", cause: helpers.Uint32Ptr(0x00000020), expected: decoder.ResetReasonOtherReset},
+		{name: "POR+PIN priority", cause: helpers.Uint32Ptr(0x00000003), expected: decoder.ResetReasonPowerReset},
+		{name: "PIN+WDOG0 priority", cause: helpers.Uint32Ptr(0x0000000a), expected: decoder.ResetReasonPinReset},
+		{name: "WDOG0+VREGIN", cause: helpers.Uint32Ptr(0x80000008), expected: decoder.ResetReasonWatchdog},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got := Port151Payload{ResetCause: tc.cause}.GetResetReason()
+			if got != tc.expected {
+				t.Errorf("expected %v, got %v", tc.expected, got)
+			}
+		})
+	}
+}
+
+func TestPort151ResetReasonFromDecode(t *testing.T) {
+	d := NewTagXLv1Decoder(context.TODO(), solver.MockSolverV1{
+		Data: decoder.NewDecodedUplink([]decoder.Feature{decoder.FeatureWiFi}, Port197Payload{}),
+	}, zap.NewExample())
+
+	// Real-world payload taken from the existing TestDecode fixtures: contains
+	// 4a 04 00 00 00 02 (PIN reset).
+	const payload = "4c2a0940010f4104012c1c204204012c05dc43010644011e45020d4e4604f6c7d8104902000a4a0400000002"
+
+	decodedUplink, err := d.Decode(context.TODO(), payload, 151)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if !decodedUplink.Is(decoder.FeatureResetReason) {
+		t.Fatalf("expected FeatureResetReason to be set")
+	}
+
+	resetReason, ok := decodedUplink.Data.(decoder.UplinkFeatureResetReason)
+	if !ok {
+		t.Fatalf("expected UplinkFeatureResetReason, got %T", decodedUplink.Data)
+	}
+
+	if got := resetReason.GetResetReason(); got != decoder.ResetReasonPinReset {
+		t.Errorf("expected %v, got %v", decoder.ResetReasonPinReset, got)
 	}
 }

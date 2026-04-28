@@ -66,6 +66,7 @@ type Port151Payload struct {
 var _ decoder.UplinkFeatureBattery = &Port151Payload{}
 var _ decoder.UplinkFeatureConfig = &Port151Payload{}
 var _ decoder.UplinkFeatureFirmwareVersion = &Port151Payload{}
+var _ decoder.UplinkFeatureResetReason = &Port151Payload{}
 
 func (p Port151Payload) GetBatteryVoltage() float64 {
 	if p.Battery == nil {
@@ -176,6 +177,42 @@ func (p Port151Payload) GetFirmwareHash() *string {
 
 func (p Port151Payload) GetFirmwareVersion() *string {
 	return nil
+}
+
+// EFR32BG22 EMU_RSTCAUSE bit masks reported by the Tag XL firmware.
+// See tag_xl/board/trackit/BSP/util/util.c::print_reset_cause and the
+// EFR32xG22 reference manual. Bit 31 (VREGIN) is filtered out by the
+// firmware before transmission; we mask defensively in case of replay.
+const (
+	tagXLResetCauseMask   uint32 = 0x7FFFFFFF
+	tagXLResetCausePOR    uint32 = 0x00000001
+	tagXLResetCausePIN    uint32 = 0x00000002
+	tagXLResetCauseWDOG0  uint32 = 0x00000008
+	tagXLResetCauseSYSREQ uint32 = 0x00000040
+)
+
+func (p Port151Payload) GetResetReason() decoder.ResetReason {
+	if p.ResetCause == nil {
+		return decoder.ResetReasonUnknown
+	}
+
+	cause := *p.ResetCause & tagXLResetCauseMask
+	if cause == 0 {
+		return decoder.ResetReasonUnknown
+	}
+
+	switch {
+	case cause&tagXLResetCausePOR != 0:
+		return decoder.ResetReasonPowerReset
+	case cause&tagXLResetCausePIN != 0:
+		return decoder.ResetReasonPinReset
+	case cause&tagXLResetCauseWDOG0 != 0:
+		return decoder.ResetReasonWatchdog
+	case cause&tagXLResetCauseSYSREQ != 0:
+		return decoder.ResetReasonSystemReset
+	default:
+		return decoder.ResetReasonOtherReset
+	}
 }
 
 // DataRateFromUint8 converts a uint8 data rate value to the corresponding TagXL DataRate enum.

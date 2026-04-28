@@ -144,7 +144,7 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 				}},
 			},
 			TargetType: reflect.TypeOf(Port151Payload{}),
-			Features:   []decoder.Feature{decoder.FeatureDataRate},
+			Features:   []decoder.Feature{decoder.FeatureDataRate, decoder.FeatureResetReason},
 		}, nil
 	case 152:
 		if len(payload) < 1 {
