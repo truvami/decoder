@@ -44,11 +44,11 @@ You can also run the truvami Decoder using Docker:
 # Pull the latest Docker image
 docker pull ghcr.io/truvami/decoder
 
-# Run the Docker container
-docker run -it ghcr.io/truvami/decoder decoder --help
+# Run the Docker container (the image ENTRYPOINT is `decoder`)
+docker run -it ghcr.io/truvami/decoder --help
 
 # Run the Docker container to start the HTTP server
-docker run -p 8080:8080 ghcr.io/truvami/decoder decoder http --port 8080 --host 0.0.0.0
+docker run -p 8080:8080 ghcr.io/truvami/decoder http --port 8080 --host 0.0.0.0
 ```
 
 ## 🛠️ Usage
