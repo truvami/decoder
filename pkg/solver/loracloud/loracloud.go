@@ -230,6 +230,14 @@ func (m LoracloudClient) DeliverUplinkMessage(devEui string, uplinkMsg UplinkMsg
 		return nil, err
 	}
 
+	// EoG uplinks share the same RX second as the prior captures in their group.
+	// Bumping the request timestamp by 1s lets Traxmate's GNSS-NG solver order the
+	// EoG message after the rest of the group.
+	if header.EndOfGroup && uplinkMsg.Timestamp != nil {
+		adjusted := *uplinkMsg.Timestamp + 1
+		uplinkMsg.Timestamp = &adjusted
+	}
+
 	url := fmt.Sprintf("%v/api/v1/device/send", m.BaseUrl)
 
 	// format devEui to match ^([0-9a-fA-F]){2}(-([0-9a-fA-F]){2}){7}$
