@@ -17,7 +17,7 @@ import (
 // | 0    | 1    | Status                                    | uint8 (FW always 0)    |
 // | 1    | 4    | Latitude                                  | int32, 1/1'000'000 deg |
 // | 5    | 4    | Longitude                                 | int32, 1/1'000'000 deg |
-// | 9    | 2    | Altitude                                  | uint16, 1/10 meter     |
+// | 9    | 2    | Altitude                                  | uint16, centimeters    |
 // | 11   | 4    | Unix timestamp                            | uint32                 |
 // | 15   | 2    | voltage_temp (battery)                    | uint16, mV             |
 // | 17   | 1    | Time to fix                               | uint8, s               |

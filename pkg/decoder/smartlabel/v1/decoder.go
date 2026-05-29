@@ -111,7 +111,7 @@ func (t SmartLabelv1Decoder) getConfig(port uint8, data string) (common.PayloadC
 				{Name: "Status", Start: 0, Length: 1},
 				{Name: "Latitude", Start: 1, Length: 4, Transform: latitude},
 				{Name: "Longitude", Start: 5, Length: 4, Transform: longitude},
-				{Name: "Altitude", Start: 9, Length: 2, Transform: altitude},
+				{Name: "Altitude", Start: 9, Length: 2, Transform: port10Altitude},
 				{Name: "Timestamp", Start: 11, Length: 4, Transform: timestamp},
 				{Name: "Battery", Start: 15, Length: 2, Transform: gnssBattery},
 				{Name: "TTF", Start: 17, Length: 1, Transform: ttf},
@@ -240,8 +240,8 @@ func longitude(v any) any {
 	return float64(common.BytesToInt32(v.([]byte))) / 1000000
 }
 
-func altitude(v any) any {
-	return float64(common.BytesToUint16(v.([]byte))) / 10
+func port10Altitude(v any) any {
+	return float64(common.BytesToUint16(v.([]byte))) / 100
 }
 
 func timestamp(v any) any {
