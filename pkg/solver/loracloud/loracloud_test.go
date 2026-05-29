@@ -2,6 +2,7 @@ package loracloud
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -15,6 +16,8 @@ import (
 	"github.com/truvami/decoder/pkg/decoder"
 	"go.uber.org/zap"
 )
+
+func float64Ptr(v float64) *float64 { return &v }
 
 func startMockServer(handler http.Handler) *httptest.Server {
 	server := httptest.NewServer(handler)
@@ -206,6 +209,131 @@ func TestDeliverUplinkMessage(t *testing.T) {
 			t.Errorf("expected decoding error, got: %v", err)
 		}
 	})
+}
+
+func TestDeliverUplinkMessage_EndOfGroupTimestampAdjustment(t *testing.T) {
+	successResponse := []byte(`{
+		"result": {
+			"deveui": "01-23-45-67-89-AB-CD-EF",
+			"position_solution": {
+				"algorithm_type": "gnssng",
+				"llh": [51.49278, 0.0212, 83.93],
+				"accuracy": 20.7,
+				"gdop": 2.48,
+				"capture_time_utc": 1722433373.18046
+			},
+			"operation": "gnss"
+		}
+	}`)
+
+	tests := []struct {
+		name           string
+		payload        string
+		inputTimestamp *float64
+		wantTimestamp  *float64
+	}{
+		{
+			name:           "end of group bumps timestamp by 1s",
+			payload:        "80",
+			inputTimestamp: float64Ptr(1722433373),
+			wantTimestamp:  float64Ptr(1722433374),
+		},
+		{
+			name:           "not end of group leaves timestamp untouched",
+			payload:        "01",
+			inputTimestamp: float64Ptr(1722433373),
+			wantTimestamp:  float64Ptr(1722433373),
+		},
+		{
+			name:           "end of group with nil timestamp stays nil",
+			payload:        "80",
+			inputTimestamp: nil,
+			wantTimestamp:  nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var capturedTimestamp *float64
+			var captured bool
+			mux := http.NewServeMux()
+			mux.HandleFunc("/api/v1/device/send", func(w http.ResponseWriter, r *http.Request) {
+				var body struct {
+					Uplink struct {
+						Timestamp *float64 `json:"timestamp"`
+					} `json:"uplink"`
+				}
+				if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+					t.Fatalf("failed to decode request body: %v", err)
+				}
+				capturedTimestamp = body.Uplink.Timestamp
+				captured = true
+
+				w.Header().Add("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(successResponse)
+			})
+
+			server := startMockServer(mux)
+			defer server.Close()
+			middleware, err := NewLoracloudClient(context.TODO(), "access_token", zap.NewExample(), WithBaseUrl(server.URL))
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+
+			_, err = middleware.DeliverUplinkMessage("0123456789ABCDEF", UplinkMsg{
+				MsgType:   "updf",
+				FCount:    1,
+				Port:      192,
+				Payload:   tt.payload,
+				Timestamp: tt.inputTimestamp,
+			})
+			assert.NoError(t, err)
+			assert.True(t, captured, "expected request to reach the mock server")
+			assert.Equal(t, tt.wantTimestamp, capturedTimestamp)
+		})
+	}
+}
+
+func TestDeliverUplinkMessage_EndOfGroupDoesNotMutateCallerTimestamp(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/v1/device/send", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{
+			"result": {
+				"deveui": "01-23-45-67-89-AB-CD-EF",
+				"position_solution": {
+					"algorithm_type": "gnssng",
+					"llh": [51.49278, 0.0212, 83.93],
+					"accuracy": 20.7,
+					"gdop": 2.48,
+					"capture_time_utc": 1722433373.18046
+				},
+				"operation": "gnss"
+			}
+		}`))
+	})
+
+	server := startMockServer(mux)
+	defer server.Close()
+	middleware, err := NewLoracloudClient(context.TODO(), "access_token", zap.NewExample(), WithBaseUrl(server.URL))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	original := float64(1722433373)
+	uplinkMsg := UplinkMsg{
+		MsgType:   "updf",
+		FCount:    1,
+		Port:      192,
+		Payload:   "80",
+		Timestamp: &original,
+	}
+
+	_, err = middleware.DeliverUplinkMessage("0123456789ABCDEF", uplinkMsg)
+	assert.NoError(t, err)
+	assert.Equal(t, float64(1722433373), *uplinkMsg.Timestamp, "caller's timestamp pointer must not be mutated")
 }
 
 func TestResponseVariants(t *testing.T) {
