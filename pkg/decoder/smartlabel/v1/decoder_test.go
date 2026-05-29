@@ -12,6 +12,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	helpers "github.com/truvami/decoder/pkg/common"
@@ -236,6 +237,73 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
+			// Active GNSS fix near Zurich (tracker sample)
+			payload: "0002d2eeb40081d77ca3706a196afd0e74000009",
+			port:    10,
+			expected: Port10Payload{
+				Status:     0,
+				Latitude:   47.3781,
+				Longitude:  8.509308,
+				Altitude:   418.4,
+				Timestamp:  time.Date(2026, 5, 29, 10, 31, 25, 0, time.UTC),
+				Battery:    3.7,
+				TTF:        helpers.DurationPtr(0),
+				PDOP:       helpers.Float64Ptr(0),
+				Satellites: helpers.Uint8Ptr(9),
+			},
+		},
+		{
+			payload: "0002d308b50082457f16eb66c4a5cd0ed3000505",
+			port:    10,
+			expected: Port10Payload{
+				Status:     0,
+				Latitude:   47.384757,
+				Longitude:  8.537471,
+				Altitude:   58.67,
+				Timestamp:  time.Date(2024, 8, 20, 14, 18, 53, 0, time.UTC),
+				Battery:    3.795,
+				TTF:        helpers.DurationPtr(0),
+				PDOP:       helpers.Float64Ptr(2.5),
+				Satellites: helpers.Uint8Ptr(5),
+			},
+		},
+		{
+			payload: "0002d30b070082491f11256718d9fe0ede190505",
+			port:    10,
+			expected: Port10Payload{
+				Status:     0,
+				Latitude:   47.385351,
+				Longitude:  8.538399,
+				Altitude:   43.89,
+				Timestamp:  time.Date(2024, 10, 23, 11, 11, 58, 0, time.UTC),
+				Battery:    3.806,
+				PDOP:       helpers.Float64Ptr(2.5),
+				Satellites: helpers.Uint8Ptr(5),
+				TTF:        helpers.DurationPtr(25 * time.Second),
+			},
+		},
+		{
+			payload: "0002d30b070082491f11256718d9fe0e74190505",
+			port:    10,
+			expected: Port10Payload{
+				Status:     0,
+				Latitude:   47.385351,
+				Longitude:  8.538399,
+				Altitude:   43.89,
+				Timestamp:  time.Date(2024, 10, 23, 11, 11, 58, 0, time.UTC),
+				Battery:    3.7,
+				PDOP:       helpers.Float64Ptr(2.5),
+				Satellites: helpers.Uint8Ptr(5),
+				TTF:        helpers.DurationPtr(25 * time.Second),
+			},
+		},
+		{
+			payload:     "00deadbeef",
+			port:        10,
+			expected:    nil,
+			expectedErr: "invalid payload length",
+		},
+		{
 			payload: "0ca90dbd07fa69",
 			port:    11,
 			expected: Port11Payload{
@@ -445,6 +513,24 @@ func TestDecodeWithNoopSolver(t *testing.T) {
 	}
 }
 
+func TestPort10Features(t *testing.T) {
+	d := NewSmartLabelv1Decoder(context.TODO(), solver.MockSolverV1{}, zap.NewNop())
+	decoded, err := d.Decode(context.TODO(), "0002d30b070082491f11256718d9fe0ede190505", 10)
+	assert.NoError(t, err)
+	assert.NotNil(t, decoded)
+
+	assert.True(t, decoded.Is(decoder.FeatureGNSS))
+	assert.True(t, decoded.Is(decoder.FeatureTimestamp))
+	assert.True(t, decoded.Is(decoder.FeatureBattery))
+	assert.False(t, decoded.Is(decoder.FeatureMoving))
+	assert.False(t, decoded.Is(decoder.FeatureDutyCycle))
+	assert.False(t, decoded.Is(decoder.FeatureConfigChange))
+
+	payload, ok := decoded.Data.(Port10Payload)
+	assert.True(t, ok)
+	assert.Equal(t, uint8(0), payload.Status)
+}
+
 func TestInvalidPort(t *testing.T) {
 	logger := zap.NewExample()
 	defer func() {
@@ -517,6 +603,10 @@ func TestFeatures(t *testing.T) {
 		{
 			payload: "fdb7218f6c166fadb359ea3bdec77daff72faac81784ab263386a455d3a73592a063900ba262b95a6ffc86",
 			port:    197,
+		},
+		{
+			payload: "0002d30b070082491f11256718d9fe0ede190505",
+			port:    10,
 		},
 	}
 
@@ -707,6 +797,11 @@ func TestMarshal(t *testing.T) {
 			payload:  "3f0e1007087801c207d0003c04b028ec0603020c",
 			port:     4,
 			expected: []string{"\"dataRate\": \"automatic-wide\"", "\"gnss\": true", "\"temperatureUpperThreshold\": 40", "\"temperatureLowerThreshold\": -20"},
+		},
+		{
+			payload:  "0002d30b070082491f11256718d9fe0ede190505",
+			port:     10,
+			expected: []string{"\"status\": 0", "\"latitude\": 47.385351", "\"battery\": \"3.806v\"", "\"satellites\": 5"},
 		},
 		{
 			payload:  "0f50107904da8d",
