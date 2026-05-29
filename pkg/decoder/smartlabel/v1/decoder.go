@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"time"
 
 	"github.com/truvami/decoder/pkg/common"
 	"github.com/truvami/decoder/pkg/decoder"
@@ -103,6 +104,22 @@ func (t SmartLabelv1Decoder) getConfig(port uint8, data string) (common.PayloadC
 			},
 			TargetType: reflect.TypeOf(Port4Payload{}),
 			Features:   []decoder.Feature{decoder.FeatureConfig, decoder.FeatureFirmwareVersion},
+		}, nil
+	case 10:
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
+				{Name: "Status", Start: 0, Length: 1},
+				{Name: "Latitude", Start: 1, Length: 4, Transform: latitude},
+				{Name: "Longitude", Start: 5, Length: 4, Transform: longitude},
+				{Name: "Altitude", Start: 9, Length: 2, Transform: altitude},
+				{Name: "Timestamp", Start: 11, Length: 4, Transform: timestamp},
+				{Name: "Battery", Start: 15, Length: 2, Transform: gnssBattery},
+				{Name: "TTF", Start: 17, Length: 1, Transform: ttf},
+				{Name: "PDOP", Start: 18, Length: 1, Transform: pdop},
+				{Name: "Satellites", Start: 19, Length: 1},
+			},
+			TargetType: reflect.TypeOf(Port10Payload{}),
+			Features:   []decoder.Feature{decoder.FeatureGNSS, decoder.FeatureTimestamp, decoder.FeatureBattery},
 		}, nil
 	case 11:
 		return common.PayloadConfig{
@@ -213,4 +230,32 @@ func temperature(v any) any {
 
 func humidity(v any) any {
 	return float32(common.BytesToUint8(v.([]byte))) / 2
+}
+
+func latitude(v any) any {
+	return float64(common.BytesToInt32(v.([]byte))) / 1000000
+}
+
+func longitude(v any) any {
+	return float64(common.BytesToInt32(v.([]byte))) / 1000000
+}
+
+func altitude(v any) any {
+	return float64(common.BytesToUint16(v.([]byte))) / 10
+}
+
+func timestamp(v any) any {
+	return time.Unix(int64(common.BytesToUint32(v.([]byte))), 0).UTC()
+}
+
+func gnssBattery(v any) any {
+	return float64(common.BytesToUint16(v.([]byte))) / 1000
+}
+
+func ttf(v any) any {
+	return time.Duration(int64(common.BytesToUint8(v.([]byte)))) * time.Second
+}
+
+func pdop(v any) any {
+	return float64(common.BytesToUint8(v.([]byte))) / 2
 }
