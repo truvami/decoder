@@ -154,6 +154,92 @@ func (t SmartLabelv1Decoder) getConfig(port uint8, data string) (common.PayloadC
 			TargetType: reflect.TypeOf(Port150Payload{}),
 			Features:   []decoder.Feature{},
 		}, nil
+	case 160:
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
+				{Name: "Tag", Start: 0, Length: 1},
+				{Name: "Moving", Start: 0, Length: 1, Transform: alwaysFalse},
+				{Name: "Rssi1", Start: 1, Length: 1},
+				{Name: "Mac1", Start: 2, Length: 6, Hex: true},
+				{Name: "Rssi2", Start: 8, Length: 1, Optional: true},
+				{Name: "Mac2", Start: 9, Length: 6, Optional: true, Hex: true},
+				{Name: "Rssi3", Start: 15, Length: 1, Optional: true},
+				{Name: "Mac3", Start: 16, Length: 6, Optional: true, Hex: true},
+				{Name: "Rssi4", Start: 22, Length: 1, Optional: true},
+				{Name: "Mac4", Start: 23, Length: 6, Optional: true, Hex: true},
+				{Name: "Rssi5", Start: 29, Length: 1, Optional: true},
+				{Name: "Mac5", Start: 30, Length: 6, Optional: true, Hex: true},
+				{Name: "Rssi6", Start: 36, Length: 1, Optional: true},
+				{Name: "Mac6", Start: 37, Length: 6, Optional: true, Hex: true},
+			},
+			TargetType: reflect.TypeOf(Port160Payload{}),
+			Features:   []decoder.Feature{decoder.FeatureBle, decoder.FeatureMoving},
+		}, nil
+	case 161:
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
+				{Name: "Tag", Start: 0, Length: 1},
+				{Name: "Moving", Start: 0, Length: 1, Transform: alwaysTrue},
+				{Name: "Rssi1", Start: 1, Length: 1},
+				{Name: "Mac1", Start: 2, Length: 6, Hex: true},
+				{Name: "Rssi2", Start: 8, Length: 1, Optional: true},
+				{Name: "Mac2", Start: 9, Length: 6, Optional: true, Hex: true},
+				{Name: "Rssi3", Start: 15, Length: 1, Optional: true},
+				{Name: "Mac3", Start: 16, Length: 6, Optional: true, Hex: true},
+				{Name: "Rssi4", Start: 22, Length: 1, Optional: true},
+				{Name: "Mac4", Start: 23, Length: 6, Optional: true, Hex: true},
+				{Name: "Rssi5", Start: 29, Length: 1, Optional: true},
+				{Name: "Mac5", Start: 30, Length: 6, Optional: true, Hex: true},
+				{Name: "Rssi6", Start: 36, Length: 1, Optional: true},
+				{Name: "Mac6", Start: 37, Length: 6, Optional: true, Hex: true},
+			},
+			TargetType: reflect.TypeOf(Port161Payload{}),
+			Features:   []decoder.Feature{decoder.FeatureBle, decoder.FeatureMoving},
+		}, nil
+	case 162:
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
+				{Name: "Timestamp", Start: 0, Length: 4, Transform: timestamp},
+				{Name: "Tag", Start: 4, Length: 1},
+				{Name: "Moving", Start: 4, Length: 1, Transform: alwaysFalse},
+				{Name: "Rssi1", Start: 5, Length: 1},
+				{Name: "Mac1", Start: 6, Length: 6, Hex: true},
+				{Name: "Rssi2", Start: 12, Length: 1, Optional: true},
+				{Name: "Mac2", Start: 13, Length: 6, Optional: true, Hex: true},
+				{Name: "Rssi3", Start: 19, Length: 1, Optional: true},
+				{Name: "Mac3", Start: 20, Length: 6, Optional: true, Hex: true},
+				{Name: "Rssi4", Start: 26, Length: 1, Optional: true},
+				{Name: "Mac4", Start: 27, Length: 6, Optional: true, Hex: true},
+				{Name: "Rssi5", Start: 33, Length: 1, Optional: true},
+				{Name: "Mac5", Start: 34, Length: 6, Optional: true, Hex: true},
+				{Name: "Rssi6", Start: 40, Length: 1, Optional: true},
+				{Name: "Mac6", Start: 41, Length: 6, Optional: true, Hex: true},
+			},
+			TargetType: reflect.TypeOf(Port162Payload{}),
+			Features:   []decoder.Feature{decoder.FeatureBle, decoder.FeatureMoving, decoder.FeatureTimestamp},
+		}, nil
+	case 163:
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
+				{Name: "Timestamp", Start: 0, Length: 4, Transform: timestamp},
+				{Name: "Tag", Start: 4, Length: 1},
+				{Name: "Moving", Start: 4, Length: 1, Transform: alwaysTrue},
+				{Name: "Rssi1", Start: 5, Length: 1},
+				{Name: "Mac1", Start: 6, Length: 6, Hex: true},
+				{Name: "Rssi2", Start: 12, Length: 1, Optional: true},
+				{Name: "Mac2", Start: 13, Length: 6, Optional: true, Hex: true},
+				{Name: "Rssi3", Start: 19, Length: 1, Optional: true},
+				{Name: "Mac3", Start: 20, Length: 6, Optional: true, Hex: true},
+				{Name: "Rssi4", Start: 26, Length: 1, Optional: true},
+				{Name: "Mac4", Start: 27, Length: 6, Optional: true, Hex: true},
+				{Name: "Rssi5", Start: 33, Length: 1, Optional: true},
+				{Name: "Mac5", Start: 34, Length: 6, Optional: true, Hex: true},
+				{Name: "Rssi6", Start: 40, Length: 1, Optional: true},
+				{Name: "Mac6", Start: 41, Length: 6, Optional: true, Hex: true},
+			},
+			TargetType: reflect.TypeOf(Port163Payload{}),
+			Features:   []decoder.Feature{decoder.FeatureBle, decoder.FeatureMoving, decoder.FeatureTimestamp},
+		}, nil
 	case 197:
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
@@ -258,4 +344,12 @@ func ttf(v any) any {
 
 func pdop(v any) any {
 	return float64(common.BytesToUint8(v.([]byte))) / 2
+}
+
+func alwaysTrue(v any) any {
+	return true
+}
+
+func alwaysFalse(v any) any {
+	return false
 }

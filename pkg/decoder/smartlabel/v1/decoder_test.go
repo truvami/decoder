@@ -398,6 +398,60 @@ func TestDecode(t *testing.T) {
 		},
 		{
 			payload: "00d63385f8ee30c2d0a0382c2601db",
+			port:    160,
+			expected: Port160Payload{
+				Tag:    byte(0x00),
+				Moving: false,
+				Rssi1:  -42,
+				Mac1:   "3385f8ee30c2",
+				Rssi2:  helpers.Int8Ptr(-48),
+				Mac2:   helpers.StringPtr("a0382c2601db"),
+			},
+		},
+		{
+			payload: "64c8b5eded55a313c0a0b8b5e86e31b894a765f3ad40",
+			port:    161,
+			expected: Port161Payload{
+				Tag:    byte(0x64),
+				Moving: true,
+				Rssi1:  -56,
+				Mac1:   "b5eded55a313",
+				Rssi2:  helpers.Int8Ptr(-64),
+				Mac2:   helpers.StringPtr("a0b8b5e86e31"),
+				Rssi3:  helpers.Int8Ptr(-72),
+				Mac3:   helpers.StringPtr("94a765f3ad40"),
+			},
+		},
+		{
+			payload: "68bae3ab00d63385f8ee30c2d0a0382c2601db",
+			port:    162,
+			expected: Port162Payload{
+				Timestamp: time.Date(2025, 9, 5, 13, 20, 43, 0, time.UTC),
+				Tag:       byte(0x00),
+				Moving:    false,
+				Rssi1:     -42,
+				Mac1:      "3385f8ee30c2",
+				Rssi2:     helpers.Int8Ptr(-48),
+				Mac2:      helpers.StringPtr("a0382c2601db"),
+			},
+		},
+		{
+			payload: "68bae3ab64c8b5eded55a313c0a0b8b5e86e31b894a765f3ad40",
+			port:    163,
+			expected: Port163Payload{
+				Timestamp: time.Date(2025, 9, 5, 13, 20, 43, 0, time.UTC),
+				Tag:       byte(0x64),
+				Moving:    true,
+				Rssi1:     -56,
+				Mac1:      "b5eded55a313",
+				Rssi2:     helpers.Int8Ptr(-64),
+				Mac2:      helpers.StringPtr("a0b8b5e86e31"),
+				Rssi3:     helpers.Int8Ptr(-72),
+				Mac3:      helpers.StringPtr("94a765f3ad40"),
+			},
+		},
+		{
+			payload: "00d63385f8ee30c2d0a0382c2601db",
 			port:    197,
 			expected: Port197Payload{
 				Tag:   byte(0x00),
@@ -605,6 +659,22 @@ func TestFeatures(t *testing.T) {
 			port:    197,
 		},
 		{
+			payload: "00d63385f8ee30c2d0a0382c2601db",
+			port:    160,
+		},
+		{
+			payload: "64c8b5eded55a313c0a0b8b5e86e31b894a765f3ad40",
+			port:    161,
+		},
+		{
+			payload: "68bae3ab00d63385f8ee30c2d0a0382c2601db",
+			port:    162,
+		},
+		{
+			payload: "68bae3ab64c8b5eded55a313c0a0b8b5e86e31b894a765f3ad40",
+			port:    163,
+		},
+		{
 			payload: "0002d30b070082491f11256718d9fe0ede190505",
 			port:    10,
 		},
@@ -708,6 +778,15 @@ func TestFeatures(t *testing.T) {
 				}
 				if wifi.GetAccessPoints() == nil {
 					t.Fatalf("expected non nil access points")
+				}
+			}
+			if decodedPayload.Is(decoder.FeatureBle) {
+				ble, ok := decodedPayload.Data.(decoder.UplinkFeatureBle)
+				if !ok {
+					t.Fatalf("expected UplinkFeatureBle, got %T", decodedPayload)
+				}
+				if len(ble.GetBeacons()) == 0 {
+					t.Fatalf("expected at least one beacon")
 				}
 			}
 			if decodedPayload.Is(decoder.FeaturePhotovoltaic) {
