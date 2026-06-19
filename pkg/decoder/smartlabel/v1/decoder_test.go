@@ -785,8 +785,8 @@ func TestFeatures(t *testing.T) {
 				if !ok {
 					t.Fatalf("expected UplinkFeatureBle, got %T", decodedPayload)
 				}
-				if ble.GetBeacons() == nil {
-					t.Fatalf("expected non nil beacons")
+				if len(ble.GetBeacons()) == 0 {
+					t.Fatalf("expected at least one beacon")
 				}
 			}
 			if decodedPayload.Is(decoder.FeaturePhotovoltaic) {
