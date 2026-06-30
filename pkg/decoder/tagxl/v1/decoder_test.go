@@ -1768,25 +1768,59 @@ func TestPort151ResetReasonFromDecode(t *testing.T) {
 		Data: decoder.NewDecodedUplink([]decoder.Feature{decoder.FeatureWiFi}, Port197Payload{}),
 	}, zap.NewExample())
 
-	// Real-world payload taken from the existing TestDecode fixtures: contains
-	// 4a 04 00 00 00 02 (PIN reset).
-	const payload = "4c2a0940010f4104012c1c204204012c05dc43010644011e45020d4e4604f6c7d8104902000a4a0400000002"
-
-	decodedUplink, err := d.Decode(context.TODO(), payload, 151)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	tests := []struct {
+		name          string
+		payload       string
+		expectFeature bool
+		expected      decoder.ResetReason
+	}{
+		{
+			name:          "without reset cause",
+			payload:       "4c050145020a92",
+			expectFeature: false,
+			expected:      decoder.ResetReasonUnknown,
+		},
+		{
+			name:          "zero reset cause",
+			payload:       "4c07014a0400000000",
+			expectFeature: false,
+			expected:      decoder.ResetReasonUnknown,
+		},
+		{
+			name:          "VREGIN-only reset cause",
+			payload:       "4c07014a0480000000",
+			expectFeature: false,
+			expected:      decoder.ResetReasonUnknown,
+		},
+		{
+			name: "PIN reset",
+			// Real-world payload taken from the existing TestDecode fixtures: contains
+			// 4a 04 00 00 00 02 (PIN reset).
+			payload:       "4c2a0940010f4104012c1c204204012c05dc43010644011e45020d4e4604f6c7d8104902000a4a0400000002",
+			expectFeature: true,
+			expected:      decoder.ResetReasonPinReset,
+		},
 	}
 
-	if !decodedUplink.Is(decoder.FeatureResetReason) {
-		t.Fatalf("expected FeatureResetReason to be set")
-	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			decodedUplink, err := d.Decode(context.TODO(), tc.payload, 151)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
 
-	resetReason, ok := decodedUplink.Data.(decoder.UplinkFeatureResetReason)
-	if !ok {
-		t.Fatalf("expected UplinkFeatureResetReason, got %T", decodedUplink.Data)
-	}
+			if got := decodedUplink.Is(decoder.FeatureResetReason); got != tc.expectFeature {
+				t.Fatalf("expected FeatureResetReason presence %v, got %v", tc.expectFeature, got)
+			}
 
-	if got := resetReason.GetResetReason(); got != decoder.ResetReasonPinReset {
-		t.Errorf("expected %v, got %v", decoder.ResetReasonPinReset, got)
+			resetReason, ok := decodedUplink.Data.(decoder.UplinkFeatureResetReason)
+			if !ok {
+				t.Fatalf("expected UplinkFeatureResetReason, got %T", decodedUplink.Data)
+			}
+
+			if got := resetReason.GetResetReason(); got != tc.expected {
+				t.Errorf("expected %v, got %v", tc.expected, got)
+			}
+		})
 	}
 }
