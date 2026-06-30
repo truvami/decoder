@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"slices"
 	"time"
 
 	"github.com/truvami/decoder/pkg/common"
@@ -129,7 +130,7 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 					return ((v.([]byte)[0] >> 1) & 0x01) != 0
 				}},
 				{Name: "ResetCount", Tag: 0x49, Optional: true},
-				{Name: "ResetCause", Tag: 0x4a, Optional: true},
+				{Name: "ResetCause", Tag: 0x4a, Optional: true, Feature: decoder.FeatureResetReason},
 				{Name: "GnssScans", Tag: 0x4b, Optional: true, Transform: func(v any) any {
 					return uint16((common.BytesToUint32(v.([]byte)) >> 16) & 0xffff)
 				}},
@@ -144,7 +145,7 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 				}},
 			},
 			TargetType: reflect.TypeOf(Port151Payload{}),
-			Features:   []decoder.Feature{decoder.FeatureDataRate, decoder.FeatureResetReason},
+			Features:   []decoder.Feature{decoder.FeatureDataRate},
 		}, nil
 	case 152:
 		if len(payload) < 1 {
@@ -667,6 +668,11 @@ func (t TagXLv1Decoder) Decode(ctx context.Context, data string, port uint8) (*d
 		}
 
 		decodedData, err := common.Decode(&data, &config)
+		if resetReason, ok := decodedData.(decoder.UplinkFeatureResetReason); ok && resetReason.GetResetReason() == decoder.ResetReasonUnknown {
+			config.Features = slices.DeleteFunc(config.Features, func(feature decoder.Feature) bool {
+				return feature == decoder.FeatureResetReason
+			})
+		}
 		return decoder.NewDecodedUplink(config.Features, decodedData), err
 	}
 }
