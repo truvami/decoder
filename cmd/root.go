@@ -63,9 +63,11 @@ func init() {
 }
 
 var rootCmd = &cobra.Command{
-	Use:     "decoder",
-	Short:   "truvami payload decoder cli helper",
-	Version: Version,
+	Use:           "decoder",
+	Short:         "truvami payload decoder cli helper",
+	Version:       Version,
+	SilenceErrors: true,
+	SilenceUsage:  true,
 	Long: getBanner() + `
 
 A CLI tool to help decode @truvami payloads.`,

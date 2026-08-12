@@ -39,21 +39,18 @@ func TestLoggingMiddlewareEmitsOnlySafeAccessFields(t *testing.T) {
 	}
 
 	fields := entry.ContextMap()
-	for _, forbidden := range []string{"devEui", "payload", "url", "requestId", "remoteAddress", "userAgent", "response"} {
+	for _, forbidden := range []string{"devEui", "payload", "url", "route", "requestId", "remoteAddress", "userAgent", "response"} {
 		if _, ok := fields[forbidden]; ok {
 			t.Fatalf("forbidden field %q present in access log", forbidden)
 		}
 	}
 
-	for _, required := range []string{"route", "method", "status", "duration"} {
+	for _, required := range []string{"method", "status", "duration"} {
 		if _, ok := fields[required]; !ok {
 			t.Fatalf("required field %q missing from access log", required)
 		}
 	}
 
-	if fields["route"] != "/tagsl/v1" {
-		t.Fatalf("expected route /tagsl/v1, got %v", fields["route"])
-	}
 	if fields["method"] != http.MethodPost {
 		t.Fatalf("expected method POST, got %v", fields["method"])
 	}

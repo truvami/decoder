@@ -14,13 +14,14 @@ func TestFilterFieldsStripsSensitiveKeys(t *testing.T) {
 		{Key: "payload", Type: zapcore.StringType, String: "deadbeef"},
 		{Key: "route", Type: zapcore.StringType, String: "/tagsl/v1"},
 		{Key: "method", Type: zapcore.StringType, String: "POST"},
+		zap.Any("method", map[string]string{"secret": "payload"}),
 	})
 
-	if len(filtered) != 2 {
-		t.Fatalf("expected 2 allowed fields, got %d", len(filtered))
+	if len(filtered) != 1 {
+		t.Fatalf("expected 1 allowed field, got %d", len(filtered))
 	}
 	for _, field := range filtered {
-		if field.Key != "route" && field.Key != "method" {
+		if field.Key != "method" {
 			t.Fatalf("unexpected allowed field %q", field.Key)
 		}
 	}
@@ -59,6 +60,9 @@ func TestFilteringCoreDoesNotEmitSensitiveFields(t *testing.T) {
 	}
 	if _, ok := out["url"]; ok {
 		t.Fatal("url must not appear in log output")
+	}
+	if _, ok := out["route"]; ok {
+		t.Fatal("route must not appear in log output")
 	}
 }
 

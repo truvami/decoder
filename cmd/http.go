@@ -134,7 +134,7 @@ var httpCmd = &cobra.Command{
 		// middleware
 		handler := loggingMiddleware(logger.Logger, router)
 
-		logger.Logger.Info("starting HTTP server", zap.String("host", host), zap.Uint64("port", uint64(port)))
+		logger.Logger.Info("starting HTTP server", zap.Uint64("port", uint64(port)))
 		server := &http.Server{
 			Addr:     fmt.Sprintf("%v:%v", host, port),
 			Handler:  handler,
@@ -150,7 +150,7 @@ var httpCmd = &cobra.Command{
 }
 
 func addDecoder(ctx context.Context, router *http.ServeMux, path string, decoder decoder.Decoder) {
-	logger.Logger.Debug("adding decoder", zap.String("path", path))
+	logger.Logger.Debug("adding decoder")
 	router.HandleFunc("POST /"+path, getHandler(ctx, decoder))
 }
 
@@ -219,7 +219,7 @@ func getHandler(ctx context.Context, targetDecoder decoder.Decoder) func(http.Re
 }
 
 func addEncoder(router *http.ServeMux, path string, encoder encoder.Encoder) {
-	logger.Logger.Debug("adding encoder", zap.String("path", path))
+	logger.Logger.Debug("adding encoder")
 	router.HandleFunc("POST /"+path, getEncoderHandler(encoder))
 }
 
@@ -440,7 +440,6 @@ func loggingMiddleware(logger *zap.Logger, next http.Handler) http.Handler {
 		next.ServeHTTP(rw, r)
 
 		logger.Info("HTTP request",
-			zap.String("route", r.URL.Path),
 			zap.String("method", r.Method),
 			zap.Int("status", rw.statusCode),
 			zap.Duration("duration", time.Since(start)),
