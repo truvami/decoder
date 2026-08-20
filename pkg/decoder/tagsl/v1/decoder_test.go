@@ -267,6 +267,46 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
+			// 5s is the lowest moving interval a Tag S/L accepts.
+			port:    4,
+			payload: "000000050000012c000151800078012c05dc02020100010200005460",
+			expected: Port4Payload{
+				LocalizationIntervalWhileMoving: 5,
+				LocalizationIntervalWhileSteady: 300,
+				HeartbeatInterval:               86400,
+				GPSTimeoutWhileWaitingForFix:    120,
+				AccelerometerWakeupThreshold:    300,
+				AccelerometerDelay:              1500,
+				DeviceState:                     2,
+				FirmwareVersionMajor:            2,
+				FirmwareVersionMinor:            1,
+				FirmwareVersionPatch:            0,
+				HardwareVersionType:             1,
+				HardwareVersionRevision:         2,
+				BatteryKeepAliveMessageInterval: 21600,
+			},
+		},
+		{
+			// 30s moving interval, as reported in #186.
+			port:    4,
+			payload: "0000001e0000012c000151800078012c05dc02020100010200005460",
+			expected: Port4Payload{
+				LocalizationIntervalWhileMoving: 30,
+				LocalizationIntervalWhileSteady: 300,
+				HeartbeatInterval:               86400,
+				GPSTimeoutWhileWaitingForFix:    120,
+				AccelerometerWakeupThreshold:    300,
+				AccelerometerDelay:              1500,
+				DeviceState:                     2,
+				FirmwareVersionMajor:            2,
+				FirmwareVersionMinor:            1,
+				FirmwareVersionPatch:            0,
+				HardwareVersionType:             1,
+				HardwareVersionRevision:         2,
+				BatteryKeepAliveMessageInterval: 21600,
+			},
+		},
+		{
 			port:           4,
 			payload:        "0000003c0000012c000151800078012c05dc02020100010200005460000a1000",
 			skipValidation: true,
@@ -1841,6 +1881,12 @@ func TestValidationErrors(t *testing.T) {
 			payload:  "00000002d30c9300824c87117966c45dcd0f812f021ca1b2c3d4e5f6c0",
 			port:     151,
 			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Satellites", 28),
+		},
+		{
+			// Below the 5s device limit the value is still rejected.
+			payload:  "000000040000012c000151800078012c05dc02020100010200005460",
+			port:     4,
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "LocalizationIntervalWhileMoving", 4),
 		},
 	}
 

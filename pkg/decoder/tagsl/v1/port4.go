@@ -25,7 +25,7 @@ import (
 // +-------+------+-------------------------------------------+------------+
 
 type Port4Payload struct {
-	LocalizationIntervalWhileMoving uint32  `json:"localizationIntervalWhileMoving" validate:"gte=60,lte=86400"`
+	LocalizationIntervalWhileMoving uint32  `json:"localizationIntervalWhileMoving" validate:"gte=5,lte=86400"`
 	LocalizationIntervalWhileSteady uint32  `json:"localizationIntervalWhileSteady" validate:"gte=120,lte=86400"`
 	HeartbeatInterval               uint32  `json:"heartbeatInterval" validate:"gte=300,lte=604800"`
 	GPSTimeoutWhileWaitingForFix    uint16  `json:"gpsTimeoutWhileWaitingForFix" validate:"gte=60,lte=86400"`

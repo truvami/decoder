@@ -4,7 +4,7 @@ type Port128Payload struct {
 	Ble                    bool   `json:"ble"`
 	Gnss                   bool   `json:"gnss"`
 	Wifi                   bool   `json:"wifi"`
-	MovingInterval         uint32 `json:"movingInterval" validate:"gte=60,lte=86400"`
+	MovingInterval         uint32 `json:"movingInterval" validate:"gte=5,lte=86400"`
 	SteadyInterval         uint32 `json:"steadyInterval" validate:"gte=120,lte=86400"`
 	ConfigInterval         uint32 `json:"configInterval" validate:"gte=300,lte=604800"`
 	GnssTimeout            uint16 `json:"gnssTimeout" validate:"gte=60,lte=86400"`
