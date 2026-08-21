@@ -12,7 +12,6 @@ import (
 
 	"github.com/go-playground/validator"
 	"github.com/truvami/decoder/internal/logger"
-	"go.uber.org/zap"
 )
 
 func HexStringToBytes(hexString string) ([]byte, error) {
@@ -94,7 +93,7 @@ func convertFieldValue(rawValue any, fieldType reflect.Type, transform func(v an
 	var value any = nil
 	var err error = nil
 
-	if fieldType.Kind() == reflect.Ptr {
+	if fieldType.Kind() == reflect.Pointer {
 		ptr = true
 		fieldType = fieldType.Elem()
 	}
@@ -208,10 +207,9 @@ func Decode(payloadHex *string, config *PayloadConfig) (any, error) {
 				}
 			}
 			if !found {
-				tagHex := fmt.Sprintf("0x%02x", tag)
-				unknownTLVTagsTotal.WithLabelValues(tagHex).Inc()
+				unknownTLVTagsTotal.Inc()
 				if logger.Logger != nil {
-					logger.Logger.Warn("skipping unknown tag", zap.String("tag", tagHex), zap.Int("length", length))
+					logger.Logger.Warn("skipping unknown tag")
 				}
 			}
 			index += length
@@ -260,7 +258,7 @@ func insertFieldBytes(fieldValue reflect.Value, length int, transform func(v any
 	var bytes []byte
 	var err error = nil
 
-	if fieldValue.Kind() == reflect.Ptr {
+	if fieldValue.Kind() == reflect.Pointer {
 		if fieldValue.IsNil() {
 			null = true
 			bytes = make([]byte, length)
@@ -487,7 +485,7 @@ func TimePointerCompare(alpha *time.Time, bravo *time.Time) bool {
 }
 
 func DerefValue(value reflect.Value) any {
-	if value.Kind() == reflect.Ptr && !value.IsNil() {
+	if value.Kind() == reflect.Pointer && !value.IsNil() {
 		return value.Elem().Interface()
 	}
 

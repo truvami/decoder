@@ -2,29 +2,46 @@ package main
 
 import (
 	"bytes"
-	"log"
+	"io"
+	"os"
 	"strings"
 	"testing"
 )
 
-func TestMain(t *testing.T) {
-	// Create a buffer to capture the output
-	var buf bytes.Buffer
-	log.SetOutput(&buf)
+func captureStdout(t *testing.T, fn func()) string {
+	t.Helper()
 
-	// main() panics on AWS API errors; recover and skip when that happens.
+	oldStdout := os.Stdout
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatalf("pipe: %v", err)
+	}
+	os.Stdout = w
+
+	fn()
+
+	_ = w.Close()
+	os.Stdout = oldStdout
+
+	var buf bytes.Buffer
+	if _, err := io.Copy(&buf, r); err != nil {
+		t.Fatalf("read stdout: %v", err)
+	}
+	_ = r.Close()
+
+	return buf.String()
+}
+
+func TestMain(t *testing.T) {
 	defer func() {
 		if r := recover(); r != nil {
 			t.Skipf("skipping: main() panicked (likely AWS API unavailable): %v", r)
 		}
 	}()
 
-	// Run the main function
-	main()
+	out := captureStdout(t, main)
 
-	// Check if the expected output is present in the buffer
-	expectedOutput := `longitude`
-	if !strings.Contains(buf.String(), expectedOutput) {
-		t.Errorf("expected output %q not found", expectedOutput)
+	if !strings.Contains(out, "longitude") {
+		t.Errorf("expected output %q not found in %q", "longitude", out)
 	}
 }

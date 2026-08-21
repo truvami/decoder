@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -85,17 +86,17 @@ var httpCmd = &cobra.Command{
 		case "aws":
 			solver, err = aws.NewAwsPositionEstimateClient(ctx, logger.Logger)
 			if err != nil {
-				logger.Logger.Error("error while creating AWS position estimate client", zap.Error(err))
+				logger.Logger.Error("error while creating AWS position estimate client", zap.String("category", "client_init_failed"))
 				os.Exit(1)
 			}
 		case "loracloud":
 			if LoracloudAccessToken == "" {
-				logger.Logger.Error("loracloud access token is required for loracloud solver")
+				logger.Logger.Error("loracloud access token is required for loracloud solver", zap.String("category", "config_invalid"))
 				os.Exit(1)
 			}
 			solver, err = loracloud.NewLoracloudClient(ctx, LoracloudAccessToken, logger.Logger)
 			if err != nil {
-				logger.Logger.Error("error while creating LoRa Cloud position estimate client", zap.Error(err))
+				logger.Logger.Error("error while creating LoRa Cloud position estimate client", zap.String("category", "client_init_failed"))
 				os.Exit(1)
 			}
 		}
@@ -133,18 +134,23 @@ var httpCmd = &cobra.Command{
 		// middleware
 		handler := loggingMiddleware(logger.Logger, router)
 
-		logger.Logger.Info("starting HTTP server", zap.String("host", host), zap.Uint64("port", uint64(port)))
-		err = http.ListenAndServe(fmt.Sprintf("%v:%v", host, port), handler)
+		logger.Logger.Info("starting HTTP server", zap.Uint64("port", uint64(port)))
+		server := &http.Server{
+			Addr:     fmt.Sprintf("%v:%v", host, port),
+			Handler:  handler,
+			ErrorLog: log.New(safeHTTPErrorLog{}, "", 0),
+		}
+		err = server.ListenAndServe()
 
 		if err != nil {
-			logger.Logger.Error("error while starting HTTP server", zap.Error(err))
+			logger.Logger.Error("error while starting HTTP server", zap.String("category", "server_start_failed"))
 			os.Exit(1)
 		}
 	},
 }
 
 func addDecoder(ctx context.Context, router *http.ServeMux, path string, decoder decoder.Decoder) {
-	logger.Logger.Debug("adding decoder", zap.String("path", path))
+	logger.Logger.Debug("adding decoder")
 	router.HandleFunc("POST /"+path, getHandler(ctx, decoder))
 }
 
@@ -162,7 +168,7 @@ func getHandler(ctx context.Context, targetDecoder decoder.Decoder) func(http.Re
 		logger.Logger.Debug("decoding request")
 		err := json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
-			logger.Logger.Error("error while decoding request", zap.Error(err))
+			logger.Logger.Error("error while decoding request", zap.String("category", "request_decode_failed"))
 
 			setBody(w, http.StatusBadRequest, map[string]any{
 				"error": err.Error(),
@@ -172,7 +178,7 @@ func getHandler(ctx context.Context, targetDecoder decoder.Decoder) func(http.Re
 		}
 
 		if err := validator.New().Struct(req); err != nil {
-			logger.Logger.Error("request validation failed", zap.Error(err))
+			logger.Logger.Error("request validation failed", zap.String("category", "request_validation_failed"))
 			setBody(w, http.StatusBadRequest, map[string]any{
 				"error": "request validation failed",
 				"docs":  "https://docs.truvami.com",
@@ -180,16 +186,9 @@ func getHandler(ctx context.Context, targetDecoder decoder.Decoder) func(http.Re
 			return
 		}
 
-		logger.Logger.Debug("set context values",
-			zap.String("devEui", req.DevEUI),
-			zap.Uint8("port", req.Port),
-			zap.String("payload", req.Payload),
-		)
 		ctx = context.WithValue(ctx, decoder.DEVEUI_CONTEXT_KEY, req.DevEUI)
 		ctx = context.WithValue(ctx, decoder.PORT_CONTEXT_KEY, req.Port)
 		ctx = context.WithValue(ctx, decoder.FCNT_CONTEXT_KEY, 1) // Default frame count, can be adjusted as needed
-
-		logger.Logger.Debug("decoding payload")
 
 		var warnings []string = nil
 		data, err := targetDecoder.Decode(ctx, req.Payload, req.Port)
@@ -197,12 +196,12 @@ func getHandler(ctx context.Context, targetDecoder decoder.Decoder) func(http.Re
 			if errors.Is(err, helpers.ErrValidationFailed) {
 				warnings = []string{}
 				for _, err := range helpers.UnwrapError(err) {
-					logger.Logger.Warn("validation error", zap.Error(err), zap.String("devEui", req.DevEUI), zap.Uint8("port", req.Port))
+					logger.Logger.Warn("validation error", zap.String("category", "validation_failed"))
 					warnings = append(warnings, err.Error())
 				}
 				logger.Logger.Warn("validation for some fields failed - are you using the correct port?")
 			} else {
-				logger.Logger.Error("error while decoding payload", zap.Error(err), zap.String("devEui", req.DevEUI), zap.Uint8("port", req.Port))
+				logger.Logger.Error("error while decoding payload", zap.String("category", "payload_decode_failed"))
 
 				setBody(w, http.StatusBadRequest, map[string]any{
 					"error": err.Error(),
@@ -212,7 +211,6 @@ func getHandler(ctx context.Context, targetDecoder decoder.Decoder) func(http.Re
 			}
 		}
 
-		logger.Logger.Info("payload decoded successfully", zap.String("devEui", req.DevEUI), zap.Uint8("port", req.Port))
 		setBody(w, http.StatusOK, map[string]any{
 			"data":     data.Data,
 			"warnings": warnings,
@@ -221,7 +219,7 @@ func getHandler(ctx context.Context, targetDecoder decoder.Decoder) func(http.Re
 }
 
 func addEncoder(router *http.ServeMux, path string, encoder encoder.Encoder) {
-	logger.Logger.Debug("adding encoder", zap.String("path", path))
+	logger.Logger.Debug("adding encoder")
 	router.HandleFunc("POST /"+path, getEncoderHandler(encoder))
 }
 
@@ -237,7 +235,7 @@ func getEncoderHandler(encoder encoder.Encoder) func(http.ResponseWriter, *http.
 		logger.Logger.Debug("decoding request")
 		err := json.NewDecoder(r.Body).Decode(&rawReq)
 		if err != nil {
-			logger.Logger.Error("error while decoding request", zap.Error(err))
+			logger.Logger.Error("error while decoding request", zap.String("category", "request_decode_failed"))
 
 			setBody(w, http.StatusBadRequest, map[string]any{
 				"error": err.Error(),
@@ -247,7 +245,7 @@ func getEncoderHandler(encoder encoder.Encoder) func(http.ResponseWriter, *http.
 		}
 
 		if err := validator.New().Struct(rawReq); err != nil {
-			logger.Logger.Error("request validation failed", zap.Error(err))
+			logger.Logger.Error("request validation failed", zap.String("category", "request_validation_failed"))
 			setBody(w, http.StatusBadRequest, map[string]any{
 				"error": "request validation failed",
 				"docs":  "https://docs.truvami.com",
@@ -267,7 +265,7 @@ func getEncoderHandler(encoder encoder.Encoder) func(http.ResponseWriter, *http.
 			case 128:
 				var payload smartlabelEncoder.Port128Payload
 				if err := json.Unmarshal(rawReq.Payload, &payload); err != nil {
-					logger.Logger.Error("error unmarshaling payload", zap.Error(err))
+					logger.Logger.Error("error unmarshaling payload", zap.String("category", "payload_unmarshal_failed"))
 					setBody(w, http.StatusBadRequest, map[string]any{
 						"error": fmt.Sprintf("Error unmarshaling payload: %v", err),
 						"docs":  "https://docs.truvami.com",
@@ -276,7 +274,7 @@ func getEncoderHandler(encoder encoder.Encoder) func(http.ResponseWriter, *http.
 				}
 				structPayload = payload
 			default:
-				logger.Logger.Error("unsupported port", zap.Uint8("port", rawReq.Port))
+				logger.Logger.Error("unsupported port", zap.String("category", "unsupported_port"))
 				setBody(w, http.StatusBadRequest, map[string]any{
 					"error": fmt.Sprintf("Unsupported port: %d", rawReq.Port),
 					"docs":  "https://docs.truvami.com",
@@ -288,7 +286,7 @@ func getEncoderHandler(encoder encoder.Encoder) func(http.ResponseWriter, *http.
 			case 128:
 				var payload tagslEncoder.Port128Payload
 				if err := json.Unmarshal(rawReq.Payload, &payload); err != nil {
-					logger.Logger.Error("error unmarshaling payload", zap.Error(err))
+					logger.Logger.Error("error unmarshaling payload", zap.String("category", "payload_unmarshal_failed"))
 					setBody(w, http.StatusBadRequest, map[string]any{
 						"error": fmt.Sprintf("Error unmarshaling payload: %v", err),
 						"docs":  "https://docs.truvami.com/docs/payloads/tag%20S/v3.2.0/",
@@ -299,7 +297,7 @@ func getEncoderHandler(encoder encoder.Encoder) func(http.ResponseWriter, *http.
 			case 129:
 				var payload tagslEncoder.Port129Payload
 				if err := json.Unmarshal(rawReq.Payload, &payload); err != nil {
-					logger.Logger.Error("error unmarshaling payload", zap.Error(err))
+					logger.Logger.Error("error unmarshaling payload", zap.String("category", "payload_unmarshal_failed"))
 					setBody(w, http.StatusBadRequest, map[string]any{
 						"error": fmt.Sprintf("Error unmarshaling payload: %v", err),
 						"docs":  "https://docs.truvami.com/docs/payloads/tag%20S/v3.2.0/",
@@ -310,7 +308,7 @@ func getEncoderHandler(encoder encoder.Encoder) func(http.ResponseWriter, *http.
 			case 131:
 				var payload tagslEncoder.Port131Payload
 				if err := json.Unmarshal(rawReq.Payload, &payload); err != nil {
-					logger.Logger.Error("error unmarshaling payload", zap.Error(err))
+					logger.Logger.Error("error unmarshaling payload", zap.String("category", "payload_unmarshal_failed"))
 					setBody(w, http.StatusBadRequest, map[string]any{
 						"error": fmt.Sprintf("Error unmarshaling payload: %v", err),
 						"docs":  "https://docs.truvami.com/docs/payloads/tag%20S/v3.2.0/",
@@ -321,7 +319,7 @@ func getEncoderHandler(encoder encoder.Encoder) func(http.ResponseWriter, *http.
 			case 134:
 				var payload tagslEncoder.Port134Payload
 				if err := json.Unmarshal(rawReq.Payload, &payload); err != nil {
-					logger.Logger.Error("error unmarshaling payload", zap.Error(err))
+					logger.Logger.Error("error unmarshaling payload", zap.String("category", "payload_unmarshal_failed"))
 					setBody(w, http.StatusBadRequest, map[string]any{
 						"error": fmt.Sprintf("Error unmarshaling payload: %v", err),
 						"docs":  "https://docs.truvami.com/docs/payloads/tag%20S/v3.2.0/",
@@ -330,7 +328,7 @@ func getEncoderHandler(encoder encoder.Encoder) func(http.ResponseWriter, *http.
 				}
 				structPayload = payload
 			default:
-				logger.Logger.Error("unsupported port", zap.Uint8("port", rawReq.Port))
+				logger.Logger.Error("unsupported port", zap.String("category", "unsupported_port"))
 				setBody(w, http.StatusBadRequest, map[string]any{
 					"error": fmt.Sprintf("Unsupported port: %d", rawReq.Port),
 					"docs":  "https://docs.truvami.com/docs/payloads/tag%20S/v3.2.0/",
@@ -339,7 +337,7 @@ func getEncoderHandler(encoder encoder.Encoder) func(http.ResponseWriter, *http.
 			}
 		default:
 			// For other device types, you would add similar switch statements
-			logger.Logger.Error("unsupported device type", zap.String("path", r.URL.Path))
+			logger.Logger.Error("unsupported device type", zap.String("category", "unsupported_device"))
 			setBody(w, http.StatusBadRequest, map[string]any{
 				"error": "Unsupported device type",
 				"docs":  "https://docs.truvami.com",
@@ -347,20 +345,18 @@ func getEncoderHandler(encoder encoder.Encoder) func(http.ResponseWriter, *http.
 			return
 		}
 
-		logger.Logger.Debug("encoding payload", zap.Any("payload", structPayload), zap.Uint8("port", rawReq.Port))
-
 		var warnings []string = nil
 		encoded, err := encoder.Encode(structPayload, rawReq.Port)
 		if err != nil {
 			if errors.Is(err, helpers.ErrValidationFailed) {
 				warnings = []string{}
 				for _, err := range helpers.UnwrapError(err) {
-					logger.Logger.Warn("validation error", zap.Error(err))
+					logger.Logger.Warn("validation error", zap.String("category", "validation_failed"))
 					warnings = append(warnings, err.Error())
 				}
 				logger.Logger.Warn("validation for some fields failed - are you using the correct port?")
 			} else {
-				logger.Logger.Error("error while encoding payload", zap.Error(err))
+				logger.Logger.Error("error while encoding payload", zap.String("category", "payload_encode_failed"))
 
 				setBody(w, http.StatusBadRequest, map[string]any{
 					"error": err.Error(),
@@ -394,20 +390,18 @@ func setHeaders(w http.ResponseWriter, status int) {
 }
 
 func setBody(w http.ResponseWriter, status int, body map[string]any) {
-	logger.Logger.Debug("encoding response")
-
 	// add traceId
 	traceId := uuid.New().String()
 	body["traceId"] = traceId
 
 	data, err := json.Marshal(body)
 	if err != nil {
-		logger.Logger.Error("error while encoding response", zap.Error(err))
+		logger.Logger.Error("error while encoding response", zap.String("category", "response_encode_failed"))
 		setHeaders(w, http.StatusInternalServerError)
-		_, err = w.Write([]byte(err.Error()))
+		_, err = w.Write([]byte("internal server error"))
 
 		if err != nil {
-			logger.Logger.Error("error while sending response", zap.Error(err))
+			logger.Logger.Error("error while sending response", zap.String("category", "response_send_failed"))
 		}
 		return
 	}
@@ -415,45 +409,40 @@ func setBody(w http.ResponseWriter, status int, body map[string]any) {
 	setHeaders(w, status)
 	_, err = w.Write(data)
 	if err != nil {
-		logger.Logger.Error("error while sending response", zap.Error(err))
+		logger.Logger.Error("error while sending response", zap.String("category", "response_send_failed"))
 		return
 	}
-
-	logger.Logger.Debug("response sent", zap.Any("response", string(data)))
 }
 
 func healthHandler(w http.ResponseWriter, r *http.Request) {
 	setHeaders(w, http.StatusOK)
 	_, err := w.Write([]byte("OK"))
 	if err != nil {
-		logger.Logger.Error("error while sending response", zap.Error(err))
+		logger.Logger.Error("error while sending response", zap.String("category", "response_send_failed"))
 	}
+}
+
+type safeHTTPErrorLog struct{}
+
+func (safeHTTPErrorLog) Write(p []byte) (int, error) {
+	if logger.Logger != nil {
+		logger.Logger.Error("http server error", zap.String("category", "internal"))
+	}
+	return len(p), nil
 }
 
 func loggingMiddleware(logger *zap.Logger, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// generate a unique request ID
-		requestID := uuid.New().String()
-		w.Header().Set("X-Request-ID", requestID)
-
-		// start timer
 		start := time.Now()
 
-		// use a ResponseWriter wrapper to capture the status code
 		rw := &responseWriter{ResponseWriter: w, statusCode: http.StatusOK}
 
-		// process the request
 		next.ServeHTTP(rw, r)
 
-		// log the details
 		logger.Info("HTTP request",
-			zap.String("requestId", requestID),
 			zap.String("method", r.Method),
-			zap.String("url", r.URL.String()),
 			zap.Int("status", rw.statusCode),
-			zap.String("remoteAddress", r.RemoteAddr),
-			zap.String("userAgent", r.UserAgent()),
-			zap.Duration("latency", time.Since(start)),
+			zap.Duration("duration", time.Since(start)),
 		)
 	})
 }
