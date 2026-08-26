@@ -22,6 +22,7 @@ import (
 	smartlabelDecoder "github.com/truvami/decoder/pkg/decoder/smartlabel/v1"
 	tagslDecoder "github.com/truvami/decoder/pkg/decoder/tagsl/v1"
 	tagxlDecoder "github.com/truvami/decoder/pkg/decoder/tagxl/v1"
+	ts2Decoder "github.com/truvami/decoder/pkg/decoder/ts2/v1"
 	"github.com/truvami/decoder/pkg/encoder"
 	nomadxsEncoder "github.com/truvami/decoder/pkg/encoder/nomadxs/v1"
 	smartlabelEncoder "github.com/truvami/decoder/pkg/encoder/smartlabel/v1"
@@ -106,6 +107,7 @@ var httpCmd = &cobra.Command{
 			{"nomadxs/v1", nomadxsDecoder.NewNomadXSv1Decoder(nomadxsDecoder.WithSkipValidation(SkipValidation))},
 			{"nomadxl/v1", nomadxlDecoder.NewNomadXLv1Decoder(nomadxlDecoder.WithSkipValidation(SkipValidation))},
 			{"smartlabel/v1", smartlabelDecoder.NewSmartLabelv1Decoder(ctx, solver, logger.Logger, smartlabelDecoder.WithSkipValidation(SkipValidation))},
+			{"ts2/v1", ts2Decoder.NewTS2v1Decoder(ctx, solver, logger.Logger, ts2Decoder.WithSkipValidation(SkipValidation))},
 		}
 
 		// add the decoders

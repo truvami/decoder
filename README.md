@@ -68,6 +68,7 @@ decoder [command] [flags]
 - `nomadxs` - 🧩 Decode Nomad XS payloads.
 - `tagsl` - 🏷️ Decode Tag S / L payloads.
 - `tagxl` - 🏷️ Decode Tag XL payloads.
+- `ts2` - 🏷️ Decode ts2 payloads.
 - `http` - 🌐 Start local HTTP server to decode payloads.
 
 ### 🚩 Global Flags
