@@ -1274,6 +1274,10 @@ func TestDecode(t *testing.T) {
 
 			t.Logf("got %v", got)
 
+			if got == nil && len(test.expectedErr) == 0 {
+				t.Fatalf("expected decoded uplink, got nil")
+			}
+
 			if got != nil && !reflect.DeepEqual(got.Data, expectedAny) && len(test.expectedErr) == 0 {
 				// marshal the expected and got values to compare
 				expectedJSON, err := json.Marshal(expectedAny)
@@ -1333,7 +1337,25 @@ func TestValidationErrors(t *testing.T) {
 		payload  string
 		port     uint8
 		expected error
-	}{}
+	}{
+		{
+			payload:  "0002d30b070082491f11256718d9fe0ede190505",
+			port:     10,
+			expected: nil,
+		},
+		{
+			// Satellites is constrained to gte=3; 0x01 is below the bound.
+			payload:  "0002d30b070082491f11256718d9fe0ede190501",
+			port:     10,
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Satellites", 1),
+		},
+		{
+			// Rssi1 is constrained to lte=-20; 0x00 is above the bound.
+			payload:  "0000b5eded55a313",
+			port:     160,
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Rssi1", 0),
+		},
+	}
 
 	if logger.Logger == nil {
 		logger.NewLogger()

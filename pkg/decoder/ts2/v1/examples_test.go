@@ -219,13 +219,13 @@ func TestTS2_GNSS_Port210_Timestamped_RotationTriggered(t *testing.T) {
 		"68bad32589b379e7ba0fb5006b9aaa8c8e25febf16f4e5c31d0cc8ca12a1cffdddf16c2cf82877f1edee4ecbc5ef54",
 	}
 	for _, payload := range payloads {
-		cap := &captureSolverV2{
+		capture := &captureSolverV2{
 			resp: decoder.NewDecodedUplink(
 				[]decoder.Feature{decoder.FeatureGNSS, decoder.FeatureTimestamp},
 				&fakeGNSSData{lat: 47.0, lon: 8.0, alt: 10.0, ts: &ts},
 			),
 		}
-		dec := NewTS2v1Decoder(context.TODO(), solver.MockSolverV1{}, log, WithSolverV2(cap))
+		dec := NewTS2v1Decoder(context.TODO(), solver.MockSolverV1{}, log, WithSolverV2(capture))
 
 		ctx := context.WithValue(context.Background(), decoder.DEVEUI_CONTEXT_KEY, devEui)
 		ctx = context.WithValue(ctx, decoder.FCNT_CONTEXT_KEY, fcnt)
@@ -235,14 +235,14 @@ func TestTS2_GNSS_Port210_Timestamped_RotationTriggered(t *testing.T) {
 			t.Fatalf("unexpected error: %v", err)
 		}
 		expectedForwarded := payload[8:] // strip 4B timestamp (8 hex chars)
-		if cap.lastPayload != expectedForwarded {
-			t.Fatalf("expected forwarded payload %q, got %q", expectedForwarded, cap.lastPayload)
+		if capture.lastPayload != expectedForwarded {
+			t.Fatalf("expected forwarded payload %q, got %q", expectedForwarded, capture.lastPayload)
 		}
-		if cap.lastOptions.Port != 192 {
-			t.Fatalf("expected port 192, got %d", cap.lastOptions.Port)
+		if capture.lastOptions.Port != 192 {
+			t.Fatalf("expected port 192, got %d", capture.lastOptions.Port)
 		}
-		if cap.lastOptions.Moving == nil || *cap.lastOptions.Moving != false {
-			t.Fatalf("expected Moving=false for port 210, got %+v", cap.lastOptions.Moving)
+		if capture.lastOptions.Moving == nil || *capture.lastOptions.Moving != false {
+			t.Fatalf("expected Moving=false for port 210, got %+v", capture.lastOptions.Moving)
 		}
 		if !out.Is(decoder.FeatureGNSS) || !out.Is(decoder.FeatureTimestamp) {
 			t.Fatalf("expected GNSS and Timestamp features in result")
@@ -268,13 +268,13 @@ func TestTS2_GNSS_Port211_Timestamped_RotationTriggered(t *testing.T) {
 		"68bad3c58aab4581b9e73a0eb580da120d7f85a75e770c6acad3dc2acdacbdcd576ab8147f5902557379b18d0f676a35fb9a6ae5ee03",
 	}
 	for _, payload := range payloads {
-		cap := &captureSolverV2{
+		capture := &captureSolverV2{
 			resp: decoder.NewDecodedUplink(
 				[]decoder.Feature{decoder.FeatureGNSS, decoder.FeatureTimestamp},
 				&fakeGNSSData{lat: 47.0, lon: 8.0, alt: 10.0, ts: &ts},
 			),
 		}
-		dec := NewTS2v1Decoder(context.TODO(), solver.MockSolverV1{}, log, WithSolverV2(cap))
+		dec := NewTS2v1Decoder(context.TODO(), solver.MockSolverV1{}, log, WithSolverV2(capture))
 
 		ctx := context.WithValue(context.Background(), decoder.DEVEUI_CONTEXT_KEY, devEui)
 		ctx = context.WithValue(ctx, decoder.FCNT_CONTEXT_KEY, fcnt)
@@ -284,14 +284,14 @@ func TestTS2_GNSS_Port211_Timestamped_RotationTriggered(t *testing.T) {
 			t.Fatalf("unexpected error: %v", err)
 		}
 		expectedForwarded := payload[8:] // strip 4B timestamp (8 hex chars)
-		if cap.lastPayload != expectedForwarded {
-			t.Fatalf("expected forwarded payload %q, got %q", expectedForwarded, cap.lastPayload)
+		if capture.lastPayload != expectedForwarded {
+			t.Fatalf("expected forwarded payload %q, got %q", expectedForwarded, capture.lastPayload)
 		}
-		if cap.lastOptions.Port != 192 {
-			t.Fatalf("expected port 192, got %d", cap.lastOptions.Port)
+		if capture.lastOptions.Port != 192 {
+			t.Fatalf("expected port 192, got %d", capture.lastOptions.Port)
 		}
-		if cap.lastOptions.Moving == nil || *cap.lastOptions.Moving != true {
-			t.Fatalf("expected Moving=true for port 211, got %+v", cap.lastOptions.Moving)
+		if capture.lastOptions.Moving == nil || *capture.lastOptions.Moving != true {
+			t.Fatalf("expected Moving=true for port 211, got %+v", capture.lastOptions.Moving)
 		}
 		if !out.Is(decoder.FeatureGNSS) || !out.Is(decoder.FeatureTimestamp) {
 			t.Fatalf("expected GNSS and Timestamp features in result")
@@ -389,13 +389,13 @@ func TestTS2_GNSS_Port194_Timestamped(t *testing.T) {
 		"68bad32589b379e7ba0fb5006b9aaa8c8e25febf16f4e5c31d0cc8ca12a1cffdddf16c2cf82877f1edee4ecbc5ef54",
 	}
 	for _, payload := range payloads {
-		cap := &captureSolverV2{
+		capture := &captureSolverV2{
 			resp: decoder.NewDecodedUplink(
 				[]decoder.Feature{decoder.FeatureGNSS, decoder.FeatureTimestamp},
 				&fakeGNSSData{lat: 47.0, lon: 8.0, alt: 10.0, ts: &ts},
 			),
 		}
-		dec := NewTS2v1Decoder(context.TODO(), solver.MockSolverV1{}, log, WithSolverV2(cap))
+		dec := NewTS2v1Decoder(context.TODO(), solver.MockSolverV1{}, log, WithSolverV2(capture))
 
 		ctx := context.WithValue(context.Background(), decoder.DEVEUI_CONTEXT_KEY, devEui)
 		ctx = context.WithValue(ctx, decoder.FCNT_CONTEXT_KEY, fcnt)
@@ -405,17 +405,17 @@ func TestTS2_GNSS_Port194_Timestamped(t *testing.T) {
 			t.Fatalf("unexpected error: %v", err)
 		}
 		expectedForwarded := payload[8:] // strip 4B timestamp (8 hex chars)
-		if cap.lastPayload != expectedForwarded {
-			t.Fatalf("expected forwarded payload %q, got %q", expectedForwarded, cap.lastPayload)
+		if capture.lastPayload != expectedForwarded {
+			t.Fatalf("expected forwarded payload %q, got %q", expectedForwarded, capture.lastPayload)
 		}
-		if cap.lastOptions.Port != 192 {
-			t.Fatalf("expected port 192, got %d", cap.lastOptions.Port)
+		if capture.lastOptions.Port != 192 {
+			t.Fatalf("expected port 192, got %d", capture.lastOptions.Port)
 		}
-		if cap.lastOptions.Moving == nil || *cap.lastOptions.Moving != false {
-			t.Fatalf("expected Moving=false for port 194, got %+v", cap.lastOptions.Moving)
+		if capture.lastOptions.Moving == nil || *capture.lastOptions.Moving != false {
+			t.Fatalf("expected Moving=false for port 194, got %+v", capture.lastOptions.Moving)
 		}
-		if cap.lastOptions.Timestamp == nil || !cap.lastOptions.Timestamp.Equal(ts) {
-			t.Fatalf("expected Timestamp=%v for port 194, got %+v", ts, cap.lastOptions.Timestamp)
+		if capture.lastOptions.Timestamp == nil || !capture.lastOptions.Timestamp.Equal(ts) {
+			t.Fatalf("expected Timestamp=%v for port 194, got %+v", ts, capture.lastOptions.Timestamp)
 		}
 		if !out.Is(decoder.FeatureGNSS) || !out.Is(decoder.FeatureTimestamp) {
 			t.Fatalf("expected GNSS and Timestamp features in result")
@@ -441,13 +441,13 @@ func TestTS2_GNSS_Port195_Timestamped(t *testing.T) {
 		"68bad3c58aab4581b9e73a0eb580da120d7f85a75e770c6acad3dc2acdacbdcd576ab8147f5902557379b18d0f676a35fb9a6ae5ee03",
 	}
 	for _, payload := range payloads {
-		cap := &captureSolverV2{
+		capture := &captureSolverV2{
 			resp: decoder.NewDecodedUplink(
 				[]decoder.Feature{decoder.FeatureGNSS, decoder.FeatureTimestamp},
 				&fakeGNSSData{lat: 47.0, lon: 8.0, alt: 10.0, ts: &ts},
 			),
 		}
-		dec := NewTS2v1Decoder(context.TODO(), solver.MockSolverV1{}, log, WithSolverV2(cap))
+		dec := NewTS2v1Decoder(context.TODO(), solver.MockSolverV1{}, log, WithSolverV2(capture))
 
 		ctx := context.WithValue(context.Background(), decoder.DEVEUI_CONTEXT_KEY, devEui)
 		ctx = context.WithValue(ctx, decoder.FCNT_CONTEXT_KEY, fcnt)
@@ -457,17 +457,17 @@ func TestTS2_GNSS_Port195_Timestamped(t *testing.T) {
 			t.Fatalf("unexpected error: %v", err)
 		}
 		expectedForwarded := payload[8:] // strip 4B timestamp (8 hex chars)
-		if cap.lastPayload != expectedForwarded {
-			t.Fatalf("expected forwarded payload %q, got %q", expectedForwarded, cap.lastPayload)
+		if capture.lastPayload != expectedForwarded {
+			t.Fatalf("expected forwarded payload %q, got %q", expectedForwarded, capture.lastPayload)
 		}
-		if cap.lastOptions.Port != 192 {
-			t.Fatalf("expected port 192, got %d", cap.lastOptions.Port)
+		if capture.lastOptions.Port != 192 {
+			t.Fatalf("expected port 192, got %d", capture.lastOptions.Port)
 		}
-		if cap.lastOptions.Moving == nil || *cap.lastOptions.Moving != true {
-			t.Fatalf("expected Moving=true for port 195, got %+v", cap.lastOptions.Moving)
+		if capture.lastOptions.Moving == nil || *capture.lastOptions.Moving != true {
+			t.Fatalf("expected Moving=true for port 195, got %+v", capture.lastOptions.Moving)
 		}
-		if cap.lastOptions.Timestamp == nil || !cap.lastOptions.Timestamp.Equal(ts) {
-			t.Fatalf("expected Timestamp=%v for port 195, got %+v", ts, cap.lastOptions.Timestamp)
+		if capture.lastOptions.Timestamp == nil || !capture.lastOptions.Timestamp.Equal(ts) {
+			t.Fatalf("expected Timestamp=%v for port 195, got %+v", ts, capture.lastOptions.Timestamp)
 		}
 		if !out.Is(decoder.FeatureGNSS) || !out.Is(decoder.FeatureTimestamp) {
 			t.Fatalf("expected GNSS and Timestamp features in result")
