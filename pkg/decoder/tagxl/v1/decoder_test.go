@@ -90,6 +90,42 @@ func TestDecode(t *testing.T) {
 			expectedErr: "port 0 not supported",
 		},
 		{
+			port:    10,
+			payload: "0002d2eeb40081d77ca3706a196afd0e74000009",
+			expected: Port10Payload{
+				Status:     0,
+				Latitude:   47.3781,
+				Longitude:  8.509308,
+				Altitude:   418.4,
+				Timestamp:  time.Date(2026, 5, 29, 10, 31, 25, 0, time.UTC),
+				Battery:    3.7,
+				TTF:        helpers.DurationPtr(0),
+				PDOP:       helpers.Float64Ptr(0),
+				Satellites: helpers.Uint8Ptr(9),
+			},
+		},
+		{
+			port:    10,
+			payload: "0002d30b070082491f11256718d9fe0ede190505",
+			expected: Port10Payload{
+				Status:     0,
+				Latitude:   47.385351,
+				Longitude:  8.538399,
+				Altitude:   43.89,
+				Timestamp:  time.Date(2024, 10, 23, 11, 11, 58, 0, time.UTC),
+				Battery:    3.806,
+				TTF:        helpers.DurationPtr(25 * time.Second),
+				PDOP:       helpers.Float64Ptr(2.5),
+				Satellites: helpers.Uint8Ptr(5),
+			},
+		},
+		{
+			port:        10,
+			payload:     "00deadbeef",
+			expected:    nil,
+			expectedErr: "invalid payload length",
+		},
+		{
 			port:        150,
 			payload:     "xx",
 			devEui:      "",
@@ -1277,7 +1313,25 @@ func TestValidationErrors(t *testing.T) {
 		payload  string
 		port     uint8
 		expected error
-	}{}
+	}{
+		{
+			payload:  "0002d30b070082491f11256718d9fe0ede190505",
+			port:     10,
+			expected: nil,
+		},
+		{
+			// Satellites is constrained to gte=3; 0x01 is below the bound.
+			payload:  "0002d30b070082491f11256718d9fe0ede190501",
+			port:     10,
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Satellites", 1),
+		},
+		{
+			// Rssi1 is constrained to lte=-20; 0x00 is above the bound.
+			payload:  "0000b5eded55a313",
+			port:     160,
+			expected: fmt.Errorf("%s for %s %v", helpers.ErrValidationFailed, "Rssi1", 0),
+		},
+	}
 
 	if logger.Logger == nil {
 		logger.NewLogger()
@@ -1353,6 +1407,14 @@ func TestFeatures(t *testing.T) {
 			payload:         "4c07014c04681a5127",
 			port:            150,
 			allowNoFeatures: true,
+		},
+		{
+			payload: "0002d2eeb40081d77ca3706a196afd0e74000009",
+			port:    10,
+		},
+		{
+			payload: "00c8b5eded55a313c0a0b8b5e86e31b894a765f3ad40b0001122334455a866778899aabba0ccddeeff0011",
+			port:    160,
 		},
 		{
 			port:    151,
@@ -1659,6 +1721,11 @@ func TestMarshal(t *testing.T) {
 		port     uint8
 		expected []string
 	}{
+		{
+			payload:  "0002d30b070082491f11256718d9fe0ede190505",
+			port:     10,
+			expected: []string{"\"status\": 0", "\"latitude\": 47.385351", "\"altitude\": \"43.9m\"", "\"battery\": \"3.806v\"", "\"ttf\": \"25s\"", "\"pdop\": \"2.5m\"", "\"satellites\": 5"},
+		},
 		{
 			payload:  "010b0266acbcf0000000000756",
 			port:     152,
