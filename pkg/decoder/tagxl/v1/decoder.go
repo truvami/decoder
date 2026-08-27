@@ -578,9 +578,8 @@ GNSS solver routing and semantics:
   - Ports 192/193/199 fall back to the legacy v1 solver for backward compatibility.
 */
 func (t TagXLv1Decoder) Decode(ctx context.Context, data string, port uint8) (*decoder.DecodedUplink, error) {
-	switch port {
-	// GNSS NAV grouping ports now use the v2 solver when available.
-	case 192, 193, 194, 195, 199, 210, 211:
+	// GNSS NAV grouping ports are solver-derived; everything else decodes locally.
+	if IsGnssSolverPort(port) {
 		if t.v2Solver != nil {
 			devEui, _ := ctx.Value(decoder.DEVEUI_CONTEXT_KEY).(string)
 			fcnt, _ := ctx.Value(decoder.FCNT_CONTEXT_KEY).(int)
@@ -665,32 +664,32 @@ func (t TagXLv1Decoder) Decode(ctx context.Context, data string, port uint8) (*d
 		}
 		return uplink, nil
 
-	default:
-		bytes, err := common.HexStringToBytes(data)
-		if err != nil {
-			return nil, err
-		}
-
-		config, err := t.getConfig(port, bytes)
-		if err != nil {
-			return nil, err
-		}
-
-		if !t.skipValidation {
-			err := common.ValidateLength(&data, &config)
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		decodedData, err := common.Decode(&data, &config)
-		if resetReason, ok := decodedData.(decoder.UplinkFeatureResetReason); ok && resetReason.GetResetReason() == decoder.ResetReasonUnknown {
-			config.Features = slices.DeleteFunc(config.Features, func(feature decoder.Feature) bool {
-				return feature == decoder.FeatureResetReason
-			})
-		}
-		return decoder.NewDecodedUplink(config.Features, decodedData), err
 	}
+
+	bytes, err := common.HexStringToBytes(data)
+	if err != nil {
+		return nil, err
+	}
+
+	config, err := t.getConfig(port, bytes)
+	if err != nil {
+		return nil, err
+	}
+
+	if !t.skipValidation {
+		err := common.ValidateLength(&data, &config)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	decodedData, err := common.Decode(&data, &config)
+	if resetReason, ok := decodedData.(decoder.UplinkFeatureResetReason); ok && resetReason.GetResetReason() == decoder.ResetReasonUnknown {
+		config.Features = slices.DeleteFunc(config.Features, func(feature decoder.Feature) bool {
+			return feature == decoder.FeatureResetReason
+		})
+	}
+	return decoder.NewDecodedUplink(config.Features, decodedData), err
 }
 
 func timestamp(v any) any {
