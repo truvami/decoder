@@ -75,6 +75,22 @@ func WithFallbackSolverV2(fallback solver.SolverV2) Option {
 // https://docs.truvami.com/docs/payloads/tag-xl
 func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadConfig, error) {
 	switch port {
+	case 10:
+		return common.PayloadConfig{
+			Fields: []common.FieldConfig{
+				{Name: "Status", Start: 0, Length: 1},
+				{Name: "Latitude", Start: 1, Length: 4, Transform: latitude},
+				{Name: "Longitude", Start: 5, Length: 4, Transform: longitude},
+				{Name: "Altitude", Start: 9, Length: 2, Transform: port10Altitude},
+				{Name: "Timestamp", Start: 11, Length: 4, Transform: timestamp},
+				{Name: "Battery", Start: 15, Length: 2, Transform: gnssBattery},
+				{Name: "TTF", Start: 17, Length: 1, Transform: ttf},
+				{Name: "PDOP", Start: 18, Length: 1, Transform: pdop},
+				{Name: "Satellites", Start: 19, Length: 1},
+			},
+			TargetType: reflect.TypeOf(Port10Payload{}),
+			Features:   []decoder.Feature{decoder.FeatureGNSS, decoder.FeatureTimestamp, decoder.FeatureBattery},
+		}, nil
 	case 150:
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
@@ -562,9 +578,8 @@ GNSS solver routing and semantics:
   - Ports 192/193/199 fall back to the legacy v1 solver for backward compatibility.
 */
 func (t TagXLv1Decoder) Decode(ctx context.Context, data string, port uint8) (*decoder.DecodedUplink, error) {
-	switch port {
-	// GNSS NAV grouping ports now use the v2 solver when available.
-	case 192, 193, 194, 195, 199, 210, 211:
+	// GNSS NAV grouping ports are solver-derived; everything else decodes locally.
+	if IsGnssSolverPort(port) {
 		if t.v2Solver != nil {
 			devEui, _ := ctx.Value(decoder.DEVEUI_CONTEXT_KEY).(string)
 			fcnt, _ := ctx.Value(decoder.FCNT_CONTEXT_KEY).(int)
@@ -649,32 +664,32 @@ func (t TagXLv1Decoder) Decode(ctx context.Context, data string, port uint8) (*d
 		}
 		return uplink, nil
 
-	default:
-		bytes, err := common.HexStringToBytes(data)
-		if err != nil {
-			return nil, err
-		}
-
-		config, err := t.getConfig(port, bytes)
-		if err != nil {
-			return nil, err
-		}
-
-		if !t.skipValidation {
-			err := common.ValidateLength(&data, &config)
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		decodedData, err := common.Decode(&data, &config)
-		if resetReason, ok := decodedData.(decoder.UplinkFeatureResetReason); ok && resetReason.GetResetReason() == decoder.ResetReasonUnknown {
-			config.Features = slices.DeleteFunc(config.Features, func(feature decoder.Feature) bool {
-				return feature == decoder.FeatureResetReason
-			})
-		}
-		return decoder.NewDecodedUplink(config.Features, decodedData), err
 	}
+
+	bytes, err := common.HexStringToBytes(data)
+	if err != nil {
+		return nil, err
+	}
+
+	config, err := t.getConfig(port, bytes)
+	if err != nil {
+		return nil, err
+	}
+
+	if !t.skipValidation {
+		err := common.ValidateLength(&data, &config)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	decodedData, err := common.Decode(&data, &config)
+	if resetReason, ok := decodedData.(decoder.UplinkFeatureResetReason); ok && resetReason.GetResetReason() == decoder.ResetReasonUnknown {
+		config.Features = slices.DeleteFunc(config.Features, func(feature decoder.Feature) bool {
+			return feature == decoder.FeatureResetReason
+		})
+	}
+	return decoder.NewDecodedUplink(config.Features, decodedData), err
 }
 
 func timestamp(v any) any {
@@ -687,4 +702,28 @@ func alwaysTrue(v any) any {
 
 func alwaysFalse(v any) any {
 	return false
+}
+
+func latitude(v any) any {
+	return float64(common.BytesToInt32(v.([]byte))) / 1000000
+}
+
+func longitude(v any) any {
+	return float64(common.BytesToInt32(v.([]byte))) / 1000000
+}
+
+func port10Altitude(v any) any {
+	return float64(common.BytesToUint16(v.([]byte))) / 100
+}
+
+func gnssBattery(v any) any {
+	return float64(common.BytesToUint16(v.([]byte))) / 1000
+}
+
+func ttf(v any) any {
+	return time.Duration(int64(common.BytesToUint8(v.([]byte)))) * time.Second
+}
+
+func pdop(v any) any {
+	return float64(common.BytesToUint8(v.([]byte))) / 2
 }

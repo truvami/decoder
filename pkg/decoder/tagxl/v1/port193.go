@@ -17,7 +17,7 @@ import (
 
 type Port193Payload struct {
 	EndOfGroup bool    `json:"endOfGroup"`
-	GroupToken uint8   `json:"groupToken" validate:"gte=2, lte=31"`
+	GroupToken uint8   `json:"groupToken" validate:"gte=2,lte=31"`
 	NavMessage []byte  `json:"navMessage"`
 	Moving     bool    `json:"moving"` // always true for port 193
 	Latitude   float64 `json:"latitude" validate:"gte=-90,lte=90"`
