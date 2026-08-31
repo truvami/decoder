@@ -94,7 +94,7 @@ func convertFieldValue(rawValue any, fieldType reflect.Type, transform func(v an
 	var value any = nil
 	var err error = nil
 
-	if fieldType.Kind() == reflect.Ptr {
+	if fieldType.Kind() == reflect.Pointer {
 		ptr = true
 		fieldType = fieldType.Elem()
 	}
@@ -260,7 +260,7 @@ func insertFieldBytes(fieldValue reflect.Value, length int, transform func(v any
 	var bytes []byte
 	var err error = nil
 
-	if fieldValue.Kind() == reflect.Ptr {
+	if fieldValue.Kind() == reflect.Pointer {
 		if fieldValue.IsNil() {
 			null = true
 			bytes = make([]byte, length)
@@ -487,7 +487,7 @@ func TimePointerCompare(alpha *time.Time, bravo *time.Time) bool {
 }
 
 func DerefValue(value reflect.Value) any {
-	if value.Kind() == reflect.Ptr && !value.IsNil() {
+	if value.Kind() == reflect.Pointer && !value.IsNil() {
 		return value.Elem().Interface()
 	}
 
