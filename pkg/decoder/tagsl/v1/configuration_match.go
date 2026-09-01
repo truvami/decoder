@@ -2,7 +2,6 @@ package tagsl
 
 import (
 	"fmt"
-	"reflect"
 
 	"github.com/truvami/decoder/pkg/common"
 )
@@ -16,21 +15,6 @@ const (
 	configurationReportWithBatchByteLength = 30
 	configurationReportFullByteLength      = 32
 )
-
-type configurationSentPayload struct {
-	Ble                    bool
-	Gnss                   bool
-	Wifi                   bool
-	MovingInterval         uint32 `validate:"gte=5,lte=86400"`
-	SteadyInterval         uint32 `validate:"gte=120,lte=86400"`
-	ConfigInterval         uint32 `validate:"gte=300,lte=604800"`
-	GnssTimeout            uint16 `validate:"gte=60,lte=86400"`
-	AccelerometerThreshold uint16 `validate:"gte=10,lte=8000"`
-	AccelerometerDelay     uint16 `validate:"gte=1000,lte=10000"`
-	BatteryInterval        uint32 `validate:"gte=300,lte=604800"`
-	BatchSize              uint16 `validate:"lte=50"`
-	BufferSize             uint16 `validate:"gte=128,lte=8128"`
-}
 
 // MatchConfiguration reports whether observed reflects the comparable fields in sent.
 // false with nil error means a well-formed non-match; non-nil error means malformed or out of range.
@@ -51,11 +35,11 @@ func MatchConfiguration(sentHex, observedHex string) (bool, error) {
 		return false, fmt.Errorf("%w: observed configuration payload length %d", common.ErrInvalidPayloadLength, len(observed))
 	}
 
-	sentPayload, err := decodeConfigurationSent(sentHex)
+	sentPayload, err := decodePort128Payload(sentHex)
 	if err != nil {
 		return false, err
 	}
-	observedPayload, err := decodeConfigurationObserved(observedHex)
+	observedPayload, err := decodePort4Payload(observedHex)
 	if err != nil {
 		return false, err
 	}
@@ -72,16 +56,16 @@ func validConfigurationReportLength(n int) bool {
 	}
 }
 
-func decodeConfigurationSent(payloadHex string) (configurationSentPayload, error) {
-	config := configurationSentPayloadConfig()
+func decodePort128Payload(payloadHex string) (Port128Payload, error) {
+	config := Port128PayloadConfig()
 	decoded, err := common.Decode(&payloadHex, &config)
 	if err != nil {
-		return configurationSentPayload{}, err
+		return Port128Payload{}, err
 	}
-	return decoded.(configurationSentPayload), nil
+	return decoded.(Port128Payload), nil
 }
 
-func decodeConfigurationObserved(payloadHex string) (Port4Payload, error) {
+func decodePort4Payload(payloadHex string) (Port4Payload, error) {
 	config := port4PayloadConfig()
 	decoded, err := common.Decode(&payloadHex, &config)
 	if err != nil {
@@ -90,27 +74,7 @@ func decodeConfigurationObserved(payloadHex string) (Port4Payload, error) {
 	return decoded.(Port4Payload), nil
 }
 
-func configurationSentPayloadConfig() common.PayloadConfig {
-	return common.PayloadConfig{
-		Fields: []common.FieldConfig{
-			{Name: "Ble", Start: 0, Length: 1},
-			{Name: "Gnss", Start: 1, Length: 1},
-			{Name: "Wifi", Start: 2, Length: 1},
-			{Name: "MovingInterval", Start: 3, Length: 4},
-			{Name: "SteadyInterval", Start: 7, Length: 4},
-			{Name: "ConfigInterval", Start: 11, Length: 4},
-			{Name: "GnssTimeout", Start: 15, Length: 2},
-			{Name: "AccelerometerThreshold", Start: 17, Length: 2},
-			{Name: "AccelerometerDelay", Start: 19, Length: 2},
-			{Name: "BatteryInterval", Start: 21, Length: 4},
-			{Name: "BatchSize", Start: 25, Length: 2},
-			{Name: "BufferSize", Start: 27, Length: 2},
-		},
-		TargetType: reflect.TypeOf(configurationSentPayload{}),
-	}
-}
-
-func configurationMatches(sent configurationSentPayload, observed Port4Payload) bool {
+func configurationMatches(sent Port128Payload, observed Port4Payload) bool {
 	if sent.MovingInterval != observed.LocalizationIntervalWhileMoving {
 		return false
 	}

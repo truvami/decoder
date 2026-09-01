@@ -232,23 +232,7 @@ func (t TagSLv1Encoder) getConfig(port uint8) (common.PayloadConfig, error) {
 			TargetType: reflect.TypeOf(tagsl.Port110Payload{}),
 		}, nil
 	case 128:
-		return common.PayloadConfig{
-			Fields: []common.FieldConfig{
-				{Name: "Ble", Start: 0, Length: 1},
-				{Name: "Gnss", Start: 1, Length: 1},
-				{Name: "Wifi", Start: 2, Length: 1},
-				{Name: "MovingInterval", Start: 3, Length: 4},
-				{Name: "SteadyInterval", Start: 7, Length: 4},
-				{Name: "ConfigInterval", Start: 11, Length: 4},
-				{Name: "GnssTimeout", Start: 15, Length: 2},
-				{Name: "AccelerometerThreshold", Start: 17, Length: 2},
-				{Name: "AccelerometerDelay", Start: 19, Length: 2},
-				{Name: "BatteryInterval", Start: 21, Length: 4},
-				{Name: "BatchSize", Start: 25, Length: 2, Optional: true},
-				{Name: "BufferSize", Start: 27, Length: 2, Optional: true},
-			},
-			TargetType: reflect.TypeOf(Port128Payload{}),
-		}, nil
+		return tagsl.Port128PayloadConfig(), nil
 	case 129:
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
