@@ -7,32 +7,6 @@ import (
 	"github.com/truvami/decoder/pkg/common"
 )
 
-const (
-	ConfigurationDownlinkPort uint8 = 151
-	ConfigurationReportPort   uint8 = 151
-
-	configurationEnvelopeMarker = 0x4c
-	configurationMaxDataRate    = 7
-)
-
-const (
-	configurationSetterTagDeviceFlags           = 0x20
-	configurationSetterTagMovingIntervals       = 0x21
-	configurationSetterTagAccelerationThreshold = 0x22
-	configurationSetterTagHeartbeatInterval     = 0x23
-	configurationSetterTagAdvertisementInterval = 0x24
-	configurationSetterTagRotationFlags         = 0x25
-	configurationSetterTagDataRate              = 0x28
-
-	configurationReportTagDeviceFlags           = 0x40
-	configurationReportTagMovingIntervals       = 0x41
-	configurationReportTagAccelerationThreshold = 0x42
-	configurationReportTagHeartbeatInterval     = 0x43
-	configurationReportTagAdvertisementInterval = 0x44
-	configurationReportTagRotationFlags         = 0x47
-	configurationReportTagDataRate              = 0x4e
-)
-
 var (
 	errConfigurationWrongMarker        = errors.New("tag xl configuration: wrong envelope marker")
 	errConfigurationMalformedTLV       = errors.New("tag xl configuration: malformed tlv")
@@ -41,29 +15,6 @@ var (
 	errConfigurationDuplicateTag       = errors.New("tag xl configuration: duplicate comparable tag")
 	errConfigurationInvalidDataRate    = errors.New("tag xl configuration: invalid data rate")
 )
-
-type configurationSetterSpec struct {
-	reportTag byte
-	valueLen  int
-}
-
-var configurationSetterSpecs = map[byte]configurationSetterSpec{
-	configurationSetterTagDeviceFlags:           {reportTag: configurationReportTagDeviceFlags, valueLen: 1},
-	configurationSetterTagMovingIntervals:       {reportTag: configurationReportTagMovingIntervals, valueLen: 4},
-	configurationSetterTagAccelerationThreshold: {reportTag: configurationReportTagAccelerationThreshold, valueLen: 4},
-	configurationSetterTagHeartbeatInterval:     {reportTag: configurationReportTagHeartbeatInterval, valueLen: 1},
-	configurationSetterTagAdvertisementInterval: {reportTag: configurationReportTagAdvertisementInterval, valueLen: 1},
-	configurationSetterTagRotationFlags:         {reportTag: configurationReportTagRotationFlags, valueLen: 1},
-	configurationSetterTagDataRate:              {reportTag: configurationReportTagDataRate, valueLen: 1},
-}
-
-var configurationReportSpecs = func() map[byte]configurationSetterSpec {
-	specs := make(map[byte]configurationSetterSpec, len(configurationSetterSpecs))
-	for _, spec := range configurationSetterSpecs {
-		specs[spec.reportTag] = spec
-	}
-	return specs
-}()
 
 // MatchConfiguration reports whether observed reflects every setter in sent.
 // false with nil error means a well-formed non-match; non-nil error means malformed or unsupported.

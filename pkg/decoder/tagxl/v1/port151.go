@@ -44,6 +44,58 @@ import (
 // |     |      | See: https://docs.truvami.com/docs/Devices/tag%20XL%20/Payload%20Format%20%20tag%20XL/#settings-downlink
 // +-----+------+------------------------------------------------+------------+
 
+const (
+	ConfigurationDownlinkPort uint8 = 151
+	ConfigurationReportPort   uint8 = 151
+
+	configurationEnvelopeMarker = 0x4c
+	configurationMaxDataRate    = 7
+
+	configurationSetterTagDeviceFlags           = 0x20
+	configurationSetterTagMovingIntervals       = 0x21
+	configurationSetterTagAccelerationThreshold = 0x22
+	configurationSetterTagHeartbeatInterval     = 0x23
+	configurationSetterTagAdvertisementInterval = 0x24
+	configurationSetterTagRotationFlags         = 0x25
+	configurationSetterTagDataRate              = 0x28
+
+	configurationReportTagDeviceFlags           = 0x40
+	configurationReportTagMovingIntervals       = 0x41
+	configurationReportTagAccelerationThreshold = 0x42
+	configurationReportTagHeartbeatInterval     = 0x43
+	configurationReportTagAdvertisementInterval = 0x44
+	configurationReportTagBattery               = 0x45
+	configurationReportTagFirmwareHash          = 0x46
+	configurationReportTagRotationFlags         = 0x47
+	configurationReportTagResetCount            = 0x49
+	configurationReportTagResetCause            = 0x4a
+	configurationReportTagScanCounts            = 0x4b
+	configurationReportTagDataRate              = 0x4e
+)
+
+type configurationSetterSpec struct {
+	reportTag byte
+	valueLen  int
+}
+
+var configurationSetterSpecs = map[byte]configurationSetterSpec{
+	configurationSetterTagDeviceFlags:           {reportTag: configurationReportTagDeviceFlags, valueLen: 1},
+	configurationSetterTagMovingIntervals:       {reportTag: configurationReportTagMovingIntervals, valueLen: 4},
+	configurationSetterTagAccelerationThreshold: {reportTag: configurationReportTagAccelerationThreshold, valueLen: 4},
+	configurationSetterTagHeartbeatInterval:     {reportTag: configurationReportTagHeartbeatInterval, valueLen: 1},
+	configurationSetterTagAdvertisementInterval: {reportTag: configurationReportTagAdvertisementInterval, valueLen: 1},
+	configurationSetterTagRotationFlags:         {reportTag: configurationReportTagRotationFlags, valueLen: 1},
+	configurationSetterTagDataRate:              {reportTag: configurationReportTagDataRate, valueLen: 1},
+}
+
+var configurationReportSpecs = func() map[byte]configurationSetterSpec {
+	specs := make(map[byte]configurationSetterSpec, len(configurationSetterSpecs))
+	for _, spec := range configurationSetterSpecs {
+		specs[spec.reportTag] = spec
+	}
+	return specs
+}()
+
 type Port151Payload struct {
 	AccelerometerEnabled                 *bool             `json:"accelerometerEnabled"`
 	WifiEnabled                          *bool             `json:"wifiEnabled"`
@@ -221,51 +273,51 @@ func (p Port151Payload) GetResetReason() decoder.ResetReason {
 func port151PayloadConfig() common.PayloadConfig {
 	return common.PayloadConfig{
 		Tags: []common.TagConfig{
-			{Name: "AccelerometerEnabled", Tag: 0x40, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
+			{Name: "AccelerometerEnabled", Tag: configurationReportTagDeviceFlags, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
 				return ((v.([]byte)[0] >> 3) & 0x01) != 0
 			}},
-			{Name: "WifiEnabled", Tag: 0x40, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
+			{Name: "WifiEnabled", Tag: configurationReportTagDeviceFlags, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
 				return ((v.([]byte)[0] >> 2) & 0x01) != 0
 			}},
-			{Name: "GnssEnabled", Tag: 0x40, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
+			{Name: "GnssEnabled", Tag: configurationReportTagDeviceFlags, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
 				return ((v.([]byte)[0] >> 1) & 0x01) != 0
 			}},
-			{Name: "FirmwareUpgrade", Tag: 0x40, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
+			{Name: "FirmwareUpgrade", Tag: configurationReportTagDeviceFlags, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
 				return (v.([]byte)[0] & 0x01) != 0
 			}},
-			{Name: "LocalizationIntervalWhileMoving", Tag: 0x41, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
+			{Name: "LocalizationIntervalWhileMoving", Tag: configurationReportTagMovingIntervals, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
 				return uint16((common.BytesToUint32(v.([]byte)) >> 16) & 0xffff)
 			}},
-			{Name: "LocalizationIntervalWhileSteady", Tag: 0x41, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
+			{Name: "LocalizationIntervalWhileSteady", Tag: configurationReportTagMovingIntervals, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
 				return uint16(common.BytesToUint32(v.([]byte)) & 0xffff)
 			}},
-			{Name: "AccelerometerWakeupThreshold", Tag: 0x42, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
+			{Name: "AccelerometerWakeupThreshold", Tag: configurationReportTagAccelerationThreshold, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
 				return uint16((common.BytesToUint32(v.([]byte)) >> 16) & 0xffff)
 			}},
-			{Name: "AccelerometerDelay", Tag: 0x42, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
+			{Name: "AccelerometerDelay", Tag: configurationReportTagAccelerationThreshold, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
 				return uint16(common.BytesToUint32(v.([]byte)) & 0xffff)
 			}},
-			{Name: "HeartbeatInterval", Tag: 0x43, Optional: true},
-			{Name: "AdvertisementFirmwareUpgradeInterval", Tag: 0x44, Optional: true},
-			{Name: "Battery", Tag: 0x45, Optional: true, Feature: decoder.FeatureBattery, Transform: func(v any) any {
+			{Name: "HeartbeatInterval", Tag: configurationReportTagHeartbeatInterval, Optional: true},
+			{Name: "AdvertisementFirmwareUpgradeInterval", Tag: configurationReportTagAdvertisementInterval, Optional: true},
+			{Name: "Battery", Tag: configurationReportTagBattery, Optional: true, Feature: decoder.FeatureBattery, Transform: func(v any) any {
 				return float32(common.BytesToUint16(v.([]byte))) / 1000
 			}},
-			{Name: "FirmwareHash", Tag: 0x46, Optional: true, Feature: decoder.FeatureFirmwareVersion, Hex: true},
-			{Name: "RotationInvert", Tag: 0x47, Optional: true, Transform: func(v any) any {
+			{Name: "FirmwareHash", Tag: configurationReportTagFirmwareHash, Optional: true, Feature: decoder.FeatureFirmwareVersion, Hex: true},
+			{Name: "RotationInvert", Tag: configurationReportTagRotationFlags, Optional: true, Transform: func(v any) any {
 				return (v.([]byte)[0] & 0x01) != 0
 			}},
-			{Name: "RotationConfirmed", Tag: 0x47, Optional: true, Transform: func(v any) any {
+			{Name: "RotationConfirmed", Tag: configurationReportTagRotationFlags, Optional: true, Transform: func(v any) any {
 				return ((v.([]byte)[0] >> 1) & 0x01) != 0
 			}},
-			{Name: "ResetCount", Tag: 0x49, Optional: true},
-			{Name: "ResetCause", Tag: 0x4a, Optional: true, Feature: decoder.FeatureResetReason},
-			{Name: "GnssScans", Tag: 0x4b, Optional: true, Transform: func(v any) any {
+			{Name: "ResetCount", Tag: configurationReportTagResetCount, Optional: true},
+			{Name: "ResetCause", Tag: configurationReportTagResetCause, Optional: true, Feature: decoder.FeatureResetReason},
+			{Name: "GnssScans", Tag: configurationReportTagScanCounts, Optional: true, Transform: func(v any) any {
 				return uint16((common.BytesToUint32(v.([]byte)) >> 16) & 0xffff)
 			}},
-			{Name: "WifiScans", Tag: 0x4b, Optional: true, Transform: func(v any) any {
+			{Name: "WifiScans", Tag: configurationReportTagScanCounts, Optional: true, Transform: func(v any) any {
 				return uint16(common.BytesToUint32(v.([]byte)) & 0xffff)
 			}},
-			{Name: "DataRate", Tag: 0x4e, Optional: true, Transform: func(v any) any {
+			{Name: "DataRate", Tag: configurationReportTagDataRate, Optional: true, Transform: func(v any) any {
 				if b, ok := v.([]byte); ok && len(b) > 0 {
 					return DataRateFromUint8(b[0])
 				}

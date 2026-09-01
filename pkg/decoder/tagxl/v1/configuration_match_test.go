@@ -259,6 +259,18 @@ func TestMatchConfiguration(t *testing.T) {
 	})
 }
 
+func TestPort151PayloadConfigCoversComparableReportTags(t *testing.T) {
+	tags := make(map[uint8]struct{})
+	for _, tag := range port151PayloadConfig().Tags {
+		tags[tag.Tag] = struct{}{}
+	}
+	for setter, spec := range configurationSetterSpecs {
+		if _, ok := tags[spec.reportTag]; !ok {
+			t.Errorf("report tag 0x%02x (setter 0x%02x) missing from port151PayloadConfig", spec.reportTag, setter)
+		}
+	}
+}
+
 func assertConfigurationError(t *testing.T, err error, target error) {
 	t.Helper()
 	if !errors.Is(err, target) {
