@@ -91,27 +91,7 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 			Features:   []decoder.Feature{decoder.FeatureBle},
 		}, nil
 	case 4:
-		return common.PayloadConfig{
-			Fields: []common.FieldConfig{
-				{Name: "LocalizationIntervalWhileMoving", Start: 0, Length: 4},
-				{Name: "LocalizationIntervalWhileSteady", Start: 4, Length: 4},
-				{Name: "HeartbeatInterval", Start: 8, Length: 4},
-				{Name: "GPSTimeoutWhileWaitingForFix", Start: 12, Length: 2},
-				{Name: "AccelerometerWakeupThreshold", Start: 14, Length: 2},
-				{Name: "AccelerometerDelay", Start: 16, Length: 2},
-				{Name: "DeviceState", Start: 18, Length: 1},
-				{Name: "FirmwareVersionMajor", Start: 19, Length: 1},
-				{Name: "FirmwareVersionMinor", Start: 20, Length: 1},
-				{Name: "FirmwareVersionPatch", Start: 21, Length: 1},
-				{Name: "HardwareVersionType", Start: 22, Length: 1},
-				{Name: "HardwareVersionRevision", Start: 23, Length: 1},
-				{Name: "BatteryKeepAliveMessageInterval", Start: 24, Length: 4},
-				{Name: "BatchSize", Start: 28, Length: 2, Optional: true},
-				{Name: "BufferSize", Start: 30, Length: 2, Optional: true},
-			},
-			TargetType: reflect.TypeOf(Port4Payload{}),
-			Features:   []decoder.Feature{decoder.FeatureMoving, decoder.FeatureConfig, decoder.FeatureHardwareVersion, decoder.FeatureFirmwareVersion},
-		}, nil
+		return port4PayloadConfig(), nil
 	case 5:
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
@@ -170,21 +150,7 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 			Features:   []decoder.Feature{decoder.FeatureTimestamp, decoder.FeatureDutyCycle, decoder.FeatureConfigChange, decoder.FeatureMoving, decoder.FeatureWiFi},
 		}, nil
 	case 8:
-		return common.PayloadConfig{
-			Fields: []common.FieldConfig{
-				{Name: "ScanInterval", Start: 0, Length: 2},
-				{Name: "ScanTime", Start: 2, Length: 1},
-				{Name: "MaxBeacons", Start: 3, Length: 1},
-				{Name: "MinRssiValue", Start: 4, Length: 1},
-				{Name: "AdvertisingFilter", Start: 5, Length: 10},
-				{Name: "AccelerometerTriggerHoldTimer", Start: 15, Length: 2},
-				{Name: "AccelerometerThreshold", Start: 17, Length: 2},
-				{Name: "ScanMode", Start: 19, Length: 1},
-				{Name: "BLECurrentConfigurationUplinkInterval", Start: 20, Length: 2},
-			},
-			TargetType: reflect.TypeOf(Port8Payload{}),
-			Features:   []decoder.Feature{},
-		}, nil
+		return port8PayloadConfig(), nil
 	case 10:
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{

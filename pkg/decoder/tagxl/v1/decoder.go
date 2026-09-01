@@ -104,7 +104,7 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 			return common.PayloadConfig{}, common.ErrPayloadTooShort
 		}
 		var payloadType = payload[0]
-		if payloadType != 0x4c {
+		if payloadType != configurationEnvelopeMarker {
 			return common.PayloadConfig{}, fmt.Errorf("%w: port %d tag %x", common.ErrPortNotSupported, port, payloadType)
 		}
 		return port151PayloadConfig(), nil
