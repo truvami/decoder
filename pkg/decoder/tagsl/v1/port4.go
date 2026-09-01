@@ -3,6 +3,7 @@ package tagsl
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/truvami/decoder/pkg/common"
@@ -181,4 +182,28 @@ func (p Port4Payload) GetHardwareVersion() string {
 
 func (p Port4Payload) IsMoving() bool {
 	return p.DeviceState == 0x01
+}
+
+func port4PayloadConfig() common.PayloadConfig {
+	return common.PayloadConfig{
+		Fields: []common.FieldConfig{
+			{Name: "LocalizationIntervalWhileMoving", Start: 0, Length: 4},
+			{Name: "LocalizationIntervalWhileSteady", Start: 4, Length: 4},
+			{Name: "HeartbeatInterval", Start: 8, Length: 4},
+			{Name: "GPSTimeoutWhileWaitingForFix", Start: 12, Length: 2},
+			{Name: "AccelerometerWakeupThreshold", Start: 14, Length: 2},
+			{Name: "AccelerometerDelay", Start: 16, Length: 2},
+			{Name: "DeviceState", Start: 18, Length: 1},
+			{Name: "FirmwareVersionMajor", Start: 19, Length: 1},
+			{Name: "FirmwareVersionMinor", Start: 20, Length: 1},
+			{Name: "FirmwareVersionPatch", Start: 21, Length: 1},
+			{Name: "HardwareVersionType", Start: 22, Length: 1},
+			{Name: "HardwareVersionRevision", Start: 23, Length: 1},
+			{Name: "BatteryKeepAliveMessageInterval", Start: 24, Length: 4},
+			{Name: "BatchSize", Start: 28, Length: 2, Optional: true},
+			{Name: "BufferSize", Start: 30, Length: 2, Optional: true},
+		},
+		TargetType: reflect.TypeOf(Port4Payload{}),
+		Features:   []decoder.Feature{decoder.FeatureMoving, decoder.FeatureConfig, decoder.FeatureHardwareVersion, decoder.FeatureFirmwareVersion},
+	}
 }
