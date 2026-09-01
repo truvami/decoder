@@ -107,62 +107,7 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 		if payloadType != 0x4c {
 			return common.PayloadConfig{}, fmt.Errorf("%w: port %d tag %x", common.ErrPortNotSupported, port, payloadType)
 		}
-		return common.PayloadConfig{
-			Tags: []common.TagConfig{
-				{Name: "AccelerometerEnabled", Tag: 0x40, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
-					return ((v.([]byte)[0] >> 3) & 0x01) != 0
-				}},
-				{Name: "WifiEnabled", Tag: 0x40, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
-					return ((v.([]byte)[0] >> 2) & 0x01) != 0
-				}},
-				{Name: "GnssEnabled", Tag: 0x40, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
-					return ((v.([]byte)[0] >> 1) & 0x01) != 0
-				}},
-				{Name: "FirmwareUpgrade", Tag: 0x40, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
-					return (v.([]byte)[0] & 0x01) != 0
-				}},
-				{Name: "LocalizationIntervalWhileMoving", Tag: 0x41, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
-					return uint16((common.BytesToUint32(v.([]byte)) >> 16) & 0xffff)
-				}},
-				{Name: "LocalizationIntervalWhileSteady", Tag: 0x41, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
-					return uint16(common.BytesToUint32(v.([]byte)) & 0xffff)
-				}},
-				{Name: "AccelerometerWakeupThreshold", Tag: 0x42, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
-					return uint16((common.BytesToUint32(v.([]byte)) >> 16) & 0xffff)
-				}},
-				{Name: "AccelerometerDelay", Tag: 0x42, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
-					return uint16(common.BytesToUint32(v.([]byte)) & 0xffff)
-				}},
-				{Name: "HeartbeatInterval", Tag: 0x43, Optional: true},
-				{Name: "AdvertisementFirmwareUpgradeInterval", Tag: 0x44, Optional: true},
-				{Name: "Battery", Tag: 0x45, Optional: true, Feature: decoder.FeatureBattery, Transform: func(v any) any {
-					return float32(common.BytesToUint16(v.([]byte))) / 1000
-				}},
-				{Name: "FirmwareHash", Tag: 0x46, Optional: true, Feature: decoder.FeatureFirmwareVersion, Hex: true},
-				{Name: "RotationInvert", Tag: 0x47, Optional: true, Transform: func(v any) any {
-					return (v.([]byte)[0] & 0x01) != 0
-				}},
-				{Name: "RotationConfirmed", Tag: 0x47, Optional: true, Transform: func(v any) any {
-					return ((v.([]byte)[0] >> 1) & 0x01) != 0
-				}},
-				{Name: "ResetCount", Tag: 0x49, Optional: true},
-				{Name: "ResetCause", Tag: 0x4a, Optional: true, Feature: decoder.FeatureResetReason},
-				{Name: "GnssScans", Tag: 0x4b, Optional: true, Transform: func(v any) any {
-					return uint16((common.BytesToUint32(v.([]byte)) >> 16) & 0xffff)
-				}},
-				{Name: "WifiScans", Tag: 0x4b, Optional: true, Transform: func(v any) any {
-					return uint16(common.BytesToUint32(v.([]byte)) & 0xffff)
-				}},
-				{Name: "DataRate", Tag: 0x4e, Optional: true, Transform: func(v any) any {
-					if b, ok := v.([]byte); ok && len(b) > 0 {
-						return DataRateFromUint8(b[0])
-					}
-					return nil
-				}},
-			},
-			TargetType: reflect.TypeOf(Port151Payload{}),
-			Features:   []decoder.Feature{decoder.FeatureDataRate},
-		}, nil
+		return port151PayloadConfig(), nil
 	case 152:
 		if len(payload) < 1 {
 			return common.PayloadConfig{}, common.ErrPayloadTooShort
