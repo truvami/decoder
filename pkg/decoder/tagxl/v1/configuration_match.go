@@ -28,20 +28,20 @@ func MatchConfiguration(sentHex, observedHex string) (bool, error) {
 		return false, err
 	}
 
-	reportHex, requestedSetters, err := parseConfigurationSent(sent)
+	sentTLVHex, requestedSetters, err := parseConfigurationSent(sent)
 	if err != nil {
 		return false, err
 	}
-	observedReportHex, err := parseConfigurationObserved(observed)
+	observedTLVHex, err := parseConfigurationObserved(observed)
 	if err != nil {
 		return false, err
 	}
 
-	sentPayload, err := decodePort151Configuration(reportHex)
+	sentPayload, err := decodePort151Payload(sentTLVHex)
 	if err != nil {
 		return false, err
 	}
-	observedPayload, err := decodePort151Configuration(observedReportHex)
+	observedPayload, err := decodePort151Payload(observedTLVHex)
 	if err != nil {
 		return false, err
 	}
@@ -55,28 +55,28 @@ func MatchConfiguration(sentHex, observedHex string) (bool, error) {
 	return true, nil
 }
 
-func parseConfigurationSent(payload []byte) (reportHex string, requestedSetters []byte, err error) {
+func parseConfigurationSent(payload []byte) (tlvHex string, requestedSetters []byte, err error) {
 	if len(payload) < 3 || payload[0] != configurationEnvelopeMarker {
 		return "", nil, errConfigurationWrongMarker
 	}
 
-	report := []byte{configurationEnvelopeMarker, 0x00, 0x00}
+	tlvPayload := []byte{configurationEnvelopeMarker, 0x00, 0x00}
 	setters := make(map[byte]struct{})
 	offset := 3
 	for offset < len(payload) {
-		tag, value, next, err := readConfigurationTLV(payload, offset)
+		tag, value, next, err := readTLV(payload, offset)
 		if err != nil {
 			return "", nil, err
 		}
 
-		spec, ok := configurationSetterSpecs[tag]
+		spec, ok := setterSpecs[tag]
 		if !ok {
 			return "", nil, errConfigurationUnsupportedCommand
 		}
 		if len(value) != spec.valueLen {
 			return "", nil, errConfigurationMalformedTLV
 		}
-		if tag == configurationSetterTagDataRate && value[0] > configurationMaxDataRate {
+		if tag == setterTagDataRate && value[0] > configurationMaxDataRate {
 			return "", nil, errConfigurationInvalidDataRate
 		}
 		if _, exists := setters[tag]; exists {
@@ -85,8 +85,8 @@ func parseConfigurationSent(payload []byte) (reportHex string, requestedSetters 
 
 		setters[tag] = struct{}{}
 		requestedSetters = append(requestedSetters, tag)
-		report = append(report, spec.reportTag, byte(len(value)))
-		report = append(report, value...)
+		tlvPayload = append(tlvPayload, spec.tlvTag, byte(len(value)))
+		tlvPayload = append(tlvPayload, value...)
 		offset = next
 	}
 
@@ -94,45 +94,45 @@ func parseConfigurationSent(payload []byte) (reportHex string, requestedSetters 
 		return "", nil, errConfigurationNoSetter
 	}
 
-	return hex.EncodeToString(report), requestedSetters, nil
+	return hex.EncodeToString(tlvPayload), requestedSetters, nil
 }
 
-func parseConfigurationObserved(payload []byte) (reportHex string, err error) {
+func parseConfigurationObserved(payload []byte) (tlvHex string, err error) {
 	if len(payload) < 3 || payload[0] != configurationEnvelopeMarker {
 		return "", errConfigurationWrongMarker
 	}
 
-	report := []byte{configurationEnvelopeMarker, 0x00, 0x00}
-	reported := make(map[byte]struct{})
+	tlvPayload := []byte{configurationEnvelopeMarker, 0x00, 0x00}
+	seen := make(map[byte]struct{})
 	offset := 3
 	for offset < len(payload) {
-		tag, value, next, err := readConfigurationTLV(payload, offset)
+		tag, value, next, err := readTLV(payload, offset)
 		if err != nil {
 			return "", err
 		}
 
-		if spec, comparable := configurationReportSpecs[tag]; comparable {
+		if spec, comparable := comparableTLVSpecs[tag]; comparable {
 			if len(value) != spec.valueLen {
 				return "", errConfigurationMalformedTLV
 			}
-			if tag == configurationReportTagDataRate && value[0] > configurationMaxDataRate {
+			if tag == tlvTagDataRate && value[0] > configurationMaxDataRate {
 				return "", errConfigurationInvalidDataRate
 			}
-			if _, exists := reported[tag]; exists {
+			if _, exists := seen[tag]; exists {
 				return "", errConfigurationDuplicateTag
 			}
-			reported[tag] = struct{}{}
-			report = append(report, tag, byte(len(value)))
-			report = append(report, value...)
+			seen[tag] = struct{}{}
+			tlvPayload = append(tlvPayload, tag, byte(len(value)))
+			tlvPayload = append(tlvPayload, value...)
 		}
 
 		offset = next
 	}
 
-	return hex.EncodeToString(report), nil
+	return hex.EncodeToString(tlvPayload), nil
 }
 
-func decodePort151Configuration(payloadHex string) (Port151Payload, error) {
+func decodePort151Payload(payloadHex string) (Port151Payload, error) {
 	config := port151PayloadConfig()
 	if err := common.ValidateLength(&payloadHex, &config); err != nil {
 		return Port151Payload{}, err
@@ -148,25 +148,25 @@ func decodePort151Configuration(payloadHex string) (Port151Payload, error) {
 
 func compareConfigurationSetter(setterTag byte, sent, observed Port151Payload) bool {
 	switch setterTag {
-	case configurationSetterTagDeviceFlags:
+	case setterTagDeviceFlags:
 		return ptrEqual(sent.AccelerometerEnabled, observed.AccelerometerEnabled) &&
 			ptrEqual(sent.WifiEnabled, observed.WifiEnabled) &&
 			ptrEqual(sent.GnssEnabled, observed.GnssEnabled) &&
 			ptrEqual(sent.FirmwareUpgrade, observed.FirmwareUpgrade)
-	case configurationSetterTagMovingIntervals:
+	case setterTagMovingIntervals:
 		return ptrEqual(sent.LocalizationIntervalWhileMoving, observed.LocalizationIntervalWhileMoving) &&
 			ptrEqual(sent.LocalizationIntervalWhileSteady, observed.LocalizationIntervalWhileSteady)
-	case configurationSetterTagAccelerationThreshold:
+	case setterTagAccelerationThreshold:
 		return ptrEqual(sent.AccelerometerWakeupThreshold, observed.AccelerometerWakeupThreshold) &&
 			ptrEqual(sent.AccelerometerDelay, observed.AccelerometerDelay)
-	case configurationSetterTagHeartbeatInterval:
+	case setterTagHeartbeatInterval:
 		return ptrEqual(sent.HeartbeatInterval, observed.HeartbeatInterval)
-	case configurationSetterTagAdvertisementInterval:
+	case setterTagAdvertisementInterval:
 		return ptrEqual(sent.AdvertisementFirmwareUpgradeInterval, observed.AdvertisementFirmwareUpgradeInterval)
-	case configurationSetterTagRotationFlags:
+	case setterTagRotationFlags:
 		return ptrEqual(sent.RotationInvert, observed.RotationInvert) &&
 			ptrEqual(sent.RotationConfirmed, observed.RotationConfirmed)
-	case configurationSetterTagDataRate:
+	case setterTagDataRate:
 		return ptrEqual(sent.DataRate, observed.DataRate)
 	default:
 		return false
@@ -180,7 +180,7 @@ func ptrEqual[T comparable](sent, observed *T) bool {
 	return *sent == *observed
 }
 
-func readConfigurationTLV(payload []byte, offset int) (tag byte, value []byte, next int, err error) {
+func readTLV(payload []byte, offset int) (tag byte, value []byte, next int, err error) {
 	if offset+2 > len(payload) {
 		return 0, nil, 0, errConfigurationMalformedTLV
 	}

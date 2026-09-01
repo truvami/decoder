@@ -51,47 +51,47 @@ const (
 	configurationEnvelopeMarker = 0x4c
 	configurationMaxDataRate    = 7
 
-	configurationSetterTagDeviceFlags           = 0x20
-	configurationSetterTagMovingIntervals       = 0x21
-	configurationSetterTagAccelerationThreshold = 0x22
-	configurationSetterTagHeartbeatInterval     = 0x23
-	configurationSetterTagAdvertisementInterval = 0x24
-	configurationSetterTagRotationFlags         = 0x25
-	configurationSetterTagDataRate              = 0x28
+	setterTagDeviceFlags           = 0x20
+	setterTagMovingIntervals       = 0x21
+	setterTagAccelerationThreshold = 0x22
+	setterTagHeartbeatInterval     = 0x23
+	setterTagAdvertisementInterval = 0x24
+	setterTagRotationFlags         = 0x25
+	setterTagDataRate              = 0x28
 
-	configurationReportTagDeviceFlags           = 0x40
-	configurationReportTagMovingIntervals       = 0x41
-	configurationReportTagAccelerationThreshold = 0x42
-	configurationReportTagHeartbeatInterval     = 0x43
-	configurationReportTagAdvertisementInterval = 0x44
-	configurationReportTagBattery               = 0x45
-	configurationReportTagFirmwareHash          = 0x46
-	configurationReportTagRotationFlags         = 0x47
-	configurationReportTagResetCount            = 0x49
-	configurationReportTagResetCause            = 0x4a
-	configurationReportTagScanCounts            = 0x4b
-	configurationReportTagDataRate              = 0x4e
+	tlvTagDeviceFlags           = 0x40
+	tlvTagMovingIntervals       = 0x41
+	tlvTagAccelerationThreshold = 0x42
+	tlvTagHeartbeatInterval     = 0x43
+	tlvTagAdvertisementInterval = 0x44
+	tlvTagBattery               = 0x45
+	tlvTagFirmwareHash          = 0x46
+	tlvTagRotationFlags         = 0x47
+	tlvTagResetCount            = 0x49
+	tlvTagResetCause            = 0x4a
+	tlvTagScanCounts            = 0x4b
+	tlvTagDataRate              = 0x4e
 )
 
-type configurationSetterSpec struct {
-	reportTag byte
-	valueLen  int
+type setterSpec struct {
+	tlvTag   byte
+	valueLen int
 }
 
-var configurationSetterSpecs = map[byte]configurationSetterSpec{
-	configurationSetterTagDeviceFlags:           {reportTag: configurationReportTagDeviceFlags, valueLen: 1},
-	configurationSetterTagMovingIntervals:       {reportTag: configurationReportTagMovingIntervals, valueLen: 4},
-	configurationSetterTagAccelerationThreshold: {reportTag: configurationReportTagAccelerationThreshold, valueLen: 4},
-	configurationSetterTagHeartbeatInterval:     {reportTag: configurationReportTagHeartbeatInterval, valueLen: 1},
-	configurationSetterTagAdvertisementInterval: {reportTag: configurationReportTagAdvertisementInterval, valueLen: 1},
-	configurationSetterTagRotationFlags:         {reportTag: configurationReportTagRotationFlags, valueLen: 1},
-	configurationSetterTagDataRate:              {reportTag: configurationReportTagDataRate, valueLen: 1},
+var setterSpecs = map[byte]setterSpec{
+	setterTagDeviceFlags:           {tlvTag: tlvTagDeviceFlags, valueLen: 1},
+	setterTagMovingIntervals:       {tlvTag: tlvTagMovingIntervals, valueLen: 4},
+	setterTagAccelerationThreshold: {tlvTag: tlvTagAccelerationThreshold, valueLen: 4},
+	setterTagHeartbeatInterval:     {tlvTag: tlvTagHeartbeatInterval, valueLen: 1},
+	setterTagAdvertisementInterval: {tlvTag: tlvTagAdvertisementInterval, valueLen: 1},
+	setterTagRotationFlags:         {tlvTag: tlvTagRotationFlags, valueLen: 1},
+	setterTagDataRate:              {tlvTag: tlvTagDataRate, valueLen: 1},
 }
 
-var configurationReportSpecs = func() map[byte]configurationSetterSpec {
-	specs := make(map[byte]configurationSetterSpec, len(configurationSetterSpecs))
-	for _, spec := range configurationSetterSpecs {
-		specs[spec.reportTag] = spec
+var comparableTLVSpecs = func() map[byte]setterSpec {
+	specs := make(map[byte]setterSpec, len(setterSpecs))
+	for _, spec := range setterSpecs {
+		specs[spec.tlvTag] = spec
 	}
 	return specs
 }()
@@ -273,51 +273,51 @@ func (p Port151Payload) GetResetReason() decoder.ResetReason {
 func port151PayloadConfig() common.PayloadConfig {
 	return common.PayloadConfig{
 		Tags: []common.TagConfig{
-			{Name: "AccelerometerEnabled", Tag: configurationReportTagDeviceFlags, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
+			{Name: "AccelerometerEnabled", Tag: tlvTagDeviceFlags, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
 				return ((v.([]byte)[0] >> 3) & 0x01) != 0
 			}},
-			{Name: "WifiEnabled", Tag: configurationReportTagDeviceFlags, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
+			{Name: "WifiEnabled", Tag: tlvTagDeviceFlags, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
 				return ((v.([]byte)[0] >> 2) & 0x01) != 0
 			}},
-			{Name: "GnssEnabled", Tag: configurationReportTagDeviceFlags, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
+			{Name: "GnssEnabled", Tag: tlvTagDeviceFlags, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
 				return ((v.([]byte)[0] >> 1) & 0x01) != 0
 			}},
-			{Name: "FirmwareUpgrade", Tag: configurationReportTagDeviceFlags, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
+			{Name: "FirmwareUpgrade", Tag: tlvTagDeviceFlags, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
 				return (v.([]byte)[0] & 0x01) != 0
 			}},
-			{Name: "LocalizationIntervalWhileMoving", Tag: configurationReportTagMovingIntervals, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
+			{Name: "LocalizationIntervalWhileMoving", Tag: tlvTagMovingIntervals, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
 				return uint16((common.BytesToUint32(v.([]byte)) >> 16) & 0xffff)
 			}},
-			{Name: "LocalizationIntervalWhileSteady", Tag: configurationReportTagMovingIntervals, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
+			{Name: "LocalizationIntervalWhileSteady", Tag: tlvTagMovingIntervals, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
 				return uint16(common.BytesToUint32(v.([]byte)) & 0xffff)
 			}},
-			{Name: "AccelerometerWakeupThreshold", Tag: configurationReportTagAccelerationThreshold, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
+			{Name: "AccelerometerWakeupThreshold", Tag: tlvTagAccelerationThreshold, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
 				return uint16((common.BytesToUint32(v.([]byte)) >> 16) & 0xffff)
 			}},
-			{Name: "AccelerometerDelay", Tag: configurationReportTagAccelerationThreshold, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
+			{Name: "AccelerometerDelay", Tag: tlvTagAccelerationThreshold, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
 				return uint16(common.BytesToUint32(v.([]byte)) & 0xffff)
 			}},
-			{Name: "HeartbeatInterval", Tag: configurationReportTagHeartbeatInterval, Optional: true},
-			{Name: "AdvertisementFirmwareUpgradeInterval", Tag: configurationReportTagAdvertisementInterval, Optional: true},
-			{Name: "Battery", Tag: configurationReportTagBattery, Optional: true, Feature: decoder.FeatureBattery, Transform: func(v any) any {
+			{Name: "HeartbeatInterval", Tag: tlvTagHeartbeatInterval, Optional: true},
+			{Name: "AdvertisementFirmwareUpgradeInterval", Tag: tlvTagAdvertisementInterval, Optional: true},
+			{Name: "Battery", Tag: tlvTagBattery, Optional: true, Feature: decoder.FeatureBattery, Transform: func(v any) any {
 				return float32(common.BytesToUint16(v.([]byte))) / 1000
 			}},
-			{Name: "FirmwareHash", Tag: configurationReportTagFirmwareHash, Optional: true, Feature: decoder.FeatureFirmwareVersion, Hex: true},
-			{Name: "RotationInvert", Tag: configurationReportTagRotationFlags, Optional: true, Transform: func(v any) any {
+			{Name: "FirmwareHash", Tag: tlvTagFirmwareHash, Optional: true, Feature: decoder.FeatureFirmwareVersion, Hex: true},
+			{Name: "RotationInvert", Tag: tlvTagRotationFlags, Optional: true, Transform: func(v any) any {
 				return (v.([]byte)[0] & 0x01) != 0
 			}},
-			{Name: "RotationConfirmed", Tag: configurationReportTagRotationFlags, Optional: true, Transform: func(v any) any {
+			{Name: "RotationConfirmed", Tag: tlvTagRotationFlags, Optional: true, Transform: func(v any) any {
 				return ((v.([]byte)[0] >> 1) & 0x01) != 0
 			}},
-			{Name: "ResetCount", Tag: configurationReportTagResetCount, Optional: true},
-			{Name: "ResetCause", Tag: configurationReportTagResetCause, Optional: true, Feature: decoder.FeatureResetReason},
-			{Name: "GnssScans", Tag: configurationReportTagScanCounts, Optional: true, Transform: func(v any) any {
+			{Name: "ResetCount", Tag: tlvTagResetCount, Optional: true},
+			{Name: "ResetCause", Tag: tlvTagResetCause, Optional: true, Feature: decoder.FeatureResetReason},
+			{Name: "GnssScans", Tag: tlvTagScanCounts, Optional: true, Transform: func(v any) any {
 				return uint16((common.BytesToUint32(v.([]byte)) >> 16) & 0xffff)
 			}},
-			{Name: "WifiScans", Tag: configurationReportTagScanCounts, Optional: true, Transform: func(v any) any {
+			{Name: "WifiScans", Tag: tlvTagScanCounts, Optional: true, Transform: func(v any) any {
 				return uint16(common.BytesToUint32(v.([]byte)) & 0xffff)
 			}},
-			{Name: "DataRate", Tag: configurationReportTagDataRate, Optional: true, Transform: func(v any) any {
+			{Name: "DataRate", Tag: tlvTagDataRate, Optional: true, Transform: func(v any) any {
 				if b, ok := v.([]byte); ok && len(b) > 0 {
 					return DataRateFromUint8(b[0])
 				}
