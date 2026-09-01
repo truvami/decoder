@@ -150,21 +150,7 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 			Features:   []decoder.Feature{decoder.FeatureTimestamp, decoder.FeatureDutyCycle, decoder.FeatureConfigChange, decoder.FeatureMoving, decoder.FeatureWiFi},
 		}, nil
 	case 8:
-		return common.PayloadConfig{
-			Fields: []common.FieldConfig{
-				{Name: "ScanInterval", Start: 0, Length: 2},
-				{Name: "ScanTime", Start: 2, Length: 1},
-				{Name: "MaxBeacons", Start: 3, Length: 1},
-				{Name: "MinRssiValue", Start: 4, Length: 1},
-				{Name: "AdvertisingFilter", Start: 5, Length: 10},
-				{Name: "AccelerometerTriggerHoldTimer", Start: 15, Length: 2},
-				{Name: "AccelerometerThreshold", Start: 17, Length: 2},
-				{Name: "ScanMode", Start: 19, Length: 1},
-				{Name: "BLECurrentConfigurationUplinkInterval", Start: 20, Length: 2},
-			},
-			TargetType: reflect.TypeOf(Port8Payload{}),
-			Features:   []decoder.Feature{},
-		}, nil
+		return port8PayloadConfig(), nil
 	case 10:
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{

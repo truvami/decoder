@@ -24,6 +24,14 @@ const (
 	tagSLDecoderReportCoreHex = "0000003c0000012c000151800078012c05dc02020100010200005460"
 	tagSLDecoderSentHex       = "0000000000003c0000012c000151800078012c05dc00005460000a1000"
 	tagSLDecoderReportFullHex = "0000003c0000012c000151800078012c05dc02020100010200005460000a1000"
+
+	// Encoder port-134 fixture: scan 300, time 60, beacons 8, rssi -24,
+	// advertising "deadbeef" + pad, accel delay 2000, threshold 1000, mode 0, uplink 21600.
+	tagSLBleSentHex = "012c3c08e86465616462656566000007d003e8005460" // pragma: allowlist secret
+
+	// Decoder port-8 fixture: scan 300, time 20, beacons 30, rssi -100,
+	// advertising "EW80ECCCCF", hold 120, threshold 300, mode 1, uplink 43200.
+	tagSLBleReportHex = "012c141e9c455738304543434343460078012c01a8c0" // pragma: allowlist secret
 )
 
 func TestMatchConfiguration(t *testing.T) {
@@ -146,6 +154,60 @@ func TestMatchConfiguration(t *testing.T) {
 	})
 }
 
+func TestMatchBleConfiguration(t *testing.T) {
+	t.Run("encoder fixture matches itself", func(t *testing.T) {
+		assertBleConfigurationMatch(t, tagSLBleSentHex, tagSLBleSentHex)
+	})
+
+	t.Run("decoder fixture matches itself", func(t *testing.T) {
+		assertBleConfigurationMatch(t, tagSLBleReportHex, tagSLBleReportHex)
+	})
+
+	t.Run("field mismatches", func(t *testing.T) {
+		cases := []struct {
+			name   string
+			offset int
+			value  []byte
+		}{
+			{name: "scan interval", offset: 0, value: []byte{0x01, 0x2d}},
+			{name: "scan time", offset: 2, value: []byte{0x3d}},
+			{name: "max beacons", offset: 3, value: []byte{0x09}},
+			{name: "min rssi", offset: 4, value: []byte{0xe9}},
+			{name: "advertising filter", offset: 5, value: []byte{0x65}},
+			{name: "accelerometer delay", offset: 15, value: []byte{0x07, 0xd1}},
+			{name: "accelerometer threshold", offset: 17, value: []byte{0x03, 0xe9}},
+			{name: "scan mode", offset: 19, value: []byte{0x01}},
+			{name: "ble uplink interval", offset: 20, value: []byte{0x54, 0x61}},
+		}
+		for _, tc := range cases {
+			t.Run(tc.name, func(t *testing.T) {
+				observed := mustMutateHex(t, tagSLBleSentHex, map[int][]byte{tc.offset: tc.value})
+				assertBleConfigurationMismatch(t, tagSLBleSentHex, observed)
+			})
+		}
+	})
+
+	t.Run("invalid hex", func(t *testing.T) {
+		_, err := MatchBleConfiguration("zz", tagSLBleSentHex)
+		if err == nil {
+			t.Fatal("expected hex error")
+		}
+
+		_, err = MatchBleConfiguration(tagSLBleSentHex, "abc")
+		if err == nil {
+			t.Fatal("expected hex error")
+		}
+	})
+
+	t.Run("wrong length", func(t *testing.T) {
+		_, err := MatchBleConfiguration(tagSLBleSentHex[:len(tagSLBleSentHex)-2], tagSLBleSentHex)
+		assertConfigurationError(t, err, common.ErrInvalidPayloadLength)
+
+		_, err = MatchBleConfiguration(tagSLBleSentHex, tagSLBleSentHex+"00")
+		assertConfigurationError(t, err, common.ErrInvalidPayloadLength)
+	})
+}
+
 func assertConfigurationMatch(t *testing.T, sent, observed string) {
 	t.Helper()
 	ok, err := MatchConfiguration(sent, observed)
@@ -154,6 +216,28 @@ func assertConfigurationMatch(t *testing.T, sent, observed string) {
 	}
 	if !ok {
 		t.Fatal("expected match")
+	}
+}
+
+func assertBleConfigurationMatch(t *testing.T, sent, observed string) {
+	t.Helper()
+	ok, err := MatchBleConfiguration(sent, observed)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !ok {
+		t.Fatal("expected match")
+	}
+}
+
+func assertBleConfigurationMismatch(t *testing.T, sent, observed string) {
+	t.Helper()
+	ok, err := MatchBleConfiguration(sent, observed)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if ok {
+		t.Fatal("expected non-match")
 	}
 }
 

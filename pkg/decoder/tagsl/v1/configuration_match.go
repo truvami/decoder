@@ -7,13 +7,16 @@ import (
 )
 
 const (
-	ConfigurationDownlinkPort uint8 = 128
-	ConfigurationReportPort   uint8 = 4
+	ConfigurationDownlinkPort    uint8 = 128
+	ConfigurationReportPort      uint8 = 4
+	BleConfigurationDownlinkPort uint8 = 134
+	BleConfigurationReportPort   uint8 = 8
 
 	configurationSentByteLength            = 29
 	configurationReportCoreByteLength      = 28
 	configurationReportWithBatchByteLength = 30
 	configurationReportFullByteLength      = 32
+	bleConfigurationByteLength             = 22
 )
 
 // MatchConfiguration reports whether observed reflects the comparable fields in sent.
@@ -103,4 +106,45 @@ func configurationMatches(sent Port128Payload, observed Port4Payload) bool {
 		return false
 	}
 	return true
+}
+
+// MatchBleConfiguration reports whether observed reflects the comparable fields in sent.
+// Port 134 downlink and port 8 report use the same 22-byte layout.
+// false with nil error means a well-formed non-match; non-nil error means malformed.
+func MatchBleConfiguration(sentHex, observedHex string) (bool, error) {
+	sent, err := common.HexStringToBytes(sentHex)
+	if err != nil {
+		return false, err
+	}
+	observed, err := common.HexStringToBytes(observedHex)
+	if err != nil {
+		return false, err
+	}
+
+	if len(sent) != bleConfigurationByteLength {
+		return false, fmt.Errorf("%w: sent BLE configuration payload length %d", common.ErrInvalidPayloadLength, len(sent))
+	}
+	if len(observed) != bleConfigurationByteLength {
+		return false, fmt.Errorf("%w: observed BLE configuration payload length %d", common.ErrInvalidPayloadLength, len(observed))
+	}
+
+	sentPayload, err := decodePort8Payload(sentHex)
+	if err != nil {
+		return false, err
+	}
+	observedPayload, err := decodePort8Payload(observedHex)
+	if err != nil {
+		return false, err
+	}
+
+	return sentPayload == observedPayload, nil
+}
+
+func decodePort8Payload(payloadHex string) (Port8Payload, error) {
+	config := port8PayloadConfig()
+	decoded, err := common.Decode(&payloadHex, &config)
+	if err != nil {
+		return Port8Payload{}, err
+	}
+	return decoded.(Port8Payload), nil
 }
