@@ -259,6 +259,101 @@ func TestMatchConfiguration(t *testing.T) {
 	})
 }
 
+func TestCompareConfiguration(t *testing.T) {
+	const sent = "4c0d0320010a210400780708280100"
+
+	t.Run("captured campaign reports are incomplete", func(t *testing.T) {
+		reports := []struct {
+			name     string
+			observed string
+		}{
+			{name: "data rate only", observed: "4c03014e0100"},
+			{name: "flags 1b with telemetry", observed: "4c0d0345020d774b040e45000040011b"},
+			{name: "matching flags with telemetry", observed: "4c0d0345020c0b4b048609000040018a"},
+		}
+		for _, tc := range reports {
+			t.Run(tc.name, func(t *testing.T) {
+				result, err := CompareConfiguration(sent, tc.observed)
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+				if result != ConfigurationIncomplete {
+					t.Fatalf("got %s, want incomplete", result)
+				}
+				ok, err := MatchConfiguration(sent, tc.observed)
+				if err != nil || ok {
+					t.Fatalf("MatchConfiguration: ok=%v err=%v", ok, err)
+				}
+			})
+		}
+	})
+
+	t.Run("complete reflection matches", func(t *testing.T) {
+		result, err := CompareConfiguration(sent, "4c0d0340010a4104007807084e0100")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if result != ConfigurationMatch {
+			t.Fatalf("got %s, want match", result)
+		}
+	})
+
+	t.Run("complete contradiction mismatches", func(t *testing.T) {
+		result, err := CompareConfiguration(sent, "4c0d0340010a4104007807084e0101")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if result != ConfigurationMismatch {
+			t.Fatalf("got %s, want mismatch", result)
+		}
+	})
+
+	t.Run("present differing field still incomplete when another setter is missing", func(t *testing.T) {
+		result, err := CompareConfiguration(sent, "4c0d0340011b")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if result != ConfigurationIncomplete {
+			t.Fatalf("got %s, want incomplete", result)
+		}
+	})
+
+	t.Run("single setter complete mismatch", func(t *testing.T) {
+		result, err := CompareConfiguration("4c0401230118", "4c0301430119")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if result != ConfigurationMismatch {
+			t.Fatalf("got %s, want mismatch", result)
+		}
+	})
+
+	t.Run("missing reflected field is incomplete", func(t *testing.T) {
+		result, err := CompareConfiguration("4c0401230118", "4c030145020fa0")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if result != ConfigurationIncomplete {
+			t.Fatalf("got %s, want incomplete", result)
+		}
+	})
+}
+
+func TestConfigurationComparisonString(t *testing.T) {
+	if ConfigurationMatch.String() != "match" {
+		t.Fatalf("match string = %q", ConfigurationMatch.String())
+	}
+	if ConfigurationMismatch.String() != "mismatch" {
+		t.Fatalf("mismatch string = %q", ConfigurationMismatch.String())
+	}
+	if ConfigurationIncomplete.String() != "incomplete" {
+		t.Fatalf("incomplete string = %q", ConfigurationIncomplete.String())
+	}
+	if ConfigurationComparison(99).String() != "unknown" {
+		t.Fatalf("unknown string = %q", ConfigurationComparison(99).String())
+	}
+}
+
 func TestPort151PayloadConfigCoversComparableTLVTags(t *testing.T) {
 	tags := make(map[uint8]struct{})
 	for _, tag := range port151PayloadConfig().Tags {
