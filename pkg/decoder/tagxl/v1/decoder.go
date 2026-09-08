@@ -79,6 +79,7 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
 				{Name: "Status", Start: 0, Length: 1},
+				{Name: "Moving", Start: 0, Length: 1},
 				{Name: "Latitude", Start: 1, Length: 4, Transform: latitude},
 				{Name: "Longitude", Start: 5, Length: 4, Transform: longitude},
 				{Name: "Altitude", Start: 9, Length: 2, Transform: port10Altitude},
@@ -89,7 +90,7 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 				{Name: "Satellites", Start: 19, Length: 1},
 			},
 			TargetType: reflect.TypeOf(Port10Payload{}),
-			Features:   []decoder.Feature{decoder.FeatureGNSS, decoder.FeatureTimestamp, decoder.FeatureBattery},
+			Features:   []decoder.Feature{decoder.FeatureGNSS, decoder.FeatureTimestamp, decoder.FeatureBattery, decoder.FeatureMoving},
 		}, nil
 	case 150:
 		return common.PayloadConfig{

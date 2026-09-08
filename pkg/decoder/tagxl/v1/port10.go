@@ -14,7 +14,7 @@ import (
 // +------+------+-------------------------------------------+------------------------+
 // | Byte | Size | Description                               | Format                 |
 // +------+------+-------------------------------------------+------------------------+
-// | 0    | 1    | Status                                    | uint8 (FW always 0)    |
+// | 0    | 1    | Status                                    | uint8 (bit 0 = moving) |
 // | 1    | 4    | Latitude                                  | int32, 1/1'000'000 deg |
 // | 5    | 4    | Longitude                                 | int32, 1/1'000'000 deg |
 // | 9    | 2    | Altitude                                  | uint16, centimeters    |
@@ -27,6 +27,7 @@ import (
 
 type Port10Payload struct {
 	Status     uint8          `json:"status"`
+	Moving     bool           `json:"moving"`
 	Latitude   float64        `json:"latitude" validate:"gte=-90,lte=90"`
 	Longitude  float64        `json:"longitude" validate:"gte=-180,lte=180"`
 	Altitude   float64        `json:"altitude"`
@@ -69,6 +70,7 @@ func (p Port10Payload) MarshalJSON() ([]byte, error) {
 var _ decoder.UplinkFeatureTimestamp = &Port10Payload{}
 var _ decoder.UplinkFeatureGNSS = &Port10Payload{}
 var _ decoder.UplinkFeatureBattery = &Port10Payload{}
+var _ decoder.UplinkFeatureMoving = &Port10Payload{}
 
 func (p Port10Payload) GetTimestamp() *time.Time {
 	return &p.Timestamp
@@ -108,4 +110,8 @@ func (p Port10Payload) GetBatteryVoltage() float64 {
 
 func (p Port10Payload) GetLowBattery() *bool {
 	return nil
+}
+
+func (p Port10Payload) IsMoving() bool {
+	return p.Moving
 }
