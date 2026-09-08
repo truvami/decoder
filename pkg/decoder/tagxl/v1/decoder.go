@@ -78,13 +78,12 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 	case 10:
 		return common.PayloadConfig{
 			Fields: []common.FieldConfig{
-				{Name: "Status", Start: 0, Length: 1},
-				{Name: "Moving", Start: 0, Length: 1},
+				{Name: "Moving", Start: 0, Length: 1, Transform: moving},
 				{Name: "Latitude", Start: 1, Length: 4, Transform: latitude},
 				{Name: "Longitude", Start: 5, Length: 4, Transform: longitude},
-				{Name: "Altitude", Start: 9, Length: 2, Transform: port10Altitude},
+				{Name: "Altitude", Start: 9, Length: 2, Transform: altitude},
 				{Name: "Timestamp", Start: 11, Length: 4, Transform: timestamp},
-				{Name: "Battery", Start: 15, Length: 2, Transform: gnssBattery},
+				{Name: "Battery", Start: 15, Length: 2, Transform: battery},
 				{Name: "TTF", Start: 17, Length: 1, Transform: ttf},
 				{Name: "PDOP", Start: 18, Length: 1, Transform: pdop},
 				{Name: "Satellites", Start: 19, Length: 1},
@@ -638,6 +637,10 @@ func (t TagXLv1Decoder) Decode(ctx context.Context, data string, port uint8) (*d
 	return decoder.NewDecodedUplink(config.Features, decodedData), err
 }
 
+func moving(v any) any {
+	return (v.([]byte))[0]&0x01 == 1
+}
+
 func timestamp(v any) any {
 	return time.Unix(int64(common.BytesToUint32(v.([]byte))), 0).UTC()
 }
@@ -658,11 +661,11 @@ func longitude(v any) any {
 	return float64(common.BytesToInt32(v.([]byte))) / 1000000
 }
 
-func port10Altitude(v any) any {
-	return float64(common.BytesToUint16(v.([]byte))) / 100
+func altitude(v any) any {
+	return float64(common.BytesToUint16(v.([]byte))) / 10
 }
 
-func gnssBattery(v any) any {
+func battery(v any) any {
 	return float64(common.BytesToUint16(v.([]byte))) / 1000
 }
 

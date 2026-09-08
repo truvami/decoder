@@ -91,9 +91,8 @@ func TestDecode(t *testing.T) {
 		},
 		{
 			port:    10,
-			payload: "0002d2eeb40081d77ca3706a196afd0e74000009",
+			payload: "0002d2eeb40081d77c10586a196afd0e74000009",
 			expected: Port10Payload{
-				Status:     0,
 				Moving:     false,
 				Latitude:   47.3781,
 				Longitude:  8.509308,
@@ -109,11 +108,10 @@ func TestDecode(t *testing.T) {
 			port:    10,
 			payload: "0002d30b070082491f11256718d9fe0ede190505",
 			expected: Port10Payload{
-				Status:     0,
 				Moving:     false,
 				Latitude:   47.385351,
 				Longitude:  8.538399,
-				Altitude:   43.89,
+				Altitude:   438.9,
 				Timestamp:  time.Date(2024, 10, 23, 11, 11, 58, 0, time.UTC),
 				Battery:    3.806,
 				TTF:        helpers.DurationPtr(25 * time.Second),
@@ -125,11 +123,10 @@ func TestDecode(t *testing.T) {
 			port:    10,
 			payload: "0102d30b070082491f11256718d9fe0ede190505",
 			expected: Port10Payload{
-				Status:     1,
 				Moving:     true,
 				Latitude:   47.385351,
 				Longitude:  8.538399,
-				Altitude:   43.89,
+				Altitude:   438.9,
 				Timestamp:  time.Date(2024, 10, 23, 11, 11, 58, 0, time.UTC),
 				Battery:    3.806,
 				TTF:        helpers.DurationPtr(25 * time.Second),
@@ -141,11 +138,10 @@ func TestDecode(t *testing.T) {
 			port:    10,
 			payload: "0202d30b070082491f11256718d9fe0ede190505",
 			expected: Port10Payload{
-				Status:     2,
 				Moving:     false,
 				Latitude:   47.385351,
 				Longitude:  8.538399,
-				Altitude:   43.89,
+				Altitude:   438.9,
 				Timestamp:  time.Date(2024, 10, 23, 11, 11, 58, 0, time.UTC),
 				Battery:    3.806,
 				TTF:        helpers.DurationPtr(25 * time.Second),
@@ -1443,7 +1439,7 @@ func TestFeatures(t *testing.T) {
 			allowNoFeatures: true,
 		},
 		{
-			payload: "0002d2eeb40081d77ca3706a196afd0e74000009",
+			payload: "0002d2eeb40081d77c10586a196afd0e74000009",
 			port:    10,
 		},
 		{
@@ -1762,12 +1758,12 @@ func TestMarshal(t *testing.T) {
 		{
 			payload:  "0002d30b070082491f11256718d9fe0ede190505",
 			port:     10,
-			expected: []string{"\"status\": 0", "\"moving\": false", "\"latitude\": 47.385351", "\"altitude\": \"43.9m\"", "\"battery\": \"3.806v\"", "\"ttf\": \"25s\"", "\"pdop\": \"2.5m\"", "\"satellites\": 5"},
+			expected: []string{"\"moving\": false", "\"latitude\": 47.385351", "\"altitude\": \"438.9m\"", "\"battery\": \"3.806v\"", "\"ttf\": \"25s\"", "\"pdop\": \"2.5m\"", "\"satellites\": 5"},
 		},
 		{
 			payload:  "0102d30b070082491f11256718d9fe0ede190505",
 			port:     10,
-			expected: []string{"\"status\": 1", "\"moving\": true", "\"latitude\": 47.385351", "\"altitude\": \"43.9m\"", "\"battery\": \"3.806v\"", "\"ttf\": \"25s\"", "\"pdop\": \"2.5m\"", "\"satellites\": 5"},
+			expected: []string{"\"moving\": true", "\"latitude\": 47.385351", "\"altitude\": \"438.9m\"", "\"battery\": \"3.806v\"", "\"ttf\": \"25s\"", "\"pdop\": \"2.5m\"", "\"satellites\": 5"},
 		},
 		{
 			payload:  "010b0266acbcf0000000000756",

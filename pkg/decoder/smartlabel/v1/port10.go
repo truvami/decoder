@@ -14,10 +14,10 @@ import (
 // +------+------+-------------------------------------------+------------------------+
 // | Byte | Size | Description                               | Format                 |
 // +------+------+-------------------------------------------+------------------------+
-// | 0    | 1    | Status                                    | uint8 (FW always 0)    |
+// | 0    | 1    | Status                                    | uint8 (bit 0 = moving) |
 // | 1    | 4    | Latitude                                  | int32, 1/1'000'000 deg |
 // | 5    | 4    | Longitude                                 | int32, 1/1'000'000 deg |
-// | 9    | 2    | Altitude                                  | uint16, centimeters    |
+// | 9    | 2    | Altitude                                  | uint16, decimeters     |
 // | 11   | 4    | Unix timestamp                            | uint32                 |
 // | 15   | 2    | voltage_temp (battery)                    | uint16, mV             |
 // | 17   | 1    | Time to fix                               | uint8, s               |
@@ -26,12 +26,12 @@ import (
 // +------+------+-------------------------------------------+------------------------+
 
 type Port10Payload struct {
-	Status     uint8          `json:"status"`
+	Moving     bool           `json:"moving"`
 	Latitude   float64        `json:"latitude" validate:"gte=-90,lte=90"`
 	Longitude  float64        `json:"longitude" validate:"gte=-180,lte=180"`
 	Altitude   float64        `json:"altitude"`
 	Timestamp  time.Time      `json:"timestamp"`
-	Battery    float64        `json:"battery" validate:"gte=1,lte=5"`
+	Battery    float32        `json:"battery" validate:"gte=1,lte=5"`
 	TTF        *time.Duration `json:"ttf"`
 	PDOP       *float64       `json:"pdop"`
 	Satellites *uint8         `json:"satellites" validate:"gte=3,lte=27"`
@@ -103,7 +103,7 @@ func (p Port10Payload) GetSatellites() *uint8 {
 }
 
 func (p Port10Payload) GetBatteryVoltage() float64 {
-	return p.Battery
+	return float64(p.Battery)
 }
 
 func (p Port10Payload) GetLowBattery() *bool {

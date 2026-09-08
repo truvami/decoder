@@ -12,7 +12,7 @@ func TestPort10Payload_GNSSAndBatteryMethods(t *testing.T) {
 
 	ttf := 25 * time.Second
 	p := Port10Payload{
-		Status:     0,
+		Moving:     false,
 		Latitude:   47.385351,
 		Longitude:  8.538399,
 		Altitude:   43.89,
