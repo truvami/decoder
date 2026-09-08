@@ -17,7 +17,7 @@ import (
 // | 0    | 1    | Status                                    | uint8 (bit 0 = moving) |
 // | 1    | 4    | Latitude                                  | int32, 1/1'000'000 deg |
 // | 5    | 4    | Longitude                                 | int32, 1/1'000'000 deg |
-// | 9    | 2    | Altitude                                  | uint16, centimeters    |
+// | 9    | 2    | Altitude                                  | uint16, decimeters     |
 // | 11   | 4    | Unix timestamp                            | uint32                 |
 // | 15   | 2    | voltage_temp (battery)                    | uint16, mV             |
 // | 17   | 1    | Time to fix                               | uint8, s               |
@@ -26,7 +26,6 @@ import (
 // +------+------+-------------------------------------------+------------------------+
 
 type Port10Payload struct {
-	Status     uint8          `json:"status"`
 	Moving     bool           `json:"moving"`
 	Latitude   float64        `json:"latitude" validate:"gte=-90,lte=90"`
 	Longitude  float64        `json:"longitude" validate:"gte=-180,lte=180"`

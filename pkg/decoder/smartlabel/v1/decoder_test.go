@@ -238,10 +238,10 @@ func TestDecode(t *testing.T) {
 		},
 		{
 			// Active GNSS fix near Zurich (tracker sample)
-			payload: "0002d2eeb40081d77ca3706a196afd0e74000009",
+			payload: "0002d2eeb40081d77c10586a196afd0e74000009",
 			port:    10,
 			expected: Port10Payload{
-				Status:     0,
+				Moving:     false,
 				Latitude:   47.3781,
 				Longitude:  8.509308,
 				Altitude:   418.4,
@@ -256,10 +256,10 @@ func TestDecode(t *testing.T) {
 			payload: "0002d308b50082457f16eb66c4a5cd0ed3000505",
 			port:    10,
 			expected: Port10Payload{
-				Status:     0,
+				Moving:     false,
 				Latitude:   47.384757,
 				Longitude:  8.537471,
-				Altitude:   58.67,
+				Altitude:   586.7,
 				Timestamp:  time.Date(2024, 8, 20, 14, 18, 53, 0, time.UTC),
 				Battery:    3.795,
 				TTF:        helpers.DurationPtr(0),
@@ -271,10 +271,10 @@ func TestDecode(t *testing.T) {
 			payload: "0002d30b070082491f11256718d9fe0ede190505",
 			port:    10,
 			expected: Port10Payload{
-				Status:     0,
+				Moving:     false,
 				Latitude:   47.385351,
 				Longitude:  8.538399,
-				Altitude:   43.89,
+				Altitude:   438.9,
 				Timestamp:  time.Date(2024, 10, 23, 11, 11, 58, 0, time.UTC),
 				Battery:    3.806,
 				PDOP:       helpers.Float64Ptr(2.5),
@@ -286,10 +286,10 @@ func TestDecode(t *testing.T) {
 			payload: "0002d30b070082491f11256718d9fe0e74190505",
 			port:    10,
 			expected: Port10Payload{
-				Status:     0,
+				Moving:     false,
 				Latitude:   47.385351,
 				Longitude:  8.538399,
-				Altitude:   43.89,
+				Altitude:   438.9,
 				Timestamp:  time.Date(2024, 10, 23, 11, 11, 58, 0, time.UTC),
 				Battery:    3.7,
 				PDOP:       helpers.Float64Ptr(2.5),
@@ -582,7 +582,7 @@ func TestPort10Features(t *testing.T) {
 
 	payload, ok := decoded.Data.(Port10Payload)
 	assert.True(t, ok)
-	assert.Equal(t, uint8(0), payload.Status)
+	assert.Equal(t, false, payload.Moving)
 }
 
 func TestInvalidPort(t *testing.T) {
@@ -880,7 +880,7 @@ func TestMarshal(t *testing.T) {
 		{
 			payload:  "0002d30b070082491f11256718d9fe0ede190505",
 			port:     10,
-			expected: []string{"\"status\": 0", "\"latitude\": 47.385351", "\"battery\": \"3.806v\"", "\"satellites\": 5"},
+			expected: []string{"\"moving\": false", "\"latitude\": 47.385351", "\"battery\": \"3.806v\"", "\"satellites\": 5"},
 		},
 		{
 			payload:  "0f50107904da8d",
