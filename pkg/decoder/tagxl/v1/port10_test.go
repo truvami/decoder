@@ -53,4 +53,12 @@ func TestPort10Payload_GNSSAndBatteryMethods(t *testing.T) {
 	if got := p.GetLowBattery(); got != nil {
 		t.Fatalf("GetLowBattery() = %v, want nil", got)
 	}
+	if got := p.IsMoving(); got {
+		t.Fatalf("IsMoving() = %v, want false", got)
+	}
+
+	p.Moving = true
+	if got := p.IsMoving(); !got {
+		t.Fatalf("IsMoving() = %v, want true", got)
+	}
 }
