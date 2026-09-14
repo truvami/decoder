@@ -673,6 +673,16 @@ func TestSmartLabelCommandMatrix(t *testing.T) {
 		sent     string
 		observed string
 	}{
+		{name: "flags 20", sent: "4c010120011f", observed: "4c010140011f"},
+		{name: "intervals 21", sent: "4c01012104012c1c20", observed: "4c01014104012c1c20"},
+		{name: "heartbeat 23", sent: "4c0101230106", observed: "4c0101430106"},
+		{name: "advertisement 24", sent: "4c010124013c", observed: "4c010144013c"},
+		{name: "data rate 28", sent: "4c0101280102", observed: "4c01014e0102"},
+		{name: "battery 45", sent: "4c01014500", observed: "4c010145020fa0"},
+		{name: "firmware 46", sent: "4c01014600", observed: "4c0101460401020304"},
+		{name: "reset count 49", sent: "4c01014900", observed: "4c01014902000c"},
+		{name: "reset cause 4a", sent: "4c01014a00", observed: "4c01014a0400000001"},
+		{name: "scan counts 4b", sent: "4c01014b00", observed: "4c01014b0400010002"},
 		{name: "battery levels 29", sent: "4c01012902050a", observed: "4c01014c02050a"},
 		{name: "wifi ap 2a", sent: "4c01012a0103", observed: "4c01014d0103"},
 		{name: "batch 2b", sent: "4c01012b0104", observed: "4c0101500104"},
