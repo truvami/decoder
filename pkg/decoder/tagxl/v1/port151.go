@@ -88,14 +88,6 @@ var setterSpecs = map[byte]setterSpec{
 	setterTagDataRate:              {tlvTag: tlvTagDataRate, valueLen: 1},
 }
 
-var comparableTLVSpecs = func() map[byte]setterSpec {
-	specs := make(map[byte]setterSpec, len(setterSpecs))
-	for _, spec := range setterSpecs {
-		specs[spec.tlvTag] = spec
-	}
-	return specs
-}()
-
 type Port151Payload struct {
 	AccelerometerEnabled                 *bool             `json:"accelerometerEnabled"`
 	WifiEnabled                          *bool             `json:"wifiEnabled"`

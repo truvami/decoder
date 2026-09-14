@@ -1,7 +1,7 @@
 package tagxl
 
 import (
-	"encoding/hex"
+	"bytes"
 	"errors"
 
 	"github.com/truvami/decoder/pkg/common"
@@ -14,18 +14,20 @@ var (
 	errConfigurationUnsupportedCommand = errors.New("tag xl configuration: unsupported command")
 	errConfigurationDuplicateTag       = errors.New("tag xl configuration: duplicate comparable tag")
 	errConfigurationInvalidDataRate    = errors.New("tag xl configuration: invalid data rate")
+	errConfigurationTooLarge           = errors.New("tag xl configuration: response exceeds dialect limit")
+	errConfigurationUnknownDialect     = errors.New("tag xl configuration: unknown dialect")
 )
 
 // ConfigurationComparison is the applicability-aware result of comparing a
-// sent Tag XL settings downlink with a port-151 settings uplink.
+// sent settings downlink with a port-151 settings uplink.
 type ConfigurationComparison int
 
 const (
-	// ConfigurationIncomplete means the uplink omitted at least one requested setter.
+	// ConfigurationIncomplete means the uplink omitted at least one required tag.
 	ConfigurationIncomplete ConfigurationComparison = iota
-	// ConfigurationMismatch means every requested setter was present and at least one differed.
+	// ConfigurationMismatch means every required tag was present and a setter differed.
 	ConfigurationMismatch
-	// ConfigurationMatch means every requested setter was present and equal.
+	// ConfigurationMatch means every required tag was present and every setter matched.
 	ConfigurationMatch
 )
 
@@ -42,18 +44,29 @@ func (c ConfigurationComparison) String() string {
 	}
 }
 
-// MatchConfiguration reports whether observed reflects every setter in sent.
-// false with nil error means a well-formed non-match or incomplete report;
-// non-nil error means malformed or unsupported.
+type configurationRequirement struct {
+	spec      commandSpec
+	wantValue []byte
+}
+
+// MatchConfiguration reports whether observed reflects every setter in sent
+// using the Tag XL dialect.
 func MatchConfiguration(sentHex, observedHex string) (bool, error) {
 	result, err := CompareConfiguration(sentHex, observedHex)
 	return result == ConfigurationMatch, err
 }
 
-// CompareConfiguration classifies observed against every setter in sent.
-// Incomplete reports are distinguished from complete contradictions so callers
-// can ignore partial telemetry without treating it as a mismatch.
+// CompareConfiguration classifies observed against the Tag XL dialect.
 func CompareConfiguration(sentHex, observedHex string) (ConfigurationComparison, error) {
+	return CompareConfigurationFor(ConfigurationDialectTagXL, sentHex, observedHex)
+}
+
+// CompareConfigurationFor classifies observed against sent for one dialect.
+func CompareConfigurationFor(dialect ConfigurationDialect, sentHex, observedHex string) (ConfigurationComparison, error) {
+	spec, err := dialectSpecFor(dialect)
+	if err != nil {
+		return 0, err
+	}
 	sent, err := common.HexStringToBytes(sentHex)
 	if err != nil {
 		return 0, err
@@ -63,166 +76,213 @@ func CompareConfiguration(sentHex, observedHex string) (ConfigurationComparison,
 		return 0, err
 	}
 
-	sentTLVHex, requestedSetters, err := parseConfigurationSent(sent)
+	requirements, err := parseConfigurationSent(spec, sent)
 	if err != nil {
 		return 0, err
 	}
-	observedTLVHex, seen, err := parseConfigurationObserved(observed)
+	seen, err := parseConfigurationObserved(requirements, observed)
 	if err != nil {
 		return 0, err
 	}
 
-	for _, setterTag := range requestedSetters {
-		spec, ok := setterSpecs[setterTag]
-		if !ok {
-			return 0, errConfigurationUnsupportedCommand
-		}
-		if _, ok := seen[spec.tlvTag]; !ok {
+	for tag := range requirements {
+		if _, ok := seen[tag]; !ok {
 			return ConfigurationIncomplete, nil
 		}
 	}
-
-	sentPayload, err := decodePort151Payload(sentTLVHex)
-	if err != nil {
-		return 0, err
-	}
-	observedPayload, err := decodePort151Payload(observedTLVHex)
-	if err != nil {
-		return 0, err
-	}
-
-	for _, setterTag := range requestedSetters {
-		if !compareConfigurationSetter(setterTag, sentPayload, observedPayload) {
-			return ConfigurationMismatch, nil
+	for tag, requirement := range requirements {
+		if requirement.wantValue == nil {
+			continue
+		}
+		for _, value := range seen[tag] {
+			if !compareRequirementValue(requirement, value) {
+				return ConfigurationMismatch, nil
+			}
 		}
 	}
-
 	return ConfigurationMatch, nil
 }
 
-func parseConfigurationSent(payload []byte) (tlvHex string, requestedSetters []byte, err error) {
-	if len(payload) < 3 || payload[0] != configurationEnvelopeMarker {
-		return "", nil, errConfigurationWrongMarker
-	}
-
-	tlvPayload := []byte{configurationEnvelopeMarker, 0x00, 0x00}
-	setters := make(map[byte]struct{})
-	offset := 3
-	for offset < len(payload) {
-		tag, value, next, err := readTLV(payload, offset)
-		if err != nil {
-			return "", nil, err
-		}
-
-		spec, ok := setterSpecs[tag]
-		if !ok {
-			return "", nil, errConfigurationUnsupportedCommand
-		}
-		if len(value) != spec.valueLen {
-			return "", nil, errConfigurationMalformedTLV
-		}
-		if tag == setterTagDataRate && value[0] > configurationMaxDataRate {
-			return "", nil, errConfigurationInvalidDataRate
-		}
-		if _, exists := setters[tag]; exists {
-			return "", nil, errConfigurationDuplicateTag
-		}
-
-		setters[tag] = struct{}{}
-		requestedSetters = append(requestedSetters, tag)
-		tlvPayload = append(tlvPayload, spec.tlvTag, byte(len(value)))
-		tlvPayload = append(tlvPayload, value...)
-		offset = next
-	}
-
-	if len(requestedSetters) == 0 {
-		return "", nil, errConfigurationNoSetter
-	}
-
-	return hex.EncodeToString(tlvPayload), requestedSetters, nil
-}
-
-func parseConfigurationObserved(payload []byte) (tlvHex string, seen map[byte]struct{}, err error) {
-	if len(payload) < 3 || payload[0] != configurationEnvelopeMarker {
-		return "", nil, errConfigurationWrongMarker
-	}
-
-	tlvPayload := []byte{configurationEnvelopeMarker, 0x00, 0x00}
-	seen = make(map[byte]struct{})
-	offset := 3
-	for offset < len(payload) {
-		tag, value, next, err := readTLV(payload, offset)
-		if err != nil {
-			return "", nil, err
-		}
-
-		if spec, comparable := comparableTLVSpecs[tag]; comparable {
-			if len(value) != spec.valueLen {
-				return "", nil, errConfigurationMalformedTLV
-			}
-			if tag == tlvTagDataRate && value[0] > configurationMaxDataRate {
-				return "", nil, errConfigurationInvalidDataRate
-			}
-			if _, exists := seen[tag]; exists {
-				return "", nil, errConfigurationDuplicateTag
-			}
-			seen[tag] = struct{}{}
-			tlvPayload = append(tlvPayload, tag, byte(len(value)))
-			tlvPayload = append(tlvPayload, value...)
-		}
-
-		offset = next
-	}
-
-	return hex.EncodeToString(tlvPayload), seen, nil
-}
-
-func decodePort151Payload(payloadHex string) (Port151Payload, error) {
-	config := port151PayloadConfig()
-	if err := common.ValidateLength(&payloadHex, &config); err != nil {
-		return Port151Payload{}, err
-	}
-
-	decoded, err := common.Decode(&payloadHex, &config)
+// ValidateConfiguration reports whether sent is a verifiable payload for dialect.
+func ValidateConfiguration(dialect ConfigurationDialect, sentHex string) error {
+	spec, err := dialectSpecFor(dialect)
 	if err != nil {
-		return Port151Payload{}, err
+		return err
 	}
-
-	return decoded.(Port151Payload), nil
+	sent, err := common.HexStringToBytes(sentHex)
+	if err != nil {
+		return err
+	}
+	_, err = parseConfigurationSent(spec, sent)
+	return err
 }
 
-func compareConfigurationSetter(setterTag byte, sent, observed Port151Payload) bool {
-	switch setterTag {
-	case setterTagDeviceFlags:
-		return ptrEqual(sent.AccelerometerEnabled, observed.AccelerometerEnabled) &&
-			ptrEqual(sent.WifiEnabled, observed.WifiEnabled) &&
-			ptrEqual(sent.GnssEnabled, observed.GnssEnabled) &&
-			ptrEqual(sent.FirmwareUpgrade, observed.FirmwareUpgrade)
-	case setterTagMovingIntervals:
-		return ptrEqual(sent.LocalizationIntervalWhileMoving, observed.LocalizationIntervalWhileMoving) &&
-			ptrEqual(sent.LocalizationIntervalWhileSteady, observed.LocalizationIntervalWhileSteady)
-	case setterTagAccelerationThreshold:
-		return ptrEqual(sent.AccelerometerWakeupThreshold, observed.AccelerometerWakeupThreshold) &&
-			ptrEqual(sent.AccelerometerDelay, observed.AccelerometerDelay)
-	case setterTagHeartbeatInterval:
-		return ptrEqual(sent.HeartbeatInterval, observed.HeartbeatInterval)
-	case setterTagAdvertisementInterval:
-		return ptrEqual(sent.AdvertisementFirmwareUpgradeInterval, observed.AdvertisementFirmwareUpgradeInterval)
-	case setterTagRotationFlags:
-		return ptrEqual(sent.RotationInvert, observed.RotationInvert) &&
-			ptrEqual(sent.RotationConfirmed, observed.RotationConfirmed)
-	case setterTagDataRate:
-		return ptrEqual(sent.DataRate, observed.DataRate)
-	default:
-		return false
+// BuildCurrentConfigurationRequest derives a getter-only readback from sent.
+func BuildCurrentConfigurationRequest(dialect ConfigurationDialect, sentHex string) ([]byte, error) {
+	spec, err := dialectSpecFor(dialect)
+	if err != nil {
+		return nil, err
 	}
+	sent, err := common.HexStringToBytes(sentHex)
+	if err != nil {
+		return nil, err
+	}
+	requirements, err := parseConfigurationSent(spec, sent)
+	if err != nil {
+		return nil, err
+	}
+
+	payload := []byte{configurationEnvelopeMarker, 0x00, 0x00}
+	for _, requirement := range orderedRequirements(sent, spec, requirements) {
+		payload = append(payload, requirement.spec.getterTag, 0x00)
+	}
+	payload[2] = byte((len(payload) - 3) / 2)
+	payload[1] = byte(len(payload) - 2)
+	return payload, nil
 }
 
-func ptrEqual[T comparable](sent, observed *T) bool {
-	if sent == nil || observed == nil {
-		return sent == observed
+func parseConfigurationSent(spec dialectSpec, payload []byte) (map[byte]configurationRequirement, error) {
+	if len(payload) < 3 || payload[0] != configurationEnvelopeMarker {
+		return nil, errConfigurationWrongMarker
 	}
-	return *sent == *observed
+
+	requirements := make(map[byte]configurationRequirement)
+	commandCount := 0
+	offset := 3
+	for offset < len(payload) {
+		tag, value, next, err := readTLV(payload, offset)
+		if err != nil {
+			return nil, err
+		}
+		commandCount++
+		if commandCount > spec.limits.maxCommands {
+			return nil, errConfigurationTooLarge
+		}
+
+		if setter, ok := spec.setters[tag]; ok {
+			if len(value) != setter.setterLen {
+				return nil, errConfigurationMalformedTLV
+			}
+			if err := validateCommandValue(setter, value); err != nil {
+				return nil, err
+			}
+			if existing, exists := requirements[setter.getterTag]; exists && existing.wantValue != nil {
+				return nil, errConfigurationDuplicateTag
+			}
+			copied := append([]byte(nil), value...)
+			requirements[setter.getterTag] = configurationRequirement{spec: setter, wantValue: copied}
+			offset = next
+			continue
+		}
+
+		getter, ok := spec.getters[tag]
+		if !ok || len(value) != 0 {
+			return nil, errConfigurationUnsupportedCommand
+		}
+		if _, exists := requirements[getter.getterTag]; !exists {
+			requirements[getter.getterTag] = configurationRequirement{spec: getter}
+		}
+		offset = next
+	}
+
+	if len(requirements) == 0 {
+		return nil, errConfigurationNoSetter
+	}
+	if expectedResponseSize(requirements) > spec.limits.maxResponseBytes {
+		return nil, errConfigurationTooLarge
+	}
+	return requirements, nil
+}
+
+func parseConfigurationObserved(requirements map[byte]configurationRequirement, payload []byte) (map[byte][][]byte, error) {
+	if len(payload) < 3 || payload[0] != configurationEnvelopeMarker {
+		return nil, errConfigurationWrongMarker
+	}
+
+	seen := make(map[byte][][]byte)
+	offset := 3
+	for offset < len(payload) {
+		tag, value, next, err := readTLV(payload, offset)
+		if err != nil {
+			return nil, err
+		}
+		requirement, required := requirements[tag]
+		if required {
+			if len(value) != requirement.spec.responseLen {
+				return nil, errConfigurationMalformedTLV
+			}
+			if requirement.wantValue != nil && requirement.spec.dataRate && len(value) > 0 && value[0] > configurationMaxDataRate {
+				return nil, errConfigurationInvalidDataRate
+			}
+			seen[tag] = append(seen[tag], append([]byte(nil), value...))
+		}
+		offset = next
+	}
+	return seen, nil
+}
+
+func validateCommandValue(spec commandSpec, value []byte) error {
+	if spec.dataRate && len(value) > 0 && value[0] > configurationMaxDataRate {
+		return errConfigurationInvalidDataRate
+	}
+	if spec.validate != nil {
+		return spec.validate(value)
+	}
+	return nil
+}
+
+func compareRequirementValue(requirement configurationRequirement, observed []byte) bool {
+	sent := requirement.wantValue
+	if requirement.spec.prefixLen > 0 {
+		n := requirement.spec.prefixLen
+		if len(sent) < n || len(observed) < n {
+			return false
+		}
+		return bytes.Equal(sent[:n], observed[:n])
+	}
+	if requirement.spec.mask != 0 {
+		if len(sent) == 0 || len(observed) == 0 {
+			return false
+		}
+		return (sent[0] & requirement.spec.mask) == (observed[0] & requirement.spec.mask)
+	}
+	return bytes.Equal(sent, observed)
+}
+
+func expectedResponseSize(requirements map[byte]configurationRequirement) int {
+	size := 3
+	for _, requirement := range requirements {
+		size += 2 + requirement.spec.responseLen
+	}
+	return size
+}
+
+func orderedRequirements(payload []byte, spec dialectSpec, requirements map[byte]configurationRequirement) []configurationRequirement {
+	ordered := make([]configurationRequirement, 0, len(requirements))
+	seen := make(map[byte]struct{}, len(requirements))
+	offset := 3
+	for offset < len(payload) {
+		tag, _, next, err := readTLV(payload, offset)
+		if err != nil {
+			break
+		}
+		var getter byte
+		if setter, ok := spec.setters[tag]; ok {
+			getter = setter.getterTag
+		} else if getterSpec, ok := spec.getters[tag]; ok {
+			getter = getterSpec.getterTag
+		}
+		if getter != 0 {
+			if _, exists := seen[getter]; !exists {
+				if requirement, ok := requirements[getter]; ok {
+					ordered = append(ordered, requirement)
+					seen[getter] = struct{}{}
+				}
+			}
+		}
+		offset = next
+	}
+	return ordered
 }
 
 func readTLV(payload []byte, offset int) (tag byte, value []byte, next int, err error) {
