@@ -15,6 +15,7 @@ var (
 	errConfigurationDuplicateTag       = errors.New("tag xl configuration: duplicate comparable tag")
 	errConfigurationInvalidDataRate    = errors.New("tag xl configuration: invalid data rate")
 	errConfigurationTooLarge           = errors.New("tag xl configuration: response exceeds dialect limit")
+	errConfigurationTooManyCommands    = errors.New("tag xl configuration: command count exceeds dialect limit")
 	errConfigurationUnknownDialect     = errors.New("tag xl configuration: unknown dialect")
 )
 
@@ -156,7 +157,7 @@ func parseConfigurationSent(spec dialectSpec, payload []byte) (map[byte]configur
 		}
 		commandCount++
 		if commandCount > spec.limits.maxCommands {
-			return nil, errConfigurationTooLarge
+			return nil, errConfigurationTooManyCommands
 		}
 
 		if setter, ok := spec.setters[tag]; ok {
@@ -211,7 +212,7 @@ func parseConfigurationObserved(requirements map[byte]configurationRequirement, 
 			if len(value) != requirement.spec.responseLen {
 				return nil, errConfigurationMalformedTLV
 			}
-			if requirement.wantValue != nil && requirement.spec.dataRate && len(value) > 0 && value[0] > configurationMaxDataRate {
+			if requirement.spec.dataRate && len(value) > 0 && value[0] > configurationMaxDataRate {
 				return nil, errConfigurationInvalidDataRate
 			}
 			seen[tag] = append(seen[tag], append([]byte(nil), value...))

@@ -208,6 +208,17 @@ func TestMatchConfiguration(t *testing.T) {
 
 		_, err = MatchConfiguration("4c0101280102", "4c01014e0108")
 		assertConfigurationError(t, err, errConfigurationInvalidDataRate)
+
+		_, err = CompareConfigurationFor(ConfigurationDialectTagXL, "4c01014e00", "4c01014e0108")
+		assertConfigurationError(t, err, errConfigurationInvalidDataRate)
+
+		result, err := CompareConfigurationFor(ConfigurationDialectTagXL, "4c01014e00", "4c01014e0102")
+		if err != nil {
+			t.Fatalf("valid getter-only data rate: %v", err)
+		}
+		if result != ConfigurationMatch {
+			t.Fatalf("got %s, want match", result)
+		}
 	})
 
 	t.Run("wrong observed comparable length", func(t *testing.T) {
@@ -376,6 +387,29 @@ func TestPort151PayloadConfigCoversComparableTLVTags(t *testing.T) {
 	for setter, spec := range setterSpecs {
 		if _, ok := tags[spec.tlvTag]; !ok {
 			t.Errorf("TLV tag 0x%02x (setter 0x%02x) missing from port151PayloadConfig", spec.tlvTag, setter)
+		}
+	}
+}
+
+func TestTagXLDialectOverlapsPort151SetterSpecs(t *testing.T) {
+	spec, err := dialectSpecFor(ConfigurationDialectTagXL)
+	if err != nil {
+		t.Fatalf("dialect: %v", err)
+	}
+	for setter, port151 := range setterSpecs {
+		command, ok := spec.setters[setter]
+		if !ok {
+			t.Errorf("tagXLDialect missing setter 0x%02x", setter)
+			continue
+		}
+		if command.getterTag != port151.tlvTag {
+			t.Errorf("setter 0x%02x getterTag=0x%02x, want 0x%02x", setter, command.getterTag, port151.tlvTag)
+		}
+		if command.setterLen != port151.valueLen {
+			t.Errorf("setter 0x%02x setterLen=%d, want %d", setter, command.setterLen, port151.valueLen)
+		}
+		if command.responseLen != port151.valueLen {
+			t.Errorf("setter 0x%02x responseLen=%d, want %d", setter, command.responseLen, port151.valueLen)
 		}
 	}
 }
@@ -623,6 +657,12 @@ func TestValidateConfiguration(t *testing.T) {
 	if err := ValidateConfiguration(ConfigurationDialectSmartLabelV2, "4c0101250101"); err == nil {
 		t.Fatal("expected colliding Tag XL command to fail Smart Label validation")
 	}
+
+	payload := []byte{0x4c, 0x00, 0x00}
+	for range 33 {
+		payload = append(payload, tlvTagDeviceFlags, 0x00)
+	}
+	assertConfigurationError(t, ValidateConfiguration(ConfigurationDialectTagXL, hex.EncodeToString(payload)), errConfigurationTooManyCommands)
 }
 
 func TestConfigurationDialectString(t *testing.T) {
