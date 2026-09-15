@@ -281,6 +281,26 @@ func TestMatchConfiguration(t *testing.T) {
 				t.Fatalf("expected validation error, got %v", err)
 			}
 		})
+
+		t.Run("moving interval 59", func(t *testing.T) {
+			ok, err := MatchConfiguration("4c01012104003b1c20", "4c01014104003b1c20")
+			if ok {
+				t.Fatal("expected validation failure, not verification")
+			}
+			if !errors.Is(err, common.ErrValidationFailed) {
+				t.Fatalf("expected validation error, got %v", err)
+			}
+		})
+
+		t.Run("acceleration delay 999", func(t *testing.T) {
+			ok, err := MatchConfiguration("4c01012204006403e7", "4c01014204006403e7")
+			if ok {
+				t.Fatal("expected validation failure, not verification")
+			}
+			if !errors.Is(err, common.ErrValidationFailed) {
+				t.Fatalf("expected validation error, got %v", err)
+			}
+		})
 	})
 }
 

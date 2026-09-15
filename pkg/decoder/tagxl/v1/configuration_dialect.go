@@ -75,10 +75,36 @@ func tagXLAdvertisementValidate(value []byte) error {
 	return nil
 }
 
+func tagXLMovingIntervalsValidate(value []byte) error {
+	if len(value) != 4 {
+		return common.ErrValidationFailed
+	}
+	packed := common.BytesToUint32(value)
+	moving := packed >> 16
+	steady := packed & 0xffff
+	if moving < 60 || moving > 86400 || steady < 120 || steady > 86400 {
+		return common.ErrValidationFailed
+	}
+	return nil
+}
+
+func tagXLAccelerationValidate(value []byte) error {
+	if len(value) != 4 {
+		return common.ErrValidationFailed
+	}
+	packed := common.BytesToUint32(value)
+	threshold := packed >> 16
+	delay := packed & 0xffff
+	if threshold < 10 || threshold > 8000 || delay < 1000 || delay > 10000 {
+		return common.ErrValidationFailed
+	}
+	return nil
+}
+
 var tagXLDialect = newDialectSpec(dialectLimits{maxCommands: 32, maxResponseBytes: 255}, []commandSpec{
 	{setterTag: setterTagDeviceFlags, getterTag: tlvTagDeviceFlags, setterLen: 1, responseLen: 1, mask: 0x0f},
-	{setterTag: setterTagMovingIntervals, getterTag: tlvTagMovingIntervals, setterLen: 4, responseLen: 4},
-	{setterTag: setterTagAccelerationThreshold, getterTag: tlvTagAccelerationThreshold, setterLen: 4, responseLen: 4},
+	{setterTag: setterTagMovingIntervals, getterTag: tlvTagMovingIntervals, setterLen: 4, responseLen: 4, validate: tagXLMovingIntervalsValidate},
+	{setterTag: setterTagAccelerationThreshold, getterTag: tlvTagAccelerationThreshold, setterLen: 4, responseLen: 4, validate: tagXLAccelerationValidate},
 	{setterTag: setterTagHeartbeatInterval, getterTag: tlvTagHeartbeatInterval, setterLen: 1, responseLen: 1, validate: tagXLHeartbeatValidate},
 	{setterTag: setterTagAdvertisementInterval, getterTag: tlvTagAdvertisementInterval, setterLen: 1, responseLen: 1, validate: tagXLAdvertisementValidate},
 	{setterTag: setterTagRotationFlags, getterTag: tlvTagRotationFlags, setterLen: 1, responseLen: 1, mask: 0x03},
