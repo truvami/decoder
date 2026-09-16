@@ -259,6 +259,40 @@ func assertConfigurationError(t *testing.T, err error, target error) {
 	}
 }
 
+func TestValidateConfiguration(t *testing.T) {
+	if err := ValidateConfiguration(tagSLSentHex); err != nil {
+		t.Fatalf("expected valid sent payload: %v", err)
+	}
+
+	if err := ValidateConfiguration("zz"); err == nil {
+		t.Fatal("expected hex error")
+	}
+
+	err := ValidateConfiguration(tagSLSentHex[:len(tagSLSentHex)-2])
+	assertConfigurationError(t, err, common.ErrInvalidPayloadLength)
+
+	sent := mustMutateHex(t, tagSLSentHex, map[int][]byte{3: {0x00, 0x00, 0x00, 0x04}})
+	if err := ValidateConfiguration(sent); !errors.Is(err, common.ErrValidationFailed) {
+		t.Fatalf("expected validation error, got %v", err)
+	}
+}
+
+func TestValidateBleConfiguration(t *testing.T) {
+	if err := ValidateBleConfiguration(tagSLBleSentHex); err != nil {
+		t.Fatalf("expected valid BLE payload: %v", err)
+	}
+
+	if err := ValidateBleConfiguration("zz"); err == nil {
+		t.Fatal("expected hex error")
+	}
+
+	err := ValidateBleConfiguration(tagSLBleSentHex[:len(tagSLBleSentHex)-2])
+	assertConfigurationError(t, err, common.ErrInvalidPayloadLength)
+
+	err = ValidateBleConfiguration(tagSLBleSentHex + "00")
+	assertConfigurationError(t, err, common.ErrInvalidPayloadLength)
+}
+
 func mustMutateHex(t *testing.T, payloadHex string, replacements map[int][]byte) string {
 	t.Helper()
 	payload, err := hex.DecodeString(payloadHex)

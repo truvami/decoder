@@ -187,9 +187,14 @@ func TestMatchConfiguration(t *testing.T) {
 		}
 	})
 
-	t.Run("unsupported runner", func(t *testing.T) {
-		_, err := MatchConfiguration("4c010180020005", "4c0101430118")
+	t.Run("unsupported command", func(t *testing.T) {
+		_, err := MatchConfiguration("4c01018500", "4c0101430118")
 		assertConfigurationError(t, err, errConfigurationUnsupportedCommand)
+	})
+
+	t.Run("action-only has no comparable requirement", func(t *testing.T) {
+		_, err := MatchConfiguration("4c010180020005", "4c0101430118")
+		assertConfigurationError(t, err, errConfigurationNoSetter)
 	})
 
 	t.Run("pure getter presence", func(t *testing.T) {
@@ -674,6 +679,9 @@ func TestValidateConfiguration(t *testing.T) {
 	if err := ValidateConfiguration(ConfigurationDialectTagXL, "4c01014600"); err != nil {
 		t.Fatalf("expected getter-only profile to validate: %v", err)
 	}
+	if err := ValidateConfiguration(ConfigurationDialectTagXL, "4c01018100"); err != nil {
+		t.Fatalf("expected action-only profile to validate: %v", err)
+	}
 	if err := ValidateConfiguration(ConfigurationDialectSmartLabelV2, "4c0101250101"); err == nil {
 		t.Fatal("expected colliding Tag XL command to fail Smart Label validation")
 	}
@@ -725,6 +733,175 @@ func TestTagXLCommandMatrix(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestAnalyzeConfiguration(t *testing.T) {
+	cases := []struct {
+		name       string
+		dialect    ConfigurationDialect
+		sent       string
+		observable bool
+		hasActions bool
+		wantErr    error
+	}{
+		{name: "tag xl setter", dialect: ConfigurationDialectTagXL, sent: "4c0101230118", observable: true},
+		{name: "tag xl getter", dialect: ConfigurationDialectTagXL, sent: "4c01014600", observable: true},
+		{name: "tag xl alarm", dialect: ConfigurationDialectTagXL, sent: "4c010180020005", hasActions: true},
+		{name: "tag xl reset", dialect: ConfigurationDialectTagXL, sent: "4c01018100", hasActions: true},
+		{name: "tag xl scan", dialect: ConfigurationDialectTagXL, sent: "4c01018200", hasActions: true},
+		{name: "tag xl clear storage", dialect: ConfigurationDialectTagXL, sent: "4c01018300", hasActions: true},
+		{name: "tag xl wipe all", dialect: ConfigurationDialectTagXL, sent: "4c01018400", hasActions: true},
+		{name: "tag xl mixed setter and reset", dialect: ConfigurationDialectTagXL, sent: "4c0a02210400780e108100", observable: true, hasActions: true},
+		{name: "tag xl mixed getter and reset", dialect: ConfigurationDialectTagXL, sent: "4c030140008100", observable: true, hasActions: true},
+		{name: "tag xl multiple actions", dialect: ConfigurationDialectTagXL, sent: "4c030281008200", hasActions: true},
+		{name: "tag xl empty", dialect: ConfigurationDialectTagXL, sent: "4c0000", wantErr: errConfigurationNoSetter},
+		{name: "tag xl unknown", dialect: ConfigurationDialectTagXL, sent: "4c01018500", wantErr: errConfigurationUnsupportedCommand},
+		{name: "smart label reset", dialect: ConfigurationDialectSmartLabelV2, sent: "4c01018100", hasActions: true},
+		{name: "smart label scan", dialect: ConfigurationDialectSmartLabelV2, sent: "4c01018200", hasActions: true},
+		{name: "smart label clear storage", dialect: ConfigurationDialectSmartLabelV2, sent: "4c01018300", hasActions: true},
+		{name: "smart label wipe all", dialect: ConfigurationDialectSmartLabelV2, sent: "4c01018400", hasActions: true},
+		{name: "smart label alarm", dialect: ConfigurationDialectSmartLabelV2, sent: "4c010180020005", wantErr: errConfigurationUnsupportedCommand},
+		{name: "unknown dialect", dialect: ConfigurationDialectUnspecified, sent: "4c01018100", wantErr: errConfigurationUnknownDialect},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			observable, hasActions, err := AnalyzeConfiguration(tc.dialect, tc.sent)
+			if tc.wantErr != nil {
+				assertConfigurationError(t, err, tc.wantErr)
+				return
+			}
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if observable != tc.observable || hasActions != tc.hasActions {
+				t.Fatalf("got observable=%v actions=%v, want observable=%v actions=%v", observable, hasActions, tc.observable, tc.hasActions)
+			}
+		})
+	}
+}
+
+func TestConfigurationActions(t *testing.T) {
+	t.Run("wrong action lengths", func(t *testing.T) {
+		cases := []struct {
+			name    string
+			dialect ConfigurationDialect
+			sent    string
+		}{
+			{name: "tag xl alarm empty", dialect: ConfigurationDialectTagXL, sent: "4c01018000"},
+			{name: "tag xl reset with value", dialect: ConfigurationDialectTagXL, sent: "4c010181020000"},
+			{name: "tag xl scan with value", dialect: ConfigurationDialectTagXL, sent: "4c01018201ff"},
+			{name: "tag xl wipe all with value", dialect: ConfigurationDialectTagXL, sent: "4c01018401ff"},
+			{name: "smart label reset with value", dialect: ConfigurationDialectSmartLabelV2, sent: "4c01018101ff"},
+			{name: "smart label wipe all with value", dialect: ConfigurationDialectSmartLabelV2, sent: "4c01018401ff"},
+		}
+		for _, tc := range cases {
+			t.Run(tc.name, func(t *testing.T) {
+				assertConfigurationError(t, ValidateConfiguration(tc.dialect, tc.sent), errConfigurationMalformedTLV)
+			})
+		}
+	})
+
+	t.Run("duplicate action", func(t *testing.T) {
+		assertConfigurationError(t, ValidateConfiguration(ConfigurationDialectTagXL, "4c030281008100"), errConfigurationDuplicateTag)
+		assertConfigurationError(t, ValidateConfiguration(ConfigurationDialectSmartLabelV2, "4c030282008200"), errConfigurationDuplicateTag)
+	})
+
+	t.Run("compare mixed setter and action", func(t *testing.T) {
+		cases := []struct {
+			name     string
+			dialect  ConfigurationDialect
+			sent     string
+			observed string
+		}{
+			{name: "action after setter", dialect: ConfigurationDialectTagXL, sent: "4c0a022104012c1c208100", observed: "4c01014104012c1c20"},
+			{name: "action before setter", dialect: ConfigurationDialectTagXL, sent: "4c0a0281002104012c1c20", observed: "4c01014104012c1c20"},
+			{name: "action between setter and getter", dialect: ConfigurationDialectTagXL, sent: "4c0d032104012c1c2081004000", observed: "4c05024104012c1c2040010f"},
+			{name: "smart label setter and reset", dialect: ConfigurationDialectSmartLabelV2, sent: "4c05022001108100", observed: "4c0101400110"},
+		}
+		for _, tc := range cases {
+			t.Run(tc.name, func(t *testing.T) {
+				result, err := CompareConfigurationFor(tc.dialect, tc.sent, tc.observed)
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+				if result != ConfigurationMatch {
+					t.Fatalf("got %s, want match", result)
+				}
+			})
+		}
+	})
+
+	t.Run("observed scan acknowledgement is ignored", func(t *testing.T) {
+		result, err := CompareConfigurationFor(ConfigurationDialectTagXL, "4c0a022104012c1c208200", "4c05024104012c1c208200")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if result != ConfigurationMatch {
+			t.Fatalf("got %s, want match", result)
+		}
+	})
+
+	t.Run("compare and build reject action-only", func(t *testing.T) {
+		assertConfigurationError(t, mustCompareErr(t, ConfigurationDialectTagXL, "4c01018100", "4c010140010f"), errConfigurationNoSetter)
+		assertConfigurationError(t, mustCompareErr(t, ConfigurationDialectSmartLabelV2, "4c01018200", "4c0101400110"), errConfigurationNoSetter)
+		_, err := BuildCurrentConfigurationRequest(ConfigurationDialectTagXL, "4c01018100")
+		assertConfigurationError(t, err, errConfigurationNoSetter)
+	})
+
+	t.Run("readback omits actions", func(t *testing.T) {
+		got, err := BuildCurrentConfigurationRequest(ConfigurationDialectTagXL, "4c0d0320010a2104007807088100")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		want, err := hex.DecodeString("4c050240004100")
+		if err != nil {
+			t.Fatalf("decode want: %v", err)
+		}
+		if !bytes.Equal(got, want) {
+			t.Fatalf("got %x, want %x", got, want)
+		}
+	})
+
+	t.Run("actions count toward command limits", func(t *testing.T) {
+		payload := []byte{0x4c, 0x00, 0x00}
+		for range 31 {
+			payload = append(payload, tlvTagDeviceFlags, 0x00)
+		}
+		payload = append(payload, actionTagResetDevice, 0x00)
+		if err := ValidateConfiguration(ConfigurationDialectTagXL, hex.EncodeToString(payload)); err != nil {
+			t.Fatalf("32 commands including one action should validate: %v", err)
+		}
+		payload = append(payload, actionTagScanNow, 0x00)
+		assertConfigurationError(t, ValidateConfiguration(ConfigurationDialectTagXL, hex.EncodeToString(payload)), errConfigurationTooManyCommands)
+	})
+
+	t.Run("actions do not count toward response size", func(t *testing.T) {
+		sent := hex.EncodeToString([]byte{
+			0x4c, 0x00, 0x00,
+			0x2c, 0x10, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
+			0x30, 0x07, 0x00, 0x64, 0x00, 0x01, 0x02, 0x03, 0x04,
+			0x21, 0x04, 0x01, 0x2c, 0x1c, 0x20,
+			0x20, 0x01, 0x0f,
+			0x23, 0x01, 0x06,
+			0x46, 0x00,
+			0x81, 0x00,
+			0x82, 0x00,
+			0x83, 0x00,
+		})
+		observable, hasActions, err := AnalyzeConfiguration(ConfigurationDialectSmartLabelV2, sent)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if !observable || !hasActions {
+			t.Fatalf("got observable=%v actions=%v", observable, hasActions)
+		}
+	})
+}
+
+func mustCompareErr(t *testing.T, dialect ConfigurationDialect, sent, observed string) error {
+	t.Helper()
+	_, err := CompareConfigurationFor(dialect, sent, observed)
+	return err
 }
 
 func TestSmartLabelCommandMatrix(t *testing.T) {

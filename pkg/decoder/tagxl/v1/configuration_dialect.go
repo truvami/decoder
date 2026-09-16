@@ -42,13 +42,18 @@ type dialectSpec struct {
 	limits  dialectLimits
 	setters map[byte]commandSpec
 	getters map[byte]commandSpec
+	actions map[byte]int
 }
 
-func newDialectSpec(limits dialectLimits, commands []commandSpec) dialectSpec {
+func newDialectSpec(limits dialectLimits, commands []commandSpec, actions map[byte]int) dialectSpec {
 	spec := dialectSpec{
 		limits:  limits,
 		setters: make(map[byte]commandSpec, len(commands)),
 		getters: make(map[byte]commandSpec, len(commands)),
+		actions: actions,
+	}
+	if spec.actions == nil {
+		spec.actions = map[byte]int{}
 	}
 	for _, command := range commands {
 		if command.setterTag != 0 {
@@ -120,6 +125,12 @@ var tagXLDialect = newDialectSpec(dialectLimits{maxCommands: 32, maxResponseByte
 	{getterTag: tlvTagScanCounts, responseLen: 4},
 	{getterTag: 0x4c, responseLen: 4},
 	{getterTag: 0x52, responseLen: 6},
+}, map[byte]int{
+	actionTagAlarm:        2,
+	actionTagResetDevice:  0,
+	actionTagScanNow:      0,
+	actionTagClearStorage: 0,
+	actionTagWipeAll:      0,
 })
 
 var smartLabelV2Dialect = newDialectSpec(dialectLimits{maxCommands: 30, maxResponseBytes: 51}, []commandSpec{
@@ -141,6 +152,11 @@ var smartLabelV2Dialect = newDialectSpec(dialectLimits{maxCommands: 30, maxRespo
 	{getterTag: 0x4b, responseLen: 4},
 	{getterTag: 0x61, responseLen: 1},
 	{getterTag: 0x63, responseLen: 2},
+}, map[byte]int{
+	actionTagResetDevice:  0,
+	actionTagScanNow:      0,
+	actionTagClearStorage: 0,
+	actionTagWipeAll:      0,
 })
 
 func dialectSpecFor(dialect ConfigurationDialect) (dialectSpec, error) {

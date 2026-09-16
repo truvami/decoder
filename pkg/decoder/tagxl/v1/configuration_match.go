@@ -50,6 +50,11 @@ type configurationRequirement struct {
 	wantValue []byte
 }
 
+type sentConfiguration struct {
+	requirements map[byte]configurationRequirement
+	hasActions   bool
+}
+
 // MatchConfiguration reports whether observed reflects every setter in sent
 // using the Tag XL dialect.
 func MatchConfiguration(sentHex, observedHex string) (bool, error) {
@@ -77,21 +82,24 @@ func CompareConfigurationFor(dialect ConfigurationDialect, sentHex, observedHex 
 		return 0, err
 	}
 
-	requirements, err := parseConfigurationSent(spec, sent)
+	parsed, err := parseConfigurationSent(spec, sent)
 	if err != nil {
 		return 0, err
 	}
-	seen, err := parseConfigurationObserved(requirements, observed)
+	if len(parsed.requirements) == 0 {
+		return 0, errConfigurationNoSetter
+	}
+	seen, err := parseConfigurationObserved(parsed.requirements, observed)
 	if err != nil {
 		return 0, err
 	}
 
-	for tag := range requirements {
+	for tag := range parsed.requirements {
 		if _, ok := seen[tag]; !ok {
 			return ConfigurationIncomplete, nil
 		}
 	}
-	for tag, requirement := range requirements {
+	for tag, requirement := range parsed.requirements {
 		if requirement.wantValue == nil {
 			continue
 		}
@@ -104,17 +112,29 @@ func CompareConfigurationFor(dialect ConfigurationDialect, sentHex, observedHex 
 	return ConfigurationMatch, nil
 }
 
-// ValidateConfiguration reports whether sent is a verifiable payload for dialect.
-func ValidateConfiguration(dialect ConfigurationDialect, sentHex string) error {
+// AnalyzeConfiguration classifies a sent payload without comparing an uplink.
+// hasObservableRequirements is true when at least one setter or getter is present.
+// hasActions is true when at least one supported action command is present.
+func AnalyzeConfiguration(dialect ConfigurationDialect, sentHex string) (hasObservableRequirements, hasActions bool, err error) {
 	spec, err := dialectSpecFor(dialect)
 	if err != nil {
-		return err
+		return false, false, err
 	}
 	sent, err := common.HexStringToBytes(sentHex)
 	if err != nil {
-		return err
+		return false, false, err
 	}
-	_, err = parseConfigurationSent(spec, sent)
+	parsed, err := parseConfigurationSent(spec, sent)
+	if err != nil {
+		return false, false, err
+	}
+	return len(parsed.requirements) > 0, parsed.hasActions, nil
+}
+
+// ValidateConfiguration reports whether sent is a syntactically valid payload for dialect.
+// Action-only payloads are valid.
+func ValidateConfiguration(dialect ConfigurationDialect, sentHex string) error {
+	_, _, err := AnalyzeConfiguration(dialect, sentHex)
 	return err
 }
 
@@ -128,13 +148,16 @@ func BuildCurrentConfigurationRequest(dialect ConfigurationDialect, sentHex stri
 	if err != nil {
 		return nil, err
 	}
-	requirements, err := parseConfigurationSent(spec, sent)
+	parsed, err := parseConfigurationSent(spec, sent)
 	if err != nil {
 		return nil, err
 	}
+	if len(parsed.requirements) == 0 {
+		return nil, errConfigurationNoSetter
+	}
 
 	payload := []byte{configurationEnvelopeMarker, 0x00, 0x00}
-	for _, requirement := range orderedRequirements(sent, spec, requirements) {
+	for _, requirement := range orderedRequirements(sent, spec, parsed.requirements) {
 		payload = append(payload, requirement.spec.getterTag, 0x00)
 	}
 	payload[2] = byte((len(payload) - 3) / 2)
@@ -142,33 +165,46 @@ func BuildCurrentConfigurationRequest(dialect ConfigurationDialect, sentHex stri
 	return payload, nil
 }
 
-func parseConfigurationSent(spec dialectSpec, payload []byte) (map[byte]configurationRequirement, error) {
+func parseConfigurationSent(spec dialectSpec, payload []byte) (sentConfiguration, error) {
 	if len(payload) < 3 || payload[0] != configurationEnvelopeMarker {
-		return nil, errConfigurationWrongMarker
+		return sentConfiguration{}, errConfigurationWrongMarker
 	}
 
 	requirements := make(map[byte]configurationRequirement)
+	seenActions := make(map[byte]struct{})
 	commandCount := 0
 	offset := 3
 	for offset < len(payload) {
 		tag, value, next, err := readTLV(payload, offset)
 		if err != nil {
-			return nil, err
+			return sentConfiguration{}, err
 		}
 		commandCount++
 		if commandCount > spec.limits.maxCommands {
-			return nil, errConfigurationTooManyCommands
+			return sentConfiguration{}, errConfigurationTooManyCommands
+		}
+
+		if actionLen, ok := spec.actions[tag]; ok {
+			if len(value) != actionLen {
+				return sentConfiguration{}, errConfigurationMalformedTLV
+			}
+			if _, exists := seenActions[tag]; exists {
+				return sentConfiguration{}, errConfigurationDuplicateTag
+			}
+			seenActions[tag] = struct{}{}
+			offset = next
+			continue
 		}
 
 		if setter, ok := spec.setters[tag]; ok {
 			if len(value) != setter.setterLen {
-				return nil, errConfigurationMalformedTLV
+				return sentConfiguration{}, errConfigurationMalformedTLV
 			}
 			if err := validateCommandValue(setter, value); err != nil {
-				return nil, err
+				return sentConfiguration{}, err
 			}
 			if existing, exists := requirements[setter.getterTag]; exists && existing.wantValue != nil {
-				return nil, errConfigurationDuplicateTag
+				return sentConfiguration{}, errConfigurationDuplicateTag
 			}
 			copied := append([]byte(nil), value...)
 			requirements[setter.getterTag] = configurationRequirement{spec: setter, wantValue: copied}
@@ -178,7 +214,7 @@ func parseConfigurationSent(spec dialectSpec, payload []byte) (map[byte]configur
 
 		getter, ok := spec.getters[tag]
 		if !ok || len(value) != 0 {
-			return nil, errConfigurationUnsupportedCommand
+			return sentConfiguration{}, errConfigurationUnsupportedCommand
 		}
 		if _, exists := requirements[getter.getterTag]; !exists {
 			requirements[getter.getterTag] = configurationRequirement{spec: getter}
@@ -186,13 +222,13 @@ func parseConfigurationSent(spec dialectSpec, payload []byte) (map[byte]configur
 		offset = next
 	}
 
-	if len(requirements) == 0 {
-		return nil, errConfigurationNoSetter
+	if len(requirements) == 0 && len(seenActions) == 0 {
+		return sentConfiguration{}, errConfigurationNoSetter
 	}
 	if expectedResponseSize(requirements) > spec.limits.maxResponseBytes {
-		return nil, errConfigurationTooLarge
+		return sentConfiguration{}, errConfigurationTooLarge
 	}
-	return requirements, nil
+	return sentConfiguration{requirements: requirements, hasActions: len(seenActions) > 0}, nil
 }
 
 func parseConfigurationObserved(requirements map[byte]configurationRequirement, payload []byte) (map[byte][][]byte, error) {
