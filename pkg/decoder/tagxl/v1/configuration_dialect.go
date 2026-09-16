@@ -130,6 +130,7 @@ var tagXLDialect = newDialectSpec(dialectLimits{maxCommands: 32, maxResponseByte
 	actionTagResetDevice:  0,
 	actionTagScanNow:      0,
 	actionTagClearStorage: 0,
+	actionTagWipeAll:      0,
 })
 
 var smartLabelV2Dialect = newDialectSpec(dialectLimits{maxCommands: 30, maxResponseBytes: 51}, []commandSpec{
@@ -155,6 +156,7 @@ var smartLabelV2Dialect = newDialectSpec(dialectLimits{maxCommands: 30, maxRespo
 	actionTagResetDevice:  0,
 	actionTagScanNow:      0,
 	actionTagClearStorage: 0,
+	actionTagWipeAll:      0,
 })
 
 func dialectSpecFor(dialect ConfigurationDialect) (dialectSpec, error) {

@@ -750,17 +750,17 @@ func TestAnalyzeConfiguration(t *testing.T) {
 		{name: "tag xl reset", dialect: ConfigurationDialectTagXL, sent: "4c01018100", hasActions: true},
 		{name: "tag xl scan", dialect: ConfigurationDialectTagXL, sent: "4c01018200", hasActions: true},
 		{name: "tag xl clear storage", dialect: ConfigurationDialectTagXL, sent: "4c01018300", hasActions: true},
+		{name: "tag xl wipe all", dialect: ConfigurationDialectTagXL, sent: "4c01018400", hasActions: true},
 		{name: "tag xl mixed setter and reset", dialect: ConfigurationDialectTagXL, sent: "4c0a02210400780e108100", observable: true, hasActions: true},
 		{name: "tag xl mixed getter and reset", dialect: ConfigurationDialectTagXL, sent: "4c030140008100", observable: true, hasActions: true},
 		{name: "tag xl multiple actions", dialect: ConfigurationDialectTagXL, sent: "4c030281008200", hasActions: true},
 		{name: "tag xl empty", dialect: ConfigurationDialectTagXL, sent: "4c0000", wantErr: errConfigurationNoSetter},
 		{name: "tag xl unknown", dialect: ConfigurationDialectTagXL, sent: "4c01018500", wantErr: errConfigurationUnsupportedCommand},
-		{name: "tag xl wipe all", dialect: ConfigurationDialectTagXL, sent: "4c01018400", wantErr: errConfigurationUnsupportedCommand},
 		{name: "smart label reset", dialect: ConfigurationDialectSmartLabelV2, sent: "4c01018100", hasActions: true},
 		{name: "smart label scan", dialect: ConfigurationDialectSmartLabelV2, sent: "4c01018200", hasActions: true},
 		{name: "smart label clear storage", dialect: ConfigurationDialectSmartLabelV2, sent: "4c01018300", hasActions: true},
+		{name: "smart label wipe all", dialect: ConfigurationDialectSmartLabelV2, sent: "4c01018400", hasActions: true},
 		{name: "smart label alarm", dialect: ConfigurationDialectSmartLabelV2, sent: "4c010180020005", wantErr: errConfigurationUnsupportedCommand},
-		{name: "smart label wipe all", dialect: ConfigurationDialectSmartLabelV2, sent: "4c01018400", wantErr: errConfigurationUnsupportedCommand},
 		{name: "unknown dialect", dialect: ConfigurationDialectUnspecified, sent: "4c01018100", wantErr: errConfigurationUnknownDialect},
 	}
 	for _, tc := range cases {
@@ -790,7 +790,9 @@ func TestConfigurationActions(t *testing.T) {
 			{name: "tag xl alarm empty", dialect: ConfigurationDialectTagXL, sent: "4c01018000"},
 			{name: "tag xl reset with value", dialect: ConfigurationDialectTagXL, sent: "4c010181020000"},
 			{name: "tag xl scan with value", dialect: ConfigurationDialectTagXL, sent: "4c01018201ff"},
+			{name: "tag xl wipe all with value", dialect: ConfigurationDialectTagXL, sent: "4c01018401ff"},
 			{name: "smart label reset with value", dialect: ConfigurationDialectSmartLabelV2, sent: "4c01018101ff"},
+			{name: "smart label wipe all with value", dialect: ConfigurationDialectSmartLabelV2, sent: "4c01018401ff"},
 		}
 		for _, tc := range cases {
 			t.Run(tc.name, func(t *testing.T) {
@@ -881,6 +883,7 @@ func TestConfigurationActions(t *testing.T) {
 			0x21, 0x04, 0x01, 0x2c, 0x1c, 0x20,
 			0x20, 0x01, 0x0f,
 			0x23, 0x01, 0x06,
+			0x46, 0x00,
 			0x81, 0x00,
 			0x82, 0x00,
 			0x83, 0x00,

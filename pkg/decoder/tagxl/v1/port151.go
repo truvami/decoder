@@ -63,6 +63,7 @@ const (
 	actionTagResetDevice  = 0x81
 	actionTagScanNow      = 0x82
 	actionTagClearStorage = 0x83
+	actionTagWipeAll      = 0x84
 
 	tlvTagDeviceFlags           = 0x40
 	tlvTagMovingIntervals       = 0x41
