@@ -59,6 +59,11 @@ const (
 	setterTagRotationFlags         = 0x25
 	setterTagDataRate              = 0x28
 
+	actionTagAlarm        = 0x80
+	actionTagResetDevice  = 0x81
+	actionTagScanNow      = 0x82
+	actionTagClearStorage = 0x83
+
 	tlvTagDeviceFlags           = 0x40
 	tlvTagMovingIntervals       = 0x41
 	tlvTagAccelerationThreshold = 0x42
