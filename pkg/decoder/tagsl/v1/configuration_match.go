@@ -50,6 +50,19 @@ func MatchConfiguration(sentHex, observedHex string) (bool, error) {
 	return configurationMatches(sentPayload, observedPayload), nil
 }
 
+// ValidateConfiguration reports whether sent is a well-formed port-128 configuration downlink.
+func ValidateConfiguration(sentHex string) error {
+	sent, err := common.HexStringToBytes(sentHex)
+	if err != nil {
+		return err
+	}
+	if len(sent) != configurationSentByteLength {
+		return fmt.Errorf("%w: sent configuration payload length %d", common.ErrInvalidPayloadLength, len(sent))
+	}
+	_, err = decodePort128Payload(sentHex)
+	return err
+}
+
 func validConfigurationReportLength(n int) bool {
 	switch n {
 	case configurationReportCoreByteLength, configurationReportWithBatchByteLength, configurationReportFullByteLength:
@@ -138,6 +151,19 @@ func MatchBleConfiguration(sentHex, observedHex string) (bool, error) {
 	}
 
 	return sentPayload == observedPayload, nil
+}
+
+// ValidateBleConfiguration reports whether sent is a well-formed port-134 BLE configuration downlink.
+func ValidateBleConfiguration(sentHex string) error {
+	sent, err := common.HexStringToBytes(sentHex)
+	if err != nil {
+		return err
+	}
+	if len(sent) != bleConfigurationByteLength {
+		return fmt.Errorf("%w: sent BLE configuration payload length %d", common.ErrInvalidPayloadLength, len(sent))
+	}
+	_, err = decodePort8Payload(sentHex)
+	return err
 }
 
 func decodePort8Payload(payloadHex string) (Port8Payload, error) {
