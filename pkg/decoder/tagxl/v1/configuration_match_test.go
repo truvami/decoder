@@ -1,6 +1,8 @@
 package tagxl
 
 import (
+	"bytes"
+	"encoding/hex"
 	"errors"
 	"testing"
 
@@ -176,16 +178,28 @@ func TestMatchConfiguration(t *testing.T) {
 		_, err := MatchConfiguration("4c0602230118230118", "4c0301430118")
 		assertConfigurationError(t, err, errConfigurationDuplicateTag)
 
-		_, err = MatchConfiguration("4c0401230118", "4c0602430118430118")
-		assertConfigurationError(t, err, errConfigurationDuplicateTag)
+		ok, err := MatchConfiguration("4c0401230118", "4c0602430118430118")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if !ok {
+			t.Fatal("expected matching duplicate observed setter responses")
+		}
 	})
 
-	t.Run("unsupported setter", func(t *testing.T) {
-		_, err := MatchConfiguration("4c01014000", "4c010140010f")
+	t.Run("unsupported runner", func(t *testing.T) {
+		_, err := MatchConfiguration("4c010180020005", "4c0101430118")
 		assertConfigurationError(t, err, errConfigurationUnsupportedCommand)
+	})
 
-		_, err = MatchConfiguration("4c010180020005", "4c0101430118")
-		assertConfigurationError(t, err, errConfigurationUnsupportedCommand)
+	t.Run("pure getter presence", func(t *testing.T) {
+		ok, err := MatchConfiguration("4c01014000", "4c010140010f")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if !ok {
+			t.Fatal("expected getter presence to match")
+		}
 	})
 
 	t.Run("invalid data rate", func(t *testing.T) {
@@ -194,6 +208,17 @@ func TestMatchConfiguration(t *testing.T) {
 
 		_, err = MatchConfiguration("4c0101280102", "4c01014e0108")
 		assertConfigurationError(t, err, errConfigurationInvalidDataRate)
+
+		_, err = CompareConfigurationFor(ConfigurationDialectTagXL, "4c01014e00", "4c01014e0108")
+		assertConfigurationError(t, err, errConfigurationInvalidDataRate)
+
+		result, err := CompareConfigurationFor(ConfigurationDialectTagXL, "4c01014e00", "4c01014e0102")
+		if err != nil {
+			t.Fatalf("valid getter-only data rate: %v", err)
+		}
+		if result != ConfigurationMatch {
+			t.Fatalf("got %s, want match", result)
+		}
 	})
 
 	t.Run("wrong observed comparable length", func(t *testing.T) {
@@ -249,6 +274,26 @@ func TestMatchConfiguration(t *testing.T) {
 
 		t.Run("heartbeat 169", func(t *testing.T) {
 			ok, err := MatchConfiguration("4c01012301a9", "4c01014301a9")
+			if ok {
+				t.Fatal("expected validation failure, not verification")
+			}
+			if !errors.Is(err, common.ErrValidationFailed) {
+				t.Fatalf("expected validation error, got %v", err)
+			}
+		})
+
+		t.Run("moving interval 59", func(t *testing.T) {
+			ok, err := MatchConfiguration("4c01012104003b1c20", "4c01014104003b1c20")
+			if ok {
+				t.Fatal("expected validation failure, not verification")
+			}
+			if !errors.Is(err, common.ErrValidationFailed) {
+				t.Fatalf("expected validation error, got %v", err)
+			}
+		})
+
+		t.Run("acceleration delay 999", func(t *testing.T) {
+			ok, err := MatchConfiguration("4c01012204006403e7", "4c01014204006403e7")
 			if ok {
 				t.Fatal("expected validation failure, not verification")
 			}
@@ -366,9 +411,355 @@ func TestPort151PayloadConfigCoversComparableTLVTags(t *testing.T) {
 	}
 }
 
+func TestTagXLDialectOverlapsPort151SetterSpecs(t *testing.T) {
+	spec, err := dialectSpecFor(ConfigurationDialectTagXL)
+	if err != nil {
+		t.Fatalf("dialect: %v", err)
+	}
+	for setter, port151 := range setterSpecs {
+		command, ok := spec.setters[setter]
+		if !ok {
+			t.Errorf("tagXLDialect missing setter 0x%02x", setter)
+			continue
+		}
+		if command.getterTag != port151.tlvTag {
+			t.Errorf("setter 0x%02x getterTag=0x%02x, want 0x%02x", setter, command.getterTag, port151.tlvTag)
+		}
+		if command.setterLen != port151.valueLen {
+			t.Errorf("setter 0x%02x setterLen=%d, want %d", setter, command.setterLen, port151.valueLen)
+		}
+		if command.responseLen != port151.valueLen {
+			t.Errorf("setter 0x%02x responseLen=%d, want %d", setter, command.responseLen, port151.valueLen)
+		}
+	}
+}
+
 func assertConfigurationError(t *testing.T, err error, target error) {
 	t.Helper()
 	if !errors.Is(err, target) {
 		t.Fatalf("expected error %v, got %v", target, err)
+	}
+}
+
+func TestCompareConfigurationForDialects(t *testing.T) {
+	t.Run("tag xl firmware getter ignores value", func(t *testing.T) {
+		result, err := CompareConfigurationFor(ConfigurationDialectTagXL, "4c01014600", "4c0101460411223344")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if result != ConfigurationMatch {
+			t.Fatalf("got %s, want match", result)
+		}
+	})
+
+	t.Run("tag xl mixed setter and getter", func(t *testing.T) {
+		result, err := CompareConfigurationFor(ConfigurationDialectTagXL, "4c050220010a4600", "4c0a0240010a4604aabbccdd")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if result != ConfigurationMatch {
+			t.Fatalf("got %s, want match", result)
+		}
+	})
+
+	t.Run("tag xl setter plus matching getter prefers setter equality", func(t *testing.T) {
+		result, err := CompareConfigurationFor(ConfigurationDialectTagXL, "4c050220010a4000", "4c010140010b")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if result != ConfigurationMismatch {
+			t.Fatalf("got %s, want mismatch", result)
+		}
+	})
+
+	t.Run("tag xl missing getter is incomplete", func(t *testing.T) {
+		result, err := CompareConfigurationFor(ConfigurationDialectTagXL, "4c030246004000", "4c010140010a")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if result != ConfigurationIncomplete {
+			t.Fatalf("got %s, want incomplete", result)
+		}
+	})
+
+	t.Run("tag xl hold interval setter", func(t *testing.T) {
+		result, err := CompareConfigurationFor(ConfigurationDialectTagXL, "4c01012702012c", "4c01014d02012c")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if result != ConfigurationMatch {
+			t.Fatalf("got %s, want match", result)
+		}
+	})
+
+	t.Run("tag xl rotation enable masks extra bits", func(t *testing.T) {
+		result, err := CompareConfigurationFor(ConfigurationDialectTagXL, "4c01012b0181", "4c0101510101")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if result != ConfigurationMatch {
+			t.Fatalf("got %s, want match", result)
+		}
+	})
+
+	t.Run("smart label flags include ble bit", func(t *testing.T) {
+		result, err := CompareConfigurationFor(ConfigurationDialectSmartLabelV2, "4c0101200110", "4c0101400110")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if result != ConfigurationMatch {
+			t.Fatalf("got %s, want match", result)
+		}
+
+		result, err = CompareConfigurationFor(ConfigurationDialectTagXL, "4c0101200110", "4c0101400100")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if result != ConfigurationMatch {
+			t.Fatalf("tag xl should ignore ble bit: got %s", result)
+		}
+	})
+
+	t.Run("smart label motion compares threshold only", func(t *testing.T) {
+		result, err := CompareConfigurationFor(ConfigurationDialectSmartLabelV2, "4c01012204006403e8", "4c01014204006407d0")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if result != ConfigurationMatch {
+			t.Fatalf("got %s, want match", result)
+		}
+
+		result, err = CompareConfigurationFor(ConfigurationDialectSmartLabelV2, "4c01012204006403e8", "4c01014204006507d0")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if result != ConfigurationMismatch {
+			t.Fatalf("got %s, want mismatch", result)
+		}
+	})
+
+	t.Run("smart label firmware getter", func(t *testing.T) {
+		result, err := CompareConfigurationFor(ConfigurationDialectSmartLabelV2, "4c01014600", "4c0101460401020304")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if result != ConfigurationMatch {
+			t.Fatalf("got %s, want match", result)
+		}
+	})
+
+	t.Run("smart label heartbeat 169 is valid", func(t *testing.T) {
+		result, err := CompareConfigurationFor(ConfigurationDialectSmartLabelV2, "4c01012301a9", "4c01014301a9")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if result != ConfigurationMatch {
+			t.Fatalf("got %s, want match", result)
+		}
+	})
+
+	t.Run("smart label rejects colliding tag xl rotation setter", func(t *testing.T) {
+		_, err := CompareConfigurationFor(ConfigurationDialectSmartLabelV2, "4c0101250103", "4c0101470103")
+		assertConfigurationError(t, err, errConfigurationUnsupportedCommand)
+	})
+
+	t.Run("smart label rejects nonresponsive scan timer", func(t *testing.T) {
+		_, err := CompareConfigurationFor(ConfigurationDialectSmartLabelV2, "4c01013203010078", "4c01016203010078")
+		assertConfigurationError(t, err, errConfigurationUnsupportedCommand)
+	})
+
+	t.Run("smart label rejects secret lte api key getter", func(t *testing.T) {
+		_, err := CompareConfigurationFor(ConfigurationDialectSmartLabelV2, "4c0101b200", "4c0101b20401020304")
+		assertConfigurationError(t, err, errConfigurationUnsupportedCommand)
+	})
+
+	t.Run("wrong getter length is malformed", func(t *testing.T) {
+		_, err := CompareConfigurationFor(ConfigurationDialectTagXL, "4c01014600", "4c010146020011")
+		assertConfigurationError(t, err, errConfigurationMalformedTLV)
+	})
+
+	t.Run("duplicate observed setter values that differ mismatch", func(t *testing.T) {
+		result, err := CompareConfigurationFor(ConfigurationDialectTagXL, "4c0101230118", "4c0602430118430119")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if result != ConfigurationMismatch {
+			t.Fatalf("got %s, want mismatch", result)
+		}
+	})
+
+	t.Run("unknown dialect", func(t *testing.T) {
+		_, err := CompareConfigurationFor(ConfigurationDialectUnspecified, "4c0101230118", "4c0101430118")
+		assertConfigurationError(t, err, errConfigurationUnknownDialect)
+	})
+}
+
+func TestBuildCurrentConfigurationRequest(t *testing.T) {
+	t.Run("converts setters and keeps getters", func(t *testing.T) {
+		got, err := BuildCurrentConfigurationRequest(ConfigurationDialectTagXL, "4c0d0320010a2104007807084600")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		want, err := hex.DecodeString("4c0703400041004600")
+		if err != nil {
+			t.Fatalf("decode want: %v", err)
+		}
+		if !bytes.Equal(got, want) {
+			t.Fatalf("got %x, want %x", got, want)
+		}
+	})
+
+	t.Run("deduplicates setter and getter of the same tag", func(t *testing.T) {
+		got, err := BuildCurrentConfigurationRequest(ConfigurationDialectTagXL, "4c050220010a4000")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		want, err := hex.DecodeString("4c03014000")
+		if err != nil {
+			t.Fatalf("decode want: %v", err)
+		}
+		if !bytes.Equal(got, want) {
+			t.Fatalf("got %x, want %x", got, want)
+		}
+	})
+
+	t.Run("smart label battery thresholds", func(t *testing.T) {
+		got, err := BuildCurrentConfigurationRequest(ConfigurationDialectSmartLabelV2, "4c01012902050a")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		want, err := hex.DecodeString("4c03014c00")
+		if err != nil {
+			t.Fatalf("decode want: %v", err)
+		}
+		if !bytes.Equal(got, want) {
+			t.Fatalf("got %x, want %x", got, want)
+		}
+	})
+
+	t.Run("rejects oversized smart label response", func(t *testing.T) {
+		sent := hex.EncodeToString([]byte{
+			0x4c, 0x00, 0x00,
+			0x2c, 0x10, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
+			0x30, 0x07, 0x00, 0x64, 0x00, 0x01, 0x02, 0x03, 0x04,
+			0x21, 0x04, 0x01, 0x2c, 0x1c, 0x20,
+			0x20, 0x01, 0x0f,
+			0x23, 0x01, 0x06,
+			0x46, 0x00,
+			0x45, 0x00,
+			0x49, 0x00,
+			0x4a, 0x00,
+			0x4b, 0x00,
+		})
+		_, err := BuildCurrentConfigurationRequest(ConfigurationDialectSmartLabelV2, sent)
+		assertConfigurationError(t, err, errConfigurationTooLarge)
+	})
+
+	t.Run("round trip generated request", func(t *testing.T) {
+		request, err := BuildCurrentConfigurationRequest(ConfigurationDialectTagXL, "4c0101280102")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		result, err := CompareConfigurationFor(ConfigurationDialectTagXL, hex.EncodeToString(request), "4c01014e0102")
+		if err != nil {
+			t.Fatalf("compare: %v", err)
+		}
+		if result != ConfigurationMatch {
+			t.Fatalf("got %s, want match", result)
+		}
+	})
+}
+
+func TestValidateConfiguration(t *testing.T) {
+	if err := ValidateConfiguration(ConfigurationDialectTagXL, "4c01014600"); err != nil {
+		t.Fatalf("expected getter-only profile to validate: %v", err)
+	}
+	if err := ValidateConfiguration(ConfigurationDialectSmartLabelV2, "4c0101250101"); err == nil {
+		t.Fatal("expected colliding Tag XL command to fail Smart Label validation")
+	}
+
+	payload := []byte{0x4c, 0x00, 0x00}
+	for range 33 {
+		payload = append(payload, tlvTagDeviceFlags, 0x00)
+	}
+	assertConfigurationError(t, ValidateConfiguration(ConfigurationDialectTagXL, hex.EncodeToString(payload)), errConfigurationTooManyCommands)
+}
+
+func TestConfigurationDialectString(t *testing.T) {
+	if ConfigurationDialectTagXL.String() != "tagxl" {
+		t.Fatalf("tag xl string = %q", ConfigurationDialectTagXL.String())
+	}
+	if ConfigurationDialectSmartLabelV2.String() != "smartlabel-v2" {
+		t.Fatalf("smart label string = %q", ConfigurationDialectSmartLabelV2.String())
+	}
+	if ConfigurationDialectUnspecified.String() != "unspecified" {
+		t.Fatalf("unspecified string = %q", ConfigurationDialectUnspecified.String())
+	}
+}
+
+func TestTagXLCommandMatrix(t *testing.T) {
+	cases := []struct {
+		name     string
+		sent     string
+		observed string
+	}{
+		{name: "hold 27", sent: "4c01012702012c", observed: "4c01014d02012c"},
+		{name: "buffer ack 29", sent: "4c0101290105", observed: "4c01014f0105"},
+		{name: "timestamped 2a", sent: "4c01012a0103", observed: "4c0101500103"},
+		{name: "rotation enable 2b", sent: "4c01012b0101", observed: "4c0101510101"},
+		{name: "time 4c", sent: "4c01014c00", observed: "4c01014c0401020304"},
+		{name: "records 52", sent: "4c01015200", observed: "4c01015206000101020304"},
+		{name: "battery 45", sent: "4c01014500", observed: "4c010145020fa0"},
+		{name: "reset count 49", sent: "4c01014900", observed: "4c01014902000c"},
+		{name: "reset cause 4a", sent: "4c01014a00", observed: "4c01014a0400000001"},
+		{name: "scan counts 4b", sent: "4c01014b00", observed: "4c01014b0400010002"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			result, err := CompareConfigurationFor(ConfigurationDialectTagXL, tc.sent, tc.observed)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if result != ConfigurationMatch {
+				t.Fatalf("got %s, want match", result)
+			}
+		})
+	}
+}
+
+func TestSmartLabelCommandMatrix(t *testing.T) {
+	cases := []struct {
+		name     string
+		sent     string
+		observed string
+	}{
+		{name: "flags 20", sent: "4c010120011f", observed: "4c010140011f"},
+		{name: "intervals 21", sent: "4c01012104012c1c20", observed: "4c01014104012c1c20"},
+		{name: "heartbeat 23", sent: "4c0101230106", observed: "4c0101430106"},
+		{name: "advertisement 24", sent: "4c010124013c", observed: "4c010144013c"},
+		{name: "data rate 28", sent: "4c0101280102", observed: "4c01014e0102"},
+		{name: "battery 45", sent: "4c01014500", observed: "4c010145020fa0"},
+		{name: "firmware 46", sent: "4c01014600", observed: "4c0101460401020304"},
+		{name: "reset count 49", sent: "4c01014900", observed: "4c01014902000c"},
+		{name: "reset cause 4a", sent: "4c01014a00", observed: "4c01014a0400000001"},
+		{name: "scan counts 4b", sent: "4c01014b00", observed: "4c01014b0400010002"},
+		{name: "battery levels 29", sent: "4c01012902050a", observed: "4c01014c02050a"},
+		{name: "wifi ap 2a", sent: "4c01012a0103", observed: "4c01014d0103"},
+		{name: "batch 2b", sent: "4c01012b0104", observed: "4c0101500104"},
+		{name: "ble 2c", sent: "4c01012c10051e0afec10000000000000000000000", observed: "4c01015110051e0afec10000000000000000000000"},
+		{name: "motion v2 30", sent: "4c0101300700640102030405", observed: "4c0101600700640102030405"},
+		{name: "temp 61", sent: "4c01016100", observed: "4c0101610119"},
+		{name: "buffer 63", sent: "4c01016300", observed: "4c01016302000a"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			result, err := CompareConfigurationFor(ConfigurationDialectSmartLabelV2, tc.sent, tc.observed)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if result != ConfigurationMatch {
+				t.Fatalf("got %s, want match", result)
+			}
+		})
 	}
 }
