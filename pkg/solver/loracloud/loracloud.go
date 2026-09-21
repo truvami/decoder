@@ -39,7 +39,7 @@ func (m LoracloudClient) isSemtechLoRaCloudShutdown() error {
 	if m.timeNow().After(time.Date(2025, 7, 31, 0, 0, 0, 0, time.UTC)) {
 		return ErrSemtechLoRaCloudShutdown
 	}
-	m.logger.Warn("LoRa Cloud is Sunsetting on 31.07.2025", zap.String("url", "https://www.semtech.com/loracloud-shutdown"))
+	m.logger.Warn("LoRa Cloud is Sunsetting on 31.07.2025")
 
 	return nil
 }
@@ -321,24 +321,22 @@ func (m LoracloudClient) DeliverUplinkMessage(devEui string, uplinkMsg UplinkMsg
 
 	// We sent a position with the EndOfGroup GNSS-NG header flag set - we expect a position resolution
 	if header.EndOfGroup {
-		metricDevEui := uplinkResponse.Result.Deveui
-
 		if uplinkResponse.GetTimestamp() == nil {
-			loracloudPositionEstimateNoCapturedAtSetCounter.WithLabelValues(metricDevEui).Inc()
+			PositionEstimateNoCapturedAtSetCounter.Inc()
 		}
 		if !uplinkResponse.HasValidCoordinates() {
-			loracloudPositionEstimateZeroCoordinatesSetCounter.WithLabelValues(metricDevEui).Inc()
+			PositionEstimateZeroCoordinatesSetCounter.Inc()
 		}
 		if uplinkResponse.GetTimestamp() == nil &&
 			uplinkResponse.HasValidCoordinates() {
-			loracloudPositionEstimateNoCapturedAtSetWithValidCoordinatesCounter.WithLabelValues(metricDevEui).Inc()
+			PositionEstimateNoCapturedAtSetWithValidCoordinatesCounter.Inc()
 		}
 
 		if uplinkResponse.HasValidPositionResolution() {
-			loracloudPositionEstimateValidCounter.WithLabelValues(metricDevEui).Inc()
+			PositionEstimateValidCounter.Inc()
 		} else {
-			loracloudPositionEstimateInvalidCounter.WithLabelValues(metricDevEui).Inc()
-			m.logger.Error("position resolution is invalid", zap.Any("uplinkResponse", uplinkResponse))
+			PositionEstimateInvalidCounter.Inc()
+			m.logger.Error("position resolution is invalid", zap.String("category", "position_invalid"))
 			return nil, ErrPositionResolutionIsEmpty
 		}
 	}

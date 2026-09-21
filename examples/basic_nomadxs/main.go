@@ -3,28 +3,25 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"log"
+	"fmt"
 
 	"github.com/truvami/decoder/pkg/decoder/nomadxs/v1"
 )
 
 func main() {
-	log.Println("initializing nomad XS decoder...")
+	fmt.Println("initializing nomad XS decoder...")
 	d := nomadxs.NewNomadXSv1Decoder()
 
-	// decode data
-	log.Println("decoding data...")
+	fmt.Println("decoding data...")
 	data, err := d.Decode(context.Background(), "0002c420ff005ed85a12b4180719142607240001ffbaffc2fc6f00d71d2e", 1)
 	if err != nil {
 		panic(err)
 	}
 
-	// data to json
 	j, err := json.Marshal(data)
 	if err != nil {
 		panic(err)
 	}
 
-	// print json
-	log.Printf("result: %s\n", j)
+	fmt.Println(string(j))
 }

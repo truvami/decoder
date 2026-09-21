@@ -59,22 +59,21 @@ func NewLoracloudClient(ctx context.Context, accessToken string, logger *zap.Log
 	}
 	// Warn for Semtech LoRaCloud shutdown (defensive)
 	if client.BaseUrl == SemtechLoRaCloudBaseUrl && time.Now().After(time.Date(2025, 7, 31, 0, 0, 0, 0, time.UTC)) {
-		logger.Warn("LoRa Cloud is Sunsetting on 31.07.2025", zap.String("url", "https://www.semtech.com/loracloud-shutdown"))
+		logger.Warn("LoRa Cloud is Sunsetting on 31.07.2025")
 	}
 	return client, nil
 }
 
 func (l LoracloudClient) Solve(ctx context.Context, payload string, options solver.SolverV2Options) (*decoder.DecodedUplink, error) {
 	start := time.Now()
-	baseURLLabel := l.BaseUrl
 	defer func() {
-		loracloudV2RequestDurationSeconds.WithLabelValues(baseURLLabel).Observe(time.Since(start).Seconds())
+		RequestDurationSeconds.Observe(time.Since(start).Seconds())
 	}()
 
 	// Validate options (do NOT read from context)
 	if err := l.validateOptions(payload, options); err != nil {
-		loracloudV2RequestsTotal.WithLabelValues(baseURLLabel, "error").Inc()
-		loracloudV2ErrorsTotal.WithLabelValues(baseURLLabel, "invalid_options").Inc()
+		RequestsTotal.WithLabelValues("error").Inc()
+		ErrorsTotal.WithLabelValues("invalid_options").Inc()
 		return nil, common.WrapError(ErrInvalidOptions, err)
 	}
 
@@ -92,8 +91,8 @@ func (l LoracloudClient) Solve(ctx context.Context, payload string, options solv
 	// Reuse v1 client for actual HTTP and response shaping, to keep behavior aligned
 	v1Client, err := v1.NewLoracloudClient(ctx, l.accessToken, l.logger, v1.WithBaseUrl(l.BaseUrl))
 	if err != nil {
-		loracloudV2RequestsTotal.WithLabelValues(baseURLLabel, "error").Inc()
-		loracloudV2ErrorsTotal.WithLabelValues(baseURLLabel, "build_request").Inc()
+		RequestsTotal.WithLabelValues("error").Inc()
+		ErrorsTotal.WithLabelValues("build_request").Inc()
 		return nil, common.WrapError(ErrBuildRequest, err)
 	}
 
@@ -107,38 +106,36 @@ func (l LoracloudClient) Solve(ctx context.Context, payload string, options solv
 
 	resp, err := v1Client.DeliverUplinkMessage(options.DevEui, uplink)
 	if err != nil {
-		loracloudV2RequestsTotal.WithLabelValues(baseURLLabel, "error").Inc()
+		RequestsTotal.WithLabelValues("error").Inc()
 		switch {
 		case errors.Is(err, v1.ErrUnexpectedStatusCode):
-			loracloudV2ErrorsTotal.WithLabelValues(baseURLLabel, "unexpected_status").Inc()
+			ErrorsTotal.WithLabelValues("unexpected_status").Inc()
 			return nil, common.WrapError(ErrUnexpectedStatus, err)
 		case errors.Is(err, v1.ErrDecodingResponse):
-			loracloudV2ErrorsTotal.WithLabelValues(baseURLLabel, "decode_failed").Inc()
+			ErrorsTotal.WithLabelValues("decode_failed").Inc()
 			return nil, common.WrapError(ErrDecodeFailed, err)
 		case errors.Is(err, v1.ErrPositionResolutionIsEmpty):
-			loracloudV2ErrorsTotal.WithLabelValues(baseURLLabel, "position_invalid").Inc()
+			ErrorsTotal.WithLabelValues("position_invalid").Inc()
 			return nil, common.WrapError(ErrPositionInvalid, err)
 		default:
-			loracloudV2ErrorsTotal.WithLabelValues(baseURLLabel, "request_failed").Inc()
+			ErrorsTotal.WithLabelValues("request_failed").Inc()
 			return nil, common.WrapError(ErrRequestFailed, err)
 		}
 	}
 
 	// Defensive validation of response
 	if resp == nil {
-		loracloudV2RequestsTotal.WithLabelValues(baseURLLabel, "error").Inc()
-		loracloudV2ResponseInvalidTotal.WithLabelValues(baseURLLabel).Inc()
+		RequestsTotal.WithLabelValues("error").Inc()
+		ResponseInvalidTotal.Inc()
 		return nil, common.WrapError(ErrResponseInvalid, fmt.Errorf("nil response"))
 	}
 
-	devEui := resp.Result.Deveui // v1 client already normalized and removed hyphens
-
 	// Visibility counters similar to v1 (best effort)
 	if resp.GetTimestamp() == nil {
-		loracloudV2PositionInvalidTotal.WithLabelValues(devEui).Inc()
+		PositionInvalidTotal.Inc()
 	}
 	if !resp.HasValidCoordinates() {
-		loracloudV2PositionInvalidTotal.WithLabelValues(devEui).Inc()
+		PositionInvalidTotal.Inc()
 	}
 
 	validPosition := resp.HasValidPositionResolution()
@@ -148,8 +145,8 @@ func (l LoracloudClient) Solve(ctx context.Context, payload string, options solv
 	if validPosition {
 		features = append(features, decoder.FeatureGNSS)
 	} else {
-		loracloudV2ErrorsTotal.WithLabelValues(baseURLLabel, "position_invalid").Inc()
-		l.logger.Debug("position resolution invalid (no GNSS feature set)", zap.Any("uplinkResponse", resp))
+		ErrorsTotal.WithLabelValues("position_invalid").Inc()
+		l.logger.Debug("position resolution invalid (no GNSS feature set)", zap.String("category", "position_invalid"))
 	}
 
 	withTimestamp := options.Timestamp != nil
@@ -163,7 +160,7 @@ func (l LoracloudClient) Solve(ctx context.Context, payload string, options solv
 		features = append(features, decoder.FeatureTimestamp)
 		timestampForBufferedCheck = options.Timestamp
 	} else if resp.GetTimestamp() != nil {
-		l.logger.Info("no timestamp provided, but LoRaCloud / Traxmate returned one", zap.String("devEui", devEui), zap.Time("timestamp", *resp.GetTimestamp()))
+		l.logger.Info("no timestamp provided, but LoRaCloud / Traxmate returned one", zap.String("category", "timestamp_from_response"))
 		features = append(features, decoder.FeatureTimestamp)
 		timestampForBufferedCheck = resp.GetTimestamp()
 	}
@@ -174,7 +171,7 @@ func (l LoracloudClient) Solve(ctx context.Context, payload string, options solv
 		if timestampForBufferedCheck.Before(thresholdAgo) {
 			buffered = true
 			features = append(features, decoder.FeatureBuffered)
-			loracloudV2BufferedDetectedTotal.WithLabelValues(devEui, l.bufferedThreshold.String()).Inc()
+			BufferedDetectedTotal.WithLabelValues(l.bufferedThreshold.String()).Inc()
 		}
 	}
 
@@ -224,7 +221,7 @@ func (l LoracloudClient) Solve(ctx context.Context, payload string, options solv
 		data = &dataBase{resp: resp}
 	}
 
-	loracloudV2RequestsTotal.WithLabelValues(baseURLLabel, "success").Inc()
+	RequestsTotal.WithLabelValues("success").Inc()
 	return decoder.NewDecodedUplink(features, data), nil
 }
 
