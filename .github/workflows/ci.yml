@@ -52,6 +52,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -99,6 +101,7 @@ jobs:
         uses: golangci/golangci-lint-action@v8
         with:
           version: v2.10.1
+          only-new-issues: true
 
       - name: Run JSON tags camelCase check
         run: make check-json-tags
@@ -133,9 +136,9 @@ jobs:
         run: |
           echo "🔍 Scanning for secrets..."
           if command -v detect-secrets >/dev/null 2>&1; then
-            detect-secrets scan --baseline .secrets.baseline --all-files || echo "Secret detection completed with findings"
+            detect-secrets scan --baseline .secrets.baseline --all-files
             if [ -f ".secrets.baseline" ]; then
-              detect-secrets audit .secrets.baseline --statistics || echo "Baseline audit completed"
+              detect-secrets audit .secrets.baseline --statistics
             fi
           else
             echo "detect-secrets not available, skipping secret scan (basic validation will still run)"
