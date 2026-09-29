@@ -18,9 +18,10 @@ linters:
       settings:
         ruleguard:
           rules: '${base-path}/lint/rules.go'
+          failOnError: true
   exclusions:
     generated: lax
-    paths: ['api/oas_.*', 'gen/']
+    paths: ['api/oas_.*', 'gen/', 'lint/rules\\.go']
     rules:
       - {path: '_test\.go$', linters: [forbidigo, gocritic, errorlint, noctx]}
       - {path: '(^|/)main\.go$', linters: [forbidigo], text: 'os\.Exit|Fatal'}

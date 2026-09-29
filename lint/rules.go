@@ -12,11 +12,14 @@ func errorTextMatch(m dsl.Matcher) {
 }
 
 func grpcInternalLeak(m dsl.Matcher) {
+	m.Import("fmt")
 	m.Import("google.golang.org/grpc/status")
 	m.Import("google.golang.org/grpc/codes")
-	m.Match(`status.Errorf(codes.Internal, $_, $_, $*_)`).
+	m.Match(`status.Errorf(codes.Internal, $_, $_, $*_)`,
+		`status.Error(codes.Internal, fmt.Sprintf($_, $_, $*_))`).
 		Report(`formatted codes.Internal can leak internals; log the cause, return a fixed message`)
-	m.Match(`status.Error(codes.Internal, $e.Error())`).
+	m.Match(`status.Error(codes.Internal, $e.Error())`,
+		`status.Errorf(codes.Internal, $e.Error())`).
 		Where(m["e"].Type.Implements("error")).
 		Report(`do not send err.Error() to gRPC clients; log it, return a fixed message`)
 }
@@ -35,11 +38,12 @@ func promErrorLabel(m dsl.Matcher) {
 
 func httpClientNoTimeout(m dsl.Matcher) {
 	m.Match(`http.Client{$*fields}`).
-		Where(!m["fields"].Text.Matches(`\bTimeout\s*:`)).
+		Where(!m["fields"].Text.Matches(`(^|,\s*)Timeout\s*:`)).
 		Report(`http.Client without Timeout can hang forever; set Timeout`)
 }
 
 func unboundedBodyRead(m dsl.Matcher) {
 	m.Match(`io.ReadAll($x.Body)`).
+		Where(m["x"].Type.Is("*http.Response") || m["x"].Type.Is("*http.Request")).
 		Report(`wrap the body in io.LimitReader or http.MaxBytesReader before io.ReadAll`)
 }
