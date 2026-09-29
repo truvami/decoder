@@ -17,8 +17,20 @@ repos:
       - id: go-fmt
       - id: go-imports
       - id: no-go-testing
-      - id: golangci-lint
       # - id: go-unit-tests
+
+  - repo: https://github.com/golangci/golangci-lint
+    rev: v2.12.2
+    hooks:
+      - id: golangci-lint
+        args: [--new-from-rev=HEAD]
+
+  - repo: git@github.com:truvami/ci-templates
+    rev: 3f3bc486f1c175d2acb665f8a5337d93f94cbcf3  # pragma: allowlist secret
+    hooks:
+      - id: goose-no-transaction
+      - id: no-default-encryption-key
+      - id: detect-secrets-fail-closed
 
   - repo: https://github.com/adrienverge/yamllint
     rev: v1.35.1
