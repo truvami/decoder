@@ -62,4 +62,7 @@ require (
 	github.com/spf13/viper v1.21.0
 )
 
-require golang.org/x/mod v0.33.0
+require (
+	github.com/quasilyte/go-ruleguard/dsl v0.3.22
+	golang.org/x/mod v0.33.0
+)

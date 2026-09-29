@@ -24,7 +24,7 @@ repos:
     hooks:
       - id: golangci-lint
         args: [--new-from-rev=HEAD]
-        exclude: ^lint/rules\.go$
+        exclude: ^lint/
 
   - repo: git@github.com:truvami/ci-templates
     rev: 59b79e9eeeef382abee0d3e7dc429b71a5fe7bbe  # pragma: allowlist secret
