@@ -24,9 +24,10 @@ repos:
     hooks:
       - id: golangci-lint
         args: [--new-from-rev=HEAD]
+        exclude: ^lint/rules\.go$
 
   - repo: git@github.com:truvami/ci-templates
-    rev: 3f3bc486f1c175d2acb665f8a5337d93f94cbcf3  # pragma: allowlist secret
+    rev: 59b79e9eeeef382abee0d3e7dc429b71a5fe7bbe  # pragma: allowlist secret
     hooks:
       - id: goose-no-transaction
       - id: no-default-encryption-key
