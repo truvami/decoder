@@ -1,0 +1,27 @@
+version: "2"
+linters:
+  enable: [exhaustive, errorlint, noctx, forbidigo, gocritic]
+  settings:
+    errorlint: {errorf: true, asserts: true, comparison: true}
+    forbidigo:
+      analyze-types: true
+      forbid:
+        - {pattern: '^os\.Exit$', msg: "return an error; exit only from main.go, or add //nolint:forbidigo // <reason>"}
+        - {pattern: '^log\.Fatal(f|ln)?$', msg: "return an error; exit only from main.go, or add //nolint:forbidigo // <reason>"}
+        - {pattern: '^zap\.(Logger|SugaredLogger)\.Fatal(f|w|ln)?$', pkg: '^go\.uber\.org/zap$', msg: "Fatal calls os.Exit and skips shutdown; return an error"}
+        - {pattern: '^uuid\.MustParse$', pkg: '^github\.com/google/uuid$', msg: "MustParse panics on bad input; use uuid.Parse and return InvalidArgument"}
+        - {pattern: '^otlp\w+\.WithInsecure$', msg: "plaintext OTLP exporter; make it a config opt-in or add //nolint:forbidigo // <reason>"}
+        - {pattern: '^http\.DefaultClient$', pkg: '^net/http$', msg: "DefaultClient has no timeout; use a client with Timeout"}
+    gocritic:
+      disable-all: true
+      enabled-checks: [ruleguard]
+      settings:
+        ruleguard:
+          rules: '${base-path}/lint/rules.go'
+  exclusions:
+    generated: lax
+    paths: ['api/oas_.*', 'gen/']
+    rules:
+      - {path: '_test\.go$', linters: [forbidigo, gocritic, errorlint, noctx]}
+      - {path: '(^|/)main\.go$', linters: [forbidigo], text: 'os\.Exit|Fatal'}
+      - {path: '(^|/)(seed|test)/', linters: [forbidigo], text: 'MustParse'}
