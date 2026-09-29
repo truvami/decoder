@@ -42,6 +42,28 @@ import (
 // |     |      |   6: DR1-3 array (EU868 SF9-11, US915 SF7-9)   |            |
 // |     |      |   7: ADR (SF7-12) for EU868                    |            |
 // |     |      | See: https://docs.truvami.com/docs/Devices/tag%20XL%20/Payload%20Format%20%20tag%20XL/#settings-downlink
+// | b1  | 0-32 | lte apn                                        | ascii      |
+// | b2  | 0-32 | lte api key (only reported as configured)      | ascii      |
+// | b3  | 9    | lte upload time of day (after 00:00 UTC)       | uint16, min|
+// |     |      | lte upload chunk size                          | uint16     |
+// |     |      | lte connection timeout                         | uint16, s  |
+// |     |      | lte upload back-off period                     | uint16, min|
+// |     |      | lte upload retry count                         | uint8      |
+// | d1  | 10   | gps scan duration                              | uint16, s  |
+// |     |      | gps cool-off duration                          | uint16, s  |
+// |     |      | gps hdop threshold (0 = disabled)              | uint16, x10|
+// |     |      | gps vdop threshold (0 = disabled)              | uint16, x10|
+// |     |      | gps pdop threshold (0 = disabled)              | uint16, x10|
+// | d2  | 2    | gps constellation                              | uint8      |
+// |     |      |   0: default (GPS+QZSS+SBAS+Galileo+BeiDou)    |            |
+// |     |      |   1: GPS (+QZSS+SBAS)                          |            |
+// |     |      |   2: GPS+Galileo                               |            |
+// |     |      |   3: GPS+GLONASS                               |            |
+// |     |      |   4: GPS+BeiDou                                |            |
+// |     |      |   5: GPS+Galileo+BeiDou                        |            |
+// |     |      |   6: GPS+Galileo+GLONASS                       |            |
+// |     |      |   7: GPS+Galileo+GLONASS+BeiDou                |            |
+// |     |      | gps power mode (0 = full power, 1 = low power) | uint8      |
 // +-----+------+------------------------------------------------+------------+
 
 const (
@@ -77,6 +99,11 @@ const (
 	tlvTagResetCause            = 0x4a
 	tlvTagScanCounts            = 0x4b
 	tlvTagDataRate              = 0x4e
+	tlvTagLteApn                = 0xb1
+	tlvTagLteApiKey             = 0xb2
+	tlvTagLteConnection         = 0xb3
+	tlvTagGpsConfig             = 0xd1
+	tlvTagGpsConstellation      = 0xd2
 )
 
 type setterSpec struct {
@@ -114,6 +141,20 @@ type Port151Payload struct {
 	GnssScans                            *uint16           `json:"gnssScans"`
 	WifiScans                            *uint16           `json:"wifiScans"`
 	DataRate                             *decoder.DataRate `json:"dataRate"`
+	LteApn                               *string           `json:"lteApn"`
+	LteApiKeyConfigured                  *bool             `json:"lteApiKeyConfigured"`
+	LteUploadTimeOfDay                   *uint16           `json:"lteUploadTimeOfDay"`
+	LteUploadChunkSize                   *uint16           `json:"lteUploadChunkSize"`
+	LteConnectionTimeout                 *uint16           `json:"lteConnectionTimeout"`
+	LteUploadBackoff                     *uint16           `json:"lteUploadBackoff"`
+	LteUploadRetryCount                  *uint8            `json:"lteUploadRetryCount"`
+	GpsScanDuration                      *uint16           `json:"gpsScanDuration"`
+	GpsCooloffDuration                   *uint16           `json:"gpsCooloffDuration"`
+	GpsHdopThreshold                     *float32          `json:"gpsHdopThreshold"`
+	GpsVdopThreshold                     *float32          `json:"gpsVdopThreshold"`
+	GpsPdopThreshold                     *float32          `json:"gpsPdopThreshold"`
+	GpsConstellation                     *uint8            `json:"gpsConstellation"`
+	GpsPowerMode                         *uint8            `json:"gpsPowerMode"`
 }
 
 var _ decoder.UplinkFeatureBattery = &Port151Payload{}
@@ -321,9 +362,59 @@ func port151PayloadConfig() common.PayloadConfig {
 				}
 				return nil
 			}},
+			{Name: "LteApn", Tag: tlvTagLteApn, Optional: true, Feature: decoder.FeatureConfig},
+			// never expose the api key itself, only whether one is configured
+			{Name: "LteApiKeyConfigured", Tag: tlvTagLteApiKey, Optional: true, Feature: decoder.FeatureConfig, Transform: func(v any) any {
+				return len(v.([]byte)) > 0
+			}},
+			{Name: "LteUploadTimeOfDay", Tag: tlvTagLteConnection, Optional: true, Feature: decoder.FeatureConfig, Transform: uint16At(0)},
+			{Name: "LteUploadChunkSize", Tag: tlvTagLteConnection, Optional: true, Feature: decoder.FeatureConfig, Transform: uint16At(2)},
+			{Name: "LteConnectionTimeout", Tag: tlvTagLteConnection, Optional: true, Feature: decoder.FeatureConfig, Transform: uint16At(4)},
+			{Name: "LteUploadBackoff", Tag: tlvTagLteConnection, Optional: true, Feature: decoder.FeatureConfig, Transform: uint16At(6)},
+			{Name: "LteUploadRetryCount", Tag: tlvTagLteConnection, Optional: true, Feature: decoder.FeatureConfig, Transform: uint8At(8)},
+			{Name: "GpsScanDuration", Tag: tlvTagGpsConfig, Optional: true, Feature: decoder.FeatureConfig, Transform: uint16At(0)},
+			{Name: "GpsCooloffDuration", Tag: tlvTagGpsConfig, Optional: true, Feature: decoder.FeatureConfig, Transform: uint16At(2)},
+			{Name: "GpsHdopThreshold", Tag: tlvTagGpsConfig, Optional: true, Feature: decoder.FeatureConfig, Transform: dopAt(4)},
+			{Name: "GpsVdopThreshold", Tag: tlvTagGpsConfig, Optional: true, Feature: decoder.FeatureConfig, Transform: dopAt(6)},
+			{Name: "GpsPdopThreshold", Tag: tlvTagGpsConfig, Optional: true, Feature: decoder.FeatureConfig, Transform: dopAt(8)},
+			{Name: "GpsConstellation", Tag: tlvTagGpsConstellation, Optional: true, Feature: decoder.FeatureConfig, Transform: uint8At(0)},
+			{Name: "GpsPowerMode", Tag: tlvTagGpsConstellation, Optional: true, Feature: decoder.FeatureConfig, Transform: uint8At(1)},
 		},
 		TargetType: reflect.TypeOf(Port151Payload{}),
 		Features:   []decoder.Feature{decoder.FeatureDataRate},
+	}
+}
+
+// uint16At returns the big-endian uint16 at offset, or nil when the value is too short.
+func uint16At(offset int) func(v any) any {
+	return func(v any) any {
+		b := v.([]byte)
+		if len(b) < offset+2 {
+			return nil
+		}
+		return common.BytesToUint16(b[offset : offset+2])
+	}
+}
+
+// uint8At returns the byte at offset, or nil when the value is too short.
+func uint8At(offset int) func(v any) any {
+	return func(v any) any {
+		b := v.([]byte)
+		if len(b) < offset+1 {
+			return nil
+		}
+		return b[offset]
+	}
+}
+
+// dopAt returns the DOP threshold (transmitted as DOP x10) at offset.
+func dopAt(offset int) func(v any) any {
+	return func(v any) any {
+		value := uint16At(offset)(v)
+		if value == nil {
+			return nil
+		}
+		return float32(value.(uint16)) / 10
 	}
 }
 
