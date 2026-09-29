@@ -138,7 +138,7 @@ jobs:
           if command -v detect-secrets >/dev/null 2>&1; then
             detect-secrets scan --baseline .secrets.baseline --all-files
             if [ -f ".secrets.baseline" ]; then
-              detect-secrets audit .secrets.baseline --statistics
+              detect-secrets audit .secrets.baseline --stats
             fi
           else
             echo "detect-secrets not available, skipping secret scan (basic validation will still run)"
