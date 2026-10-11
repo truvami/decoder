@@ -13,7 +13,6 @@ import (
 	"github.com/truvami/decoder/internal/logger"
 	"github.com/truvami/decoder/internal/selfupdate"
 	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 )
 
 var banner = []string{
@@ -64,9 +63,11 @@ func init() {
 }
 
 var rootCmd = &cobra.Command{
-	Use:     "decoder",
-	Short:   "truvami payload decoder cli helper",
-	Version: Version,
+	Use:           "decoder",
+	Short:         "truvami payload decoder cli helper",
+	Version:       Version,
+	SilenceErrors: true,
+	SilenceUsage:  true,
 	Long: getBanner() + `
 
 A CLI tool to help decode @truvami payloads.`,
@@ -75,24 +76,6 @@ A CLI tool to help decode @truvami payloads.`,
 
 		if Debug {
 			options = append(options, logger.WithDebug())
-		}
-
-		if Json {
-			// create a custom encoder
-			encoderConfig := zapcore.EncoderConfig{
-				TimeKey:        "time",
-				LevelKey:       "level",
-				NameKey:        "logger",
-				CallerKey:      "caller",
-				MessageKey:     "msg",
-				StacktraceKey:  "", // disable stack traces
-				LineEnding:     zapcore.DefaultLineEnding,
-				EncodeLevel:    zapcore.CapitalLevelEncoder,
-				EncodeTime:     zapcore.ISO8601TimeEncoder,
-				EncodeDuration: zapcore.StringDurationEncoder,
-			}
-
-			options = append(options, logger.WithEncoder(zapcore.NewJSONEncoder(encoderConfig)))
 		}
 
 		logger.NewLogger(options...)
@@ -130,24 +113,24 @@ func Execute() {
 }
 
 func printJSON(data any) {
+	payload := map[string]any{"data": data}
+
 	if Json {
-		logger.Logger.Info("successfully decoded payload", zap.Any("data", data))
+		marshaled, err := json.Marshal(payload)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "marshaling error")
+			os.Exit(1)
+		}
+		fmt.Println(string(marshaled))
 		return
 	}
 
-	logger.Logger.Info("successfully decoded payload")
-
-	// print data beautifully and formatted
-	marshaled, err := json.MarshalIndent(map[string]any{
-		"data": data,
-	}, "", "   ")
-
-	// handle marshaling error
+	marshaled, err := json.MarshalIndent(payload, "", "   ")
 	if err != nil {
-		logger.Logger.Fatal("marshaling error", zap.Error(err))
+		fmt.Fprintln(os.Stderr, "marshaling error")
+		os.Exit(1)
 	}
 
-	// print the marshaled data
 	fmt.Println()
 	fmt.Println(string(marshaled))
 	fmt.Println()

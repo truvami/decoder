@@ -61,10 +61,6 @@ func (c PositionEstimateClient) Solve(ctx context.Context, payload string) (*dec
 	start := time.Now()
 	awsPositionEstimatesTotalCounter.Inc()
 
-	c.logger.Debug("Starting position estimate request",
-		zap.String("payload", payload),
-	)
-
 	// remove first 2 characters from the payload
 	if len(payload) > 2 {
 		payload = payload[2:]
@@ -93,14 +89,9 @@ func (c PositionEstimateClient) Solve(ctx context.Context, payload string) (*dec
 	output, err := c.client.GetPositionEstimate(ctx, input)
 	if err != nil {
 		awsPositionEstimatesFailureCounter.Inc()
+		c.logger.Error("position estimate request failed", zap.String("category", "request_failed"))
 		return nil, fmt.Errorf("failed to get position estimate: %w", err)
 	}
-
-	c.logger.Debug("Position estimate received",
-		zap.String("payload", payload),
-		zap.ByteString("geoJson", output.GeoJsonPayload),
-		zap.Any("metadata", output.ResultMetadata),
-	)
 
 	var position *GeoJsonResponse
 	err = json.Unmarshal(output.GeoJsonPayload, &position)
