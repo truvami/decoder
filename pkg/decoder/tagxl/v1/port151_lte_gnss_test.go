@@ -38,6 +38,25 @@ func TestPort151_GpsSettings(t *testing.T) {
 	assert.Equal(t, common.Float32Ptr(0), data.GpsHdopThreshold)
 	assert.Equal(t, common.Float32Ptr(0), data.GpsVdopThreshold)
 	assert.Equal(t, common.Float32Ptr(3), data.GpsPdopThreshold)
+
+	// 2-byte 0xD2 from older ts2 firmware: no dynamic model / static hold
+	assert.Nil(t, data.GpsDynamicModel)
+	assert.Nil(t, data.GpsStaticHoldSpeed)
+	assert.Nil(t, data.GpsStaticHoldDistance)
+}
+
+func TestPort151_GpsReceiverConfig(t *testing.T) {
+	t.Parallel()
+
+	// 5-byte 0xD2: all constellations, full power, automotive, static hold < 50 cm/s, exit after 10 m
+	decoded, data := decodePort151(t, "4c0701d205070004320a")
+
+	assert.True(t, decoded.Is(decoder.FeatureConfig))
+	assert.Equal(t, common.Uint8Ptr(7), data.GpsConstellation)
+	assert.Equal(t, common.Uint8Ptr(0), data.GpsPowerMode)
+	assert.Equal(t, common.Uint8Ptr(4), data.GpsDynamicModel)
+	assert.Equal(t, common.Uint8Ptr(50), data.GpsStaticHoldSpeed)
+	assert.Equal(t, common.Uint8Ptr(10), data.GpsStaticHoldDistance)
 }
 
 func TestPort151_LteSettings(t *testing.T) {

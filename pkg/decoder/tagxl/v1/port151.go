@@ -54,7 +54,7 @@ import (
 // |     |      | gps hdop threshold (0 = disabled)              | uint16, x10|
 // |     |      | gps vdop threshold (0 = disabled)              | uint16, x10|
 // |     |      | gps pdop threshold (0 = disabled)              | uint16, x10|
-// | d2  | 2    | gps constellation                              | uint8      |
+// | d2  | 2-5  | gps constellation                              | uint8      |
 // |     |      |   0: default (GPS+QZSS+SBAS+Galileo+BeiDou)    |            |
 // |     |      |   1: GPS (+QZSS+SBAS)                          |            |
 // |     |      |   2: GPS+Galileo                               |            |
@@ -64,6 +64,13 @@ import (
 // |     |      |   6: GPS+Galileo+GLONASS                       |            |
 // |     |      |   7: GPS+Galileo+GLONASS+BeiDou                |            |
 // |     |      | gps power mode (0 = full power, 1 = low power) | uint8      |
+// |     |      | gps dynamic model (u-blox CFG-NAVSPG-DYNMODEL) | uint8      |
+// |     |      |   0: portable, 2: stationary, 3: pedestrian,   |            |
+// |     |      |   4: automotive, 5: sea, 6-8: airborne <1/2/4g,|            |
+// |     |      |   9: wrist, 10: bike                           |            |
+// |     |      | gps static hold speed (0 = off)                | uint8, cm/s|
+// |     |      | gps static hold exit distance                  | uint8, m   |
+// |     |      | (older ts2 firmware sends only the first 2)    |            |
 // +-----+------+------------------------------------------------+------------+
 
 const (
@@ -155,6 +162,9 @@ type Port151Payload struct {
 	GpsPdopThreshold                     *float32          `json:"gpsPdopThreshold"`
 	GpsConstellation                     *uint8            `json:"gpsConstellation"`
 	GpsPowerMode                         *uint8            `json:"gpsPowerMode"`
+	GpsDynamicModel                      *uint8            `json:"gpsDynamicModel"`
+	GpsStaticHoldSpeed                   *uint8            `json:"gpsStaticHoldSpeed"`
+	GpsStaticHoldDistance                *uint8            `json:"gpsStaticHoldDistance"`
 }
 
 var _ decoder.UplinkFeatureBattery = &Port151Payload{}
@@ -379,6 +389,9 @@ func port151PayloadConfig() common.PayloadConfig {
 			{Name: "GpsPdopThreshold", Tag: tlvTagGpsConfig, Optional: true, Feature: decoder.FeatureConfig, Transform: dopAt(8)},
 			{Name: "GpsConstellation", Tag: tlvTagGpsConstellation, Optional: true, Feature: decoder.FeatureConfig, Transform: uint8At(0)},
 			{Name: "GpsPowerMode", Tag: tlvTagGpsConstellation, Optional: true, Feature: decoder.FeatureConfig, Transform: uint8At(1)},
+			{Name: "GpsDynamicModel", Tag: tlvTagGpsConstellation, Optional: true, Feature: decoder.FeatureConfig, Transform: uint8At(2)},
+			{Name: "GpsStaticHoldSpeed", Tag: tlvTagGpsConstellation, Optional: true, Feature: decoder.FeatureConfig, Transform: uint8At(3)},
+			{Name: "GpsStaticHoldDistance", Tag: tlvTagGpsConstellation, Optional: true, Feature: decoder.FeatureConfig, Transform: uint8At(4)},
 		},
 		TargetType: reflect.TypeOf(Port151Payload{}),
 		Features:   []decoder.Feature{decoder.FeatureDataRate},
