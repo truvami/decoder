@@ -135,7 +135,11 @@ jobs:
       - name: Detect secrets
         run: |
           set -euo pipefail
-          git ls-files -z | xargs -0 detect-secrets-hook --baseline .secrets.baseline
+          mapfile -d '' files < <(git ls-files -z)
+          # Exit 1 means new secrets. Exit 3 only means baselined line numbers moved.
+          rc=0
+          detect-secrets-hook --baseline .secrets.baseline "${files[@]}" || rc=$?
+          [ "$rc" -eq 0 ] || [ "$rc" -eq 3 ]
 
   test:
     name: Test (matrix)
