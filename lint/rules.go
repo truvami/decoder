@@ -1,4 +1,4 @@
-//go:build ignore
+//go:build ruleguard
 
 package gorules
 
@@ -36,10 +36,13 @@ func promErrorLabel(m dsl.Matcher) {
 		Report(`err.Error() as a label value is unbounded; use a fixed error class`)
 }
 
+// The text match also accepts a Timeout key nested in a field value, e.g. a net.Dialer.
 func httpClientNoTimeout(m dsl.Matcher) {
 	m.Match(`http.Client{$*fields}`).
 		Where(!m["fields"].Text.Matches(`(^|,\s*)Timeout\s*:`)).
 		Report(`http.Client without Timeout can hang forever; set Timeout`)
+	m.Match(`http.Client{$*_, Timeout: 0, $*_}`).
+		Report(`Timeout: 0 means no timeout; set a positive Timeout`)
 }
 
 func unboundedBodyRead(m dsl.Matcher) {

@@ -3,6 +3,7 @@ linters:
   enable: [exhaustive, errorlint, noctx, forbidigo, gocritic]
   settings:
     errorlint: {errorf: true, asserts: true, comparison: true}
+    exhaustive: {check: [switch, map]}
     forbidigo:
       analyze-types: true
       forbid:
@@ -18,9 +19,10 @@ linters:
       settings:
         ruleguard:
           rules: '${base-path}/lint/rules.go'
+          failOn: dsl,import
   exclusions:
     generated: lax
-    paths: ['api/oas_.*', 'gen/', 'lint/rules\\.go', 'oas_.*\\.go']
+    paths: ['api/oas_.*', 'gen/']
     rules:
       - {path: '_test\.go$', linters: [forbidigo, gocritic, errorlint, noctx]}
       - {path: '(^|/)main\.go$', linters: [forbidigo], text: 'os\.Exit|Fatal'}
