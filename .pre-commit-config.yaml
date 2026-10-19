@@ -26,7 +26,7 @@ repos:
       - id: golangci-lint
 
   - repo: https://github.com/truvami/ci-templates
-    rev: c766412c418d0b198f393ce8723f9f0d1f903133  # pragma: allowlist secret
+    rev: 70dee10c98fb4fdc9524dcb0987884cf247e68bd  # pragma: allowlist secret
     hooks:
       - id: detect-secrets-fail-closed
 

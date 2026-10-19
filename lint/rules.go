@@ -31,8 +31,8 @@ func apiMessageLeak(m dsl.Matcher) {
 }
 
 func promErrorLabel(m dsl.Matcher) {
-	m.Match(`$v.WithLabelValues($*args)`).
-		Where(m["args"].Text.Matches(`\.Error\(\)`)).
+	m.Match(`$v.WithLabelValues($*_, $e.Error(), $*_)`).
+		Where(m["e"].Type.Implements("error")).
 		Report(`err.Error() as a label value is unbounded; use a fixed error class`)
 }
 
