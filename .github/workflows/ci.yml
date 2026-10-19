@@ -101,7 +101,8 @@ jobs:
         uses: golangci/golangci-lint-action@v9
         with:
           version: v2.14.0
-          only-new-issues: true
+          # Works for every event, unlike only-new-issues, which lints the whole tree on manual runs.
+          args: --new-from-merge-base=origin/main
 
       - name: Run JSON tags camelCase check
         run: make check-json-tags
