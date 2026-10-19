@@ -22,15 +22,12 @@ repos:
   - repo: https://github.com/golangci/golangci-lint
     rev: v2.12.2
     hooks:
+      - id: golangci-lint-config-verify
       - id: golangci-lint
-        args: [--new-from-rev=HEAD]
-        exclude: ^lint/
 
-  - repo: git@github.com:truvami/ci-templates
-    rev: 59b79e9eeeef382abee0d3e7dc429b71a5fe7bbe  # pragma: allowlist secret
+  - repo: https://github.com/truvami/ci-templates
+    rev: cdcceba401831c5b3aed064b75f41b9419236e25  # pragma: allowlist secret
     hooks:
-      - id: goose-no-transaction
-      - id: no-default-encryption-key
       - id: detect-secrets-fail-closed
 
   - repo: https://github.com/adrienverge/yamllint
