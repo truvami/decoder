@@ -20,13 +20,13 @@ repos:
       # - id: go-unit-tests
 
   - repo: https://github.com/golangci/golangci-lint
-    rev: v2.12.2
+    rev: v2.14.0
     hooks:
       - id: golangci-lint-config-verify
       - id: golangci-lint
 
   - repo: https://github.com/truvami/ci-templates
-    rev: cdcceba401831c5b3aed064b75f41b9419236e25  # pragma: allowlist secret
+    rev: 7850271f878e385bdcea442c59ee8755795ce59a  # pragma: allowlist secret
     hooks:
       - id: detect-secrets-fail-closed
 
