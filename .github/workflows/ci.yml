@@ -98,9 +98,9 @@ jobs:
         run: $(go env GOPATH)/bin/staticcheck ./...
 
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v8
+        uses: golangci/golangci-lint-action@v9
         with:
-          version: v2.10.1
+          version: v2.12.2
           only-new-issues: true
 
       - name: Run JSON tags camelCase check
