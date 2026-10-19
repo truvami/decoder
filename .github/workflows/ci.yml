@@ -130,19 +130,12 @@ jobs:
 
       - name: Install detect-secrets
         run: |
-          pip install detect-secrets
+          pip install detect-secrets==1.5.0
 
       - name: Detect secrets
         run: |
-          echo "🔍 Scanning for secrets..."
-          if command -v detect-secrets >/dev/null 2>&1; then
-            detect-secrets scan --baseline .secrets.baseline --all-files
-            if [ -f ".secrets.baseline" ]; then
-              detect-secrets audit .secrets.baseline --stats
-            fi
-          else
-            echo "detect-secrets not available, skipping secret scan (basic validation will still run)"
-          fi
+          set -euo pipefail
+          git ls-files -z | xargs -0 detect-secrets-hook --baseline .secrets.baseline
 
   test:
     name: Test (matrix)
