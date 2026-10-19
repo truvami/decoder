@@ -101,8 +101,9 @@ jobs:
         uses: golangci/golangci-lint-action@v9
         with:
           version: v2.14.0
-          # Works for every event, unlike only-new-issues, which lints the whole tree on manual runs.
-          args: --new-from-merge-base=origin/main
+          # The merge base works for every event, unlike only-new-issues. On main and on
+          # tags it is HEAD itself, so compare with the parent commit there.
+          args: ${{ (github.ref_type == 'tag' || github.ref_name == 'main') && '--new-from-rev=HEAD~1' || '--new-from-merge-base=origin/main' }}
 
       - name: Run JSON tags camelCase check
         run: make check-json-tags
