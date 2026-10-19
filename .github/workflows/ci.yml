@@ -137,6 +137,7 @@ jobs:
         run: |
           set -euo pipefail
           mapfile -d '' files < <(git ls-files -z)
+          [ "${#files[@]}" -gt 0 ] || { echo "::error::git ls-files returned no files"; exit 1; }
           # Exit 1 means new secrets. Exit 3 only means baselined line numbers moved.
           rc=0
           detect-secrets-hook --baseline .secrets.baseline "${files[@]}" || rc=$?
