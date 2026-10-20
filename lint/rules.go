@@ -36,17 +36,20 @@ func promErrorLabel(m dsl.Matcher) {
 		Report(`err.Error() as a label value is unbounded; use a fixed error class`)
 }
 
-// The text match also accepts a Timeout key nested in a field value, e.g. a net.Dialer.
+// Timeout must be a top-level field. The regexp skips balanced {...} up to three
+// levels deep, so a net.Dialer Timeout does not count. Deeper nesting is reported.
 func httpClientNoTimeout(m dsl.Matcher) {
 	m.Match(`http.Client{$*fields}`).
-		Where(!m["fields"].Text.Matches(`(^|,\s*)Timeout\s*:`)).
+		Where(!m["fields"].Text.Matches(`^(?:(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{[^{}]*\})*\})*\})*,)?\s*Timeout\s*:`)).
 		Report(`http.Client without Timeout can hang forever; set Timeout`)
 	m.Match(`http.Client{$*_, Timeout: 0, $*_}`).
 		Report(`Timeout: 0 means no timeout; set a positive Timeout`)
 }
 
+// Responses only: a handler bounds r.Body with http.MaxBytesReader in an earlier
+// statement, which a pattern cannot see.
 func unboundedBodyRead(m dsl.Matcher) {
 	m.Match(`io.ReadAll($x.Body)`).
-		Where(m["x"].Type.Is("*http.Response") || m["x"].Type.Is("*http.Request")).
-		Report(`wrap the body in io.LimitReader or http.MaxBytesReader before io.ReadAll`)
+		Where(m["x"].Type.Is("*http.Response")).
+		Report(`wrap the body in io.LimitReader before io.ReadAll`)
 }
