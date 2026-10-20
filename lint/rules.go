@@ -36,11 +36,15 @@ func promErrorLabel(m dsl.Matcher) {
 		Report(`err.Error() as a label value is unbounded; use a fixed error class`)
 }
 
-// Timeout must be a top-level field. The regexp skips balanced {...} up to three
-// levels deep, so a net.Dialer Timeout does not count. Deeper nesting is reported.
+// topLevelTimeout matches a Timeout key among the top-level fields of a composite
+// literal. It skips strings, runes, comments and balanced {...} up to three levels
+// deep, so a net.Dialer Timeout or text in a string does not count. Deeper nesting
+// is reported. Generated: atom = string|raw|rune|comment|other char|{atom*}.
+const topLevelTimeout = "^(?:(?:\"(?:[^\"\\\\\\n]|\\\\.)*\"|`[^`]*`|'(?:[^'\\\\\\n]|\\\\.)*'|//[^\\n]*\\n|/\\*(?:[^*]|\\*+[^*/])*\\*+/|/[^/*]|[^{}\"\\'`/]|\\{(?:\"(?:[^\"\\\\\\n]|\\\\.)*\"|`[^`]*`|'(?:[^'\\\\\\n]|\\\\.)*'|//[^\\n]*\\n|/\\*(?:[^*]|\\*+[^*/])*\\*+/|/[^/*]|[^{}\"\\'`/]|\\{(?:\"(?:[^\"\\\\\\n]|\\\\.)*\"|`[^`]*`|'(?:[^'\\\\\\n]|\\\\.)*'|//[^\\n]*\\n|/\\*(?:[^*]|\\*+[^*/])*\\*+/|/[^/*]|[^{}\"\\'`/]|\\{(?:\"(?:[^\"\\\\\\n]|\\\\.)*\"|`[^`]*`|'(?:[^'\\\\\\n]|\\\\.)*'|//[^\\n]*\\n|/\\*(?:[^*]|\\*+[^*/])*\\*+/|/[^/*]|[^{}\"\\'`/])*\\})*\\})*\\})*,)?(?:\\s|//[^\\n]*\\n|/\\*(?:[^*]|\\*+[^*/])*\\*+/)*Timeout\\s*:"
+
 func httpClientNoTimeout(m dsl.Matcher) {
 	m.Match(`http.Client{$*fields}`).
-		Where(!m["fields"].Text.Matches(`^(?:(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{[^{}]*\})*\})*\})*,)?\s*Timeout\s*:`)).
+		Where(!m["fields"].Text.Matches(topLevelTimeout)).
 		Report(`http.Client without Timeout can hang forever; set Timeout`)
 	m.Match(`http.Client{$*_, Timeout: 0, $*_}`).
 		Report(`Timeout: 0 means no timeout; set a positive Timeout`)
