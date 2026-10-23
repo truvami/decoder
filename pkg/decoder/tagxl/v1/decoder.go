@@ -87,6 +87,13 @@ func (t TagXLv1Decoder) getConfig(port uint8, payload []byte) (common.PayloadCon
 				{Name: "TTF", Start: 17, Length: 1, Transform: ttf},
 				{Name: "PDOP", Start: 18, Length: 1, Transform: pdop},
 				{Name: "Satellites", Start: 19, Length: 1},
+				// optional: older firmware sends 20 bytes without hAcc and speed
+				{Name: "Accuracy", Start: 20, Length: 1, Optional: true, Transform: func(v any) any {
+					return float64(v.([]byte)[0])
+				}},
+				{Name: "Speed", Start: 21, Length: 1, Optional: true, Transform: func(v any) any {
+					return float64(v.([]byte)[0])
+				}},
 			},
 			TargetType: reflect.TypeOf(Port10Payload{}),
 			Features:   []decoder.Feature{decoder.FeatureGNSS, decoder.FeatureTimestamp, decoder.FeatureBattery, decoder.FeatureMoving},

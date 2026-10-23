@@ -23,7 +23,10 @@ import (
 // | 17   | 1    | Time to fix                               | uint8, s               |
 // | 18   | 1    | Position dilution of precision            | uint8, 1/2 meter       |
 // | 19   | 1    | Number of satellites                      | uint8                  |
+// | 20   | 1    | Horizontal accuracy estimate (hAcc)       | uint8, m (optional)    |
+// | 21   | 1    | Speed over ground                         | uint8, km/h (optional) |
 // +------+------+-------------------------------------------+------------------------+
+// Bytes 20-21 were added later; 20-byte uplinks from older firmware leave them nil.
 
 type Port10Payload struct {
 	Moving     bool           `json:"moving"`
@@ -35,6 +38,8 @@ type Port10Payload struct {
 	TTF        *time.Duration `json:"ttf"`
 	PDOP       *float64       `json:"pdop"`
 	Satellites *uint8         `json:"satellites" validate:"gte=3,lte=27"`
+	Accuracy   *float64       `json:"accuracy"`
+	Speed      *float64       `json:"speed"`
 }
 
 func (p Port10Payload) MarshalJSON() ([]byte, error) {
@@ -47,6 +52,14 @@ func (p Port10Payload) MarshalJSON() ([]byte, error) {
 	if p.PDOP != nil {
 		pdop = common.StringPtr(fmt.Sprintf("%.1fm", *p.PDOP))
 	}
+	var accuracy *string
+	if p.Accuracy != nil {
+		accuracy = common.StringPtr(fmt.Sprintf("%.0fm", *p.Accuracy))
+	}
+	var speed *string
+	if p.Speed != nil {
+		speed = common.StringPtr(fmt.Sprintf("%.0fkm/h", *p.Speed))
+	}
 	return json.Marshal(&struct {
 		*Alias
 		Altitude   string  `json:"altitude"`
@@ -55,6 +68,8 @@ func (p Port10Payload) MarshalJSON() ([]byte, error) {
 		TTF        *string `json:"ttf"`
 		PDOP       *string `json:"pdop"`
 		Satellites *uint8  `json:"satellites"`
+		Accuracy   *string `json:"accuracy"`
+		Speed      *string `json:"speed"`
 	}{
 		Alias:      (*Alias)(&p),
 		Altitude:   fmt.Sprintf("%.1fm", p.Altitude),
@@ -63,6 +78,8 @@ func (p Port10Payload) MarshalJSON() ([]byte, error) {
 		TTF:        ttf,
 		PDOP:       pdop,
 		Satellites: p.Satellites,
+		Accuracy:   accuracy,
+		Speed:      speed,
 	})
 }
 
@@ -88,7 +105,7 @@ func (p Port10Payload) GetAltitude() float64 {
 }
 
 func (p Port10Payload) GetAccuracy() *float64 {
-	return nil
+	return p.Accuracy
 }
 
 func (p Port10Payload) GetTTF() *time.Duration {
