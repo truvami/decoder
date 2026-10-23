@@ -83,6 +83,7 @@ func TestPort10_OptionalAccuracyAndSpeed(t *testing.T) {
 		{name: "20 bytes, older firmware", payload: base},
 		{name: "21 bytes, hAcc only", payload: base + "0c", accuracy: common.Float64Ptr(12)},
 		{name: "22 bytes, hAcc and speed", payload: base + "0c22", accuracy: common.Float64Ptr(12), speed: common.Float64Ptr(34)},
+		{name: "22 bytes, hAcc capped at 255, standing still", payload: base + "ff00", accuracy: common.Float64Ptr(255), speed: common.Float64Ptr(0)},
 	}
 
 	dec := NewTagXLv1Decoder(context.TODO(), solver.MockSolverV1{}, logger.Logger)
@@ -117,4 +118,15 @@ func TestPort10_AccuracyAndSpeedJSON(t *testing.T) {
 	require.NoError(t, err)
 	assert.Contains(t, string(encoded), `"accuracy":null`)
 	assert.Contains(t, string(encoded), `"speed":null`)
+}
+
+func TestPort10_RejectsUnknownTrailingBytes(t *testing.T) {
+	t.Parallel()
+
+	// the maximum length is derived from the configured fields: a byte the decoder doesn't
+	// know yet is rejected, so the decoder must be updated before firmware appends more
+	dec := NewTagXLv1Decoder(context.TODO(), solver.MockSolverV1{}, logger.Logger)
+	_, err := dec.Decode(context.TODO(), "0002d30b070082491f11256718d9fe0ede1905050c22ff", 10)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "payload too long")
 }

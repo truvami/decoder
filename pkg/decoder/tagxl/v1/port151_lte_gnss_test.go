@@ -118,3 +118,22 @@ func TestPort151_LteGpsNullWhenNotReported(t *testing.T) {
 	assert.Contains(t, string(encoded), `"gpsConstellation":null`)
 	assert.Contains(t, string(encoded), `"lteApn":null`)
 }
+
+func TestPort151_GpsReceiverConfigPartialAndExtended(t *testing.T) {
+	t.Parallel()
+
+	// 3-byte 0xD2: dynamic model only, static hold fields not reported
+	_, data := decodePort151(t, "4c0501d203020104")
+	assert.Equal(t, common.Uint8Ptr(2), data.GpsConstellation)
+	assert.Equal(t, common.Uint8Ptr(1), data.GpsPowerMode)
+	assert.Equal(t, common.Uint8Ptr(4), data.GpsDynamicModel)
+	assert.Nil(t, data.GpsStaticHoldSpeed)
+	assert.Nil(t, data.GpsStaticHoldDistance)
+
+	// 6-byte 0xD2: a byte from future firmware is ignored, known fields still decode
+	_, data = decodePort151(t, "4c0801d206070004320aff")
+	assert.Equal(t, common.Uint8Ptr(7), data.GpsConstellation)
+	assert.Equal(t, common.Uint8Ptr(4), data.GpsDynamicModel)
+	assert.Equal(t, common.Uint8Ptr(50), data.GpsStaticHoldSpeed)
+	assert.Equal(t, common.Uint8Ptr(10), data.GpsStaticHoldDistance)
+}
