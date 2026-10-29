@@ -62,6 +62,8 @@ func (p Port10Payload) MarshalJSON() ([]byte, error) {
 		TTF        *string `json:"ttf"`
 		PDOP       *string `json:"pdop"`
 		Satellites *uint8  `json:"satellites"`
+		HACC       *uint8  `json:"hacc"`
+		SOG        *uint8  `json:"sog"`
 	}{
 		Alias:      (*Alias)(&p),
 		Altitude:   fmt.Sprintf("%.1fm", p.Altitude),
@@ -70,6 +72,8 @@ func (p Port10Payload) MarshalJSON() ([]byte, error) {
 		TTF:        ttf,
 		PDOP:       pdop,
 		Satellites: p.Satellites,
+		HACC:       p.HACC,
+		SOG:        p.SOG,
 	})
 }
 
