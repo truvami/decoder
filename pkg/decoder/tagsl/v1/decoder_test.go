@@ -613,7 +613,7 @@ func TestDecode(t *testing.T) {
 		},
 		{
 			port:           10,
-			payload:        "0002d30b070082491f11256718d9fe0ede190505deadbeef",
+			payload:        "0002d30b070082491f11256718d9fe0ede1905050708deadbeef",
 			skipValidation: true,
 			expected: Port10Payload{
 				Latitude:   47.385351,
@@ -624,6 +624,8 @@ func TestDecode(t *testing.T) {
 				PDOP:       helpers.Float64Ptr(2.5),
 				Satellites: helpers.Uint8Ptr(5),
 				TTF:        helpers.DurationPtr(time.Duration(25) * time.Second),
+				HACC:       helpers.Uint8Ptr(7),
+				SOG:        helpers.Uint8Ptr(8),
 			},
 		},
 		{
@@ -1123,7 +1125,7 @@ func TestDecode(t *testing.T) {
 		},
 		{
 			port:           110,
-			payload:        "01020002d309ae008247c5113966c45d640f7ee72004deadbeef",
+			payload:        "01020002d309ae008247c5113966c45d640f7ee720040708deadbeef",
 			skipValidation: true,
 			expected: Port110Payload{
 				BufferLevel: 258,
@@ -1137,6 +1139,8 @@ func TestDecode(t *testing.T) {
 				TTF:         helpers.DurationPtr(time.Duration(231) * time.Second),
 				PDOP:        helpers.Float64Ptr(16),
 				Satellites:  helpers.Uint8Ptr(4),
+				HACC:       helpers.Uint8Ptr(7),
+				SOG:        helpers.Uint8Ptr(8),
 			},
 		},
 		{
