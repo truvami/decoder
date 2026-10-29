@@ -40,6 +40,8 @@ type Port10Payload struct {
 	TTF          *time.Duration `json:"ttf"`
 	PDOP         *float64       `json:"pdop"`
 	Satellites   *uint8         `json:"satellites" validate:"gte=3,lte=27"`
+	HACC         *uint8         `json:"hacc"`
+	SOG          *uint8         `json:"sog"`
 }
 
 func (p Port10Payload) MarshalJSON() ([]byte, error) {
