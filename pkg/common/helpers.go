@@ -12,7 +12,6 @@ import (
 
 	"github.com/go-playground/validator"
 	"github.com/truvami/decoder/internal/logger"
-	"go.uber.org/zap"
 )
 
 func HexStringToBytes(hexString string) ([]byte, error) {
@@ -208,10 +207,9 @@ func Decode(payloadHex *string, config *PayloadConfig) (any, error) {
 				}
 			}
 			if !found {
-				tagHex := fmt.Sprintf("0x%02x", tag)
-				unknownTLVTagsTotal.WithLabelValues(tagHex).Inc()
+				unknownTLVTagsTotal.Inc()
 				if logger.Logger != nil {
-					logger.Logger.Warn("skipping unknown tag", zap.String("tag", tagHex), zap.Int("length", length))
+					logger.Logger.Warn("skipping unknown tag")
 				}
 			}
 			index += length

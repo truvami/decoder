@@ -41,11 +41,11 @@ func NewLogger(options ...Option) {
 		opt(config)
 	}
 
-	core := zapcore.NewCore(
+	core := newFilteringCore(zapcore.NewCore(
 		config.Encoder,
 		zapcore.AddSync(os.Stdout),
 		config.Level,
-	)
+	))
 
 	Logger = zap.New(core)
 }

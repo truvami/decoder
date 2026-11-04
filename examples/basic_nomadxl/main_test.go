@@ -2,22 +2,40 @@ package main
 
 import (
 	"bytes"
-	"log"
+	"io"
+	"os"
 	"strings"
 	"testing"
 )
 
-func TestMain(t *testing.T) {
-	// Create a buffer to capture the output
+func captureStdout(t *testing.T, fn func()) string {
+	t.Helper()
+
+	oldStdout := os.Stdout
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatalf("pipe: %v", err)
+	}
+	os.Stdout = w
+
+	fn()
+
+	_ = w.Close()
+	os.Stdout = oldStdout
+
 	var buf bytes.Buffer
-	log.SetOutput(&buf)
+	if _, err := io.Copy(&buf, r); err != nil {
+		t.Fatalf("read stdout: %v", err)
+	}
+	_ = r.Close()
 
-	// Run the main function
-	main()
+	return buf.String()
+}
 
-	// Check if the expected output is present in the buffer
-	expectedOutput := `49.39894`
-	if !strings.Contains(buf.String(), expectedOutput) {
-		t.Errorf("expected output %q not found", expectedOutput)
+func TestMain(t *testing.T) {
+	out := captureStdout(t, main)
+
+	if !strings.Contains(out, "49.39894") {
+		t.Errorf("expected output %q not found in %q", "49.39894", out)
 	}
 }
