@@ -166,8 +166,12 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 				{Name: "TTF", Start: 17, Length: 1, Optional: true, Transform: ttf},
 				{Name: "PDOP", Start: 18, Length: 1, Optional: true, Transform: pdop},
 				{Name: "Satellites", Start: 19, Length: 1, Optional: true},
-				{Name: "HACC", Start: 20, Length: 1, Optional: true},
-				{Name: "SOG", Start: 21, Length: 1, Optional: true},
+				{Name: "Accuracy", Start: 20, Length: 1, Optional: true, Transform: func(v any) any {
+					return float64(v.([]byte)[0])
+				}},
+				{Name: "Speed", Start: 21, Length: 1, Optional: true, Transform: func(v any) any {
+					return float64(v.([]byte)[0])
+				}},
 			},
 			TargetType: reflect.TypeOf(Port10Payload{}),
 			Features:   []decoder.Feature{decoder.FeatureDutyCycle, decoder.FeatureConfigChange, decoder.FeatureMoving, decoder.FeatureGNSS, decoder.FeatureTimestamp, decoder.FeatureBattery},
@@ -277,8 +281,12 @@ func (t TagSLv1Decoder) getConfig(port uint8) (common.PayloadConfig, error) {
 				{Name: "TTF", Start: 19, Length: 1, Optional: true, Transform: ttf},
 				{Name: "PDOP", Start: 20, Length: 1, Optional: true, Transform: pdop},
 				{Name: "Satellites", Start: 21, Length: 1, Optional: true},
-				{Name: "HACC", Start: 22, Length: 1, Optional: true},
-				{Name: "SOG", Start: 23, Length: 1, Optional: true},
+				{Name: "Accuracy", Start: 22, Length: 1, Optional: true, Transform: func(v any) any {
+					return float64(v.([]byte)[0])
+				}},
+				{Name: "Speed", Start: 23, Length: 1, Optional: true, Transform: func(v any) any {
+					return float64(v.([]byte)[0])
+				}},
 			},
 			TargetType: reflect.TypeOf(Port110Payload{}),
 			Features:   []decoder.Feature{decoder.FeatureBuffered, decoder.FeatureDutyCycle, decoder.FeatureConfigChange, decoder.FeatureMoving, decoder.FeatureGNSS, decoder.FeatureTimestamp, decoder.FeatureBattery},

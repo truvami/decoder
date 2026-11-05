@@ -624,8 +624,8 @@ func TestDecode(t *testing.T) {
 				PDOP:       helpers.Float64Ptr(2.5),
 				Satellites: helpers.Uint8Ptr(5),
 				TTF:        helpers.DurationPtr(time.Duration(25) * time.Second),
-				HACC:       helpers.Uint8Ptr(7),
-				SOG:        helpers.Uint8Ptr(8),
+				Accuracy:   helpers.Float64Ptr(7),
+				Speed:      helpers.Float64Ptr(8),
 			},
 		},
 		{
@@ -1139,8 +1139,8 @@ func TestDecode(t *testing.T) {
 				TTF:         helpers.DurationPtr(time.Duration(231) * time.Second),
 				PDOP:        helpers.Float64Ptr(16),
 				Satellites:  helpers.Uint8Ptr(4),
-				HACC:        helpers.Uint8Ptr(7),
-				SOG:         helpers.Uint8Ptr(8),
+				Accuracy:    helpers.Float64Ptr(7),
+				Speed:       helpers.Float64Ptr(8),
 			},
 		},
 		{

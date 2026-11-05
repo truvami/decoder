@@ -40,8 +40,8 @@ type Port10Payload struct {
 	TTF          *time.Duration `json:"ttf"`
 	PDOP         *float64       `json:"pdop"`
 	Satellites   *uint8         `json:"satellites" validate:"gte=3,lte=27"`
-	HACC         *uint8         `json:"hacc"`
-	SOG          *uint8         `json:"sog"`
+	Accuracy     *float64       `json:"accuracy"`
+	Speed        *float64       `json:"speed"`
 }
 
 func (p Port10Payload) MarshalJSON() ([]byte, error) {
@@ -54,6 +54,14 @@ func (p Port10Payload) MarshalJSON() ([]byte, error) {
 	if p.PDOP != nil {
 		pdop = common.StringPtr(fmt.Sprintf("%.1fm", *p.PDOP))
 	}
+	var accuracy *string
+	if p.Accuracy != nil {
+		accuracy = common.StringPtr(fmt.Sprintf("%.0fm", *p.Accuracy))
+	}
+	var speed *string
+	if p.Speed != nil {
+		speed = common.StringPtr(fmt.Sprintf("%.0fkm/h", *p.Speed))
+	}
 	return json.Marshal(&struct {
 		*Alias
 		Altitude   string  `json:"altitude"`
@@ -62,8 +70,8 @@ func (p Port10Payload) MarshalJSON() ([]byte, error) {
 		TTF        *string `json:"ttf"`
 		PDOP       *string `json:"pdop"`
 		Satellites *uint8  `json:"satellites"`
-		HACC       *uint8  `json:"hacc"`
-		SOG        *uint8  `json:"sog"`
+		Accuracy   *string `json:"accuracy"`
+		Speed      *string `json:"speed"`
 	}{
 		Alias:      (*Alias)(&p),
 		Altitude:   fmt.Sprintf("%.1fm", p.Altitude),
@@ -72,8 +80,8 @@ func (p Port10Payload) MarshalJSON() ([]byte, error) {
 		TTF:        ttf,
 		PDOP:       pdop,
 		Satellites: p.Satellites,
-		HACC:       p.HACC,
-		SOG:        p.SOG,
+		Accuracy:   accuracy,
+		Speed:      speed,
 	})
 }
 
@@ -101,7 +109,7 @@ func (p Port10Payload) GetAltitude() float64 {
 }
 
 func (p Port10Payload) GetAccuracy() *float64 {
-	return nil
+	return p.Accuracy
 }
 
 func (p Port10Payload) GetTTF() *time.Duration {
