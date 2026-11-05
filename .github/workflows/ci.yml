@@ -52,6 +52,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -96,9 +98,12 @@ jobs:
         run: $(go env GOPATH)/bin/staticcheck ./...
 
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v8
+        uses: golangci/golangci-lint-action@v9
         with:
-          version: v2.10.1
+          version: v2.14.0
+          # The merge base works for every event, unlike only-new-issues. On main and on
+          # tags it is HEAD itself, so compare with the parent commit there.
+          args: ${{ (github.ref_type == 'tag' || github.ref_name == 'main') && '--new-from-rev=HEAD~1' || '--new-from-merge-base=origin/main' }}
 
       - name: Run JSON tags camelCase check
         run: make check-json-tags
@@ -127,19 +132,17 @@ jobs:
 
       - name: Install detect-secrets
         run: |
-          pip install detect-secrets
+          pip install detect-secrets==1.5.0
 
       - name: Detect secrets
         run: |
-          echo "🔍 Scanning for secrets..."
-          if command -v detect-secrets >/dev/null 2>&1; then
-            detect-secrets scan --baseline .secrets.baseline --all-files || echo "Secret detection completed with findings"
-            if [ -f ".secrets.baseline" ]; then
-              detect-secrets audit .secrets.baseline --statistics || echo "Baseline audit completed"
-            fi
-          else
-            echo "detect-secrets not available, skipping secret scan (basic validation will still run)"
-          fi
+          set -euo pipefail
+          mapfile -d '' files < <(git ls-files -z)
+          [ "${#files[@]}" -gt 0 ] || { echo "::error::git ls-files returned no files"; exit 1; }
+          # Exit 1 means new secrets. Exit 3 only means baselined line numbers moved.
+          rc=0
+          detect-secrets-hook --baseline .secrets.baseline "${files[@]}" || rc=$?
+          [ "$rc" -eq 0 ] || [ "$rc" -eq 3 ]
 
   test:
     name: Test (matrix)
